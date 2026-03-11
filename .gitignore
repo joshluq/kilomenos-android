@@ -1,0 +1,102 @@
+gitignore
+# =================================================================
+# Android Studio & IntelliJ IDEA#
+# Archivos específicos del IDE y configuraciones de usuario.
+# =================================================================
+.idea/
+*.iml
+*.ipr
+*.iws
+.project
+.classpath
+.settings/
+
+# =================================================================
+# Gradle
+#
+# Archivos y directorios generados por Gradle.
+# =================================================================
+.gradle/
+build/
+# El archivo local.properties contiene rutas específicas de la máquina (como la del SDK)
+# y claves de API que no deben subirse al repositorio.
+# Si necesitas definir propiedades para todo el equipo, usa gradle.properties.
+local.properties
+
+# =to_be_generated=================================================================
+# Android
+#
+# Archivos y directorios específicos de la compilación de Android.
+# =================================================================
+# Archivos APK, AAB (Android App Bundle) y otros artefactos de salida.
+*.apk
+*.aab
+*.ap_
+*.apks
+
+# Archivos generados por ProGuard y R8.
+proguard/
+mapping.txt
+seeds.txt
+usage.txt
+
+# Capturas de pantalla de instrumentación.
+showcase/src/androidTest/screenshots/
+
+# Archivos de keystore para firmar la showcase. ¡NUNCA los subas a un repositorio público!
+*.jks
+*.keystore
+
+# Archivos generados por NDK.
+/obj/
+/libs/
+/arm/
+/x86/
+/mips/
+/lib/
+
+# =================================================================
+# Build System & OS
+#
+# Archivos temporales y de sistema operativo.
+# =================================================================
+# Archivos generados en macOS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+
+# Archivos generados en Windows
+Thumbs.db
+Desktop.ini
+ehthumbs.db
+
+# =================================================================
+# Otros
+#
+# Archivos de registro y otros archivos que no deben ser versionados.
+# =================================================================
+# Registros de errores de Android Studio y JVM
+captures/
+*.log
+**/hs_err_pid*.log
+
+# Archivos generados por Google Services (pueden contener información sensible)
+google-services.json
+
+*.iml
+.gradle
+/local.properties
+/.idea/caches
+/.idea/libraries
+/.idea/modules.xml
+/.idea/workspace.xml
+/.idea/navEditor.xml
+/.idea/assetWizardSettings.xml
+.DS_Store
+/build
+/captures
+.externalNativeBuild
+.cxx
+local.properties
