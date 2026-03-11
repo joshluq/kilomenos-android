@@ -1,0 +1,680 @@
+package es.joshluq.kmsafe.ui.onboarding
+
+import android.content.res.Configuration
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.BrokenImage
+import androidx.compose.material.icons.filled.CameraAlt
+import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material3.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation.NavBackStackEntry
+import coil.compose.SubcomposeAsyncImage
+import coil.request.ImageRequest
+import es.joshluq.canvaskit.components.buttons.CanvasKitButton
+import es.joshluq.canvaskit.components.buttons.CanvasKitButtonVariant
+import es.joshluq.canvaskit.components.feedback.CanvasKitAlertVariant
+import es.joshluq.canvaskit.components.feedback.CanvasKitBanner
+import es.joshluq.canvaskit.components.feedback.CanvasKitSkeleton
+import es.joshluq.canvaskit.components.inputs.CanvasKitDatePicker
+import es.joshluq.canvaskit.components.inputs.CanvasKitDatePickerDialog
+import es.joshluq.canvaskit.components.inputs.CanvasKitTextField
+import es.joshluq.canvaskit.components.inputs.CanvasKitTextFieldVariant
+import es.joshluq.canvaskit.components.layout.CanvasKitLoadingScaffold
+import es.joshluq.canvaskit.components.navigation.CanvasKitTopBar
+import es.joshluq.canvaskit.foundations.theme.CanvasKitTheme
+import es.joshluq.kmsafe.R
+import es.joshluq.kmsafe.ui.util.safeClick
+import es.joshluq.kmsafe.ui.util.safeClickable
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
+import androidx.core.net.toUri
+
+@Composable
+fun OnboardingRoute(
+    onNavigateBack: () -> Unit,
+    onNavigateToCropper: (String) -> Unit,
+    backStackEntry: NavBackStackEntry
+) {
+    val viewModel: OnboardingViewModel = hiltViewModel()
+    val state by viewModel.state.collectAsStateWithLifecycle()
+    
+    val croppedUri by backStackEntry.savedStateHandle.getStateFlow<String?>("cropped_uri", null).collectAsStateWithLifecycle()
+    
+    LaunchedEffect(croppedUri) {
+        croppedUri?.let { uri ->
+            viewModel.sendEvent(Event.OnImageSelected(uri.toUri()))
+            backStackEntry.savedStateHandle.remove<String>("cropped_uri")
+        }
+    }
+
+    OnboardingScreen(
+        state = state,
+        onEvent = viewModel::sendEvent,
+        onNavigateBack = onNavigateBack
+    )
+    
+    LaunchedEffect(viewModel.effects) {
+        viewModel.effects.collect { effect ->
+            when (effect) {
+                is Effect.NavigateBack -> onNavigateBack()
+                is Effect.NavigateToCropper -> onNavigateToCropper(effect.uri)
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun OnboardingScreen(
+    state: State,
+    onEvent: (Event) -> Unit,
+    onNavigateBack: () -> Unit = {}
+) {
+    val datePickerState = rememberDatePickerState()
+
+    val photoPickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri ->
+        onEvent(Event.OnOriginalImageSelected(uri))
+    }
+
+    CanvasKitLoadingScaffold(
+        isLoading = state.isLoading && state.renting == null,
+        topBar = {
+            CanvasKitTopBar(
+                title = {
+                    Text(
+                        text = when {
+                            state.isReadOnly -> stringResource(R.string.onboarding_title_alternative)
+                            else -> stringResource(R.string.onboarding_title)
+                        },
+                        style = CanvasKitTheme.typography.headingMedium,
+                        color = CanvasKitTheme.colors.textPrimary
+                    )
+                },
+                navigationIcon = {
+                    IconButton(onClick = safeClick { onNavigateBack() }) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = stringResource(R.string.acc_back),
+                            tint = CanvasKitTheme.colors.textPrimary
+                        )
+                    }
+                },
+                centeredTitle = true
+            )
+        },
+        containerColor = CanvasKitTheme.colors.backgroundSecondary,
+        contentWindowInsets = WindowInsets()
+    ) { innerPadding ->
+        Box(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .imePadding()
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = 24.dp),
+                verticalArrangement = Arrangement.spacedBy(if (state.isReadOnly) 24.dp else 16.dp)
+            ) {
+                Spacer(modifier = Modifier.height(4.dp))
+
+                // Image Picker Section
+                Box(
+                    modifier = Modifier.fillMaxWidth(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    VehicleImagePicker(
+                        imageUrl = state.vehicleImageUrl,
+                        selectedUri = state.selectedImageUri,
+                        isReadOnly = state.isReadOnly,
+                        onClick = { if (!state.isReadOnly) photoPickerLauncher.launch("image/*") }
+                    )
+                }
+
+                if (state.isReadOnly) {
+                    ReadOnlyContent(state)
+                } else {
+                    EditableContent(state, onEvent)
+                }
+
+                Spacer(modifier = Modifier.height(64.dp))
+            }
+
+            // Silent Interaction Block Overlay while saving
+            if (state.isLoading && state.renting != null) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .pointerInput(Unit) { }
+                )
+            }
+
+            // Toast-style Banner (Error)
+            CanvasKitBanner(
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(16.dp)
+                    .imePadding()
+                    .navigationBarsPadding(),
+                variant = CanvasKitAlertVariant.Error,
+                message = { Text(state.error?.asString() ?: "") },
+                visible = state.error != null,
+                onDismiss = { onEvent(Event.OnDismissError) }
+            )
+
+            // Date Picker Dialog moved inside composition Box to ensure z-index
+            if (state.showDatePicker) {
+                CanvasKitDatePickerDialog(
+                    onDismissRequest = { onEvent(Event.OnToggleDatePicker) },
+                    confirmButton = {
+                        CanvasKitButton(
+                            onClick = safeClick {
+                                datePickerState.selectedDateMillis?.let { millis ->
+                                    val date = Date(millis)
+                                    val formatter = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+                                    onEvent(Event.OnStartDateChanged(formatter.format(date)))
+                                }
+                                onEvent(Event.OnToggleDatePicker)
+                            },
+                            variant = CanvasKitButtonVariant.Ghost,
+                        ) {
+                            @Suppress("DEPRECATION")
+                            Text(
+                                text = stringResource(R.string.onboarding_date_picker_confirm),
+                                color = CanvasKitTheme.colors.brandAccent
+                            )
+                        }
+                    },
+                    dismissButton = {
+                        CanvasKitButton(
+                            variant = CanvasKitButtonVariant.Ghost,
+                            onClick = safeClick { onEvent(Event.OnToggleDatePicker) }
+                        ) {
+                            @Suppress("DEPRECATION")
+                            Text(
+                                text = stringResource(R.string.onboarding_date_picker_cancel),
+                                color = CanvasKitTheme.colors.brandAccent
+                            )
+                        }
+                    }
+                ) {
+                    CanvasKitDatePicker(state = datePickerState)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ReadOnlyContent(state: State) {
+    Column(
+        modifier = Modifier.padding(horizontal = 12.dp),
+        verticalArrangement = Arrangement.spacedBy(24.dp)
+    ) {
+        OnboardingDisplayField(
+            label = stringResource(R.string.onboarding_vehicle_name_label),
+            value = state.vehicleName
+        )
+
+        OnboardingDisplayField(
+            label = stringResource(R.string.onboarding_start_date_label),
+            value = state.startDate
+        )
+
+        OnboardingDisplayField(
+            label = stringResource(R.string.onboarding_duration_months_label),
+            value = state.durationMonths,
+            suffix = stringResource(R.string.onboarding_months_suffix)
+        )
+
+        OnboardingDisplayField(
+            label = stringResource(R.string.onboarding_total_kms_label),
+            value = state.totalKms,
+            suffix = stringResource(R.string.onboarding_km_suffix)
+        )
+
+        OnboardingDisplayField(
+            label = stringResource(R.string.onboarding_start_odometer_label),
+            value = state.startOdometer,
+            suffix = stringResource(R.string.onboarding_km_suffix)
+        )
+
+        OnboardingDisplayField(
+            label = stringResource(R.string.onboarding_current_odometer_label),
+            value = state.currentOdometer,
+            suffix = stringResource(R.string.onboarding_km_suffix)
+        )
+    }
+}
+
+@Composable
+private fun EditableContent(state: State, onEvent: (Event) -> Unit) {
+    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        OnboardingTextField(
+            label = stringResource(R.string.onboarding_vehicle_name_label),
+            value = state.vehicleName,
+            onValueChange = { onEvent(Event.OnVehicleNameChanged(it)) },
+            errorMessage = state.vehicleNameError?.asString(),
+            placeholder = stringResource(R.string.onboarding_vehicle_name_placeholder),
+            enabled = true
+        )
+
+        if (state.isEditMode) {
+            OnboardingDisplayField(
+                label = stringResource(R.string.onboarding_start_date_label),
+                value = state.startDate,
+                trailingIcon = {
+                    Icon(
+                        imageVector = Icons.Default.Lock,
+                        contentDescription = null,
+                        tint = CanvasKitTheme.colors.textSecondary,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+            )
+        } else {
+            OnboardingDisplayField(
+                label = stringResource(R.string.onboarding_start_date_label),
+                value = state.startDate,
+                placeholder = stringResource(R.string.onboarding_start_date_placeholder),
+                errorMessage = state.startDateError?.asString(),
+                onClick = { onEvent(Event.OnToggleDatePicker) },
+                trailingIcon = {
+                    Icon(
+                        imageVector = Icons.Default.DateRange,
+                        contentDescription = stringResource(R.string.onboarding_start_date_label),
+                        tint = CanvasKitTheme.colors.brandAccent
+                    )
+                }
+            )
+        }
+
+        OnboardingTextField(
+            label = stringResource(R.string.onboarding_duration_months_label),
+            value = state.durationMonths,
+            onValueChange = { onEvent(Event.OnDurationMonthsChanged(it)) },
+            errorMessage = state.durationMonthsError?.asString(),
+            trailingIcon = {
+                @Suppress("DEPRECATION")
+                Text(
+                    text = stringResource(R.string.onboarding_months_suffix),
+                    color = CanvasKitTheme.colors.brandAccent
+                )
+            },
+            placeholder = stringResource(R.string.onboarding_duration_months_placeholder),
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+            enabled = true
+        )
+
+        OnboardingTextField(
+            label = stringResource(R.string.onboarding_total_kms_label),
+            value = state.totalKms,
+            onValueChange = { onEvent(Event.OnTotalKmsChanged(it)) },
+            errorMessage = state.totalKmsError?.asString(),
+            trailingIcon = {
+                @Suppress("DEPRECATION")
+                Text(
+                    text = stringResource(R.string.onboarding_km_suffix),
+                    color = CanvasKitTheme.colors.brandAccent
+                )
+            },
+            placeholder = stringResource(R.string.onboarding_total_kms_placeholder),
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+            enabled = true
+        )
+
+        if (state.isEditMode) {
+            OnboardingDisplayField(
+                label = stringResource(R.string.onboarding_start_odometer_label),
+                value = state.startOdometer,
+                suffix = stringResource(R.string.onboarding_km_suffix),
+                trailingIcon = {
+                    Icon(
+                        imageVector = Icons.Default.Lock,
+                        contentDescription = null,
+                        tint = CanvasKitTheme.colors.textSecondary,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+            )
+        } else {
+            OnboardingTextField(
+                label = stringResource(R.string.onboarding_start_odometer_label),
+                value = state.startOdometer,
+                onValueChange = { onEvent(Event.OnStartOdometerChanged(it)) },
+                errorMessage = state.startOdometerError?.asString(),
+                trailingIcon = {
+                    @Suppress("DEPRECATION")
+                    Text(
+                        text = stringResource(R.string.onboarding_km_suffix),
+                        color = CanvasKitTheme.colors.brandAccent
+                    )
+                },
+                placeholder = stringResource(R.string.onboarding_start_odometer_placeholder),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                enabled = true
+            )
+        }
+
+        OnboardingTextField(
+            label = stringResource(R.string.onboarding_current_odometer_label),
+            value = state.currentOdometer,
+            onValueChange = { onEvent(Event.OnCurrentOdometerChanged(it)) },
+            errorMessage = state.currentOdometerError?.asString(),
+            trailingIcon = {
+                @Suppress("DEPRECATION")
+                Text(
+                    text = stringResource(R.string.onboarding_km_suffix),
+                    color = CanvasKitTheme.colors.brandAccent
+                )
+            },
+            placeholder = stringResource(R.string.onboarding_current_odometer_placeholder),
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+            enabled = true
+        )
+
+        Spacer(modifier = Modifier.height(32.dp))
+
+        CanvasKitButton(
+            onClick = safeClick { onEvent(Event.OnRegisterClicked) },
+            enabled = !state.isLoading,
+            loading = state.isLoading,
+            modifier = Modifier.fillMaxWidth()
+        ) { contentColor ->
+            @Suppress("DEPRECATION")
+            Text(
+                text = if (state.isLoading) {
+                    stringResource(R.string.onboarding_saving_button)
+                } else {
+                    stringResource(R.string.onboarding_save_button)
+                },
+                style = CanvasKitTheme.typography.bodyLarge,
+                color = contentColor
+            )
+        }
+    }
+}
+
+@Composable
+fun VehicleImagePicker(
+    imageUrl: String?,
+    selectedUri: Uri?,
+    isReadOnly: Boolean,
+    onClick: () -> Unit
+) {
+    val shape = RoundedCornerShape(16.dp)
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(120.dp)
+            .clip(shape)
+            .background(CanvasKitTheme.colors.backgroundPrimary)
+            .border(1.dp, CanvasKitTheme.colors.borderSubtle, shape)
+            .clickable(enabled = !isReadOnly, onClick = onClick),
+        contentAlignment = Alignment.Center
+    ) {
+        when {
+            selectedUri != null -> {
+                SubcomposeAsyncImage(
+                    model = ImageRequest.Builder(LocalContext.current)
+                        .data(selectedUri)
+                        .crossfade(true)
+                        .build(),
+                    contentDescription = stringResource(R.string.onboarding_photo_label),
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop,
+                    loading = { CanvasKitSkeleton(modifier = Modifier.fillMaxSize()) },
+                    error = {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .background(CanvasKitTheme.colors.error.copy(alpha = 0.05f)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.BrokenImage,
+                                contentDescription = null,
+                                tint = CanvasKitTheme.colors.textSecondary
+                            )
+                        }
+                    }
+                )
+            }
+            imageUrl != null -> {
+                SubcomposeAsyncImage(
+                    model = ImageRequest.Builder(LocalContext.current)
+                        .data(imageUrl)
+                        .crossfade(true)
+                        .build(),
+                    contentDescription = stringResource(R.string.onboarding_photo_label),
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop,
+                    loading = { CanvasKitSkeleton(modifier = Modifier.fillMaxSize()) },
+                    error = {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .background(CanvasKitTheme.colors.error.copy(alpha = 0.05f)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.BrokenImage,
+                                contentDescription = null,
+                                tint = CanvasKitTheme.colors.textSecondary
+                            )
+                        }
+                    }
+                )
+            }
+            else -> {
+                Icon(
+                    imageVector = Icons.Default.CameraAlt,
+                    contentDescription = stringResource(R.string.onboarding_photo_label),
+                    tint = CanvasKitTheme.colors.textSecondary,
+                    modifier = Modifier.size(32.dp)
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun OnboardingDisplayField(
+    label: String,
+    value: String,
+    placeholder: String? = null,
+    suffix: String? = null,
+    onClick: (() -> Unit)? = null,
+    trailingIcon: @Composable (() -> Unit)? = null,
+    errorMessage: String? = null
+) {
+    val colors = CanvasKitTheme.colors
+    val spacing = CanvasKitTheme.spacing
+    val typography = CanvasKitTheme.typography
+    val interactionSource = remember { MutableInteractionSource() }
+
+    Column(verticalArrangement = Arrangement.spacedBy(spacing.xs)) {
+        Row {
+            Spacer(modifier = Modifier.width(spacing.lg))
+            Text(
+                text = label,
+                style = typography.labelSmall,
+                color = if (errorMessage != null) colors.error else colors.textPrimary
+            )
+        }
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(56.dp)
+                .border(
+                    width = 1.dp,
+                    color = if (errorMessage != null) colors.error else colors.borderSubtle,
+                    shape = CanvasKitTheme.shapes.pill
+                )
+                .clip(CanvasKitTheme.shapes.pill)
+                .then(
+                    if (onClick != null) {
+                        Modifier.safeClickable(
+                            interactionSource = interactionSource,
+                            indication = null, // To remove the dark flicker as requested
+                            onClick = onClick
+                        )
+                    } else {
+                        Modifier
+                    }
+                )
+                .padding(horizontal = 24.dp),
+            contentAlignment = Alignment.CenterStart
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                if (value.isEmpty() && placeholder != null) {
+                    Text(
+                        text = placeholder,
+                        color = colors.textSecondary,
+                        style = typography.bodyMedium
+                    )
+                } else {
+                    @Suppress("DEPRECATION")
+                    Text(
+                        text = value,
+                        color = colors.textPrimary,
+                        fontWeight = FontWeight.Bold,
+                    )
+                }
+
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    if (suffix != null) {
+                        @Suppress("DEPRECATION")
+                        Text(
+                            text = suffix,
+                            style = typography.labelLarge,
+                            color = colors.brandAccent
+                        )
+                    }
+                    if (trailingIcon != null) {
+                        if (suffix != null) Spacer(modifier = Modifier.width(CanvasKitTheme.spacing.xs))
+                        trailingIcon()
+                    }
+                }
+            }
+        }
+        if (errorMessage != null) {
+            Text(
+                text = errorMessage,
+                style = typography.labelSmall,
+                color = colors.error,
+                modifier = Modifier.padding(start = spacing.lg, top = 2.dp)
+            )
+        }
+    }
+}
+
+@Composable
+fun OnboardingTextField(
+    label: String,
+    value: String,
+    onValueChange: (String) -> Unit,
+    placeholder: String = "",
+    errorMessage: String? = null,
+    leadingIcon: @Composable (() -> Unit)? = null,
+    trailingIcon: @Composable (() -> Unit)? = null,
+    keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
+    enabled: Boolean = true
+) {
+    val spacing = CanvasKitTheme.spacing
+    Column(verticalArrangement = Arrangement.spacedBy(spacing.xs)) {
+        CanvasKitTextField(
+            value = value,
+            onValueChange = onValueChange,
+            placeholder = placeholder,
+            leadingIcon = leadingIcon,
+            trailingIcon = trailingIcon,
+            errorText = errorMessage,
+            isError = errorMessage != null,
+            keyboardOptions = keyboardOptions,
+            enabled = enabled,
+            variant = CanvasKitTextFieldVariant.Outlined,
+            label = label
+        )
+    }
+}
+
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES or Configuration.UI_MODE_TYPE_NORMAL)
+@Preview
+@Composable
+fun OnboardingScreenReadOnlyPreview() {
+    CanvasKitTheme {
+        OnboardingScreen(
+            state = State.Empty.copy(
+                isLoading = false,
+                isReadOnly = true,
+                vehicleName = "Volkswagen ID.3",
+                startDate = "12/10/2023",
+                durationMonths = "36",
+                totalKms = "45000",
+                startOdometer = "0",
+                currentOdometer = "1500"
+            ),
+            onEvent = {}
+        )
+    }
+}
+
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES or Configuration.UI_MODE_TYPE_NORMAL)
+@Preview
+@Composable
+fun OnboardingScreenLoadingPreview() {
+    CanvasKitTheme {
+        OnboardingScreen(
+            state = State.Empty,
+            onEvent = {}
+        )
+    }
+}
+
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES or Configuration.UI_MODE_TYPE_NORMAL)
+@Preview
+@Composable
+fun OnboardingScreenPreview() {
+    CanvasKitTheme {
+        OnboardingScreen(
+            state = State.Empty.copy(isLoading = false),
+            onEvent = {}
+        )
+    }
+}

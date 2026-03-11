@@ -1,0 +1,368 @@
+package es.joshluq.kmsafe.ui.history.detail
+
+import android.content.res.Configuration
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.Label
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import es.joshluq.canvaskit.components.buttons.CanvasKitButton
+import es.joshluq.canvaskit.components.buttons.CanvasKitButtonVariant
+import es.joshluq.canvaskit.components.cards.CanvasKitCard
+import es.joshluq.canvaskit.components.feedback.CanvasKitAlertVariant
+import es.joshluq.canvaskit.components.feedback.CanvasKitBanner
+import es.joshluq.canvaskit.components.feedback.CanvasKitDialog
+import es.joshluq.canvaskit.components.feedback.CanvasKitDialogContent
+import es.joshluq.canvaskit.components.layout.CanvasKitLoadingScaffold
+import es.joshluq.canvaskit.components.navigation.CanvasKitTopBar
+import es.joshluq.canvaskit.foundations.theme.CanvasKitTheme
+import es.joshluq.kmsafe.R
+import es.joshluq.kmsafe.domain.model.OdometerRecord
+import es.joshluq.kmsafe.ui.util.safeClick
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
+import java.util.TimeZone
+
+@Composable
+fun RecordDetailRoute(
+    onNavigateBack: () -> Unit,
+    onNavigateToEdit: (String) -> Unit
+) {
+    val viewModel: RecordDetailViewModel = hiltViewModel()
+    val state by viewModel.state.collectAsStateWithLifecycle()
+
+    LaunchedEffect(viewModel.effects) {
+        viewModel.effects.collect { effect ->
+            when (effect) {
+                RecordDetailEffect.NavigateBack -> onNavigateBack()
+                is RecordDetailEffect.NavigateToEdit -> onNavigateToEdit(effect.record.id)
+                is RecordDetailEffect.ShowError -> { /* Handled via state.error */ }
+            }
+        }
+    }
+
+    RecordDetailScreen(
+        state = state,
+        onEvent = viewModel::sendEvent
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun RecordDetailScreen(
+    state: RecordDetailState,
+    onEvent: (RecordDetailEvent) -> Unit
+) {
+    CanvasKitLoadingScaffold(
+        isLoading = state.isLoading,
+        topBar = {
+            CanvasKitTopBar(
+                title = {
+                    Text(
+                        text = stringResource(R.string.history_detail_action),
+                        style = CanvasKitTheme.typography.headingMedium
+                    )
+                },
+                navigationIcon = {
+                    IconButton(onClick = safeClick { onEvent(RecordDetailEvent.OnBackClicked) }) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = stringResource(R.string.acc_back),
+                            tint = CanvasKitTheme.colors.textPrimary
+                        )
+                    }
+                },
+                centeredTitle = true
+            )
+        },
+        containerColor = CanvasKitTheme.colors.backgroundSecondary
+    ) { innerPadding ->
+        Box(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = 24.dp)
+            ) {
+                state.record?.let { record ->
+                    Spacer(modifier = Modifier.height(24.dp))
+
+                    // Hero Data
+                    HeroMileageCard(record.odometerValue)
+
+                    Spacer(modifier = Modifier.height(24.dp))
+
+                    // Details Section
+                    DetailSection(record)
+
+                    Spacer(modifier = Modifier.height(24.dp))
+
+                    // Consumption Section (Premium)
+                    if (state.isPremium && state.consumptionL100km != null) {
+                        ConsumptionCard(state.consumptionL100km, record.fuelAmount!!)
+                        Spacer(modifier = Modifier.height(24.dp))
+                    }
+
+                    Spacer(modifier = Modifier.weight(1f))
+
+                    // Action Buttons
+                    ActionButtons(onEvent)
+
+                    Spacer(modifier = Modifier.height(32.dp))
+                }
+            }
+
+            // Toast-style Banner (Error)
+            CanvasKitBanner(
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(16.dp)
+                    .navigationBarsPadding(),
+                variant = CanvasKitAlertVariant.Error,
+                message = { Text(state.error?.asString() ?: "") },
+                visible = state.error != null,
+                onDismiss = { onEvent(RecordDetailEvent.OnDismissError) }
+            )
+
+            if (state.showDeleteConfirmation) {
+                DeleteConfirmationDialog(onEvent)
+            }
+        }
+    }
+}
+
+@Composable
+private fun HeroMileageCard(kms: Int) {
+    CanvasKitCard(
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(32.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(
+                text = stringResource(R.string.overview_current_odometer_label).uppercase(),
+                style = CanvasKitTheme.typography.labelSmall,
+                color = CanvasKitTheme.colors.textSecondary,
+                letterSpacing = 1.sp
+            )
+            Text(
+                text = stringResource(R.string.common_km_suffix, kms),
+                style = CanvasKitTheme.typography.displayLarge,
+                color = CanvasKitTheme.colors.brandAccent,
+                fontWeight = FontWeight.Black
+            )
+        }
+    }
+}
+
+@Composable
+private fun DetailSection(record: OdometerRecord) {
+    val dateFormatter = remember { SimpleDateFormat("EEEE, dd MMMM yyyy", Locale.getDefault()) }
+    val timeFormatter = remember { 
+        SimpleDateFormat("HH:mm", Locale.getDefault()).apply {
+            timeZone = TimeZone.getDefault()
+        }
+    }
+    
+    CanvasKitCard {
+        Column(
+            modifier = Modifier.padding(24.dp),
+            verticalArrangement = Arrangement.spacedBy(20.dp)
+        ) {
+            DetailRow(
+                icon = Icons.Default.CalendarToday,
+                label = stringResource(R.string.overview_record_date_label),
+                value = dateFormatter.format(Date(record.timestamp))
+            )
+            
+            DetailRow(
+                icon = Icons.Default.AccessTime,
+                label = stringResource(R.string.history_detail_time_label),
+                value = timeFormatter.format(Date(record.timestamp))
+            )
+
+            if (record.label != null) {
+                DetailRow(
+                    icon = Icons.AutoMirrored.Default.Label,
+                    label = stringResource(R.string.overview_record_label_label),
+                    value = record.label
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun DetailRow(icon: ImageVector, label: String, value: String) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = label,
+            tint = CanvasKitTheme.colors.brandAccent,
+            modifier = Modifier.size(20.dp)
+        )
+        Spacer(modifier = Modifier.width(16.dp))
+        Column {
+            Text(
+                text = label,
+                style = CanvasKitTheme.typography.labelSmall,
+                color = CanvasKitTheme.colors.textSecondary
+            )
+            Text(
+                text = value,
+                style = CanvasKitTheme.typography.bodyLarge,
+                color = CanvasKitTheme.colors.textPrimary,
+                fontWeight = FontWeight.Bold
+            )
+        }
+    }
+}
+
+@Composable
+private fun ConsumptionCard(l100km: Double, liters: Double) {
+    val cardColor = CanvasKitTheme.colors.brandPrimary.copy(alpha = 0.05f)
+    CanvasKitCard {
+        Box(modifier = Modifier.background(cardColor)) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(24.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Column {
+                    Text(
+                        text = stringResource(R.string.history_detail_consumption_title),
+                        style = CanvasKitTheme.typography.labelSmall,
+                        color = CanvasKitTheme.colors.brandAccent,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Text(
+                        text = "%.1f L/100km".format(l100km),
+                        style = CanvasKitTheme.typography.headingLarge,
+                        color = CanvasKitTheme.colors.textPrimary,
+                        fontWeight = FontWeight.Black
+                    )
+                }
+                Box(
+                    modifier = Modifier
+                        .size(48.dp)
+                        .clip(CircleShape)
+                        .background(CanvasKitTheme.colors.brandAccent.copy(alpha = 0.1f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.LocalGasStation,
+                        contentDescription = null,
+                        tint = CanvasKitTheme.colors.brandAccent
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ActionButtons(onEvent: (RecordDetailEvent) -> Unit) {
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        CanvasKitButton(
+            onClick = safeClick { onEvent(RecordDetailEvent.OnEditClicked) },
+            modifier = Modifier.fillMaxWidth()
+        ) { contentColor ->
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(Icons.Default.Edit, contentDescription = stringResource(R.string.history_edit_action), tint = contentColor)
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(stringResource(R.string.history_edit_action), color = contentColor)
+            }
+        }
+        
+        CanvasKitButton(
+            onClick = safeClick { onEvent(RecordDetailEvent.OnDeleteClicked) },
+            variant = CanvasKitButtonVariant.Ghost,
+            modifier = Modifier.fillMaxWidth()
+        ) { _ ->
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(Icons.Default.Delete, contentDescription = stringResource(R.string.history_delete_action), tint = CanvasKitTheme.colors.error)
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(stringResource(R.string.history_delete_action), color = CanvasKitTheme.colors.error)
+            }
+        }
+    }
+}
+
+@Composable
+private fun DeleteConfirmationDialog(onEvent: (RecordDetailEvent) -> Unit) {
+    CanvasKitDialog(onDismissRequest = { onEvent(RecordDetailEvent.OnCancelDelete) }) {
+        CanvasKitDialogContent(
+            title = {
+                Text(stringResource(R.string.vehicles_delete_confirmation_title), fontWeight = FontWeight.Bold)
+            },
+            content = {
+                Text(stringResource(R.string.vehicles_delete_confirmation_message))
+            },
+            buttons = {
+                TextButton(onClick = { onEvent(RecordDetailEvent.OnCancelDelete) }) {
+                    Text(stringResource(R.string.profile_logout_cancel), color = CanvasKitTheme.colors.textSecondary)
+                }
+                CanvasKitButton(
+                    onClick = safeClick { onEvent(RecordDetailEvent.OnConfirmDelete) },
+                    variant = CanvasKitButtonVariant.Ghost
+                ) { _ ->
+                    Text(stringResource(R.string.vehicles_delete_confirm), color = CanvasKitTheme.colors.error)
+                }
+            }
+        )
+    }
+}
+
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES or Configuration.UI_MODE_TYPE_NORMAL)
+@Preview
+@Composable
+fun RecordDetailScreenPreview() {
+    CanvasKitTheme {
+        RecordDetailScreen(
+            state = RecordDetailState(
+                isLoading = false,
+                isPremium = true,
+                consumptionL100km = 5.4,
+                record = OdometerRecord(
+                    id = "1",
+                    contractId = "1",
+                    timestamp = System.currentTimeMillis(),
+                    odometerValue = 12000,
+                    isInitialRecord = false,
+                    label = "Viaje al trabajo",
+                    fuelAmount = 15.0
+                )
+            ),
+            onEvent = {}
+        )
+    }
+}

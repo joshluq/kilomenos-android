@@ -1,0 +1,15 @@
+# KiloMenos - Test Case: Flow D (Firebase App Testing Agent)
+tests:
+  - displayName: "Flow D: Gestión de Flota (PREMIUM)"
+    steps:
+      - goal: "Navegar a la lista de vehículos desde el Perfil."
+        hint: "Ve a la pestaña Perfil y pulsa en 'Mis Vehículos'."
+        finalScreenAssertion: "Debo ver la lista con al menos un vehículo."
+
+      - goal: "Añadir un segundo vehículo a la flota."
+        hint: "Pulsa en 'Añadir Vehículo' (Icono '+'). Rellena los datos de un nuevo coche (ej: Tesla Model 3). Pulsa 'Guardar'."
+        finalScreenAssertion: "Debo volver a la lista y ver dos vehículos diferentes."
+
+      - goal: "Cambiar el vehículo activo."
+        hint: "Pulsa sobre el nuevo vehículo en la lista para seleccionarlo."
+        finalScreenAssertion: "El vehículo pulsado debe aparecer marcado como ACTIVO."

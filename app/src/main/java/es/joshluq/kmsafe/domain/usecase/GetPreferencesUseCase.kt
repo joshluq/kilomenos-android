@@ -1,0 +1,38 @@
+package es.joshluq.kmsafe.domain.usecase
+
+import es.joshluq.foundationkit.usecase.FlowUseCase
+import es.joshluq.foundationkit.usecase.UseCaseInput
+import es.joshluq.foundationkit.usecase.UseCaseOutput
+import es.joshluq.kmsafe.domain.model.UserPreferences
+import es.joshluq.kmsafe.domain.repository.AuthRepository
+import es.joshluq.kmsafe.domain.repository.PreferencesRepository
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.map
+import javax.inject.Inject
+
+class GetPreferencesUseCase @Inject constructor(
+    private val repository: PreferencesRepository,
+    private val authRepository: AuthRepository
+) : FlowUseCase<GetPreferencesUseCase.Input, GetPreferencesUseCase.Output> {
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    override fun invoke(input: Input): Flow<Output> {
+        return authRepository.getCurrentUser().flatMapLatest { user ->
+            if (user != null) {
+                repository.getPreferences(user.id)
+            } else {
+                repository.getGlobalPreferences()
+            }
+        }.map {
+            Output.Success(it)
+        }
+    }
+
+    object Input : UseCaseInput
+
+    sealed interface Output : UseCaseOutput {
+        data class Success(val preferences: UserPreferences) : Output
+    }
+}

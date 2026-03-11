@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+  <group android:scaleX="0.94285715"
+      android:scaleY="0.94285715"
+      android:translateX="-0.6857143"
+      android:translateY="-0.6857143">
+
+      <!-- The Intelligent Path Design: Minimalist K -->
+      <group
+          android:translateX="4"
+          android:translateY="4">
+          <!-- Main Structure (White) -->
+          <path
+              android:pathData="M 34,24 L 34,84"
+              android:strokeColor="#FFFFFF"
+              android:strokeWidth="10"
+              android:strokeLineCap="round" />
+          <path
+              android:pathData="M 34,54 L 74,24"
+              android:strokeColor="#FFFFFF"
+              android:strokeWidth="10"
+              android:strokeLineCap="round" />
+
+          <!-- The Intelligent Path (ElectricBlue) -->
+          <path
+              android:pathData="M 34,54 L 74,84"
+              android:strokeColor="#00B0F0"
+              android:strokeWidth="10"
+              android:strokeLineCap="round" />
+      </group>
+  </group>
+</vector>

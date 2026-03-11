@@ -1,0 +1,238 @@
+package es.joshluq.kmsafe.ui.history
+
+import androidx.lifecycle.viewModelScope
+import dagger.hilt.android.lifecycle.HiltViewModel
+import es.joshluq.analyticskit.domain.model.AnalyticsEvent
+import es.joshluq.analyticskit.sdk.AnalyticskitManager
+import es.joshluq.foundationkit.coroutines.DispatcherProvider
+import es.joshluq.foundationkit.log.LoggerKit
+import es.joshluq.foundationkit.text.TextProvider
+import es.joshluq.foundationkit.usecase.FlowUseCase
+import es.joshluq.foundationkit.viewmodel.ScreenViewModel
+import es.joshluq.kmsafe.R
+import es.joshluq.kmsafe.di.DeleteOdometerRecord
+import es.joshluq.kmsafe.di.GetHistory
+import es.joshluq.kmsafe.di.IsUserPremium
+import es.joshluq.kmsafe.di.UpdateOdometerRecord
+import es.joshluq.kmsafe.domain.model.OdometerRecord
+import es.joshluq.kmsafe.domain.usecase.DeleteOdometerRecordUseCase
+import es.joshluq.kmsafe.domain.usecase.GetHistoryUseCase
+import es.joshluq.kmsafe.domain.usecase.IsUserPremiumUseCase
+import es.joshluq.kmsafe.domain.usecase.UpdateOdometerRecordUseCase
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
+import javax.inject.Inject
+
+@HiltViewModel
+class HistoryViewModel @Inject constructor(
+    @param:GetHistory private val getHistoryUseCase:
+    @JvmSuppressWildcards FlowUseCase<GetHistoryUseCase.Input, GetHistoryUseCase.Output>,
+    @param:DeleteOdometerRecord private val deleteOdometerRecordUseCase:
+    @JvmSuppressWildcards FlowUseCase<DeleteOdometerRecordUseCase.Input, DeleteOdometerRecordUseCase.Output>,
+    @param:UpdateOdometerRecord private val updateOdometerRecordUseCase:
+    @JvmSuppressWildcards FlowUseCase<UpdateOdometerRecordUseCase.Input, UpdateOdometerRecordUseCase.Output>,
+    @param:IsUserPremium private val isUserPremiumUseCase:
+    @JvmSuppressWildcards FlowUseCase<IsUserPremiumUseCase.Input, IsUserPremiumUseCase.Output>,
+    private val dispatchers: DispatcherProvider,
+    private val analytics: AnalyticskitManager,
+    private val logger: LoggerKit
+) : ScreenViewModel<HistoryState, HistoryEvent, HistoryEffect>() {
+
+    init {
+        checkSubscription()
+        loadHistory(forceRefresh = false)
+    }
+
+    override fun createInitialState(): HistoryState = HistoryState.Empty
+
+    override fun handleEvent(event: HistoryEvent) {
+        logger.d("HistoryViewModel", "Event received: $event")
+        when (event) {
+            is HistoryEvent.OnDeleteRecords -> handleDeleteRecords(event.records)
+            is HistoryEvent.OnToggleMonthCollapse -> handleToggleMonthCollapse(event.monthYear)
+            is HistoryEvent.OnViewDetail -> {
+                updateState { copy(selectedDailyRecords = event.records) }
+            }
+            is HistoryEvent.OnDismissDetail -> {
+                updateState { copy(selectedDailyRecords = null) }
+            }
+            HistoryEvent.OnRefresh -> loadHistory(forceRefresh = true)
+            is HistoryEvent.OnEditRecordClicked -> updateState {
+                copy(
+                    editingRecord = event.record,
+                    editingOdometerValue = event.record.odometerValue.toString(),
+                    editingLabel = event.record.label ?: "",
+                    editingFuel = event.record.fuelAmount?.toString() ?: ""
+                )
+            }
+            is HistoryEvent.OnEditingOdometerChanged -> updateState { copy(editingOdometerValue = event.value) }
+            is HistoryEvent.OnEditingLabelChanged -> updateState { copy(editingLabel = event.value) }
+            is HistoryEvent.OnEditingFuelChanged -> updateState { copy(editingFuel = event.value) }
+            HistoryEvent.OnUpdateRecordClicked -> handleUpdateRecord()
+            HistoryEvent.OnDismissEdit -> updateState { copy(editingRecord = null) }
+            HistoryEvent.OnDismissError -> updateState { copy(error = null) }
+            is HistoryEvent.OnSearchQueryChanged -> {
+                updateState { copy(searchQuery = event.query) }
+                applyFilters()
+            }
+            is HistoryEvent.OnGroupingModeChanged -> {
+                updateState { copy(groupingMode = event.mode) }
+                applyFilters()
+            }
+            is HistoryEvent.OnRecordClicked -> {
+                launchEffect(HistoryEffect.NavigateToDetail(event.record.record.id))
+            }
+        }
+    }
+
+    private fun checkSubscription() {
+        isUserPremiumUseCase(IsUserPremiumUseCase.Input)
+            .onEach { output ->
+                if (output is IsUserPremiumUseCase.Output.Success) {
+                    updateState { copy(isPremium = output.isPremium) }
+                }
+            }
+            .launchIn(viewModelScope)
+    }
+
+    private fun handleUpdateRecord() {
+        val record = state.value.editingRecord ?: return
+        val newValue = state.value.editingOdometerValue.toIntOrNull() ?: return
+        val label = state.value.editingLabel.takeIf { it.isNotBlank() }
+        val fuelAmount = state.value.editingFuel.toDoubleOrNull()
+
+        val updatedRecord = record.copy(
+            odometerValue = newValue,
+            label = label,
+            fuelAmount = fuelAmount
+        )
+
+        updateOdometerRecordUseCase(UpdateOdometerRecordUseCase.Input(updatedRecord))
+            .onEach { output ->
+                when (output) {
+                    is UpdateOdometerRecordUseCase.Output.Progress -> updateState { copy(isEditing = true) }
+                    is UpdateOdometerRecordUseCase.Output.Success -> {
+                        if (fuelAmount != null) {
+                            analytics.track(AnalyticsEvent.Custom("fuel_entry_added", mapOf("amount" to fuelAmount)))
+                        }
+                        updateState { copy(isEditing = false, editingRecord = null) }
+                    }
+                    is UpdateOdometerRecordUseCase.Output.Failure -> {
+                        updateState {
+                            copy(
+                                isEditing = false,
+                                error = TextProvider.Resource(R.string.history_register_error)
+                            )
+                        }
+                    }
+                }
+            }
+            .launchIn(viewModelScope)
+    }
+
+    private fun loadHistory(forceRefresh: Boolean) {
+        getHistoryUseCase(GetHistoryUseCase.Input(forceRefresh = forceRefresh))
+            .onEach { output ->
+                when (output) {
+                    is GetHistoryUseCase.Output.Progress -> {
+                        if (state.value.filteredGroups.isEmpty()) {
+                            updateState { copy(isLoading = true) }
+                        }
+                        if (forceRefresh) {
+                            updateState { copy(isRefreshing = true) }
+                        }
+                    }
+
+                    is GetHistoryUseCase.Output.Success -> {
+                        updateState {
+                            copy(
+                                isLoading = false,
+                                isRefreshing = false,
+                                initialRecord = output.initialRecord,
+                                allRecords = output.allRecords,
+                                totalKms = output.totalKms,
+                                totalRecordsCount = output.totalRecordsCount
+                            )
+                        }
+                        applyFilters()
+                    }
+
+                    is GetHistoryUseCase.Output.Failure -> {
+                        updateState {
+                            copy(
+                                isLoading = false,
+                                isRefreshing = false,
+                                error = TextProvider.Resource(R.string.history_load_error)
+                            )
+                        }
+                    }
+                }
+            }
+            .launchIn(viewModelScope)
+    }
+
+    private fun applyFilters() {
+        viewModelScope.launch(dispatchers.default) {
+            val currentState = state.value
+            val filteredList = if (currentState.searchQuery.isBlank()) {
+                currentState.allRecords
+            } else {
+                currentState.allRecords.filter { 
+                    it.record.label?.contains(currentState.searchQuery, ignoreCase = true) == true 
+                }
+            }
+
+            val grouped = filteredList.groupBy { item ->
+                val date = Date(item.record.timestamp)
+                when (currentState.groupingMode) {
+                    HistoryGroupingMode.DAY -> {
+                        SimpleDateFormat("dd MMMM yyyy", Locale.getDefault()).format(date)
+                    }
+                    HistoryGroupingMode.MONTH -> {
+                        SimpleDateFormat("MMMM yyyy", Locale.getDefault()).format(date).replaceFirstChar { it.uppercase() }
+                    }
+                    HistoryGroupingMode.YEAR -> {
+                        SimpleDateFormat("yyyy", Locale.getDefault()).format(date)
+                    }
+                }
+            }
+
+            updateState { copy(filteredGroups = grouped) }
+        }
+    }
+
+    private fun handleToggleMonthCollapse(monthYear: String) {
+        updateState {
+            val newCollapsed = if (collapsedMonths.contains(monthYear)) {
+                collapsedMonths - monthYear
+            } else {
+                collapsedMonths + monthYear
+            }
+            copy(collapsedMonths = newCollapsed)
+        }
+    }
+
+    private fun handleDeleteRecords(records: List<OdometerRecord>) {
+        records.forEach { record ->
+            deleteOdometerRecordUseCase(DeleteOdometerRecordUseCase.Input(record))
+                .onEach { output ->
+                    when (output) {
+                        is DeleteOdometerRecordUseCase.Output.Progress -> Unit
+                        is DeleteOdometerRecordUseCase.Output.Success -> Unit
+                        is DeleteOdometerRecordUseCase.Output.Failure -> {
+                            updateState {
+                                copy(
+                                    error = TextProvider.Resource(R.string.history_register_error)
+                                )
+                            }
+                        }
+                    }
+                }
+                .launchIn(viewModelScope)
+        }
+    }
+}

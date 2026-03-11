@@ -1,34 +1,80 @@
-# SafeKm 🚗💨
-**"Toma el control de tu renting, kilómetro a kilómetro."**
+# KiloMenos 🚗💨
+**"Intelligent Mileage Management for Renting and Leasing"**
 
-## 📌 El Problema
-El auge de los contratos de renting y leasing ha traído consigo una preocupación constante para los conductores: **el miedo a superar el límite de kilómetros contratados**. Una desviación mínima puede traducirse en penalizaciones económicas significativas al finalizar el contrato, lo que genera ansiedad y falta de libertad al usar el vehículo.
+KiloMenos transforms the complexity of renting contracts into absolute financial control. Forget about excess mileage penalties and optimize your investment with a technical assistant that understands your lifestyle.
 
-## 💡 La Solución
-**SafeKm** es la herramienta definitiva de gestión para conductores de renting. No es solo un contador de kilómetros; es un asistente inteligente que calcula tu "presupuesto" diario de conducción. Al acumular los kilómetros de los días que no usas el coche, SafeKm te ofrece un **saldo real** que te permite saber exactamente cuánto puedes conducir hoy sin penalizaciones futuras.
+---
 
-## ✨ Propuesta de Valor
-*   **Tranquilidad Mental:** Olvídate de hacer cálculos mentales complejos o de llevar hojas de Excel.
-*   **Ahorro Económico:** Evita pagos extra por exceso de kilometraje mediante un control preventivo.
-*   **Optimización del Contrato:** Aprovecha al máximo los kilómetros que ya has pagado, redistribuyéndolos según tus necesidades reales.
+## 📈 Business Value: Control in Your Hands
 
-## 🎯 Público Objetivo
-1.  **Particulares con Renting:** Personas que usan su vehículo para el día a día y ocio.
-2.  **Autónomos y Empresas:** Profesionales que necesitan un control riguroso de sus flotas para evitar desviaciones presupuestarias.
+In the renting ecosystem, lack of information is costly. KiloMenos directly addresses the three pain points of the modern driver:
 
-## 🚀 Core Features (MVP)
-*   **Configuración del Contrato:** Ingreso sencillo de fecha de inicio, duración (meses) y kilómetros totales contratados.
-*   **Actualización de Odómetro:** Registro rápido de la lectura actual del cuentakilómetros.
-*   **Algoritmo de Saldo:** Cálculo dinámico del "saldo a favor" o "en contra".
-*   **Dashboard Visual:** Interfaz intuitiva con indicadores de color:
-    *   🟢 **Verde:** Estás por debajo del límite teórico (Saldo positivo).
-    *   🔴 **Rojo:** Has superado el límite proporcional (Saldo negativo).
-*   **Proyección:** Estimación de kilómetros restantes por día/mes hasta el fin del contrato.
+1.  **Elimination of Penalties:** Through preventive monitoring, we avoid unexpected bills at the end of the contract.
+2.  **Asset Optimization:** Maximize the use of the kilometers you've already paid for. If you don't drive today, your kilometers are saved for your vacation.
+3.  **Fleet Management:** Manage multiple vehicles independently (Premium) or your daily driver (Free).
 
-## 💰 Modelo de Monetización
-*   **Freemium:** Uso gratuito para un vehículo con anuncios no intrusivos.
-*   **Versión Pro (Suscripción/Pago Único):**
-    *   Gestión de múltiples vehículos (ideal para familias o pequeñas flotas).
-    *   Exportación de informes en PDF/CSV.
-    *   Sin publicidad.
-    *   Alertas personalizadas al llegar a ciertos hitos de kilometraje.
+---
+
+## 🔄 Functional Flows and User Experience
+
+### 1. Multi-Vehicle Configuration
+Define limits for one or several contracts. The app maintains independent histories for each vehicle.
+
+### 2. Assisted GPS Tracking 🛰️🕹️
+Register your trips in real-time with high precision. Use the "Co-Pilot" mode to track your kilometers via GPS without manual typing. The app follows an **incremental model**: you only need to register the kilometers of your trip, and KiloMenos automatically updates your total balance.
+
+### 3. Resilience and Offline-First 📡
+KiloMenos is designed to work anywhere. Your data is always saved locally first and automatically synchronized with the cloud using **WorkManager** as soon as a network connection is detected.
+
+### 4. Professional Analytics 📊
+Interactive charts with legends and contextual help to understand your consumption patterns at a glance.
+
+---
+
+## 💎 Product Strategy: Freemium Model
+
+KiloMenos follows a **Local-First** priority to ensure maximum privacy and offline reliability.
+
+### 🌟 Core Experience (Free)
+*   🚗 **Single Vehicle**: Track your main renting contract with full precision.
+*   💾 **Local-Only Storage**: Your mileage data is persisted in a Room database.
+*   🛰️ **Manual GPS Tracking**: High-precision trip logging (Asisted Co-Pilot).
+*   📺 **Discreet Ads**: Non-intrusive banner ads powered by **Google AdMob**.
+*   📊 **Basic Analytics**: Real-time balance and daily limit calculations.
+*   📤 **Fair-Use Export**: Export your data to CSV (Excel) for personal records.
+
+### 👑 Premium Services (Remote)
+*   💳 **Native Subscription**: Seamless upgrade via **Google Play Billing**.
+*   ☁️ **Cloud Sync**: Securely backup and sync your mileage data across multiple devices.
+*   🚜 **Fleet Mode**: Manage an unlimited number of vehicles and contracts simultaneously.
+*   📥 **Data Portability**: Full JSON backup and restoration capabilities.
+*   🤖 **Advanced Projections**: Predictive financial impact analysis based on usage trends.
+
+---
+
+## ⚖️ Ethics and Compliance (EU Standards)
+
+KiloMenos is built with the highest European standards:
+*   🛡️ **GDPR Compliant**: Full "Right to be Forgotten" with permanent account and data deletion from the app.
+*   ⚖️ **Transparency**: Integrated privacy policy and terms of service in Login/Signup and Profile.
+*   🛡️ **Consent Management**: Granular privacy controls via UMP SDK.
+*   ♿ **Accessibility (EAA)**: Optimized for TalkBack and inclusive interaction, following the European Accessibility Act standards.
+
+---
+
+## 🏗️ Reliability Guarantee: Clean Architecture & MVI
+
+*   **Clean Architecture (Domain-Driven):** Isolated business logic ensures 100% calculation accuracy.
+*   **Relational Persistence (Room v3):** Robust data integrity with versioned migrations and String-based IDs.
+*   **MVI (Model-View-Intent):** Unidirectional data flow for a predictable and synchronized UI.
+*   **Background Sync**: Intelligent background processing with WorkManager and ID consistency logic.
+
+---
+
+## 🛠️ Tech Stack
+*   **UI:** Jetpack Compose (Material 3).
+*   **DI:** Dagger Hilt.
+*   **Network:** Retrofit + OkHttp with JWT auth and segregated public/private channels.
+*   **Async:** Kotlin Coroutines & Flow.
+*   **Monetization:** Google Play Billing & AdMob.
+*   **Infrastructure:** buildSrc for environment-based configuration.

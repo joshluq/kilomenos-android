@@ -1,0 +1,19 @@
+# KiloMenos - Test Case: Flow A (Firebase App Testing Agent)
+tests:
+  - displayName: "Flow A: Registro de Nuevo Usuario"
+    steps:
+      - goal: "Navegar a la pantalla de registro desde el Login."
+        hint: "Busca y pulsa el botón '¿Eres nuevo conductor? Crea una cuenta'."
+        finalScreenAssertion: "Debo ver el formulario de Registro con el campo 'Nombre y apellidos'."
+
+      - goal: "Rellenar el formulario de alta."
+        hint: "Escribe un nombre (ej: Robot Tester), un email válido (ej: robot@kilomenos.com) y una contraseña segura (ej: Secure@123)."
+        finalScreenAssertion: "El botón 'Registrarse' debe habilitarse."
+
+      - goal: "Completar el registro."
+        hint: "Pulsa en 'Registrarse'."
+        finalScreenAssertion: "Debo ver la oferta de KiloMenos Premium o el Dashboard directamente si el alta fue exitosa."
+
+      - goal: "Aceptar términos y privacidad."
+        hint: "Verifica que el enlace de Política de Privacidad es visible y pulsable antes de registrarte."
+        finalScreenAssertion: "La navegación debe ser fluida hacia el final del funnel de registro."

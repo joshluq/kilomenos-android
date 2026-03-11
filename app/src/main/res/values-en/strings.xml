@@ -1,0 +1,274 @@
+<resources>
+    <string name="app_name">KiloMenos</string>
+<!--    Dashboard-->
+    <string name="dashboard_item_home">Home</string>
+    <string name="dashboard_item_history">History</string>
+    <string name="dashboard_item_projection">Projections</string>
+    <string name="dashboard_item_profile">Profile</string>
+    <string name="profile_title">Profile</string>
+    <string name="profile_renting_option">My Renting</string>
+    <string name="profile_vehicles_option">My Vehicles</string>
+    <string name="profile_preferences_option">Preferences</string>
+    <string name="profile_logout_button">Logout</string>
+    <string name="profile_logout_confirmation_title">Logout</string>
+    <string name="profile_logout_confirmation_message_free">Your data will remain on this device when you log out. However, if another driver logs in on this phone, they will be asked to delete your local information to avoid conflicts.</string>
+    <string name="profile_logout_confirmation_message_premium">Are you sure you want to log out? Your data is safe in the cloud.</string>
+    <string name="profile_logout_confirm">Logout</string>
+    <string name="profile_logout_cancel">Cancel</string>
+
+    <string name="premium_paywall_title">KiloMenos Premium</string>
+    <string name="premium_paywall_subtitle">Optimize your investment with advanced management tools</string>
+    <string name="premium_benefit_sync_title">Total Synchronization</string>
+    <string name="premium_benefit_sync_desc">Automatic cloud backup and access from multiple devices.</string>
+    <string name="premium_benefit_fleet_title">Fleet Mode</string>
+    <string name="premium_benefit_fleet_desc">Manage as many vehicles and contracts as you need without limits.</string>
+    <string name="premium_benefit_reports_title">Professional Reports</string>
+    <string name="premium_benefit_reports_desc">Full export and reports ready for your renting company.</string>
+    <string name="premium_benefit_roadmap_title">Roadmap</string>
+    <string name="premium_benefit_roadmap_desc">Priority access to OCR reading and smart GPS tracking.</string>
+    <string name="premium_upgrade_button">Upgrade to Premium now</string>
+    <string name="premium_continue_free">Continue with free version</string>
+
+    <string name="profile_subscription_free">Free Account</string>
+    <string name="profile_subscription_premium">Premium Account</string>
+    <string name="profile_sync_disabled">Sync: Local Only</string>
+    <string name="profile_sync_enabled">Sync: Active</string>
+    <string name="profile_upgrade_button">Upgrade to\nPremium</string>
+    <string name="profile_upgrade_benefit">Your data is safe in the cloud.</string>
+    <string name="profile_upgrade_coming_soon">Coming Soon!</string>
+
+    <string name="premium_limit_vehicle_title">Vehicle Limit</string>
+    <string name="premium_limit_vehicle_message">The free version allows you to manage one vehicle. Upgrade to Premium to manage your entire fleet in the cloud.</string>
+    <string name="premium_limit_data_title">Premium Feature</string>
+    <string name="premium_limit_data_message">Full backup and data restoration are exclusive features of KiloMenos Premium.</string>
+    <string name="premium_upgrade_confirm">Learn More</string>
+    <string name="premium_upgrade_cancel">Not now</string>
+
+<!--    Vehicles List -->
+    <string name="vehicles_title">My Vehicles</string>
+    <string name="vehicles_add_button">Add Vehicle</string>
+    <string name="vehicles_selected_tag">ACTIVE</string>
+    <string name="vehicles_delete_confirmation_title">Delete Vehicle</string>
+    <string name="vehicles_delete_confirmation_message">All records associated with this vehicle will be deleted. Do you want to continue?</string>
+    <string name="vehicles_delete_confirm">Delete</string>
+    <string name="vehicles_delete_cancel">Cancel</string>
+    <string name="vehicles_empty_title">Your fleet starts here</string>
+    <string name="vehicles_empty_description">You haven\'t registered any vehicles yet. Set up your first contract to start taking control of your mileage.</string>
+
+<!--    Data Management -->
+    <string name="profile_data_management_title">DATA MANAGEMENT</string>
+    <string name="profile_data_management_option">Data management</string>
+    <string name="profile_export_data_option">Export data</string>
+    <string name="profile_import_data_option">Import backup</string>
+    <string name="profile_export_format_title">Choose export format</string>
+    <string name="profile_export_json_desc">Full backup to restore on another device.</string>
+    <string name="profile_export_csv_desc">List of records for Excel or Google Sheets.</string>
+    <string name="profile_import_json_desc">Select a .json file to restore your data.</string>
+    <string name="profile_import_csv_desc">Import records from a spreadsheet.</string>
+    <string name="profile_export_success">Data exported successfully.</string>
+    <string name="profile_import_success">Data imported successfully.</string>
+    <string name="profile_data_error">Error processing data.</string>
+
+<!--    Overview-->
+    <string name="overview_empty_state_title">Start tracking your mileage</string>
+    <string name="overview_empty_state_description">Set up your first renting contract to monitor your balance and optimize your investment.</string>
+    <string name="overview_kilometer_balance">Kilometer Balance</string>
+    <string name="overview_daily_limit">Ideal daily limit</string>
+    <string name="overview_monthly_limit">Ideal monthly limit</string>
+    <string name="overview_total_kms_driven">Total distance</string>
+    <string name="overview_ideal_limits_title">IDEAL LIMITS (CONTRACT)</string>
+    <string name="overview_usage_comparison_title">USAGE COMPARISON</string>
+    <string name="overview_monthly_usage_title">MONTHLY USAGE</string>
+    <string name="overview_no_data_available">No enough data</string>
+    <string name="overview_difference_label">Difference</string>
+    <string name="overview_time_used_label">Time\nUsed</string>
+    <string name="overview_kms_used_label">Kms\nUsed</string>
+    <string name="overview_update_odometer_title">Register Kilometers</string>
+    <string name="overview_current_odometer_label">Kilometers traveled</string>
+    <string name="overview_current_odometer_placeholder">e.g. 25</string>
+    <string name="overview_record_date_label">Record date</string>
+    <string name="overview_save_record_button">Save Record</string>
+    <string name="overview_record_label_label">Category (e.g. Trip)</string>
+    <string name="overview_record_label_placeholder">Optional</string>
+    <string name="overview_record_fuel_label">Fuel consumed (L)</string>
+    <string name="overview_record_fuel_placeholder">Optional</string>
+    <string name="overview_register_renting_button">Register my Renting</string>
+
+<!--    Chart Info -->
+    <string name="overview_chart_info_title">Chart Help</string>
+    <string name="overview_chart_comparison_info">This chart compares the time elapsed in your contract versus the kilometers you have already consumed.\n\n• If the blue circle is larger than the grey one, you have spent a higher percentage of kilometers than time (Be careful!).\n\n• The difference (%) tells you how much margin you have relative to your temporal budget.</string>
+    <string name="overview_chart_monthly_info">Shows your actual kilometer consumption versus the ideal budget for each month.\n\n• Blue Bar: Your actual kilometers.\n\n• Grey Bar: The theoretical monthly budget.\n\n• Horizontal Line: The maximum limit to avoid overspending.</string>
+    <string name="overview_chart_legend_kms">Kms used</string>
+    <string name="overview_chart_legend_time">Time elapsed</string>
+    <string name="overview_chart_legend_actual">Actual Usage</string>
+    <string name="overview_chart_legend_budget">Budget</string>
+
+<!--    onboarding-->
+    <string name="onboarding_title">Configure your Renting</string>
+    <string name="onboarding_title_alternative">Renting Information</string>
+    <string name="onboarding_vehicle_name_label">Vehicle name</string>
+    <string name="onboarding_vehicle_name_placeholder">e.g. My Toyota Corolla</string>
+    <string name="onboarding_start_date_label">Start date</string>
+    <string name="onboarding_start_date_placeholder">e.g. 12/05/2023</string>
+    <string name="onboarding_duration_months_label">Duration in months</string>
+    <string name="onboarding_duration_months_placeholder">e.g. 6</string>
+    <string name="onboarding_months_suffix">months</string>
+    <string name="onboarding_total_kms_label">Total included</string>
+    <string name="onboarding_total_kms_placeholder">e.g. 45000</string>
+    <string name="onboarding_km_suffix">Km</string>
+    <string name="onboarding_start_odometer_label">Initial odometer at signing</string>
+    <string name="onboarding_start_odometer_placeholder">e.g. 0 (if it was new)</string>
+    <string name="onboarding_current_odometer_label">Odometer today</string>
+    <string name="onboarding_current_odometer_placeholder">e.g. 15000</string>
+    <string name="onboarding_save_button">Save Configuration</string>
+    <string name="onboarding_date_picker_confirm">Accept</string>
+    <string name="onboarding_date_picker_cancel">Cancel</string>
+    <string name="onboarding_vehicle_name_feedback">Name is required</string>
+    <string name="onboarding_number_feedback">Must be greater than 0</string>
+    <string name="onboarding_current_odometer_feedback">Current odometer must be equal to or greater than the initial</string>
+    <string name="onboarding_date_feedback">Date required</string>
+    <string name="onboarding_change_photo">Change photo</string>
+    <string name="onboarding_photo_label">Vehicle photo</string>
+    <string name="onboarding_register_error">An error occurred while registering the renting. Please try again.</string>
+    <string name="onboarding_saving_button">Saving&#8230;</string>
+
+<!--    History -->
+    <string name="history_empty_state_title">No monthly records</string>
+    <string name="history_empty_state_description">Update your odometer periodically to visualize your contract\'s evolution here.</string>
+    <string name="history_register_error">Could not delete record</string>
+    <string name="history_load_error">Could not synchronize history</string>
+    <string name="history_initial_kms_label">Initial Kilometers</string>
+    <string name="history_total_kms_label">Total Kms. Registered</string>
+    <string name="history_records_count_label">%1$d records made so far</string>
+    <string name="history_detail_action">Detail</string>
+    <string name="history_edit_action">Edit</string>
+    <string name="history_edit_title">Edit Record</string>
+    <string name="history_edit_save">Save Changes</string>
+    <string name="history_delete_action">Delete</string>
+    <string name="history_close_button">Close</string>
+    <string name="history_daily_records_title">Records from %1$s</string>
+    <string name="history_expand_desc">Expand</string>
+    <string name="history_collapse_desc">Collapse</string>
+    <string name="history_delete_desc">Delete</string>
+    <string name="history_no_history_yet">No history yet</string>
+
+    <string name="history_detail_time_label">Time</string>
+    <string name="history_detail_consumption_title">ESTIMATED CONSUMPTION</string>
+
+<!--    Tracking Card -->
+    <string name="tracking_card_status_pending">Detecting driving&#8230;</string>
+    <string name="tracking_card_status_recording">Active trip</string>
+    <string name="tracking_card_distance_label">Distance</string>
+    <string name="tracking_card_time_label">Time</string>
+    <string name="tracking_card_stop_button">Stop</string>
+    <string name="tracking_card_start_button">Confirm Start</string>
+    <string name="tracking_card_active_mode">CO-PILOT MODE</string>
+    <string name="tracking_card_idle_mode">TRIP ASSISTANT</string>
+    <string name="tracking_card_kms_label">KILOMETERS TRAVELED</string>
+    <string name="tracking_card_save_action">SAVE</string>
+    <string name="tracking_card_cancel_action">CANCEL</string>
+    <string name="tracking_card_start_action">START</string>
+    <string name="tracking_card_stop_action">STOP TRIP</string>
+    <string name="tracking_channel_name">Trip Tracking</string>
+    <string name="tracking_notification_title">KiloMenos Tracking</string>
+    <string name="tracking_notification_content">Trip in progress: %1$.2f km</string>
+
+<!--    Projection Card -->
+    <string name="projection_card_title">FINAL PROJECTION</string>
+    <string name="projection_card_expected_balance">Estimated final balance</string>
+    <string name="projection_card_projected_total">Total at delivery</string>
+    <string name="projection_card_daily_average">Actual daily average</string>
+    <string name="projection_card_not_enough_data">Calculating projection (missing %1$d days of data)&#8230;</string>
+    <string name="projection_card_status_safe">You\'re on track. You would have %1$d km left.</string>
+    <string name="projection_card_status_over">⚠️ You will exceed your limit by %1$d km.</string>
+
+<!--    Projection Analysis -->
+    <string name="projection_analysis_financial_impact_title">FINANCIAL IMPACT</string>
+    <string name="projection_analysis_penalty_price_label">Penalty price per extra KM</string>
+    <string name="projection_analysis_estimated_penalty">Estimated penalty</string>
+    <string name="projection_analysis_simulator_title">"WHAT IF…" SIMULATOR</string>
+    <string name="projection_analysis_simulator_desc">Adjust your future daily average to see the impact:</string>
+    <string name="projection_analysis_simulated_balance">Projected balance</string>
+    <string name="projection_analysis_daily_km_slider">%1$d km/day</string>
+    <string name="projection_analysis_timeline_exhaustion">You will exhaust your KM on:</string>
+    <string name="projection_analysis_timeline_safe">Contract covered until the end.</string>
+
+<!--    Projection Advisory & Planner -->
+    <string name="projection_advisory_title">ADVISORY</string>
+    <string name="projection_advisory_safe">Keep your current pace. You are in the safe zone.</string>
+    <string name="projection_advisory_action">To avoid a penalty, adjust your usage to %1$d km/day.</string>
+    <string name="projection_planner_title">TRIP PLANNER</string>
+    <string name="projection_planner_desc">Simulate a long trip (e.g. holidays):</string>
+    <string name="projection_planner_add_trip">Add trip (+%1$d km)</string>
+    <string name="projection_planner_impact_warning">⚠️ This trip will take you out of the safe zone.</string>
+    <string name="projection_planner_impact_safe">Manageable trip within budget.</string>
+
+    <string name="common_brand_kilo">Kilo</string>
+    <string name="common_brand_menos">Menos</string>
+
+<!--    Login -->
+    <string name="login_subtitle">Your command center for efficient driving</string>
+    <string name="login_email_label">Corporate or personal email</string>
+    <string name="login_email_placeholder">example@email.com</string>
+    <string name="login_email_error">Invalid email format</string>
+    <string name="login_password_error">Password must be at least 8 characters, and include at least one uppercase letter, one lowercase letter, one number, and one special character.</string>
+    <string name="login_password_label">Access password</string>
+    <string name="login_button">Access my Fleet</string>
+    <string name="login_create_account">New driver? Create an account</string>
+    <string name="login_conflict_title">Another driver detected</string>
+    <string name="login_conflict_message">This device contains data from another driver. To start your session, the previous information must be deleted.</string>
+    <string name="login_conflict_confirm">Delete and continue</string>
+
+    <string name="error_invalid_credentials">The email or password is incorrect.</string>
+    <string name="error_user_already_registered">This email address is already registered.</string>
+    <string name="error_weak_password">Password must be at least 8 characters, including uppercase, lowercase, numbers, and a special character.</string>
+    <string name="error_invalid_email">The email format is not valid.</string>
+    <string name="error_network">Could not connect to the server. Please check your connection.</string>
+    <string name="error_server">Server error (%1$d). Please try again later.</string>
+    <string name="error_unknown">An unexpected error occurred. Please try again.</string>
+
+    <string name="signup_title">Driver Registration</string>
+    <string name="signup_subtitle">Join the community of efficient drivers</string>
+    <string name="signup_name_label">Full name</string>
+    <string name="signup_name_placeholder">e.g. John Doe</string>
+    <string name="signup_button">Sign Up</string>
+    <string name="signup_success_title">Registration successful!</string>
+    <string name="signup_success_message">Please check your email to confirm your account before signing in.</string>
+
+    <string name="common_km_suffix">%1$d km</string>
+    <string name="common_km_positive_suffix">+ %1$d km</string>
+    <string name="common_km_negative_suffix">- %1$d km</string>
+    <string name="common_ratio_label">%1$s/%2$s</string>
+    <string name="common_percentage_format">%.1f%%</string>
+
+<!--    Preferences -->
+    <string name="preferences_account_settings_title">ACCOUNT SETTINGS</string>
+    <string name="preferences_remember_email_label">Remember email</string>
+    <string name="preferences_remember_email_desc">Automatically pre-fill your email on the login screen.</string>
+    <string name="preferences_projection_banner_label">Projection Alerts</string>
+    <string name="preferences_projection_banner_desc">Show a notification on the home screen about your contract\'s estimated final status.</string>
+
+<!--    Privacy & Legal (GDPR) -->
+    <string name="profile_privacy_section">PRIVACY &amp; DATA</string>
+    <string name="profile_privacy_policy">Privacy Policy</string>
+    <string name="profile_terms_conditions">Terms and Conditions</string>
+    <string name="profile_delete_account">Delete my account</string>
+    <string name="profile_delete_account_confirmation_title">Permanently delete account?</string>
+    <string name="profile_delete_account_confirmation_message">This action cannot be undone. All your vehicles, mileage records, and profile data will be deleted from both this device and the cloud.</string>
+    <string name="profile_delete_account_confirm">Delete forever</string>
+    <string name="profile_delete_account_error">Could not delete account. Please try again.</string>
+    <string name="signup_privacy_agreement">By signing up, you agree to our %1$s and %2$s.</string>
+    <string name="login_privacy_agreement">By logging in, you confirm you have read our %1$s and %2$s.</string>
+
+<!--    Accessibility (EAA) -->
+    <string name="acc_back">Back</string>
+    <string name="acc_add_vehicle">Add vehicle</string>
+    <string name="acc_edit_contract">Edit contract</string>
+    <string name="acc_delete_vehicle">Delete vehicle</string>
+    <string name="acc_vehicle_info">Vehicle information</string>
+    <string name="acc_open_menu">Open menu</string>
+    <string name="acc_chart_help">Chart help</string>
+    <string name="acc_sync_pending">Sync pending</string>
+    <string name="acc_close">Close</string>
+
+</resources>

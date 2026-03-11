@@ -1,52 +1,69 @@
-# AGENTS.md - SafeKm Architecture & Guidelines 🚗
+# AGENTS.md - KiloMenos Architecture & Guidelines 🚗
 
 ## 1. Objective
-El objetivo de **SafeKm** es proporcionar una herramienta de alta calidad para conductores de renting o leasing, permitiéndoles gestionar su consumo de kilometraje de forma diaria y acumulada. La app elimina la incertidumbre sobre las penalizaciones por exceso de kilómetros mediante un cálculo dinámico de "saldo".
+The goal of **KiloMenos** is to provide a high-quality tool for renting or leasing drivers, allowing them to manage **multiple** mileage consumption contracts daily and cumulatively. The app eliminates uncertainty regarding excess mileage penalties through a dynamic "balance" calculation per vehicle.
 
 ## 2. Architecture
-El proyecto sigue una arquitectura de **Clean Architecture** dentro de un único módulo (`:app`). Se prioriza la legibilidad, la testabilidad y el mantenimiento siguiendo los principios SOLID.
+The project follows **Clean Architecture** and **Domain-Driven Design (DDD)** principles within a single module (`:app`). Priority is given to readability, testability, and strict isolation of business rules.
 
 ### Layers:
-- **`data/`**: Implementaciones de repositorios, fuentes de datos (Room/DataStore) y mappers.
-- **`domain/`**: Contiene la lógica de negocio pura.
-    - `model/`: Entidades de negocio y Value Objects.
-    - `usecase/`: Casos de uso que encapsulan la lógica de negocio ejecutable (ej. `GetCurrentBalanceUseCase`).
-    - `repository/`: Definiciones de contratos de datos (interfaces).
-- **`ui/`**: Implementación de la interfaz de usuario con Jetpack Compose.
-    - Sigue el patrón **MVI (Model-View-Intent)** para una gestión de estado predecible (`State`, `Event`, `Effect`).
-    - Organizado por features (ej. `dashboard/`, `contract/`).
-- **`di/`**: Módulos Hilt para la inyección de dependencias.
-- **`designsystem/`**: Componentes de UI reutilizables y tokens de diseño (colores, tipografía).
+- **`buildSrc/`**: Kotlin DSL for centralized dependency and environment-based configuration (API URLs, Legal T&C, AdMob IDs, Billing SKUs).
+- **`data/`**: Repository implementations, data sources (Room DAOs and Entities), and mappers.
+- **`domain/`**: Pure business logic. **Strict rule: Zero Android dependencies.**
+- **`ui/`**: User interface with Jetpack Compose using the **MVI (Model-View-Intent)** pattern.
+- **`di/`**: Hilt modules for dependency injection.
+- **`designsystem/`**: Reusable components via **CanvasKit**.
 
-## 3. Business Logic (El Algoritmo SafeKm)
-El núcleo de la aplicación debe implementar estrictamente estos cálculos en la capa `Domain`:
+## 3. Business Logic (The KiloMenos Algorithm)
+KiloMenos uses an **Additive Data Model**. Instead of storing absolute odometer snapshots, each `OdometerRecord` represents an **increment** (a specific trip or daily distance).
 
-1.  **Presupuesto Diario Base (PDB):** `Km Totales / Días Totales del Contrato`.
-2.  **Kilómetros Teóricos (KT):** `Días Transcurridos * PDB`.
-3.  **Saldo Actualizado (SA):** `KT - Kilómetros Reales`. 
-    *   *Positivo:* Ahorro (Verde). *Negativo:* Exceso (Rojo).
+### Core Calculations:
+1.  **Daily Base Budget (DBB):** `Total Km / Total Contract Days`.
+2.  **Real Km Consumed (RKC):** Sum of all `odometerValue` in the history (excluding the initial record).
+3.  **Theoretical Km (TK):** `Days Elapsed * DBB`.
+4.  **Updated Balance (UB):** `TK - RKC`.
+5.  **Current Odometer:** `Initial Odometer + RKC`.
 
 ## 4. Tech Stack
-- **Language**: Kotlin 2.0+ (K2 Compiler ready).
-- **Build System**: Gradle Kotlin DSL con Version Catalogs.
-- **UI Framework**: Jetpack Compose con Material 3.
-- **Dependency Injection**: Hilt (Dagger).
-- **Asynchrony & Reactivity**: Kotlin Coroutines y Flow.
-- **Architecture**: Pure MVI (Model-View-Intent).
-- **Foundation & Infrastructure (Pluginkit)**:
-    - **FoundationKit**: Abstracciones de `UseCase`, `DispatcherProvider` y utilidades core.
-    - **Pluginkit Navigation**: Navegación de Compose type-safe.
-    - **Pluginkit Quality**: Análisis estático y estándares de código (Linting).
-- **Persistence**: Room para el histórico de lecturas y DataStore para preferencias rápidas.
+- **UI Framework**: Jetpack Compose + Material 3.
+- **Dependency Injection**: Dagger Hilt.
+- **Asynchrony**: Kotlin Coroutines & Flow (via `DispatcherProvider`).
+- **Persistence**: Room (Relational model with String-based IDs (v8) for Cloud compatibility).
+- **Background Sync**: WorkManager for reliable offline-to-online data promotion.
+- **Location Services**: Fused Location Provider with Foreground Services for persistent trip tracking.
 
-## 5. Design Patterns and SOLID
-- **SRP (Single Responsibility)**: Cada clase tiene una única responsabilidad.
-- **DIP (Dependency Inversion)**: Las capas de UI y Data dependen de abstracciones definidas en Domain.
-- **Repository Pattern**: Desacoplamiento de las fuentes de datos.
-- **Stateless UI**: Separación clara entre `Root` composables (con ViewModel) y `Screen` composables (representación pura).
+## 5. Coding Standards & Communication
+- **KDoc**: Technical documentation mandatory and exclusively in **English**.
+- **Main-Safety**: Repositories are responsible for threading (using `dispatchers.io`). High-performance UI logic (filters, groupings) must use `dispatchers.default`.
+- **Domain Purity**: No platform-specific types (e.g., Context) in the domain layer.
+- **RGPD Compliance**: Explicit "Delete Account" flows to wipe both local and remote data (Auth, DB, and Preferences).
+- **Accessibility**: Mandatory `contentDescription` for all interactive elements to comply with EAA standards.
 
-## 6. Best Practices
-- **KDoc**: Documentación obligatoria en componentes críticos y lógica del algoritmo.
-- **Immutability**: Uso de `data class` inmutables para UI State y modelos de dominio.
-- **Visual Feedback**: Uso de colores semánticos (Verde/Rojo) para comunicar el estado del saldo de un vistazo.
-- **Testing**: Tests unitarios rigurosos para el algoritmo de cálculo en la capa de dominio.
+## 6. Product Strategy: Freemium Model 💎
+KiloMenos implements a tiered access model to balance user value and monetization:
+
+### Core Version (Free):
+- **Local-First**: Data is stored in Room; sync is disabled but state is tracked as `PENDING`.
+- **Assisted GPS Tracking**: Manual trip start/stop with distance accumulation.
+- **Single Vehicle**: Limited to one active renting contract.
+- **Ad-Supported**: Non-intrusive AdMob banners initialized after user consent.
+- **Fair-Use Export**: Only CSV format is allowed.
+
+### Premium Version (Paid):
+- **Native Billing**: Managed via Google Play Billing Library.
+- **Remote Synchronization**: Real-time cloud backup and multi-device sync.
+- **Data Promotion**: Automatic "push" of local data to the cloud upon upgrade.
+- **Fleet Management**: Unlimited vehicle contracts and active switcher.
+- **Data Portability**: Full JSON backup and restoration.
+- **Advanced Insights**: AI-driven financial projections.
+
+## 7. Technical Roadmap 🚀
+Planned and Achieved high-value implementations:
+1.  ✅ **Offline Sync**: Reliable WorkManager integration with ID Swap logic.
+2.  ✅ **Native Billing**: Fully integrated Google Play Billing flow.
+3.  ✅ **Legibility Fix**: Chart legends and interactive info dialogs.
+4.  ✅ **GDPR/EAA**: Full European regulation compliance.
+5.  ✅ **GPS Tracking (Fase 1)**: Foreground Service for manual trip recording.
+6.  📅 **Computer Vision (OCR)**: ML Kit for dashboard scanning.
+7.  📅 **Smart Tracking (Fase 2)**: Activity Recognition for automated trip detection.
+8.  📅 **Reporting Engine**: PDF generator for professional reports.

@@ -4,44 +4,78 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
-import es.joshluq.kmsafe.ui.theme.KmSafeTheme
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import dagger.hilt.android.AndroidEntryPoint
+import es.joshluq.canvaskit.foundations.theme.CanvasKitTheme
+import es.joshluq.kmsafe.ui.navigation.AppNavigation
+import es.joshluq.kmsafe.ui.util.ConsentManager
+import es.joshluq.kmsafe.ui.util.NetworkConnectivityObserver
+import es.joshluq.kmsafe.data.worker.SyncManager
+import es.joshluq.kmsafe.data.remote.billing.BillingManager
+import com.google.android.gms.ads.MobileAds
+import javax.inject.Inject
+import androidx.lifecycle.lifecycleScope
+import es.joshluq.foundationkit.log.LoggerKit
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
+import kotlin.time.Duration.Companion.milliseconds
 
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+
+    @Inject
+    lateinit var consentManager: ConsentManager
+    
+    @Inject
+    lateinit var connectivityObserver: NetworkConnectivityObserver
+    
+    @Inject
+    lateinit var syncManager: SyncManager
+
+    @Inject
+    lateinit var billingManager: BillingManager
+
+    @Inject
+    lateinit var logger: LoggerKit
+
+
     override fun onCreate(savedInstanceState: Bundle?) {
+        installSplashScreen()
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
-        setContent {
-            KmSafeTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Greeting(
-                        name = "Android",
-                        modifier = Modifier.padding(innerPadding)
-                    )
-                }
+
+        consentManager.gatherConsent(this) { canRequestAds ->
+            if (canRequestAds) {
+                MobileAds.initialize(this)
             }
         }
-    }
-}
+        
+        connectivityObserver.observe()
+            .onEach { status ->
+                logger.d("MainActivity", "Network status changed: $status")
+                if (status == NetworkConnectivityObserver.Status.Available) {
+                    // Small delay to ensure the data connection is stable
+                    delay(1000.milliseconds)
+                    logger.d("MainActivity", "Triggering background sync")
+                    syncManager.scheduleSync()
+                }
+            }
+            .launchIn(lifecycleScope)
 
-@Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
-}
-
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    KmSafeTheme {
-        Greeting("Android")
+        enableEdgeToEdge()
+        setContent {
+            CanvasKitTheme {
+                AppNavigation(
+                    onLaunchBilling = { billingManager.launchBillingFlow(this) },
+                    onShowPrivacyOptions = {
+                        consentManager.showPrivacyOptionsForm(this) { canRequestAds ->
+                            if (canRequestAds) {
+                                MobileAds.initialize(this)
+                            }
+                        }
+                    }
+                )
+            }
+        }
     }
 }

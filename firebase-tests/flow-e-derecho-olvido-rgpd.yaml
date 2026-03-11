@@ -1,0 +1,11 @@
+# KiloMenos - Test Case: Flow E (Firebase App Testing Agent)
+tests:
+  - displayName: "Flow E: Derecho al Olvido (RGPD)"
+    steps:
+      - goal: "Solicitar la eliminación permanente de la cuenta."
+        hint: "Ve a Perfil, busca la sección de PRIVACIDAD y pulsa en 'Eliminar mi cuenta'."
+        finalScreenAssertion: "Debo ver un diálogo de confirmación con advertencia de pérdida de datos."
+
+      - goal: "Confirmar el borrado total de la información."
+        hint: "Pulsa el botón 'Eliminar para siempre' en el diálogo."
+        finalScreenAssertion: "La aplicación debe cerrarse o devolverme a la pantalla de Inicio de Sesión (Login) y mostrar un mensaje de éxito."

@@ -2,4 +2,10 @@
 <resources>
 
     <style name="Theme.KmSafe" parent="android:Theme.Material.Light.NoActionBar" />
+
+    <style name="Theme.KmSafe.Splash" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_launcher_foreground</item>
+        <item name="windowSplashScreenBackground">#00214D</item>
+        <item name="postSplashScreenTheme">@style/Theme.KmSafe</item>
+    </style>
 </resources>

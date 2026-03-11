@@ -77,6 +77,9 @@ ehthumbs.db
 #
 # Archivos de registro y otros archivos que no deben ser versionados.
 # =================================================================
+# Secretos y claves de API (Obligatorio)
+secrets.properties
+
 # Registros de errores de Android Studio y JVM
 captures/
 *.log
@@ -100,3 +103,4 @@ google-services.json
 .externalNativeBuild
 .cxx
 local.properties
+/.artifacts/

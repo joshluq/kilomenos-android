@@ -41,6 +41,7 @@ dependencyResolutionManagement {
         maven { setupGithub("pluginkit-android") }
         google()
         mavenCentral()
+        maven { url = uri("https://jitpack.io") }
     }
     versionCatalogs {
         create("libs") {
@@ -49,6 +50,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "KmSafe"
+rootProject.name = "KiloMenos"
 include(":app")
- 

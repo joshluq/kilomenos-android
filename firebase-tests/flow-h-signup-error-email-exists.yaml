@@ -1,0 +1,7 @@
+# KiloMenos - Test Case: Flow H (Firebase App Testing Agent)
+tests:
+  - displayName: "Flow H: Registro - Email ya registrado"
+    steps:
+      - goal: "Intentar registrar un usuario con un email que ya está en uso."
+        hint: "Navega a Registro. Escribe un nombre y usa el email 'free@kilomenos.com'. Completa una contraseña y pulsa 'Registrarse'."
+        finalScreenAssertion: "Debo ver un mensaje de error indicando que el correo electrónico ya está registrado."
