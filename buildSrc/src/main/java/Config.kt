@@ -32,10 +32,10 @@ object AppConfig : Config {
 
         object Production : Environment {
             override val name: String = "Pro"
-            override val serverUrl: String = "https://gist.githubusercontent.com/palcalde/6c19259bd32dd6aafa327fa557859c2f/raw/ba51779474a150ee4367cda4f4ffacdcca479887/"
-            override val storageUrl: String = ""
-            override val termsUrl: String = "https://kilomenos.web.app/terms.html"
-            override val privacyUrl: String = "https://kilomenos.web.app/privacy.html"
+            override val serverUrl: String = "https://rezviycyzlhxlmhlhdfr.supabase.co/functions/v1/api/"
+            override val storageUrl: String = "https://rezviycyzlhxlmhlhdfr.supabase.co/storage/v1/object/public/vehicle-images/contratos/"
+            override val termsUrl: String = "https://kilomenos-pro.web.app/terms.html"
+            override val privacyUrl: String = "https://kilomenos-pro.web.app/privacy.html"
             override val premiumSku: String = "subscription_premium_monthly"
             override val applicationIdSuffix: String? = null
         }
