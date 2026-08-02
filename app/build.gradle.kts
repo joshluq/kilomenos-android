@@ -7,6 +7,8 @@ plugins {
     alias(libs.plugins.pluginkit.android.navigation)
     alias(libs.plugins.pluginkit.android.network)
     alias(libs.plugins.pluginkit.android.hilt)
+    alias(libs.plugins.pluginkit.android.room)
+    alias(libs.plugins.pluginkit.android.work)
     alias(libs.plugins.pluginkit.quality)
     alias(libs.plugins.pluginkit.android.testing)
     id("com.google.gms.google-services")
@@ -110,12 +112,6 @@ dependencies {
     implementation("com.google.android.libraries.identity.googleid:googleid:1.2.0")
 
     implementation("com.android.billingclient:billing-ktx:9.1.0")
-    implementation("androidx.work:work-runtime-ktx:2.11.2")
-    implementation("androidx.hilt:hilt-work:1.4.0")
-    ksp("androidx.hilt:hilt-compiler:1.4.0")
-    implementation("androidx.room:room-runtime:2.8.4")
-    implementation("androidx.room:room-ktx:2.8.4")
-    ksp("androidx.room:room-compiler:2.8.4")
 
     implementation(platform("com.google.firebase:firebase-bom:34.17.0"))
     implementation("com.google.firebase:firebase-analytics")
