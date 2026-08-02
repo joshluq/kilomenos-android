@@ -61,7 +61,8 @@
         <service
             android:name=".data.location.LocationTrackingService"
             android:foregroundServiceType="location"
-            android:exported="false" />
+            android:exported="false"
+            tools:replace="android:foregroundServiceType" />
     </application>
 
 </manifest>
