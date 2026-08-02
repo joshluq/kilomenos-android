@@ -19,6 +19,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -104,6 +105,8 @@ fun TrackingCard(
                     style = CanvasKitTheme.typography.displayMedium.copy(fontSize = 48.sp),
                     color = CanvasKitTheme.colors.textPrimary,
                     textAlign = TextAlign.Center,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
                     fontWeight = FontWeight.Black
                 )
                 Text(
@@ -204,7 +207,7 @@ fun PreviewTrackingCardConfirmation() {
     CanvasKitTheme {
         TrackingCard(
             isTracking = false,
-            distanceMeters = 540000.0,
+            distanceMeters = 900080.0,
             onStart = {},
             onStop = {},
             onConfirm = {},

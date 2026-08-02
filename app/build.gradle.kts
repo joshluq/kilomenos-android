@@ -38,6 +38,27 @@ configure<ApplicationExtension> {
         buildConfig = true
     }
 
+    signingConfigs {
+        create("release") {
+            storeFile = secrets.getProperty("RELEASE_KEYSTORE_PATH")?.let { file(it) }
+            storePassword = secrets.getProperty("RELEASE_STORE_PASSWORD")
+            keyAlias = secrets.getProperty("RELEASE_KEY_ALIAS")
+            keyPassword = secrets.getProperty("RELEASE_KEY_PASSWORD")
+        }
+    }
+
+    buildTypes {
+        release {
+            isMinifyEnabled = true
+            isShrinkResources = true
+            signingConfig = signingConfigs.getByName("release")
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
+        }
+    }
+
     flavorDimensions.add("environment")
 
     productFlavors {

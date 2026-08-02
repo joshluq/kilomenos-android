@@ -1,21 +1,53 @@
-# Add project specific ProGuard rules here.
-# You can control the set of applied configuration files using the
-# proguardFiles setting in build.gradle.
-#
-# For more details, see
-#   http://developer.android.com/guide/developing/tools/proguard.html
+# =================================================================
+# KiloMenos - ProGuard / R8 Rules 🛡️
+# =================================================================
 
-# If your project uses WebView with JS, uncomment the following
-# and specify the fully qualified class name to the JavaScript interface
-# class:
-#-keepclassmembers class fqcn.of.javascript.interface.for.webview {
-#   public *;
-#}
+# --- General Optimizations ---
+-keepattributes SourceFile,LineNumberTable,Signature,Annotation
+-renamesourcefileattribute SourceFile
 
-# Uncomment this to preserve the line number information for
-# debugging stack traces.
-#-keepattributes SourceFile,LineNumberTable
+# --- Kotlin Serialization & Coroutines ---
+-keepclassmembers class kotlinx.coroutines.** { *; }
 
-# If you keep the line number information, uncomment this to
-# hide the original source file name.
-#-renamesourcefileattribute SourceFile
+# --- Retrofit & OkHttp ---
+-keepattributes Signature
+-keepattributes *Annotation*
+-keep class retrofit2.** { *; }
+-keep class okhttp3.** { *; }
+-dontwarn retrofit2.**
+-dontwarn okhttp3.**
+
+# --- Jackson Serialization (DTOs) ---
+# We MUST keep our data models and their members to avoid JSON parsing issues.
+-keep class es.joshluq.kmsafe.data.remote.request.** { *; }
+-keep class es.joshluq.kmsafe.data.remote.response.** { *; }
+-keep class es.joshluq.kmsafe.data.remote.model.** { *; }
+-keep class es.joshluq.kmsafe.domain.model.** { *; }
+-keepclassmembers class * {
+    @com.fasterxml.jackson.annotation.JsonProperty *;
+}
+
+# --- Room Persistence ---
+-keep class es.joshluq.kmsafe.data.local.entity.** { *; }
+-keep class * extends androidx.room.RoomDatabase
+-dontwarn androidx.room.**
+
+# --- Dagger Hilt ---
+-keep class * extends androidx.lifecycle.ViewModel
+-keep class * implements dagger.hilt.internal.GeneratedComponent
+-keep class * implements dagger.hilt.internal.EntryPoint
+-keep class * extends android.app.Service
+-keep class * extends android.app.Application
+
+# --- Google Identity & Credentials ---
+-keep class com.google.android.libraries.identity.googleid.** { *; }
+-keep class androidx.credentials.** { *; }
+
+# --- AdMob ---
+-keep class com.google.android.gms.ads.** { *; }
+-keep class com.google.ads.** { *; }
+
+# --- Compose (Artisanal UI) ---
+# Compose rules are usually handled by the compiler, but we keep our foundations safe.
+-keep class es.joshluq.canvaskit.** { *; }
+-keep class es.joshluq.kmsafe.ui.** { *; }
