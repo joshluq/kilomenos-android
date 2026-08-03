@@ -293,7 +293,7 @@ private fun VehicleItem(
                     )
                 }
                 Text(
-                    text = "${vehicle.totalKms} Km · ${vehicle.durationMonths} meses",
+                    text = stringResource(R.string.vehicle_list_item_summary, vehicle.totalKms, vehicle.durationMonths),
                     style = CanvasKitTheme.typography.labelSmall,
                     color = CanvasKitTheme.colors.textSecondary
                 )

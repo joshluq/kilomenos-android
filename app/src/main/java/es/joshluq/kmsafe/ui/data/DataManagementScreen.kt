@@ -133,7 +133,7 @@ fun DataManagementScreen(
                     onClick = { onEvent(Event.OnExportClicked(ExportDataUseCase.Format.JSON)) }
                 ) {
                     DataOptionContent(
-                        title = "Exportar Backup (JSON)",
+                        title = stringResource(R.string.profile_data_management_export_json_title),
                         description = stringResource(R.string.profile_export_json_desc),
                         icon = Icons.Default.SdCard,
                         isLocked = !state.isPremium
@@ -146,7 +146,7 @@ fun DataManagementScreen(
                     onClick = { onEvent(Event.OnExportClicked(ExportDataUseCase.Format.CSV)) }
                 ) {
                     DataOptionContent(
-                        title = "Exportar para Excel (CSV)",
+                        title = stringResource(R.string.profile_data_management_export_csv_title),
                         description = stringResource(R.string.profile_export_csv_desc),
                         icon = Icons.Default.Description,
                         isLocked = false
@@ -272,7 +272,7 @@ private fun DataOptionContent(
             if (isLocked) {
                 Icon(
                     imageVector = Icons.Default.Lock,
-                    contentDescription = "Locked",
+                    contentDescription = stringResource(R.string.acc_locked),
                     tint = CanvasKitTheme.colors.textSecondary,
                     modifier = Modifier.size(20.dp)
                 )

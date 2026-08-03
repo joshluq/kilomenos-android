@@ -133,7 +133,7 @@ fun PremiumPaywallScreen(
 
                 if (state.isMigrating) {
                 Text(
-                    text = "Asegurando tus datos en la nube...",
+                    text = stringResource(R.string.premium_paywall_migrating_msg),
                     style = CanvasKitTheme.typography.labelSmall,
                     color = CanvasKitTheme.colors.brandAccent,
                     modifier = Modifier.padding(bottom = 8.dp)
@@ -146,7 +146,7 @@ fun PremiumPaywallScreen(
                     modifier = Modifier.fillMaxWidth()
                 ) { contentColor ->
                     Text(
-                        text = if (state.isLoading) "Procesando..." else stringResource(R.string.premium_upgrade_button),
+                        text = if (state.isLoading) stringResource(R.string.common_processing) else stringResource(R.string.premium_upgrade_button),
                         style = CanvasKitTheme.typography.bodyLarge,
                         fontWeight = FontWeight.Bold,
                         color = contentColor

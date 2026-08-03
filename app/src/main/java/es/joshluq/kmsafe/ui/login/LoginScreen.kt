@@ -149,7 +149,7 @@ fun LoginScreen(
                                     value = state.password,
                                     onValueChange = { onEvent(Event.OnPasswordChanged(it)) },
                                     label = stringResource(R.string.login_password_label),
-                                    placeholder = "••••••••",
+                                    placeholder = stringResource(R.string.login_password_placeholder),
                                     visualTransformation = if (state.isPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                                     leadingIcon = {
                                         Icon(
@@ -193,7 +193,7 @@ fun LoginScreen(
                                 ) {
                                     HorizontalDivider(modifier = Modifier.weight(1f), color = CanvasKitTheme.colors.borderSubtle)
                                     Text(
-                                        text = " O ",
+                                        text = stringResource(R.string.login_divider_or),
                                         modifier = Modifier.padding(horizontal = 16.dp),
                                         style = CanvasKitTheme.typography.labelSmall,
                                         color = CanvasKitTheme.colors.textSecondary
@@ -217,7 +217,7 @@ fun LoginScreen(
                                         @Suppress("DEPRECATION")
                                         Text(
                                             modifier = Modifier.padding(start = 12.dp),
-                                            text = "Continuar con Google",
+                                            text = stringResource(R.string.login_google_button),
                                             color = contentColor,
                                             style = CanvasKitTheme.typography.bodyMedium,
                                             fontWeight = FontWeight.Bold

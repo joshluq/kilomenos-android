@@ -164,7 +164,7 @@ private fun SimulationSection(
                             color = CanvasKitTheme.colors.textSecondary
                         )
                         Text(
-                            text = "Actual: ${currentRealKm.toInt()} km/día",
+                            text = stringResource(R.string.projection_analysis_actual_average, currentRealKm.toInt()),
                             style = CanvasKitTheme.typography.labelSmall,
                             color = CanvasKitTheme.colors.brandAccent.copy(alpha = 0.6f)
                         )
@@ -203,7 +203,7 @@ private fun SimulationSection(
                         color = CanvasKitTheme.colors.textSecondary
                     )
                     Text(
-                        text = "+ $plannedKm km",
+                        text = stringResource(R.string.projection_analysis_planned_trip_increment, plannedKm),
                         style = CanvasKitTheme.typography.bodyLarge,
                         color = if (isOverLimit) CanvasKitTheme.colors.error else CanvasKitTheme.colors.brandAccent,
                         fontWeight = FontWeight.Bold
@@ -279,7 +279,7 @@ private fun FinancialImpactCard(
                         )
                         if (isPositive) {
                             Text(
-                                text = "Presupuesto protegido",
+                                text = stringResource(R.string.projection_analysis_budget_protected),
                                 style = CanvasKitTheme.typography.labelSmall,
                                 color = accentColor
                             )
@@ -312,13 +312,13 @@ private fun FinancialImpactCard(
                                 color = CanvasKitTheme.colors.textSecondary
                             )
                             Text(
-                                text = "%.2f€".format(estimatedPenalty),
+                                text = stringResource(R.string.common_currency_format, estimatedPenalty),
                                 style = CanvasKitTheme.typography.displayMedium,
                                 color = CanvasKitTheme.colors.error,
                                 fontWeight = FontWeight.Black
                             )
                             Text(
-                                text = stringResource(R.string.projection_analysis_penalty_price_label) + ": %.2f€".format(penaltyPrice),
+                                text = stringResource(R.string.projection_analysis_penalty_price_label) + ": " + stringResource(R.string.common_currency_format, penaltyPrice),
                                 style = CanvasKitTheme.typography.labelSmall,
                                 color = CanvasKitTheme.colors.textSecondary
                             )
