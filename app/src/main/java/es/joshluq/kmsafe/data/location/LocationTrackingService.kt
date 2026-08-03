@@ -20,6 +20,8 @@ import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority.PRIORITY_HIGH_ACCURACY
 import dagger.hilt.android.AndroidEntryPoint
+import es.joshluq.analyticskit.domain.model.AnalyticsEvent
+import es.joshluq.analyticskit.sdk.AnalyticskitManager
 import es.joshluq.foundationkit.log.LoggerKit
 import es.joshluq.kmsafe.MainActivity
 import es.joshluq.kmsafe.R
@@ -34,6 +36,9 @@ class LocationTrackingService : Service() {
 
     @Inject
     lateinit var logger: LoggerKit
+
+    @Inject
+    lateinit var analytics: AnalyticskitManager
 
     private lateinit var fusedLocationClient: FusedLocationProviderClient
     private var lastLocation: Location? = null
@@ -94,6 +99,20 @@ class LocationTrackingService : Service() {
         override fun onLocationResult(result: LocationResult) {
             super.onLocationResult(result)
             val location = result.lastLocation ?: return
+
+            // SECURITY CONTROL: Prevent GPS Spoofing (Mock Locations)
+            val isMock = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                location.isMock
+            } else {
+                @Suppress("DEPRECATION")
+                location.isFromMockProvider
+            }
+
+            if (isMock) {
+                logger.w("LocationService", "Fake location detected. Ignoring update.")
+                analytics.track(AnalyticsEvent.Custom("security_gps_spoofing_detected"))
+                return
+            }
 
             lastLocation?.let { last ->
                 val distance = last.distanceTo(location)
