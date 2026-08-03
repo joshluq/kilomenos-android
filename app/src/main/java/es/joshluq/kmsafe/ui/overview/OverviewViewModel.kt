@@ -20,15 +20,7 @@ import es.joshluq.kmsafe.di.SelectContract
 import es.joshluq.kmsafe.di.UpdatePreferences
 import es.joshluq.kmsafe.domain.model.RentingContract
 import es.joshluq.kmsafe.domain.repository.TrackingRepository
-import es.joshluq.kmsafe.domain.usecase.AddOdometerRecordUseCase
-import es.joshluq.kmsafe.domain.usecase.GetAllContractsUseCase
-import es.joshluq.kmsafe.domain.usecase.GetMonthlyUsageUseCase
-import es.joshluq.kmsafe.domain.usecase.GetOverviewDataUseCase
-import es.joshluq.kmsafe.domain.usecase.GetPreferencesUseCase
-import es.joshluq.kmsafe.domain.usecase.GetTripProjectionUseCase
-import es.joshluq.kmsafe.domain.usecase.IsUserPremiumUseCase
-import es.joshluq.kmsafe.domain.usecase.SelectContractUseCase
-import es.joshluq.kmsafe.domain.usecase.UpdatePreferencesUseCase
+import es.joshluq.kmsafe.domain.usecase.*
 import es.joshluq.kmsafe.ui.overview.model.toUiModel
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
@@ -263,9 +255,8 @@ class OverviewViewModel @Inject constructor(
                         updateState { copy(isSaving = false, showBottomSheet = false, isLoading = false) }
                         
                         // If we were confirming a GPS trip, clear the tracking state
-                        if (state.value.newRecordLabel == "Viaje GPS") {
                             trackingRepository.clear()
-                        }
+
                     }
                     is AddOdometerRecordUseCase.Output.Failure -> {
                         updateState {
