@@ -32,6 +32,7 @@ import es.joshluq.canvaskit.foundations.theme.CanvasKitTheme
 import es.joshluq.kmsafe.R
 import java.io.File
 import java.io.FileOutputStream
+import androidx.core.net.toUri
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -47,7 +48,7 @@ fun CropImageScreen(
 
     LaunchedEffect(uri) {
         runCatching {
-            val inputUri = Uri.parse(uri)
+            val inputUri = uri.toUri()
             val inputStream = context.contentResolver.openInputStream(inputUri)
             bitmap = BitmapFactory.decodeStream(inputStream)
         }.onFailure {
@@ -134,7 +135,7 @@ fun CropImageScreen(
                             enabled = !isSaving && !triggerCrop,
                             loading = isSaving
                         ) { contentColor ->
-                            Text("Aplicar Recorte", color = contentColor)
+                            Text(stringResource(R.string.onboarding_crop_button), color = contentColor)
                         }
                     }
                 }

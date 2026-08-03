@@ -1,10 +1,13 @@
 <resources>
     <string name="app_name">KiloMenos</string>
-<!--    Dashboard-->
+
+    <!-- Dashboard -->
     <string name="dashboard_item_home">Inicio</string>
     <string name="dashboard_item_history">Historial</string>
     <string name="dashboard_item_projection">Proyecciones</string>
     <string name="dashboard_item_profile">Perfil</string>
+
+    <!-- Profile -->
     <string name="profile_title">Perfil</string>
     <string name="profile_renting_option">Mi Renting</string>
     <string name="profile_vehicles_option">Mis Vehículos</string>
@@ -15,7 +18,15 @@
     <string name="profile_logout_confirmation_message_premium">¿Estás seguro de que deseas cerrar la sesión? Tus datos están a salvo en la nube.</string>
     <string name="profile_logout_confirm">Cerrar sesión</string>
     <string name="profile_logout_cancel">Cancelar</string>
+    <string name="profile_subscription_free">Cuenta Gratuita</string>
+    <string name="profile_subscription_premium">Cuenta Premium</string>
+    <string name="profile_sync_disabled">Sincronización: Solo Local</string>
+    <string name="profile_sync_enabled">Sincronización: Activa</string>
+    <string name="profile_upgrade_button">Pasar a\nPremium</string>
+    <string name="profile_upgrade_benefit">Tus datos están seguros en la nube.</string>
+    <string name="profile_upgrade_coming_soon">¡Próximamente!</string>
 
+    <!-- Premium -->
     <string name="premium_paywall_title">KiloMenos Premium</string>
     <string name="premium_paywall_subtitle">Optimiza tu inversión con herramientas avanzadas de gestión</string>
     <string name="premium_benefit_sync_title">Sincronización Total</string>
@@ -29,15 +40,6 @@
     <string name="premium_upgrade_button">Subir a Premium ahora</string>
     <string name="premium_paywall_migrating_msg">Asegurando tus datos en la nube…</string>
     <string name="premium_continue_free">Continuar con la versión gratuita</string>
-
-    <string name="profile_subscription_free">Cuenta Gratuita</string>
-    <string name="profile_subscription_premium">Cuenta Premium</string>
-    <string name="profile_sync_disabled">Sincronización: Solo Local</string>
-    <string name="profile_sync_enabled">Sincronización: Activa</string>
-    <string name="profile_upgrade_button">Pasar a\nPremium</string>
-    <string name="profile_upgrade_benefit">Tus datos están seguros en la nube.</string>
-    <string name="profile_upgrade_coming_soon">¡Próximamente!</string>
-
     <string name="premium_limit_vehicle_title">Límite de vehículos</string>
     <string name="premium_limit_vehicle_message">La versión gratuita permite gestionar un vehículo. Pásate a Premium para gestionar toda tu flota en la nube.</string>
     <string name="premium_limit_data_title">Función Premium</string>
@@ -45,7 +47,7 @@
     <string name="premium_upgrade_confirm">Saber más</string>
     <string name="premium_upgrade_cancel">Ahora no</string>
 
-<!--    Vehicles List -->
+    <!-- Vehicles -->
     <string name="vehicles_title">Mis Vehículos</string>
     <string name="vehicles_add_button">Añadir Vehículo</string>
     <string name="vehicles_selected_tag">ACTIVO</string>
@@ -57,7 +59,7 @@
     <string name="vehicles_empty_description">Aún no has registrado ningún vehículo. Configura tu primer contrato para empezar a tomar el control de tus kilómetros.</string>
     <string name="vehicle_list_item_summary">%1$d Km · %2$d meses</string>
 
-<!--    Data Management -->
+    <!-- Data Management -->
     <string name="profile_data_management_title">GESTIÓN DE DATOS</string>
     <string name="profile_data_management_option">Gestión de datos</string>
     <string name="profile_export_data_option">Exportar datos</string>
@@ -73,7 +75,7 @@
     <string name="profile_import_success">Datos importados correctamente.</string>
     <string name="profile_data_error">Error al procesar los datos.</string>
 
-<!--    Overview-->
+    <!-- Overview -->
     <string name="overview_empty_state_title">Tu control de kilometraje empieza aquí</string>
     <string name="overview_empty_state_description">Configura tu contrato de renting para monitorizar tu balance y optimizar tu inversión.</string>
     <string name="overview_kilometer_balance">Saldo de Kilómetros</string>
@@ -96,8 +98,16 @@
     <string name="overview_record_label_placeholder">Opcional</string>
     <string name="overview_record_fuel_label">Combustible consumido (L)</string>
     <string name="overview_record_fuel_placeholder">Opcional</string>
+    <string name="overview_register_renting_button">Registrar mi Renting</string>
+    <string name="overview_chart_info_title">Ayuda del Gráfico</string>
+    <string name="overview_chart_comparison_info">Este gráfico compara el tiempo que ha pasado de tu contrato frente a los kilómetros que ya has consumido.\n\n• Si el círculo azul es mayor que el gris, has gastado más porcentaje de kilómetros que de tiempo (¡Cuidado!).\n\n• La diferencia (%) te indica cuánto margen tienes respecto a tu presupuesto temporal.</string>
+    <string name="overview_chart_monthly_info">Muestra tu consumo de kilómetros real frente al presupuesto ideal de cada mes.\n\n• Barra Azul: Tus kilómetros reales.\n\n• Barra Gris: El presupuesto teórico del mes.\n\n• Línea Horizontal: El límite máximo para no excederte.</string>
+    <string name="overview_chart_legend_kms">Kms usados</string>
+    <string name="overview_chart_legend_time">Tiempo transcurrido</string>
+    <string name="overview_chart_legend_actual">Consumo Real</string>
+    <string name="overview_chart_legend_budget">Presupuesto</string>
 
-<!--    Projection Card -->
+    <!-- Projection -->
     <string name="projection_card_title">PROYECCIÓN FINAL</string>
     <string name="projection_card_expected_balance">Saldo final estimado</string>
     <string name="projection_card_projected_total">Total al entregar</string>
@@ -105,8 +115,6 @@
     <string name="projection_card_not_enough_data">Calculando proyección (faltan %1$d días de datos)&#8230;</string>
     <string name="projection_card_status_safe">Vas por buen camino. Te sobrarían %1$d km.</string>
     <string name="projection_card_status_over">⚠️ Excederás tu límite por %1$d km.</string>
-
-<!--    Projection Analysis -->
     <string name="projection_analysis_financial_impact_title">IMPACTO ECONÓMICO</string>
     <string name="projection_analysis_penalty_price_label">Precio por KM extra</string>
     <string name="projection_analysis_estimated_penalty">Multa estimada</string>
@@ -119,8 +127,6 @@
     <string name="projection_analysis_budget_protected">Presupuesto protegido</string>
     <string name="projection_analysis_timeline_exhaustion">Agotarás tus KM el:</string>
     <string name="projection_analysis_timeline_safe">Contrato cubierto hasta el final.</string>
-
-<!--    Projection Advisory & Planner -->
     <string name="projection_advisory_title">RECOMENDACIÓN</string>
     <string name="projection_advisory_safe">Mantén tu ritmo actual. Estás en la zona segura.</string>
     <string name="projection_advisory_action">Para no pagar multa, ajusta tu uso a %1$d km/día.</string>
@@ -130,18 +136,7 @@
     <string name="projection_planner_impact_warning">⚠️ Este viaje te sacará de la zona segura.</string>
     <string name="projection_planner_impact_safe">Viaje asumible dentro del presupuesto.</string>
 
-    <string name="overview_register_renting_button">Registrar mi Renting</string>
-
-<!--    Chart Info -->
-    <string name="overview_chart_info_title">Ayuda del Gráfico</string>
-    <string name="overview_chart_comparison_info">Este gráfico compara el tiempo que ha pasado de tu contrato frente a los kilómetros que ya has consumido.\n\n• Si el círculo azul es mayor que el gris, has gastado más porcentaje de kilómetros que de tiempo (¡Cuidado!).\n\n• La diferencia (%) te indica cuánto margen tienes respecto a tu presupuesto temporal.</string>
-    <string name="overview_chart_monthly_info">Muestra tu consumo de kilómetros real frente al presupuesto ideal de cada mes.\n\n• Barra Azul: Tus kilómetros reales.\n\n• Barra Gris: El presupuesto teórico del mes.\n\n• Línea Horizontal: El límite máximo para no excederte.</string>
-    <string name="overview_chart_legend_kms">Kms usados</string>
-    <string name="overview_chart_legend_time">Tiempo transcurrido</string>
-    <string name="overview_chart_legend_actual">Consumo Real</string>
-    <string name="overview_chart_legend_budget">Presupuesto</string>
-
-<!--    onboarding-->
+    <!-- Onboarding -->
     <string name="onboarding_title">Configura tu Renting</string>
     <string name="onboarding_title_alternative">Información de tu Renting</string>
     <string name="onboarding_vehicle_name_label">Nombre del vehículo</string>
@@ -167,8 +162,12 @@
     <string name="onboarding_date_feedback">Fecha requerida</string>
     <string name="onboarding_change_photo">Cambiar foto</string>
     <string name="onboarding_photo_label">Foto del vehículo</string>
+    <string name="onboarding_crop_title">Ajustar Foto</string>
+    <string name="onboarding_crop_button">Aplicar Recorte</string>
     <string name="onboarding_register_error">Ha ocurrido un error al registrar el renting. Por favor, inténtalo de nuevo.</string>
-<!--    History -->
+    <string name="onboarding_saving_button">Guardando…</string>
+
+    <!-- History -->
     <string name="history_empty_state_title">No hay registros mensuales</string>
     <string name="history_empty_state_description">Actualiza tu kilometraje periódicamente para visualizar aquí la evolución de tu contrato.</string>
     <string name="history_register_error">No se pudo borrar el registro</string>
@@ -190,13 +189,10 @@
     <string name="history_label_year">Año</string>
     <string name="history_delete_desc">Borrar</string>
     <string name="history_no_history_yet">No hay historial todavía</string>
-
     <string name="history_detail_time_label">Hora</string>
     <string name="history_detail_consumption_title">CONSUMO ESTIMADO</string>
 
-    <string name="onboarding_saving_button">Guardando…</string>
-
-<!--    Tracking Card -->
+    <!-- Tracking -->
     <string name="tracking_card_status_pending">Detectando conducción…</string>
     <string name="tracking_card_status_recording">Viaje activo</string>
     <string name="tracking_card_distance_label">Distancia</string>
@@ -215,12 +211,19 @@
     <string name="tracking_notification_title">KiloMenos Tracking</string>
     <string name="tracking_notification_content">Viaje en curso: %1$.2f km</string>
 
+    <!-- Common -->
     <string name="common_brand_kilo">Kilo</string>
     <string name="common_brand_menos">Menos</string>
     <string name="common_processing">Procesando…</string>
     <string name="common_fuel_consumption_format">%.1f L/100km</string>
+    <string name="common_km_suffix">%1$d km</string>
+    <string name="common_km_positive_suffix">+ %1$d km</string>
+    <string name="common_km_negative_suffix">- %1$d km</string>
+    <string name="common_ratio_label">%1$s/%2$s</string>
+    <string name="common_percentage_format">%.1f%%</string>
+    <string name="common_currency_format">%.2f€</string>
 
-<!--    Login -->
+    <!-- Login -->
     <string name="login_subtitle">Tu centro de mando para una conducción eficiente</string>
     <string name="login_email_label">Correo corporativo o personal</string>
     <string name="login_email_placeholder">ejemplo@correo.com</string>
@@ -235,7 +238,9 @@
     <string name="login_conflict_title">Otro conductor detectado</string>
     <string name="login_conflict_message">Este dispositivo contiene datos de otro conductor. Para iniciar tu sesión, es necesario eliminar la información anterior.</string>
     <string name="login_conflict_confirm">Borrar y continuar</string>
+    <string name="login_privacy_agreement">Al acceder, confirmas que has leído nuestros %1$s y %2$s.</string>
 
+    <!-- Error Messages -->
     <string name="error_invalid_credentials">El correo o la contraseña son incorrectos.</string>
     <string name="error_user_already_registered">Este correo electrónico ya está registrado.</string>
     <string name="error_weak_password">La contraseña debe tener al menos 8 caracteres, mayúsculas, minúsculas, números y un carácter especial.</string>
@@ -244,6 +249,7 @@
     <string name="error_server">Error en el servidor (%1$d). Inténtalo más tarde.</string>
     <string name="error_unknown">Ha ocurrido un error inesperado. Por favor, inténtalo de nuevo.</string>
 
+    <!-- Signup -->
     <string name="signup_title">Registro de Conductor</string>
     <string name="signup_subtitle">Únete a la comunidad de conductores inteligentes</string>
     <string name="signup_name_label">Nombre y apellidos</string>
@@ -251,15 +257,9 @@
     <string name="signup_button">Registrarse</string>
     <string name="signup_success_title">¡Registro exitoso!</string>
     <string name="signup_success_message">Por favor, verifica tu correo electrónico para confirmar tu cuenta antes de iniciar sesión.</string>
+    <string name="signup_privacy_agreement">Al registrarte, aceptas nuestros %1$s y la %2$s.</string>
 
-    <string name="common_km_suffix">%1$d km</string>
-    <string name="common_km_positive_suffix">+ %1$d km</string>
-    <string name="common_km_negative_suffix">- %1$d km</string>
-    <string name="common_ratio_label">%1$s/%2$s</string>
-    <string name="common_currency_format">%.2f€</string>
-    <string name="common_percentage_format">%.1f%%</string>
-
-<!--    Preferences -->
+    <!-- Preferences UI Strings -->
     <string name="preferences_account_settings_title">AJUSTES DE CUENTA</string>
     <string name="preferences_remember_email_label">Recordar email</string>
     <string name="preferences_remember_email_desc">Muestra automáticamente tu email en la pantalla de inicio de sesión.</string>
@@ -272,7 +272,7 @@
     <string name="preferences_oss_description">KiloMenos se construye gracias al increíble trabajo de la comunidad de código abierto. A continuación, se detallan las principales librerías utilizadas:</string>
     <string name="preferences_oss_license_label">Licencia: %1$s</string>
 
-<!--    Privacy & Legal (GDPR) -->
+    <!-- Privacy & Legal (GDPR) -->
     <string name="profile_privacy_section">PRIVACIDAD Y DATOS</string>
     <string name="profile_privacy_policy">Política de privacidad</string>
     <string name="profile_terms_conditions">Términos y condiciones</string>
@@ -281,10 +281,8 @@
     <string name="profile_delete_account_confirmation_message">Esta acción no se puede deshacer. Se borrarán todos tus vehículos, registros de kilometraje y datos de perfil tanto de este dispositivo como de la nube.</string>
     <string name="profile_delete_account_confirm">Eliminar para siempre</string>
     <string name="profile_delete_account_error">No se pudo eliminar la cuenta. Por favor, inténtalo de nuevo.</string>
-    <string name="signup_privacy_agreement">Al registrarte, aceptas nuestros %1$s y la %2$s.</string>
-    <string name="login_privacy_agreement">Al acceder, confirmas que has leído nuestros %1$s y %2$s.</string>
 
-<!--    Accessibility (EAA) -->
+    <!-- Accessibility (EAA) -->
     <string name="acc_back">Volver</string>
     <string name="acc_add_vehicle">Añadir vehículo</string>
     <string name="acc_edit_contract">Editar contrato</string>
