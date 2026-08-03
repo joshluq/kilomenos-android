@@ -1,4 +1,4 @@
-package es.joshluq.kmsafe.ui.data
+package es.joshluq.kmsafe.ui.datamanagement
 
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel

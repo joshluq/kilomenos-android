@@ -8,7 +8,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
 import es.joshluq.kmsafe.ui.common.cropper.CropImageScreen
 import es.joshluq.kmsafe.ui.dashboard.DashboardRoute
-import es.joshluq.kmsafe.ui.data.DataManagementRoute
+import es.joshluq.kmsafe.ui.datamanagement.DataManagementRoute
 import es.joshluq.kmsafe.ui.launch.LaunchRoute
 import es.joshluq.kmsafe.ui.login.LoginRoute
 import es.joshluq.kmsafe.ui.onboarding.OnboardingRoute
@@ -174,10 +174,6 @@ fun AppNavigation(
             RecordDetailRoute(
                 onNavigateBack = {
                     navController.popBackStack()
-                },
-                onNavigateToEdit = {
-                    // For now, we don't have a direct route to Edit Record from here, 
-                    // but we can use this slot later or navigate to Overview to trigger the edit.
                 }
             )
         }

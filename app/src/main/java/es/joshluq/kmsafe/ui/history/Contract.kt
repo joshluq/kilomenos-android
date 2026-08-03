@@ -27,11 +27,6 @@ data class HistoryState(
     val totalKms: Int = 0,
     val totalRecordsCount: Int = 0,
     val selectedDailyRecords: List<RecordWithIndicator>? = null,
-    val editingRecord: OdometerRecord? = null,
-    val isEditing: Boolean = false,
-    val editingOdometerValue: String = "",
-    val editingLabel: String = "",
-    val editingFuel: String = "",
     val isPremium: Boolean = false,
     val searchQuery: String = "",
     val groupingMode: HistoryGroupingMode = HistoryGroupingMode.MONTH,
@@ -51,12 +46,6 @@ sealed interface HistoryEvent : UiEvent {
     data class OnViewDetail(val records: List<RecordWithIndicator>) : HistoryEvent
     data object OnDismissDetail : HistoryEvent
     data object OnRefresh : HistoryEvent
-    data class OnEditRecordClicked(val record: OdometerRecord) : HistoryEvent
-    data class OnEditingOdometerChanged(val value: String) : HistoryEvent
-    data class OnEditingLabelChanged(val value: String) : HistoryEvent
-    data class OnEditingFuelChanged(val value: String) : HistoryEvent
-    data object OnUpdateRecordClicked : HistoryEvent
-    data object OnDismissEdit : HistoryEvent
     data class OnSearchQueryChanged(val query: String) : HistoryEvent
     data class OnGroupingModeChanged(val mode: HistoryGroupingMode) : HistoryEvent
     data class OnRecordClicked(val record: RecordWithIndicator) : HistoryEvent
@@ -68,5 +57,4 @@ sealed interface HistoryEvent : UiEvent {
  */
 sealed interface HistoryEffect : UiEffect {
     data class NavigateToDetail(val recordId: String) : HistoryEffect
-    data class ShowError(val message: TextProvider) : HistoryEffect
 }

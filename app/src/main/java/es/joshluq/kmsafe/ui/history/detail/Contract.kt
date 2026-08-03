@@ -14,6 +14,11 @@ data class RecordDetailState(
     val isPremium: Boolean = false,
     val isDeleting: Boolean = false,
     val showDeleteConfirmation: Boolean = false,
+    val showEditDialog: Boolean = false,
+    val isEditing: Boolean = false,
+    val editingOdometerValue: String = "",
+    val editingLabel: String = "",
+    val editingFuel: String = "",
     val error: TextProvider? = null
 ) : UiState {
     companion object {
@@ -28,10 +33,14 @@ sealed interface RecordDetailEvent : UiEvent {
     data object OnCancelDelete : RecordDetailEvent
     data object OnDismissError : RecordDetailEvent
     data object OnBackClicked : RecordDetailEvent
+    
+    data object OnDismissEdit : RecordDetailEvent
+    data class OnEditingOdometerChanged(val value: String) : RecordDetailEvent
+    data class OnEditingLabelChanged(val value: String) : RecordDetailEvent
+    data class OnEditingFuelChanged(val value: String) : RecordDetailEvent
+    data object OnUpdateRecordClicked : RecordDetailEvent
 }
 
 sealed interface RecordDetailEffect : UiEffect {
-    data class NavigateToEdit(val record: OdometerRecord) : RecordDetailEffect
     data object NavigateBack : RecordDetailEffect
-    data class ShowError(val message: TextProvider) : RecordDetailEffect
 }

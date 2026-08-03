@@ -11,10 +11,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Label
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -38,6 +35,7 @@ import es.joshluq.canvaskit.components.navigation.CanvasKitTopBar
 import es.joshluq.canvaskit.foundations.theme.CanvasKitTheme
 import es.joshluq.kmsafe.R
 import es.joshluq.kmsafe.domain.model.OdometerRecord
+import es.joshluq.kmsafe.ui.onboarding.OnboardingTextField
 import es.joshluq.kmsafe.ui.util.safeClick
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -46,8 +44,7 @@ import java.util.TimeZone
 
 @Composable
 fun RecordDetailRoute(
-    onNavigateBack: () -> Unit,
-    onNavigateToEdit: (String) -> Unit
+    onNavigateBack: () -> Unit
 ) {
     val viewModel: RecordDetailViewModel = hiltViewModel()
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -56,8 +53,6 @@ fun RecordDetailRoute(
         viewModel.effects.collect { effect ->
             when (effect) {
                 RecordDetailEffect.NavigateBack -> onNavigateBack()
-                is RecordDetailEffect.NavigateToEdit -> onNavigateToEdit(effect.record.id)
-                is RecordDetailEffect.ShowError -> { /* Handled via state.error */ }
             }
         }
     }
@@ -79,6 +74,7 @@ fun RecordDetailScreen(
         topBar = {
             CanvasKitTopBar(
                 title = {
+                    @Suppress("DEPRECATION")
                     Text(
                         text = stringResource(R.string.history_detail_action),
                         style = CanvasKitTheme.typography.headingMedium
@@ -147,6 +143,10 @@ fun RecordDetailScreen(
 
             if (state.showDeleteConfirmation) {
                 DeleteConfirmationDialog(onEvent)
+            }
+
+            if (state.showEditDialog) {
+                EditRecordDialog(state = state, onEvent = onEvent)
             }
         }
     }
@@ -336,6 +336,92 @@ private fun DeleteConfirmationDialog(onEvent: (RecordDetailEvent) -> Unit) {
                     variant = CanvasKitButtonVariant.Ghost
                 ) { _ ->
                     Text(stringResource(R.string.vehicles_delete_confirm), color = CanvasKitTheme.colors.error)
+                }
+            }
+        )
+    }
+}
+
+@Composable
+fun EditRecordDialog(
+    state: RecordDetailState,
+    onEvent: (RecordDetailEvent) -> Unit
+) {
+    CanvasKitDialog(
+        onDismissRequest = { onEvent(RecordDetailEvent.OnDismissEdit) }
+    ) {
+        CanvasKitDialogContent(
+            title = {
+                Text(
+                    text = stringResource(R.string.history_edit_title),
+                    style = CanvasKitTheme.typography.bodyLarge,
+                    fontWeight = FontWeight.Bold
+                )
+            },
+            content = {
+                Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                    OnboardingTextField(
+                        label = stringResource(R.string.overview_current_odometer_label),
+                        value = state.editingOdometerValue,
+                        onValueChange = { onEvent(RecordDetailEvent.OnEditingOdometerChanged(it)) },
+                        placeholder = stringResource(R.string.overview_current_odometer_placeholder),
+                        trailingIcon = {
+                            Text(
+                                text = stringResource(R.string.onboarding_km_suffix),
+                                color = CanvasKitTheme.colors.brandAccent,
+                            )
+                        },
+                        keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
+                            keyboardType = androidx.compose.ui.text.input.KeyboardType.Number
+                        )
+                    )
+
+                    OnboardingTextField(
+                        label = stringResource(R.string.overview_record_label_label),
+                        value = state.editingLabel,
+                        onValueChange = { onEvent(RecordDetailEvent.OnEditingLabelChanged(it)) },
+                        placeholder = stringResource(R.string.overview_record_label_placeholder)
+                    )
+
+                    if (state.isPremium) {
+                        OnboardingTextField(
+                            label = stringResource(R.string.overview_record_fuel_label),
+                            value = state.editingFuel,
+                            onValueChange = { onEvent(RecordDetailEvent.OnEditingFuelChanged(it)) },
+                            placeholder = stringResource(R.string.overview_record_fuel_placeholder),
+                            keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
+                                keyboardType = androidx.compose.ui.text.input.KeyboardType.Decimal
+                            )
+                        )
+                    }
+                }
+            },
+            buttons = {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    CanvasKitButton(
+                        variant = CanvasKitButtonVariant.Secondary,
+                        onClick = { onEvent(RecordDetailEvent.OnDismissEdit) },
+                        modifier = Modifier.weight(1f)
+                    ) { contentColor ->
+                        Text(
+                            text = stringResource(R.string.history_close_button),
+                            color = contentColor
+                        )
+                    }
+                    CanvasKitButton(
+                        onClick = { onEvent(RecordDetailEvent.OnUpdateRecordClicked) },
+                        enabled = !state.isEditing && state.editingOdometerValue.isNotBlank(),
+                        loading = state.isEditing,
+                        modifier = Modifier.weight(1f)
+                    ) { contentColor ->
+                        Text(
+                            text = stringResource(R.string.history_edit_save),
+                            color = contentColor
+                        )
+                    }
                 }
             }
         )

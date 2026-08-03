@@ -1,4 +1,4 @@
-package es.joshluq.kmsafe.ui.data
+package es.joshluq.kmsafe.ui.datamanagement
 
 import es.joshluq.foundationkit.text.TextProvider
 import es.joshluq.foundationkit.viewmodel.UiEffect

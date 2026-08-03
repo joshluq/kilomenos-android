@@ -3,6 +3,8 @@ package es.joshluq.kmsafe.ui.history.detail
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import es.joshluq.analyticskit.domain.model.AnalyticsEvent
+import es.joshluq.analyticskit.sdk.AnalyticskitManager
 import es.joshluq.foundationkit.text.TextProvider
 import es.joshluq.foundationkit.usecase.FlowUseCase
 import es.joshluq.foundationkit.viewmodel.ScreenViewModel
@@ -10,10 +12,12 @@ import es.joshluq.kmsafe.R
 import es.joshluq.kmsafe.di.DeleteOdometerRecord
 import es.joshluq.kmsafe.di.GetOdometerRecord
 import es.joshluq.kmsafe.di.IsUserPremium
+import es.joshluq.kmsafe.di.UpdateOdometerRecord
 import es.joshluq.kmsafe.domain.model.OdometerRecord
 import es.joshluq.kmsafe.domain.usecase.DeleteOdometerRecordUseCase
 import es.joshluq.kmsafe.domain.usecase.GetOdometerRecordUseCase
 import es.joshluq.kmsafe.domain.usecase.IsUserPremiumUseCase
+import es.joshluq.kmsafe.domain.usecase.UpdateOdometerRecordUseCase
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import javax.inject.Inject
@@ -25,8 +29,11 @@ class RecordDetailViewModel @Inject constructor(
     @JvmSuppressWildcards FlowUseCase<GetOdometerRecordUseCase.Input, GetOdometerRecordUseCase.Output>,
     @param:DeleteOdometerRecord private val deleteOdometerRecordUseCase:
     @JvmSuppressWildcards FlowUseCase<DeleteOdometerRecordUseCase.Input, DeleteOdometerRecordUseCase.Output>,
+    @param:UpdateOdometerRecord private val updateOdometerRecordUseCase:
+    @JvmSuppressWildcards FlowUseCase<UpdateOdometerRecordUseCase.Input, UpdateOdometerRecordUseCase.Output>,
     @param:IsUserPremium private val isUserPremiumUseCase:
-    @JvmSuppressWildcards FlowUseCase<IsUserPremiumUseCase.Input, IsUserPremiumUseCase.Output>
+    @JvmSuppressWildcards FlowUseCase<IsUserPremiumUseCase.Input, IsUserPremiumUseCase.Output>,
+    private val analytics: AnalyticskitManager
 ) : ScreenViewModel<RecordDetailState, RecordDetailEvent, RecordDetailEffect>() {
 
     private val recordId: String = checkNotNull(savedStateHandle["recordId"])
@@ -42,12 +49,27 @@ class RecordDetailViewModel @Inject constructor(
         when (event) {
             RecordDetailEvent.OnBackClicked -> launchEffect(RecordDetailEffect.NavigateBack)
             RecordDetailEvent.OnEditClicked -> {
-                state.value.record?.let { launchEffect(RecordDetailEffect.NavigateToEdit(it)) }
+                state.value.record?.let { record ->
+                    updateState {
+                        copy(
+                            showEditDialog = true,
+                            editingOdometerValue = record.odometerValue.toString(),
+                            editingLabel = record.label ?: "",
+                            editingFuel = record.fuelAmount?.toString() ?: ""
+                        )
+                    }
+                }
             }
             RecordDetailEvent.OnDeleteClicked -> updateState { copy(showDeleteConfirmation = true) }
             RecordDetailEvent.OnCancelDelete -> updateState { copy(showDeleteConfirmation = false) }
             RecordDetailEvent.OnDismissError -> updateState { copy(error = null) }
             RecordDetailEvent.OnConfirmDelete -> handleDelete()
+            
+            RecordDetailEvent.OnDismissEdit -> updateState { copy(showEditDialog = false) }
+            is RecordDetailEvent.OnEditingFuelChanged -> updateState { copy(editingFuel = event.value) }
+            is RecordDetailEvent.OnEditingLabelChanged -> updateState { copy(editingLabel = event.value) }
+            is RecordDetailEvent.OnEditingOdometerChanged -> updateState { copy(editingOdometerValue = event.value) }
+            RecordDetailEvent.OnUpdateRecordClicked -> handleUpdateRecord()
         }
     }
 
@@ -93,6 +115,42 @@ class RecordDetailViewModel @Inject constructor(
         val distance = record.odometerValue - previous.odometerValue
         if (distance <= 0) return null
         return (record.fuelAmount / distance.toDouble()) * 100.0
+    }
+
+    private fun handleUpdateRecord() {
+        val record = state.value.record ?: return
+        val newValue = state.value.editingOdometerValue.toIntOrNull() ?: return
+        val label = state.value.editingLabel.takeIf { it.isNotBlank() }
+        val fuelAmount = state.value.editingFuel.toDoubleOrNull()
+
+        val updatedRecord = record.copy(
+            odometerValue = newValue,
+            label = label,
+            fuelAmount = fuelAmount
+        )
+
+        updateOdometerRecordUseCase(UpdateOdometerRecordUseCase.Input(updatedRecord))
+            .onEach { output ->
+                when (output) {
+                    is UpdateOdometerRecordUseCase.Output.Progress -> updateState { copy(isEditing = true) }
+                    is UpdateOdometerRecordUseCase.Output.Success -> {
+                        if (fuelAmount != null) {
+                            analytics.track(AnalyticsEvent.Custom("fuel_entry_added", mapOf("amount" to fuelAmount)))
+                        }
+                        updateState { copy(isEditing = false, showEditDialog = false) }
+                        loadRecord() // Refresh local data
+                    }
+                    is UpdateOdometerRecordUseCase.Output.Failure -> {
+                        updateState {
+                            copy(
+                                isEditing = false,
+                                error = TextProvider.Resource(R.string.history_register_error)
+                            )
+                        }
+                    }
+                }
+            }
+            .launchIn(viewModelScope)
     }
 
     private fun handleDelete() {
