@@ -178,7 +178,7 @@ fun SignupScreen(
                                     value = state.password,
                                     onValueChange = { onEvent(Event.OnPasswordChanged(it)) },
                                     label = stringResource(R.string.login_password_label),
-                                    placeholder = "••••••••",
+                                    placeholder = stringResource(R.string.login_password_placeholder),
                                     errorText = state.passwordError?.asString(),
                                     isError = state.passwordError != null,
                                     visualTransformation = if (state.isPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),

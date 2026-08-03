@@ -8,6 +8,7 @@ import es.joshluq.foundationkit.log.LoggerKit
 import es.joshluq.foundationkit.text.TextProvider
 import es.joshluq.foundationkit.usecase.FlowUseCase
 import es.joshluq.foundationkit.viewmodel.ScreenViewModel
+import es.joshluq.kmsafe.R
 import es.joshluq.kmsafe.di.AddOdometerRecord
 import es.joshluq.kmsafe.di.GetAllContracts
 import es.joshluq.kmsafe.di.GetMonthlyUsage
@@ -145,7 +146,7 @@ class OverviewViewModel @Inject constructor(
                     is GetOverviewDataUseCase.Output.Failure -> updateState { 
                         copy(
                             isLoading = false,
-                            error = TextProvider.Resource(es.joshluq.kmsafe.R.string.history_load_error)
+                            error = TextProvider.Resource(R.string.history_load_error)
                         ) 
                     }
                     is GetOverviewDataUseCase.Output.Progress -> updateState { copy(isLoading = true) }
@@ -356,8 +357,7 @@ class OverviewViewModel @Inject constructor(
         updateState {
             copy(
                 showBottomSheet = true,
-                newOdometerValue = tripKms.toString(),
-                newRecordLabel = "Viaje GPS"
+                newOdometerValue = tripKms.toString()
             )
         }
         

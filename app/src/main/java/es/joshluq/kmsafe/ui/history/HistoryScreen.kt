@@ -279,19 +279,19 @@ private fun HistoryFilters(
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             GroupingChip(
-                label = "Día",
+                label = stringResource(R.string.history_label_day),
                 icon = Icons.Default.Today,
                 selected = currentMode == HistoryGroupingMode.DAY,
                 onClick = { onModeChange(HistoryGroupingMode.DAY) }
             )
             GroupingChip(
-                label = "Mes",
+                label = stringResource(R.string.history_label_month),
                 icon = Icons.Default.CalendarToday,
                 selected = currentMode == HistoryGroupingMode.MONTH,
                 onClick = { onModeChange(HistoryGroupingMode.MONTH) }
             )
             GroupingChip(
-                label = "Año",
+                label = stringResource(R.string.history_label_year),
                 icon = Icons.Default.DateRange,
                 selected = currentMode == HistoryGroupingMode.YEAR,
                 onClick = { onModeChange(HistoryGroupingMode.YEAR) }

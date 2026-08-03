@@ -86,7 +86,7 @@ fun CropImageScreen(
                         ImageCropper(
                             modifier = Modifier.fillMaxSize(),
                             imageBitmap = imageBitmap,
-                            contentDescription = "Crop Image",
+                            contentDescription = stringResource(R.string.acc_crop_image),
                             crop = triggerCrop,
                             cropProperties = CropDefaults.properties(
                                 cropOutlineProperty = CropOutlineProperty(

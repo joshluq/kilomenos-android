@@ -27,6 +27,7 @@
     <string name="premium_benefit_roadmap_title">Hoja de Ruta</string>
     <string name="premium_benefit_roadmap_desc">Acceso prioritario a lectura OCR y tracking inteligente por GPS.</string>
     <string name="premium_upgrade_button">Subir a Premium ahora</string>
+    <string name="premium_paywall_migrating_msg">Asegurando tus datos en la nube…</string>
     <string name="premium_continue_free">Continuar con la versión gratuita</string>
 
     <string name="profile_subscription_free">Cuenta Gratuita</string>
@@ -54,11 +55,14 @@
     <string name="vehicles_delete_cancel">Cancelar</string>
     <string name="vehicles_empty_title">Tu flota empieza aquí</string>
     <string name="vehicles_empty_description">Aún no has registrado ningún vehículo. Configura tu primer contrato para empezar a tomar el control de tus kilómetros.</string>
+    <string name="vehicle_list_item_summary">%1$d Km · %2$d meses</string>
 
 <!--    Data Management -->
     <string name="profile_data_management_title">GESTIÓN DE DATOS</string>
     <string name="profile_data_management_option">Gestión de datos</string>
     <string name="profile_export_data_option">Exportar datos</string>
+    <string name="profile_data_management_export_json_title">Exportar Backup (JSON)</string>
+    <string name="profile_data_management_export_csv_title">Exportar para Excel (CSV)</string>
     <string name="profile_import_data_option">Importar backup</string>
     <string name="profile_export_format_title">Elegir formato de exportación</string>
     <string name="profile_export_json_desc">Backup completo para restaurar en otro dispositivo.</string>
@@ -110,6 +114,9 @@
     <string name="projection_analysis_simulator_desc">Ajusta tu media diaria futura para ver el impacto:</string>
     <string name="projection_analysis_simulated_balance">Saldo proyectado</string>
     <string name="projection_analysis_daily_km_slider">%1$d km/día</string>
+    <string name="projection_analysis_actual_average">Actual: %1$d km/día</string>
+    <string name="projection_analysis_planned_trip_increment">+ %1$d km</string>
+    <string name="projection_analysis_budget_protected">Presupuesto protegido</string>
     <string name="projection_analysis_timeline_exhaustion">Agotarás tus KM el:</string>
     <string name="projection_analysis_timeline_safe">Contrato cubierto hasta el final.</string>
 
@@ -178,6 +185,9 @@
     <string name="history_daily_records_title">Registros del %1$s</string>
     <string name="history_expand_desc">Expandir</string>
     <string name="history_collapse_desc">Colapsar</string>
+    <string name="history_label_day">Día</string>
+    <string name="history_label_month">Mes</string>
+    <string name="history_label_year">Año</string>
     <string name="history_delete_desc">Borrar</string>
     <string name="history_no_history_yet">No hay historial todavía</string>
 
@@ -200,12 +210,15 @@
     <string name="tracking_card_cancel_action">CANCEL</string>
     <string name="tracking_card_start_action">START</string>
     <string name="tracking_card_stop_action">STOP TRIP</string>
+    <string name="tracking_trip_label">Viaje GPS</string>
     <string name="tracking_channel_name">Seguimiento de Viaje</string>
     <string name="tracking_notification_title">KiloMenos Tracking</string>
     <string name="tracking_notification_content">Viaje en curso: %1$.2f km</string>
 
     <string name="common_brand_kilo">Kilo</string>
     <string name="common_brand_menos">Menos</string>
+    <string name="common_processing">Procesando…</string>
+    <string name="common_fuel_consumption_format">%.1f L/100km</string>
 
 <!--    Login -->
     <string name="login_subtitle">Tu centro de mando para una conducción eficiente</string>
@@ -214,6 +227,9 @@
     <string name="login_email_error">Formato de correo inválido</string>
     <string name="login_password_error">La contraseña debe tener al menos 8 caracteres, e incluir al menos una letra mayúscula, una letra minúscula, un número y un carácter especial.</string>
     <string name="login_password_label">Contraseña de acceso</string>
+    <string name="login_password_placeholder">••••••••</string>
+    <string name="login_divider_or"> O </string>
+    <string name="login_google_button">Continuar con Google</string>
     <string name="login_button">Acceder a mi Flota</string>
     <string name="login_create_account">¿Eres nuevo conductor? Crea una cuenta</string>
     <string name="login_conflict_title">Otro conductor detectado</string>
@@ -240,6 +256,7 @@
     <string name="common_km_positive_suffix">+ %1$d km</string>
     <string name="common_km_negative_suffix">- %1$d km</string>
     <string name="common_ratio_label">%1$s/%2$s</string>
+    <string name="common_currency_format">%.2f€</string>
     <string name="common_percentage_format">%.1f%%</string>
 
 <!--    Preferences -->
@@ -248,6 +265,12 @@
     <string name="preferences_remember_email_desc">Muestra automáticamente tu email en la pantalla de inicio de sesión.</string>
     <string name="preferences_projection_banner_label">Alertas de proyección</string>
     <string name="preferences_projection_banner_desc">Muestra un aviso en el inicio sobre el estado final estimado de tu contrato.</string>
+    <string name="preferences_oss_licenses_label">Créditos de software</string>
+    <string name="preferences_oss_licenses_desc">Licencias de las librerías de código abierto utilizadas.</string>
+    <string name="preferences_about_header">ACERCA DE</string>
+    <string name="preferences_manage_consent_label">Gestionar preferencias de anuncios</string>
+    <string name="preferences_oss_description">KiloMenos se construye gracias al increíble trabajo de la comunidad de código abierto. A continuación, se detallan las principales librerías utilizadas:</string>
+    <string name="preferences_oss_license_label">Licencia: %1$s</string>
 
 <!--    Privacy & Legal (GDPR) -->
     <string name="profile_privacy_section">PRIVACIDAD Y DATOS</string>
@@ -270,6 +293,8 @@
     <string name="acc_open_menu">Abrir menú</string>
     <string name="acc_chart_help">Ayuda sobre el gráfico</string>
     <string name="acc_sync_pending">Sincronización pendiente</string>
+    <string name="acc_locked">Bloqueado</string>
+    <string name="acc_crop_image">Recortar imagen</string>
     <string name="acc_close">Cerrar</string>
 
 </resources>

@@ -265,7 +265,7 @@ private fun ConsumptionCard(l100km: Double, liters: Double) {
                         fontWeight = FontWeight.Bold
                     )
                     Text(
-                        text = "%.1f L/100km".format(l100km),
+                        text = stringResource(R.string.common_fuel_consumption_format, l100km),
                         style = CanvasKitTheme.typography.headingLarge,
                         color = CanvasKitTheme.colors.textPrimary,
                         fontWeight = FontWeight.Black
