@@ -37,6 +37,9 @@
     <string name="premium_benefit_reports_desc">Full export and reports ready for your renting company.</string>
     <string name="premium_benefit_roadmap_title">Roadmap</string>
     <string name="premium_benefit_roadmap_desc">Priority access to OCR reading and smart GPS tracking.</string>
+    <string name="premium_benefit_autotracking_title">Smart Auto-Tracking</string>
+    <string name="premium_benefit_autotracking_desc">Forget the button. The app detects when you drive and starts GPS for you.</string>
+    <string name="premium_paywall_save_money_highlight">Save on penalties with total and automatic control.</string>
     <string name="premium_upgrade_button">Upgrade to Premium now</string>
     <string name="premium_paywall_migrating_msg">Securing your data in the cloud&#8230;</string>
     <string name="premium_continue_free">Continue with free version</string>
@@ -271,6 +274,9 @@
     <string name="preferences_manage_consent_label">Manage ad preferences</string>
     <string name="preferences_oss_description">KiloMenos is built thanks to the incredible work of the open source community. Below are the main libraries used:</string>
     <string name="preferences_oss_license_label">License: %1$s</string>
+    <string name="preferences_auto_tracking_label">Automatic trip detection</string>
+    <string name="preferences_auto_tracking_desc">Automatically start GPS when entering a vehicle.</string>
+    <string name="preferences_auto_tracking_locked_desc">Automatic detection available only in Premium version.</string>
 
     <!-- Privacy & Legal (GDPR) -->
     <string name="profile_privacy_section">PRIVACY &amp; DATA</string>
@@ -294,5 +300,11 @@
     <string name="acc_locked">Locked</string>
     <string name="acc_crop_image">Crop image</string>
     <string name="acc_close">Close</string>
+
+    <!-- Reminders -->
+    <string name="reminder_channel_name">Activity Reminders</string>
+    <string name="reminder_channel_description">Notifications to remind you to update your mileage.</string>
+    <string name="reminder_notification_title">How is that odometer going? 🚗</string>
+    <string name="reminder_notification_message">You haven\'t updated your kilometers in a few days. Register them now to keep your balance up to date!</string>
 
 </resources>

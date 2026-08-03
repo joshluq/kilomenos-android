@@ -7,6 +7,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.PrivacyTip
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -89,7 +90,9 @@ fun PreferencesScreen(
         },
         containerColor = CanvasKitTheme.colors.backgroundSecondary
     ) { innerPadding ->
-        Box(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
+        Box(modifier = Modifier
+            .fillMaxSize()
+            .padding(innerPadding)) {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -116,18 +119,44 @@ fun PreferencesScreen(
                             checked = state.rememberEmail,
                             onCheckedChange = { onEvent(Event.OnRememberEmailToggled(it)) }
                         )
-                        Spacer(modifier = Modifier.height(16.dp))
+
                         HorizontalDivider(
+                            modifier = Modifier.padding(horizontal = 16.dp),
                             color = CanvasKitTheme.colors.borderSubtle.copy(alpha = 0.5f)
                         )
-
-                        Spacer(modifier = Modifier.height(16.dp))
 
                         PreferenceSwitchItem(
                             label = stringResource(R.string.preferences_projection_banner_label),
                             description = stringResource(R.string.preferences_projection_banner_desc),
                             checked = state.showProjectionBanner,
                             onCheckedChange = { onEvent(Event.OnProjectionBannerToggled(it)) }
+                        )
+
+                        HorizontalDivider(
+                            modifier = Modifier.padding(horizontal = 16.dp),
+                            color = CanvasKitTheme.colors.borderSubtle.copy(alpha = 0.5f)
+                        )
+
+                        PreferenceSwitchItem(
+                            label = stringResource(R.string.preferences_auto_tracking_label),
+                            description = if (state.isUserPremium) {
+                                stringResource(R.string.preferences_auto_tracking_desc)
+                            } else {
+                                stringResource(R.string.preferences_auto_tracking_locked_desc)
+                            },
+                            checked = state.autoTrackingEnabled,
+                            onCheckedChange = { onEvent(Event.OnAutoTrackingToggled(it)) },
+                            enabled = state.isUserPremium,
+                            trailingIcon = if (!state.isUserPremium) {
+                                {
+                                    Icon(
+                                        imageVector = Icons.Default.Lock,
+                                        contentDescription = null,
+                                        tint = CanvasKitTheme.colors.textSecondary,
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                }
+                            } else null
                         )
                     }
                 }
@@ -313,10 +342,15 @@ private fun PreferenceSwitchItem(
     label: String,
     description: String,
     checked: Boolean,
-    onCheckedChange: (Boolean) -> Unit
+    onCheckedChange: (Boolean) -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+    trailingIcon: @Composable (() -> Unit)? = null
 ) {
     Row(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(16.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
@@ -325,7 +359,7 @@ private fun PreferenceSwitchItem(
                 text = label,
                 style = CanvasKitTheme.typography.bodyLarge,
                 fontWeight = FontWeight.Bold,
-                color = CanvasKitTheme.colors.textPrimary
+                color = if (enabled) CanvasKitTheme.colors.textPrimary else CanvasKitTheme.colors.textSecondary
             )
             Text(
                 text = description,
@@ -333,14 +367,23 @@ private fun PreferenceSwitchItem(
                 color = CanvasKitTheme.colors.textSecondary
             )
         }
-        Switch(
-            checked = checked,
-            onCheckedChange = onCheckedChange,
-            colors = SwitchDefaults.colors(
-                checkedThumbColor = CanvasKitTheme.colors.onBrandAccent,
-                checkedTrackColor = CanvasKitTheme.colors.brandAccent
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            trailingIcon?.invoke()
+            if (trailingIcon != null) {
+                Spacer(modifier = Modifier.width(8.dp))
+            }
+            Switch(
+                checked = checked,
+                onCheckedChange = onCheckedChange,
+                enabled = enabled,
+                colors = SwitchDefaults.colors(
+                    checkedThumbColor = CanvasKitTheme.colors.onBrandAccent,
+                    checkedTrackColor = CanvasKitTheme.colors.brandAccent,
+                    disabledCheckedTrackColor = CanvasKitTheme.colors.brandAccent.copy(alpha = 0.5f),
+                    disabledUncheckedTrackColor = CanvasKitTheme.colors.borderSubtle.copy(alpha = 0.5f)
+                )
             )
-        )
+        }
     }
 }
 
@@ -350,7 +393,12 @@ private fun PreferenceSwitchItem(
 fun PreferencesScreenPreview() {
     CanvasKitTheme {
         PreferencesScreen(
-            state = State(rememberEmail = true, isLoading = false, isPrivacyOptionsRequired = true),
+            state = State(
+                rememberEmail = true,
+                isLoading = false,
+                isPrivacyOptionsRequired = true,
+                isUserPremium = true
+            ),
             onEvent = {}
         )
     }

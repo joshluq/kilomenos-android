@@ -35,6 +35,10 @@ class PreferencesRepositoryImpl @Inject constructor(
         dataSource.setShowProjectionBanner(userId, enabled)
     }
 
+    override suspend fun setAutoTrackingEnabled(userId: String, enabled: Boolean) {
+        dataSource.setAutoTrackingEnabled(userId, enabled)
+    }
+
     override suspend fun setLastKnownOverLimit(userId: String, overLimit: Boolean?) {
         dataSource.setLastKnownOverLimit(userId, overLimit)
     }

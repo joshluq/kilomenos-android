@@ -33,6 +33,11 @@ interface PreferencesRepository {
     suspend fun setShowProjectionBanner(userId: String, enabled: Boolean)
 
     /**
+     * Updates the auto-tracking setting for a specific user.
+     */
+    suspend fun setAutoTrackingEnabled(userId: String, enabled: Boolean)
+
+    /**
      * Updates the last known state of the projection for a specific user.
      */
     suspend fun setLastKnownOverLimit(userId: String, overLimit: Boolean?)
