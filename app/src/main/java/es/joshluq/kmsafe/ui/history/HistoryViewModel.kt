@@ -170,6 +170,15 @@ class HistoryViewModel @Inject constructor(
                             )
                         }
                     }
+
+                    GetHistoryUseCase.Output.Empty -> {
+                        updateState {
+                            copy(
+                                isLoading = false,
+                                isRefreshing = false
+                            )
+                        }
+                    }
                 }
             }
             .launchIn(viewModelScope)

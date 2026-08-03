@@ -39,7 +39,7 @@ class GetHistoryUseCase @Inject constructor(
         return rentingRepository.getContract().flatMapLatest { contract ->
             if (contract == null) {
                 logger.w("GetHistoryUseCase", "No active contract")
-                return@flatMapLatest flowOf(Output.Failure)
+                return@flatMapLatest flowOf(Output.Empty)
             }
 
             val localFlow = historyRepository.getHistory(contract.id)
@@ -107,6 +107,7 @@ class GetHistoryUseCase @Inject constructor(
     sealed interface Output : UseCaseOutput {
         data object Progress : Output
         data object Failure : Output
+        data object Empty : Output
         data class Success(
             val contractId: String,
             val initialRecord: OdometerRecord?,
