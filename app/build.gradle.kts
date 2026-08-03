@@ -101,6 +101,8 @@ dependencies {
     implementation("io.coil-kt:coil-compose:2.7.0")
     implementation("com.google.android.gms:play-services-ads:25.4.0")
     implementation("com.google.android.gms:play-services-location:21.4.0")
+    // Activity Recognition
+    implementation("com.google.android.gms:play-services-location:21.4.0") 
     implementation("com.google.android.ump:user-messaging-platform:4.0.0")
     
     // Image Processing & Cropping
@@ -112,6 +114,9 @@ dependencies {
     implementation("com.google.android.libraries.identity.googleid:googleid:1.2.0")
 
     implementation("com.android.billingclient:billing-ktx:9.1.0")
+    implementation("androidx.work:work-runtime-ktx:2.11.2")
+    implementation("androidx.hilt:hilt-work:1.4.0")
+    ksp("androidx.hilt:hilt-compiler:1.4.0")
 
     implementation(platform("com.google.firebase:firebase-bom:34.17.0"))
     implementation("com.google.firebase:firebase-analytics")

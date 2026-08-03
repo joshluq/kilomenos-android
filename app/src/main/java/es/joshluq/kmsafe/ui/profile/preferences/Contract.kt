@@ -8,6 +8,8 @@ import es.joshluq.foundationkit.viewmodel.UiState
 data class State(
     val rememberEmail: Boolean = true,
     val showProjectionBanner: Boolean = true,
+    val autoTrackingEnabled: Boolean = false,
+    val isUserPremium: Boolean = false,
     val isPrivacyOptionsRequired: Boolean = false,
     val isLoading: Boolean = false,
     val error: TextProvider? = null
@@ -20,6 +22,7 @@ data class State(
 sealed interface Event : UiEvent {
     data class OnRememberEmailToggled(val enabled: Boolean) : Event
     data class OnProjectionBannerToggled(val enabled: Boolean) : Event
+    data class OnAutoTrackingToggled(val enabled: Boolean) : Event
     object OnManagePrivacyClicked : Event
     object OnBackClicked : Event
     object OnDismissError : Event

@@ -37,6 +37,9 @@
     <string name="premium_benefit_reports_desc">Exportación completa y reportes listos para tu empresa de renting.</string>
     <string name="premium_benefit_roadmap_title">Hoja de Ruta</string>
     <string name="premium_benefit_roadmap_desc">Acceso prioritario a lectura OCR y tracking inteligente por GPS.</string>
+    <string name="premium_benefit_autotracking_title">Auto-Tracking Inteligente</string>
+    <string name="premium_benefit_autotracking_desc">Olvida darle al botón. La app detecta cuándo conduces y activa el GPS por ti.</string>
+    <string name="premium_paywall_save_money_highlight">Ahorra en penalizaciones con un control total y automático.</string>
     <string name="premium_upgrade_button">Subir a Premium ahora</string>
     <string name="premium_paywall_migrating_msg">Asegurando tus datos en la nube…</string>
     <string name="premium_continue_free">Continuar con la versión gratuita</string>
@@ -271,6 +274,9 @@
     <string name="preferences_manage_consent_label">Gestionar preferencias de anuncios</string>
     <string name="preferences_oss_description">KiloMenos se construye gracias al increíble trabajo de la comunidad de código abierto. A continuación, se detallan las principales librerías utilizadas:</string>
     <string name="preferences_oss_license_label">Licencia: %1$s</string>
+    <string name="preferences_auto_tracking_label">Detección automática de viajes</string>
+    <string name="preferences_auto_tracking_desc">Inicia el GPS automáticamente al entrar en un vehículo.</string>
+    <string name="preferences_auto_tracking_locked_desc">Detección automática disponible solo en la versión Premium.</string>
 
     <!-- Privacy & Legal (GDPR) -->
     <string name="profile_privacy_section">PRIVACIDAD Y DATOS</string>
@@ -294,5 +300,11 @@
     <string name="acc_locked">Bloqueado</string>
     <string name="acc_crop_image">Recortar imagen</string>
     <string name="acc_close">Cerrar</string>
+
+    <!-- Reminders -->
+    <string name="reminder_channel_name">Recordatorios de actividad</string>
+    <string name="reminder_channel_description">Notificaciones para recordarte actualizar tu kilometraje.</string>
+    <string name="reminder_notification_title">¿Cómo va ese odómetro? 🚗</string>
+    <string name="reminder_notification_message">No has actualizado tus kilómetros en unos días. ¡Regístralos ahora para mantener tu balance al día!</string>
 
 </resources>

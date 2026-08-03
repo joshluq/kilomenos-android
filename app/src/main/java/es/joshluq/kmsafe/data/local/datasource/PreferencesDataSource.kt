@@ -22,6 +22,7 @@ class PreferencesDataSource @Inject constructor(
         
         private fun bannerKey(userId: String) = "ui_${userId}_show_projection_banner"
         private fun limitKey(userId: String) = "ui_${userId}_last_known_over_limit"
+        private fun autoTrackingKey(userId: String) = "settings_${userId}_auto_tracking_enabled"
     }
 
     /**
@@ -39,12 +40,17 @@ class PreferencesDataSource @Inject constructor(
             storage.read<Boolean>(limitKey(userId))
         } else null
 
+        val autoTracking = if (userId.isNotEmpty()) {
+            storage.read<Boolean>(autoTrackingKey(userId)) ?: false
+        } else false
+
         emit(
             UserPreferences(
                 rememberEmail = rememberEmail,
                 lastEmail = lastEmail,
                 showProjectionBanner = showBanner,
-                lastKnownOverLimit = lastLimit
+                lastKnownOverLimit = lastLimit,
+                autoTrackingEnabled = autoTracking
             )
         )
     }
@@ -78,6 +84,11 @@ class PreferencesDataSource @Inject constructor(
         } else {
             storage.save(limitKey(userId), overLimit)
         }
+    }
+
+    suspend fun setAutoTrackingEnabled(userId: String, enabled: Boolean) {
+        if (userId.isEmpty()) return
+        storage.save(autoTrackingKey(userId), enabled)
     }
 
     suspend fun clearAllPreferences() {
