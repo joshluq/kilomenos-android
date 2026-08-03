@@ -242,7 +242,7 @@ private fun VehicleItem(
         selected = vehicle.isSelected
     ) {
         Row(
-            modifier = Modifier.fillMaxWidth().padding(CanvasKitTheme.spacing.md),
+            modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {

@@ -2,8 +2,6 @@ package es.joshluq.kmsafe.ui.history
 
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import es.joshluq.analyticskit.domain.model.AnalyticsEvent
-import es.joshluq.analyticskit.sdk.AnalyticskitManager
 import es.joshluq.foundationkit.coroutines.DispatcherProvider
 import es.joshluq.foundationkit.log.LoggerKit
 import es.joshluq.foundationkit.text.TextProvider
@@ -13,12 +11,10 @@ import es.joshluq.kmsafe.R
 import es.joshluq.kmsafe.di.DeleteOdometerRecord
 import es.joshluq.kmsafe.di.GetHistory
 import es.joshluq.kmsafe.di.IsUserPremium
-import es.joshluq.kmsafe.di.UpdateOdometerRecord
 import es.joshluq.kmsafe.domain.model.OdometerRecord
 import es.joshluq.kmsafe.domain.usecase.DeleteOdometerRecordUseCase
 import es.joshluq.kmsafe.domain.usecase.GetHistoryUseCase
 import es.joshluq.kmsafe.domain.usecase.IsUserPremiumUseCase
-import es.joshluq.kmsafe.domain.usecase.UpdateOdometerRecordUseCase
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
@@ -33,12 +29,9 @@ class HistoryViewModel @Inject constructor(
     @JvmSuppressWildcards FlowUseCase<GetHistoryUseCase.Input, GetHistoryUseCase.Output>,
     @param:DeleteOdometerRecord private val deleteOdometerRecordUseCase:
     @JvmSuppressWildcards FlowUseCase<DeleteOdometerRecordUseCase.Input, DeleteOdometerRecordUseCase.Output>,
-    @param:UpdateOdometerRecord private val updateOdometerRecordUseCase:
-    @JvmSuppressWildcards FlowUseCase<UpdateOdometerRecordUseCase.Input, UpdateOdometerRecordUseCase.Output>,
     @param:IsUserPremium private val isUserPremiumUseCase:
     @JvmSuppressWildcards FlowUseCase<IsUserPremiumUseCase.Input, IsUserPremiumUseCase.Output>,
     private val dispatchers: DispatcherProvider,
-    private val analytics: AnalyticskitManager,
     private val logger: LoggerKit
 ) : ScreenViewModel<HistoryState, HistoryEvent, HistoryEffect>() {
 
@@ -61,19 +54,6 @@ class HistoryViewModel @Inject constructor(
                 updateState { copy(selectedDailyRecords = null) }
             }
             HistoryEvent.OnRefresh -> loadHistory(forceRefresh = true)
-            is HistoryEvent.OnEditRecordClicked -> updateState {
-                copy(
-                    editingRecord = event.record,
-                    editingOdometerValue = event.record.odometerValue.toString(),
-                    editingLabel = event.record.label ?: "",
-                    editingFuel = event.record.fuelAmount?.toString() ?: ""
-                )
-            }
-            is HistoryEvent.OnEditingOdometerChanged -> updateState { copy(editingOdometerValue = event.value) }
-            is HistoryEvent.OnEditingLabelChanged -> updateState { copy(editingLabel = event.value) }
-            is HistoryEvent.OnEditingFuelChanged -> updateState { copy(editingFuel = event.value) }
-            HistoryEvent.OnUpdateRecordClicked -> handleUpdateRecord()
-            HistoryEvent.OnDismissEdit -> updateState { copy(editingRecord = null) }
             HistoryEvent.OnDismissError -> updateState { copy(error = null) }
             is HistoryEvent.OnSearchQueryChanged -> {
                 updateState { copy(searchQuery = event.query) }
@@ -94,41 +74,6 @@ class HistoryViewModel @Inject constructor(
             .onEach { output ->
                 if (output is IsUserPremiumUseCase.Output.Success) {
                     updateState { copy(isPremium = output.isPremium) }
-                }
-            }
-            .launchIn(viewModelScope)
-    }
-
-    private fun handleUpdateRecord() {
-        val record = state.value.editingRecord ?: return
-        val newValue = state.value.editingOdometerValue.toIntOrNull() ?: return
-        val label = state.value.editingLabel.takeIf { it.isNotBlank() }
-        val fuelAmount = state.value.editingFuel.toDoubleOrNull()
-
-        val updatedRecord = record.copy(
-            odometerValue = newValue,
-            label = label,
-            fuelAmount = fuelAmount
-        )
-
-        updateOdometerRecordUseCase(UpdateOdometerRecordUseCase.Input(updatedRecord))
-            .onEach { output ->
-                when (output) {
-                    is UpdateOdometerRecordUseCase.Output.Progress -> updateState { copy(isEditing = true) }
-                    is UpdateOdometerRecordUseCase.Output.Success -> {
-                        if (fuelAmount != null) {
-                            analytics.track(AnalyticsEvent.Custom("fuel_entry_added", mapOf("amount" to fuelAmount)))
-                        }
-                        updateState { copy(isEditing = false, editingRecord = null) }
-                    }
-                    is UpdateOdometerRecordUseCase.Output.Failure -> {
-                        updateState {
-                            copy(
-                                isEditing = false,
-                                error = TextProvider.Resource(R.string.history_register_error)
-                            )
-                        }
-                    }
                 }
             }
             .launchIn(viewModelScope)
