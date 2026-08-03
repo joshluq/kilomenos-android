@@ -22,9 +22,19 @@ object AnalyticsModule {
         loggerProvider: LoggerAnalyticsProvider,
         firebaseProvider: FirebaseAnalyticsProvider
     ): AnalyticskitManager {
-        return AnalyticskitManager.Builder()
+        val manager = AnalyticskitManager.Builder()
             .addProvider(loggerProvider)
             .addProvider(firebaseProvider)
             .build()
+
+        // Configure Global Properties for all events
+        manager.apply {
+            addGlobalProperty("device_model", android.os.Build.MODEL)
+            addGlobalProperty("device_brand", android.os.Build.MANUFACTURER)
+            addGlobalProperty("os_version", android.os.Build.VERSION.RELEASE)
+            addGlobalProperty("android_api", android.os.Build.VERSION.SDK_INT)
+        }
+
+        return manager
     }
 }
