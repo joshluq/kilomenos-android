@@ -273,6 +273,7 @@
     <string name="preferences_about_header">ABOUT</string>
     <string name="preferences_manage_consent_label">Manage ad preferences</string>
     <string name="preferences_oss_description">KiloMenos is built thanks to the incredible work of the open source community. Below are the main libraries used:</string>
+    <string name="preferences_oss_license_generic">License: Apache 2.0 / MIT</string>
     <string name="preferences_oss_license_label">License: %1$s</string>
     <string name="preferences_auto_tracking_label">Automatic trip detection</string>
     <string name="preferences_auto_tracking_desc">Automatically start GPS when entering a vehicle.</string>

@@ -72,9 +72,11 @@ fun PreferencesScreen(
     val permissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { isGranted ->
-        onEvent(Event.OnPermissionResult(Manifest.permission.ACTIVITY_RECOGNITION, isGranted))
-        if (isGranted) {
-            onEvent(Event.OnAutoTrackingToggled(true))
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            onEvent(Event.OnPermissionResult(Manifest.permission.ACTIVITY_RECOGNITION, isGranted))
+            if (isGranted) {
+                onEvent(Event.OnAutoTrackingToggled(true))
+            }
         }
     }
 
@@ -97,7 +99,7 @@ fun PreferencesScreen(
                     IconButton(onClick = safeClick { onEvent(Event.OnBackClicked) }) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = null,
+                            contentDescription = stringResource(R.string.acc_back),
                             tint = CanvasKitTheme.colors.textPrimary
                         )
                     }
@@ -197,7 +199,7 @@ fun PreferencesScreen(
                 Spacer(modifier = Modifier.height(CanvasKitTheme.spacing.md))
 
                 Text(
-                    text = "ACERCA DE",
+                    text = stringResource(R.string.preferences_about_header),
                     style = CanvasKitTheme.typography.labelSmall,
                     color = CanvasKitTheme.colors.textSecondary,
                     modifier = Modifier.padding(start = CanvasKitTheme.spacing.xs)
@@ -321,7 +323,7 @@ private fun SoftwareCreditsDialog(onDismiss: () -> Unit) {
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
                     Text(
-                        text = "KiloMenos se construye gracias al increíble trabajo de la comunidad de código abierto. A continuación, se detallan las principales librerías utilizadas:",
+                        text = stringResource(R.string.preferences_oss_description),
                         style = CanvasKitTheme.typography.bodyMedium,
                         color = CanvasKitTheme.colors.textSecondary
                     )
@@ -354,7 +356,7 @@ private fun SoftwareCreditsDialog(onDismiss: () -> Unit) {
                                 )
                                 Spacer(modifier = Modifier.height(8.dp))
                                 Text(
-                                    text = "Licencia: Apache 2.0 / MIT",
+                                    text = stringResource(R.string.preferences_oss_license_generic),
                                     style = CanvasKitTheme.typography.labelSmall,
                                     color = CanvasKitTheme.colors.brandAccent,
                                     fontWeight = FontWeight.Medium

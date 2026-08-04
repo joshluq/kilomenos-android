@@ -273,6 +273,7 @@
     <string name="preferences_about_header">ACERCA DE</string>
     <string name="preferences_manage_consent_label">Gestionar preferencias de anuncios</string>
     <string name="preferences_oss_description">KiloMenos se construye gracias al increíble trabajo de la comunidad de código abierto. A continuación, se detallan las principales librerías utilizadas:</string>
+    <string name="preferences_oss_license_generic">Licencia: Apache 2.0 / MIT</string>
     <string name="preferences_oss_license_label">Licencia: %1$s</string>
     <string name="preferences_auto_tracking_label">Detección automática de viajes</string>
     <string name="preferences_auto_tracking_desc">Inicia el GPS automáticamente al entrar en un vehículo.</string>
