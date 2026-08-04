@@ -21,7 +21,7 @@ data class HistoryState(
     val initialRecord: OdometerRecord? = null,
     val allRecords: List<RecordWithIndicator> = emptyList(),
     val filteredGroups: Map<String, List<RecordWithIndicator>> = emptyMap(),
-    val collapsedMonths: Set<String> = emptySet(),
+    val expandedGroups: Set<String> = emptySet(),
     val isLoading: Boolean = false,
     val isRefreshing: Boolean = false,
     val totalKms: Int = 0,
@@ -42,7 +42,7 @@ data class HistoryState(
  */
 sealed interface HistoryEvent : UiEvent {
     data class OnDeleteRecords(val records: List<OdometerRecord>) : HistoryEvent
-    data class OnToggleMonthCollapse(val monthYear: String) : HistoryEvent
+    data class OnToggleGroupExpansion(val groupTitle: String) : HistoryEvent
     data class OnViewDetail(val records: List<RecordWithIndicator>) : HistoryEvent
     data object OnDismissDetail : HistoryEvent
     data object OnRefresh : HistoryEvent

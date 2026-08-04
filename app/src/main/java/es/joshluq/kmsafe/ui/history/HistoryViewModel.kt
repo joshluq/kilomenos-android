@@ -46,7 +46,7 @@ class HistoryViewModel @Inject constructor(
         logger.d("HistoryViewModel", "Event received: $event")
         when (event) {
             is HistoryEvent.OnDeleteRecords -> handleDeleteRecords(event.records)
-            is HistoryEvent.OnToggleMonthCollapse -> handleToggleMonthCollapse(event.monthYear)
+            is HistoryEvent.OnToggleGroupExpansion -> handleToggleGroupExpansion(event.groupTitle)
             is HistoryEvent.OnViewDetail -> {
                 updateState { copy(selectedDailyRecords = event.records) }
             }
@@ -159,14 +159,14 @@ class HistoryViewModel @Inject constructor(
         }
     }
 
-    private fun handleToggleMonthCollapse(monthYear: String) {
+    private fun handleToggleGroupExpansion(groupTitle: String) {
         updateState {
-            val newCollapsed = if (collapsedMonths.contains(monthYear)) {
-                collapsedMonths - monthYear
+            val newExpanded = if (expandedGroups.contains(groupTitle)) {
+                expandedGroups - groupTitle
             } else {
-                collapsedMonths + monthYear
+                expandedGroups + groupTitle
             }
-            copy(collapsedMonths = newCollapsed)
+            copy(expandedGroups = newExpanded)
         }
     }
 

@@ -7,6 +7,7 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import es.joshluq.kmsafe.BuildConfig
 import es.joshluq.kmsafe.data.local.AppDatabase
 import es.joshluq.kmsafe.data.local.dao.OdometerRecordDao
 import es.joshluq.kmsafe.data.local.dao.RentingContractDao
@@ -19,7 +20,12 @@ import javax.inject.Singleton
 @InstallIn(SingletonComponent::class)
 abstract class DataModule {
 
+
+
     companion object {
+
+        private const val DATABASE_NAME = "kmsafe_db_${BuildConfig.FLAVOR}"
+
         /**
          * Provides the singleton instance of [AppDatabase].
          */
@@ -31,7 +37,7 @@ abstract class DataModule {
             return Room.databaseBuilder(
                 context,
                 AppDatabase::class.java,
-                "kilomenos_db"
+                DATABASE_NAME
             ).addMigrations(
                 AppDatabase.MIGRATION_1_2,
                 AppDatabase.MIGRATION_2_3,

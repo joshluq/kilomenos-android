@@ -147,14 +147,14 @@ fun HistoryScreen(
                                 item { HistoryEmptyState() }
                             } else {
                                 state.filteredGroups.forEach { (title, records) ->
-                                    val isCollapsed = state.collapsedMonths.contains(title)
+                                    val isExpanded = state.expandedGroups.contains(title)
                                     val totalGroupKms = records.sumOf { it.record.odometerValue }
 
                                     item(key = "header_$title") {
                                         CanvasKitAccordion(
-                                            expanded = !isCollapsed,
+                                            expanded = isExpanded,
                                             onExpandedChange = {
-                                                onEvent(HistoryEvent.OnToggleMonthCollapse(title))
+                                                onEvent(HistoryEvent.OnToggleGroupExpansion(title))
                                             },
                                             headline = {
                                                 GroupHeader(title = title)
@@ -172,7 +172,7 @@ fun HistoryScreen(
                                         Spacer(modifier = Modifier.height(12.dp))
                                     }
 
-                                    if (!isCollapsed) {
+                                    if (isExpanded) {
                                         items(records, key = { it.record.id }) { item ->
                                             HistoryItem(
                                                 item = item,
