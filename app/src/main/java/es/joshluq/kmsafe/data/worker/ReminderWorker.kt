@@ -33,7 +33,7 @@ class ReminderWorker @AssistedInject constructor(
 ) : CoroutineWorker(context, workerParams) {
 
     companion object {
-        private const val CHANNEL_ID = "reminder_channel"
+        private const val CHANNEL_ID = "reminder_channel_${es.joshluq.kmsafe.BuildConfig.FLAVOR}"
         private const val NOTIFICATION_ID = 2001
         private const val INACTIVITY_THRESHOLD_DAYS = 3L
     }

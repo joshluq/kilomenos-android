@@ -23,6 +23,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import es.joshluq.analyticskit.domain.model.AnalyticsEvent
 import es.joshluq.analyticskit.sdk.AnalyticskitManager
 import es.joshluq.foundationkit.log.LoggerKit
+import es.joshluq.kmsafe.BuildConfig
 import es.joshluq.kmsafe.MainActivity
 import es.joshluq.kmsafe.R
 import es.joshluq.kmsafe.domain.repository.TrackingRepository
@@ -44,7 +45,7 @@ class LocationTrackingService : Service() {
     private var lastLocation: Location? = null
 
     companion object {
-        private const val CHANNEL_ID = "location_tracking_channel"
+        private const val CHANNEL_ID = "location_tracking_channel_${BuildConfig.FLAVOR}"
         private const val NOTIFICATION_ID = 1001
         
         const val ACTION_START = "ACTION_START"

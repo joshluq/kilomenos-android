@@ -20,6 +20,7 @@ import es.joshluq.encryptionkit.sdk.EncryptionKit
 import es.joshluq.foundationkit.log.LoggerKit
 import es.joshluq.foundationkit.provider.SerializerProvider
 import es.joshluq.foundationkit.provider.StorageProvider
+import es.joshluq.kmsafe.BuildConfig
 import es.joshluq.kmsafe.data.remote.auth.AuthTokenRefresher
 import es.joshluq.kmsafe.data.remote.auth.UserSessionDataSource
 import es.joshluq.kmsafe.data.remote.auth.UserSessionDataSourceImpl
@@ -34,7 +35,10 @@ import javax.inject.Singleton
 @InstallIn(SingletonComponent::class)
 object AuthModule {
 
-    private const val STORE_NAME = "kmsafe_auth_store"
+    private const val STORE_NAME = "kmsafe_auth_store_${BuildConfig.FLAVOR}"
+    private const val ENCRYPTION_ALIAS = "kmsafe_secure_key_${BuildConfig.FLAVOR}"
+
+    private const val PREFS_NAME = "kmsafe_secure_prefs_${BuildConfig.FLAVOR}"
 
     @Provides
     @Singleton
@@ -46,7 +50,7 @@ object AuthModule {
         return AuthKit.init(context) {
             storeName = STORE_NAME
             this.logger = logger
-            encryptionAlias = "kmsafe_secure_key"
+            encryptionAlias = ENCRYPTION_ALIAS
             addFeature(
                 SessionKit,
                 SessionKitConfig.build {
@@ -75,7 +79,7 @@ object AuthModule {
         logger: LoggerKit
     ): EncryptionKit {
         return EncryptionKit.build(context) {
-            alias = "kmsafe_secure_key"
+            alias = ENCRYPTION_ALIAS
             this.logger = logger
         }
     }
@@ -84,7 +88,7 @@ object AuthModule {
     @Singleton
     fun provideDataStore(@ApplicationContext context: Context): DataStore<Preferences> {
         return PreferenceDataStoreFactory.create {
-            context.preferencesDataStoreFile("kmsafe_secure_prefs")
+            context.preferencesDataStoreFile(PREFS_NAME)
         }
     }
 
