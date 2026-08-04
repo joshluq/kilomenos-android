@@ -15,6 +15,7 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -25,14 +26,18 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -128,6 +133,9 @@ fun OverviewScreen(
     onEvent: (Event) -> Unit
 ) {
     val bottomSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val focusManager = LocalFocusManager.current
+    val keyboardController = LocalSoftwareKeyboardController.current
+
     val permissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
     ) { permissions ->
@@ -152,7 +160,10 @@ fun OverviewScreen(
         floatingActionButton = {
             if (state.hasRenting) {
                 FloatingActionButton(
-                    onClick = safeClick { onEvent(Event.OnUpdateOdometerClicked) },
+                    onClick = safeClick { 
+                        keyboardController?.hide()
+                        onEvent(Event.OnUpdateOdometerClicked) 
+                    },
                     containerColor = CanvasKitTheme.colors.brandAccent,
                     contentColor = CanvasKitTheme.colors.onBrandAccent,
                     shape = CircleShape
@@ -216,7 +227,11 @@ fun OverviewScreen(
 
         if (state.showBottomSheet) {
             CanvasKitBottomSheet(
-                onDismissRequest = { onEvent(Event.OnBottomSheetDismissed) },
+                onDismissRequest = { 
+                    keyboardController?.hide()
+                    focusManager.clearFocus()
+                    onEvent(Event.OnBottomSheetDismissed) 
+                },
                 sheetState = bottomSheetState,
             ) {
                 UpdateOdometerContent(state, onEvent)
@@ -231,6 +246,8 @@ private fun RentingState(
     onEvent: (Event) -> Unit,
     permissionLauncher: ActivityResultLauncher<Array<String>>
 ) {
+    val keyboardController = LocalSoftwareKeyboardController.current
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -251,7 +268,10 @@ private fun RentingState(
             balance = state.balance,
             totalKms = state.totalKmsDriven,
             imageUrl = state.renting?.vehicleImageUrl,
-            onEditClick = { state.renting?.let { onEvent(Event.OnEditContractClicked(it.id)) } }
+            onEditClick = { 
+                keyboardController?.hide()
+                state.renting?.let { onEvent(Event.OnEditContractClicked(it.id)) } 
+            }
         )
 
         TheoreticalLimitsSection(
@@ -270,10 +290,13 @@ private fun TrackingSection(
     onEvent: (Event) -> Unit,
     permissionLauncher: ActivityResultLauncher<Array<String>>
 ) {
+    val keyboardController = LocalSoftwareKeyboardController.current
+
     TrackingCard(
         isTracking = state.isTracking,
         distanceMeters = state.trackedDistance,
         onStart = {
+            keyboardController?.hide()
             val permissions = mutableListOf(
                 android.Manifest.permission.ACCESS_FINE_LOCATION,
                 android.Manifest.permission.ACCESS_COARSE_LOCATION
@@ -283,9 +306,18 @@ private fun TrackingSection(
             }
             permissionLauncher.launch(permissions.toTypedArray())
         },
-        onStop = { onEvent(Event.OnStopTrackingClicked) },
-        onConfirm = { onEvent(Event.OnConfirmTrackedTripClicked) },
-        onCancel = { onEvent(Event.OnCancelTrackedTripClicked) }
+        onStop = { 
+            keyboardController?.hide()
+            onEvent(Event.OnStopTrackingClicked) 
+        },
+        onConfirm = { 
+            keyboardController?.hide()
+            onEvent(Event.OnConfirmTrackedTripClicked) 
+        },
+        onCancel = { 
+            keyboardController?.hide()
+            onEvent(Event.OnCancelTrackedTripClicked) 
+        }
     )
 }
 
@@ -795,6 +827,8 @@ private fun UpdateOdometerContent(
     onEvent: (Event) -> Unit
 ) {
     val datePickerState = rememberDatePickerState(initialSelectedDateMillis = state.newRecordDate)
+    val focusManager = LocalFocusManager.current
+    val keyboardController = LocalSoftwareKeyboardController.current
 
     Column(
         modifier = Modifier
@@ -822,7 +856,11 @@ private fun UpdateOdometerContent(
                             color = CanvasKitTheme.colors.brandAccent,
                         )
                     },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Number,
+                        imeAction = ImeAction.Next
+                    ),
+                    keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Next) })
                 )
             }
             Column(modifier = Modifier.weight(1f)) {
@@ -831,7 +869,12 @@ private fun UpdateOdometerContent(
                     value = state.newRecordLabel,
                     onValueChange = { onEvent(Event.OnNewLabelChanged(it)) },
                     placeholder = stringResource(R.string.overview_record_label_placeholder),
-                    enabled = true
+                    enabled = true,
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                    keyboardActions = KeyboardActions(onDone = {
+                        keyboardController?.hide()
+                        focusManager.clearFocus()
+                    })
                 )
             }
         }
@@ -846,6 +889,8 @@ private fun UpdateOdometerContent(
         CanvasKitButton(
             modifier = Modifier.fillMaxWidth(),
             onClick = safeClick {
+                keyboardController?.hide()
+                focusManager.clearFocus()
                 datePickerState.selectedDateMillis?.let {
                     val preciseTimestamp = DateUtils.mergeDateWithCurrentTime(it)
                     onEvent(Event.OnSaveRecordClicked(preciseTimestamp))

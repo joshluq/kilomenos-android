@@ -2,22 +2,50 @@ package es.joshluq.kmsafe.ui.history.detail
 
 import android.content.res.Configuration
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Label
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.filled.AccessTime
+import androidx.compose.material.icons.filled.CalendarToday
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.LocalGasStation
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -69,19 +97,23 @@ fun RecordDetailScreen(
     state: RecordDetailState,
     onEvent: (RecordDetailEvent) -> Unit
 ) {
+    val keyboardController = LocalSoftwareKeyboardController.current
+
     CanvasKitLoadingScaffold(
         isLoading = state.isLoading,
         topBar = {
             CanvasKitTopBar(
                 title = {
-                    @Suppress("DEPRECATION")
                     Text(
                         text = stringResource(R.string.history_detail_action),
                         style = CanvasKitTheme.typography.headingMedium
                     )
                 },
                 navigationIcon = {
-                    IconButton(onClick = safeClick { onEvent(RecordDetailEvent.OnBackClicked) }) {
+                    IconButton(onClick = safeClick { 
+                        keyboardController?.hide()
+                        onEvent(RecordDetailEvent.OnBackClicked) 
+                    }) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = stringResource(R.string.acc_back),
@@ -116,7 +148,7 @@ fun RecordDetailScreen(
 
                     // Consumption Section (Premium)
                     if (state.isPremium && state.consumptionL100km != null) {
-                        ConsumptionCard(state.consumptionL100km, record.fuelAmount!!)
+                        ConsumptionCard(state.consumptionL100km)
                         Spacer(modifier = Modifier.height(24.dp))
                     }
 
@@ -246,7 +278,7 @@ private fun DetailRow(icon: ImageVector, label: String, value: String) {
 }
 
 @Composable
-private fun ConsumptionCard(l100km: Double, liters: Double) {
+private fun ConsumptionCard(l100km: Double) {
     val cardColor = CanvasKitTheme.colors.brandPrimary.copy(alpha = 0.05f)
     CanvasKitCard {
         Box(modifier = Modifier.background(cardColor)) {
@@ -291,9 +323,16 @@ private fun ConsumptionCard(l100km: Double, liters: Double) {
 
 @Composable
 private fun ActionButtons(onEvent: (RecordDetailEvent) -> Unit) {
+    val focusManager = LocalFocusManager.current
+    val keyboardController = LocalSoftwareKeyboardController.current
+
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         CanvasKitButton(
-            onClick = safeClick { onEvent(RecordDetailEvent.OnEditClicked) },
+            onClick = safeClick { 
+                keyboardController?.hide()
+                focusManager.clearFocus()
+                onEvent(RecordDetailEvent.OnEditClicked) 
+            },
             modifier = Modifier.fillMaxWidth()
         ) { contentColor ->
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -304,7 +343,11 @@ private fun ActionButtons(onEvent: (RecordDetailEvent) -> Unit) {
         }
         
         CanvasKitButton(
-            onClick = safeClick { onEvent(RecordDetailEvent.OnDeleteClicked) },
+            onClick = safeClick { 
+                keyboardController?.hide()
+                focusManager.clearFocus()
+                onEvent(RecordDetailEvent.OnDeleteClicked) 
+            },
             variant = CanvasKitButtonVariant.Ghost,
             modifier = Modifier.fillMaxWidth()
         ) { _ ->
@@ -319,6 +362,9 @@ private fun ActionButtons(onEvent: (RecordDetailEvent) -> Unit) {
 
 @Composable
 private fun DeleteConfirmationDialog(onEvent: (RecordDetailEvent) -> Unit) {
+    val focusManager = LocalFocusManager.current
+    val keyboardController = LocalSoftwareKeyboardController.current
+
     CanvasKitDialog(onDismissRequest = { onEvent(RecordDetailEvent.OnCancelDelete) }) {
         CanvasKitDialogContent(
             title = {
@@ -332,7 +378,11 @@ private fun DeleteConfirmationDialog(onEvent: (RecordDetailEvent) -> Unit) {
                     Text(stringResource(R.string.profile_logout_cancel), color = CanvasKitTheme.colors.textSecondary)
                 }
                 CanvasKitButton(
-                    onClick = safeClick { onEvent(RecordDetailEvent.OnConfirmDelete) },
+                    onClick = safeClick { 
+                        keyboardController?.hide()
+                        focusManager.clearFocus()
+                        onEvent(RecordDetailEvent.OnConfirmDelete) 
+                    },
                     variant = CanvasKitButtonVariant.Ghost
                 ) { _ ->
                     Text(stringResource(R.string.vehicles_delete_confirm), color = CanvasKitTheme.colors.error)
@@ -347,6 +397,9 @@ fun EditRecordDialog(
     state: RecordDetailState,
     onEvent: (RecordDetailEvent) -> Unit
 ) {
+    val focusManager = LocalFocusManager.current
+    val keyboardController = LocalSoftwareKeyboardController.current
+
     CanvasKitDialog(
         onDismissRequest = { onEvent(RecordDetailEvent.OnDismissEdit) }
     ) {
@@ -371,16 +424,28 @@ fun EditRecordDialog(
                                 color = CanvasKitTheme.colors.brandAccent,
                             )
                         },
-                        keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
-                            keyboardType = androidx.compose.ui.text.input.KeyboardType.Number
-                        )
+                        keyboardOptions = KeyboardOptions(
+                            keyboardType = androidx.compose.ui.text.input.KeyboardType.Number,
+                            imeAction = ImeAction.Next
+                        ),
+                        keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Next) })
                     )
 
                     OnboardingTextField(
                         label = stringResource(R.string.overview_record_label_label),
                         value = state.editingLabel,
                         onValueChange = { onEvent(RecordDetailEvent.OnEditingLabelChanged(it)) },
-                        placeholder = stringResource(R.string.overview_record_label_placeholder)
+                        placeholder = stringResource(R.string.overview_record_label_placeholder),
+                        keyboardOptions = KeyboardOptions(
+                            imeAction = if (state.isPremium) ImeAction.Next else ImeAction.Done
+                        ),
+                        keyboardActions = KeyboardActions(
+                            onNext = { focusManager.moveFocus(FocusDirection.Next) },
+                            onDone = { 
+                                keyboardController?.hide()
+                                focusManager.clearFocus()
+                            }
+                        )
                     )
 
                     if (state.isPremium) {
@@ -389,9 +454,14 @@ fun EditRecordDialog(
                             value = state.editingFuel,
                             onValueChange = { onEvent(RecordDetailEvent.OnEditingFuelChanged(it)) },
                             placeholder = stringResource(R.string.overview_record_fuel_placeholder),
-                            keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
-                                keyboardType = androidx.compose.ui.text.input.KeyboardType.Decimal
-                            )
+                            keyboardOptions = KeyboardOptions(
+                                keyboardType = androidx.compose.ui.text.input.KeyboardType.Decimal,
+                                imeAction = ImeAction.Done
+                            ),
+                            keyboardActions = KeyboardActions(onDone = { 
+                                keyboardController?.hide()
+                                focusManager.clearFocus()
+                            })
                         )
                     }
                 }
@@ -403,7 +473,11 @@ fun EditRecordDialog(
                 ) {
                     CanvasKitButton(
                         variant = CanvasKitButtonVariant.Secondary,
-                        onClick = { onEvent(RecordDetailEvent.OnDismissEdit) },
+                        onClick = { 
+                            keyboardController?.hide()
+                            focusManager.clearFocus()
+                            onEvent(RecordDetailEvent.OnDismissEdit) 
+                        },
                         modifier = Modifier.weight(1f)
                     ) { contentColor ->
                         Text(
@@ -412,7 +486,11 @@ fun EditRecordDialog(
                         )
                     }
                     CanvasKitButton(
-                        onClick = { onEvent(RecordDetailEvent.OnUpdateRecordClicked) },
+                        onClick = { 
+                            keyboardController?.hide()
+                            focusManager.clearFocus()
+                            onEvent(RecordDetailEvent.OnUpdateRecordClicked) 
+                        },
                         enabled = !state.isEditing && state.editingOdometerValue.isNotBlank(),
                         loading = state.isEditing,
                         modifier = Modifier.weight(1f)

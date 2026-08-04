@@ -1,8 +1,20 @@
 package es.joshluq.kmsafe.ui.signup
 
 import android.content.res.Configuration
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -12,16 +24,24 @@ import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
-import androidx.compose.material3.*
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
@@ -79,6 +99,8 @@ fun SignupScreen(
     onNavigateToPremiumPaywall: () -> Unit
 ) {
     val uriHandler = LocalUriHandler.current
+    val focusManager = LocalFocusManager.current
+    val keyboardController = LocalSoftwareKeyboardController.current
 
     LaunchedEffect(effects) {
         effects?.collect { effect ->
@@ -103,7 +125,10 @@ fun SignupScreen(
                     )
                 },
                 navigationIcon = {
-                    IconButton(onClick = safeClick { onEvent(Event.OnBackClicked) }) {
+                    IconButton(onClick = safeClick { 
+                        keyboardController?.hide()
+                        onNavigateBack() 
+                    }) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = stringResource(R.string.acc_back),
@@ -152,6 +177,8 @@ fun SignupScreen(
                                             modifier = Modifier.size(20.dp)
                                         )
                                     },
+                                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+                                    keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Next) }),
                                     modifier = Modifier.fillMaxWidth()
                                 )
 
@@ -170,7 +197,11 @@ fun SignupScreen(
                                             modifier = Modifier.size(20.dp)
                                         )
                                     },
-                                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+                                    keyboardOptions = KeyboardOptions(
+                                        keyboardType = KeyboardType.Email,
+                                        imeAction = ImeAction.Next
+                                    ),
+                                    keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Next) }),
                                     modifier = Modifier.fillMaxWidth()
                                 )
 
@@ -199,12 +230,24 @@ fun SignupScreen(
                                             )
                                         }
                                     },
-                                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                                    keyboardOptions = KeyboardOptions(
+                                        keyboardType = KeyboardType.Password,
+                                        imeAction = ImeAction.Done
+                                    ),
+                                    keyboardActions = KeyboardActions(onDone = {
+                                        keyboardController?.hide()
+                                        focusManager.clearFocus()
+                                        if (state.isSignupEnabled) onEvent(Event.OnSignupClicked)
+                                    }),
                                     modifier = Modifier.fillMaxWidth()
                                 )
 
                                 CanvasKitButton(
-                                    onClick = { onEvent(Event.OnSignupClicked) },
+                                    onClick = { 
+                                        keyboardController?.hide()
+                                        focusManager.clearFocus()
+                                        onEvent(Event.OnSignupClicked) 
+                                    },
                                     enabled = state.isSignupEnabled,
                                     loading = state.isLoading,
                                     modifier = Modifier.fillMaxWidth()
@@ -281,7 +324,11 @@ fun SignupScreen(
                             )
                         }
                         CanvasKitButton(
-                            onClick = { onEvent(Event.OnConfirmUserConflict) },
+                            onClick = { 
+                                keyboardController?.hide()
+                                focusManager.clearFocus()
+                                onEvent(Event.OnConfirmUserConflict) 
+                            },
                             variant = CanvasKitButtonVariant.Ghost
                         ) { _ ->
                             Text(
