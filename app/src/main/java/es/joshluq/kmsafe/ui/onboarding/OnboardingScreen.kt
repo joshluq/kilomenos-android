@@ -8,9 +8,23 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -19,7 +33,11 @@ import androidx.compose.material.icons.filled.BrokenImage
 import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material3.*
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.Text
+import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -27,11 +45,15 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -102,6 +124,8 @@ fun OnboardingScreen(
     onNavigateBack: () -> Unit = {}
 ) {
     val datePickerState = rememberDatePickerState()
+    val focusManager = LocalFocusManager.current
+    val keyboardController = LocalSoftwareKeyboardController.current
 
     val photoPickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
@@ -124,7 +148,10 @@ fun OnboardingScreen(
                     )
                 },
                 navigationIcon = {
-                    IconButton(onClick = safeClick { onNavigateBack() }) {
+                    IconButton(onClick = safeClick { 
+                        keyboardController?.hide()
+                        onNavigateBack() 
+                    }) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = stringResource(R.string.acc_back),
@@ -204,12 +231,12 @@ fun OnboardingScreen(
                                     val date = Date(millis)
                                     val formatter = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
                                     onEvent(Event.OnStartDateChanged(formatter.format(date)))
+                                    focusManager.clearFocus()
                                 }
                                 onEvent(Event.OnToggleDatePicker)
                             },
                             variant = CanvasKitButtonVariant.Ghost,
                         ) {
-                            @Suppress("DEPRECATION")
                             Text(
                                 text = stringResource(R.string.onboarding_date_picker_confirm),
                                 color = CanvasKitTheme.colors.brandAccent
@@ -221,7 +248,6 @@ fun OnboardingScreen(
                             variant = CanvasKitButtonVariant.Ghost,
                             onClick = safeClick { onEvent(Event.OnToggleDatePicker) }
                         ) {
-                            @Suppress("DEPRECATION")
                             Text(
                                 text = stringResource(R.string.onboarding_date_picker_cancel),
                                 color = CanvasKitTheme.colors.brandAccent
@@ -280,6 +306,9 @@ private fun ReadOnlyContent(state: State) {
 
 @Composable
 private fun EditableContent(state: State, onEvent: (Event) -> Unit) {
+    val focusManager = LocalFocusManager.current
+    val keyboardController = LocalSoftwareKeyboardController.current
+
     Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
         OnboardingTextField(
             label = stringResource(R.string.onboarding_vehicle_name_label),
@@ -287,7 +316,9 @@ private fun EditableContent(state: State, onEvent: (Event) -> Unit) {
             onValueChange = { onEvent(Event.OnVehicleNameChanged(it)) },
             errorMessage = state.vehicleNameError?.asString(),
             placeholder = stringResource(R.string.onboarding_vehicle_name_placeholder),
-            enabled = true
+            enabled = true,
+            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+            keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Next) })
         )
 
         if (state.isEditMode) {
@@ -309,7 +340,10 @@ private fun EditableContent(state: State, onEvent: (Event) -> Unit) {
                 value = state.startDate,
                 placeholder = stringResource(R.string.onboarding_start_date_placeholder),
                 errorMessage = state.startDateError?.asString(),
-                onClick = { onEvent(Event.OnToggleDatePicker) },
+                onClick = { 
+                    keyboardController?.hide()
+                    onEvent(Event.OnToggleDatePicker) 
+                },
                 trailingIcon = {
                     Icon(
                         imageVector = Icons.Default.DateRange,
@@ -326,14 +360,17 @@ private fun EditableContent(state: State, onEvent: (Event) -> Unit) {
             onValueChange = { onEvent(Event.OnDurationMonthsChanged(it)) },
             errorMessage = state.durationMonthsError?.asString(),
             trailingIcon = {
-                @Suppress("DEPRECATION")
                 Text(
                     text = stringResource(R.string.onboarding_months_suffix),
                     color = CanvasKitTheme.colors.brandAccent
                 )
             },
             placeholder = stringResource(R.string.onboarding_duration_months_placeholder),
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+            keyboardOptions = KeyboardOptions(
+                keyboardType = KeyboardType.Number,
+                imeAction = ImeAction.Next
+            ),
+            keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Next) }),
             enabled = true
         )
 
@@ -343,14 +380,17 @@ private fun EditableContent(state: State, onEvent: (Event) -> Unit) {
             onValueChange = { onEvent(Event.OnTotalKmsChanged(it)) },
             errorMessage = state.totalKmsError?.asString(),
             trailingIcon = {
-                @Suppress("DEPRECATION")
                 Text(
                     text = stringResource(R.string.onboarding_km_suffix),
                     color = CanvasKitTheme.colors.brandAccent
                 )
             },
             placeholder = stringResource(R.string.onboarding_total_kms_placeholder),
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+            keyboardOptions = KeyboardOptions(
+                keyboardType = KeyboardType.Number,
+                imeAction = ImeAction.Next
+            ),
+            keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Next) }),
             enabled = true
         )
 
@@ -375,14 +415,17 @@ private fun EditableContent(state: State, onEvent: (Event) -> Unit) {
                 onValueChange = { onEvent(Event.OnStartOdometerChanged(it)) },
                 errorMessage = state.startOdometerError?.asString(),
                 trailingIcon = {
-                    @Suppress("DEPRECATION")
                     Text(
                         text = stringResource(R.string.onboarding_km_suffix),
                         color = CanvasKitTheme.colors.brandAccent
                     )
                 },
                 placeholder = stringResource(R.string.onboarding_start_odometer_placeholder),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Number,
+                    imeAction = ImeAction.Next
+                ),
+                keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Next) }),
                 enabled = true
             )
         }
@@ -393,26 +436,35 @@ private fun EditableContent(state: State, onEvent: (Event) -> Unit) {
             onValueChange = { onEvent(Event.OnCurrentOdometerChanged(it)) },
             errorMessage = state.currentOdometerError?.asString(),
             trailingIcon = {
-                @Suppress("DEPRECATION")
                 Text(
                     text = stringResource(R.string.onboarding_km_suffix),
                     color = CanvasKitTheme.colors.brandAccent
                 )
             },
             placeholder = stringResource(R.string.onboarding_current_odometer_placeholder),
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+            keyboardOptions = KeyboardOptions(
+                keyboardType = KeyboardType.Number,
+                imeAction = ImeAction.Done
+            ),
+            keyboardActions = KeyboardActions(onDone = { 
+                keyboardController?.hide()
+                focusManager.clearFocus()
+            }),
             enabled = true
         )
 
         Spacer(modifier = Modifier.height(32.dp))
 
         CanvasKitButton(
-            onClick = safeClick { onEvent(Event.OnRegisterClicked) },
+            onClick = safeClick { 
+                keyboardController?.hide()
+                focusManager.clearFocus()
+                onEvent(Event.OnRegisterClicked) 
+            },
             enabled = !state.isLoading,
             loading = state.isLoading,
             modifier = Modifier.fillMaxWidth()
         ) { contentColor ->
-            @Suppress("DEPRECATION")
             Text(
                 text = if (state.isLoading) {
                     stringResource(R.string.onboarding_saving_button)
@@ -569,7 +621,6 @@ fun OnboardingDisplayField(
                         style = typography.bodyMedium
                     )
                 } else {
-                    @Suppress("DEPRECATION")
                     Text(
                         text = value,
                         color = colors.textPrimary,
@@ -579,7 +630,6 @@ fun OnboardingDisplayField(
 
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     if (suffix != null) {
-                        @Suppress("DEPRECATION")
                         Text(
                             text = suffix,
                             style = typography.labelLarge,
@@ -614,6 +664,7 @@ fun OnboardingTextField(
     leadingIcon: @Composable (() -> Unit)? = null,
     trailingIcon: @Composable (() -> Unit)? = null,
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
+    keyboardActions: KeyboardActions = KeyboardActions.Default,
     enabled: Boolean = true
 ) {
     val spacing = CanvasKitTheme.spacing
@@ -627,6 +678,7 @@ fun OnboardingTextField(
             errorText = errorMessage,
             isError = errorMessage != null,
             keyboardOptions = keyboardOptions,
+            keyboardActions = keyboardActions,
             enabled = enabled,
             variant = CanvasKitTextFieldVariant.Outlined,
             label = label
