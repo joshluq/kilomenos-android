@@ -9,6 +9,7 @@ import es.joshluq.foundationkit.log.LogLevel
 import es.joshluq.foundationkit.log.LogProvider
 import es.joshluq.foundationkit.log.LoggerKit
 import es.joshluq.kmsafe.BuildConfig
+import es.joshluq.kmsafe.data.log.CrashlyticsLogProvider
 import javax.inject.Singleton
 
 /**
@@ -26,9 +27,25 @@ object LoggerModule {
         } else {
             LogLevel.NONE
         }
+        
         return LoggerKit.Builder()
-            .setProvider(KmLogProvider(level))
+            .setProvider(CompositeLogProvider(
+                listOf(
+                    KmLogProvider(level),
+                    CrashlyticsLogProvider()
+                )
+            ))
             .build()
+    }
+
+    private class CompositeLogProvider(
+        private val providers: List<LogProvider>
+    ) : LogProvider {
+        override val minLogLevel: LogLevel = LogLevel.VERBOSE // Managed by children
+
+        override fun log(priority: LogLevel, tag: String, message: String, throwable: Throwable?) {
+            providers.forEach { it.log(priority, tag, message, throwable) }
+        }
     }
 
     private class KmLogProvider(

@@ -32,19 +32,27 @@ class ActivityTransitionReceiver : BroadcastReceiver() {
     lateinit var isUserPremiumUseCase: @JvmSuppressWildcards FlowUseCase<IsUserPremiumUseCase.Input, IsUserPremiumUseCase.Output>
 
     override fun onReceive(context: Context, intent: Intent) {
-        if (!ActivityTransitionResult.hasResult(intent)) return
+        logger.d("ActivityReceiver", "onReceive triggered with action: ${intent.action}")
+
+        if (!ActivityTransitionResult.hasResult(intent)) {
+            logger.w("ActivityReceiver", "Received intent without ActivityTransitionResult")
+            return
+        }
 
         val result = ActivityTransitionResult.extractResult(intent) ?: return
         
         CoroutineScope(Dispatchers.IO).launch {
             // Check Premium Status first
             val output = isUserPremiumUseCase(IsUserPremiumUseCase.Input).first()
-            if (output !is IsUserPremiumUseCase.Output.Success || !output.isPremium) {
+            val isPremium = (output is IsUserPremiumUseCase.Output.Success && output.isPremium)
+
+            if (!isPremium) {
                 logger.d("ActivityReceiver", "Ignored: User is not premium.")
                 return@launch
             }
 
             for (event in result.transitionEvents) {
+                logger.i("ActivityReceiver", "Transition Event: Type=${event.activityType}, Transition=${event.transitionType}")
                 when (event.activityType) {
                     DetectedActivity.IN_VEHICLE -> handleVehicleTransition(context, event.transitionType)
                 }

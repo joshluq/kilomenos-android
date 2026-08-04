@@ -23,6 +23,7 @@ sealed interface Event : UiEvent {
     data class OnRememberEmailToggled(val enabled: Boolean) : Event
     data class OnProjectionBannerToggled(val enabled: Boolean) : Event
     data class OnAutoTrackingToggled(val enabled: Boolean) : Event
+    data class OnPermissionResult(val permission: String, val isGranted: Boolean) : Event
     object OnManagePrivacyClicked : Event
     object OnBackClicked : Event
     object OnDismissError : Event
