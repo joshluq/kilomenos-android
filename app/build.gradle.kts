@@ -111,6 +111,7 @@ dependencies {
     implementation("androidx.credentials:credentials:1.6.0")
     implementation("androidx.credentials:credentials-play-services-auth:1.6.0")
     implementation("com.google.android.libraries.identity.googleid:googleid:1.2.0")
+    implementation("com.google.accompanist:accompanist-permissions:0.37.3")
 
     implementation("com.android.billingclient:billing-ktx:9.1.0")
 

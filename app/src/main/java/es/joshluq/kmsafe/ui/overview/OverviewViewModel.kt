@@ -9,17 +9,8 @@ import es.joshluq.foundationkit.text.TextProvider
 import es.joshluq.foundationkit.usecase.FlowUseCase
 import es.joshluq.foundationkit.viewmodel.ScreenViewModel
 import es.joshluq.kmsafe.R
-import es.joshluq.kmsafe.di.AddOdometerRecord
-import es.joshluq.kmsafe.di.GetAllContracts
-import es.joshluq.kmsafe.di.GetMonthlyUsage
-import es.joshluq.kmsafe.di.GetOverviewData
-import es.joshluq.kmsafe.di.GetPreferences
-import es.joshluq.kmsafe.di.GetTripProjection
-import es.joshluq.kmsafe.di.IsUserPremium
-import es.joshluq.kmsafe.di.SelectContract
-import es.joshluq.kmsafe.di.UpdatePreferences
+import es.joshluq.kmsafe.di.*
 import es.joshluq.kmsafe.domain.model.RentingContract
-import es.joshluq.kmsafe.domain.repository.TrackingRepository
 import es.joshluq.kmsafe.domain.usecase.*
 import es.joshluq.kmsafe.ui.overview.model.toUiModel
 import kotlinx.coroutines.flow.launchIn
@@ -49,7 +40,12 @@ class OverviewViewModel @Inject constructor(
     @JvmSuppressWildcards FlowUseCase<GetPreferencesUseCase.Input, GetPreferencesUseCase.Output>,
     @param:UpdatePreferences private val updatePreferencesUseCase:
     @JvmSuppressWildcards FlowUseCase<UpdatePreferencesUseCase.Input, UpdatePreferencesUseCase.Output>,
-    private val trackingRepository: TrackingRepository,
+    @param:ObserveTrackingState private val observeTrackingStateUseCase:
+    @JvmSuppressWildcards FlowUseCase<ObserveTrackingStateUseCase.Input, ObserveTrackingStateUseCase.Output>,
+    @param:StopTracking private val stopTrackingUseCase:
+    @JvmSuppressWildcards FlowUseCase<StopTrackingUseCase.Input, StopTrackingUseCase.Output>,
+    @param:ClearTracking private val clearTrackingUseCase:
+    @JvmSuppressWildcards FlowUseCase<ClearTrackingUseCase.Input, ClearTrackingUseCase.Output>,
     private val analytics: AnalyticskitManager,
     private val logger: LoggerKit
 ) : ScreenViewModel<State, Event, Effect>() {
@@ -65,6 +61,7 @@ class OverviewViewModel @Inject constructor(
         loadProjection()
         loadAllVehicles()
         observeTracking()
+        loadPreferences()
     }
 
     override fun createInitialState(): State = State.Empty
@@ -98,10 +95,8 @@ class OverviewViewModel @Inject constructor(
             Event.OnStartTrackingClicked -> handleStartTracking()
             Event.OnStopTrackingClicked -> handleStopTracking()
             Event.OnConfirmTrackedTripClicked -> handleConfirmTrackedTrip()
-            Event.OnCancelTrackedTripClicked -> {
-                analytics.track(AnalyticsEvent.Custom("tracking_cancelled"))
-                trackingRepository.clear()
-            }
+            Event.OnCancelTrackedTripClicked -> handleCancelTrackedTrip()
+            Event.OnRequestPermissionsRationale -> launchEffect(Effect.OpenAppSettings)
         }
     }
 
@@ -111,16 +106,12 @@ class OverviewViewModel @Inject constructor(
                 if (output is IsUserPremiumUseCase.Output.Success) {
                     val isPremium = output.isPremium
                     updateState { copy(isPremium = isPremium) }
-                    // Refresh data to ensure sync icon is updated based on new plan
                     loadContractData()
                 }
             }
             .launchIn(viewModelScope)
     }
 
-    /**
-     * Loads the contract and odometer data to calculate the current status.
-     */
     private fun loadContractData() {
         getOverviewDataUseCase(GetOverviewDataUseCase.Input)
             .onEach { output ->
@@ -128,10 +119,8 @@ class OverviewViewModel @Inject constructor(
                     is GetOverviewDataUseCase.Output.Success -> {
                         if (output.contract != null) {
                             calculateMetrics(output.contract, output.actualKmsDrivenSinceStart)
-                            // Indicator should only be visible for Premium users
                             updateState { copy(isSyncPending = isPremium && output.isSyncPending) }
                         } else {
-                            // Important: Don't use State.Empty here as it wipes availableVehicles
                             updateState { copy(isLoading = false, renting = null) }
                         }
                     }
@@ -147,9 +136,6 @@ class OverviewViewModel @Inject constructor(
             .launchIn(viewModelScope)
     }
 
-    /**
-     * Loads all registered vehicles to allow switching.
-     */
     private fun loadAllVehicles() {
         getAllContractsUseCase(GetAllContractsUseCase.Input)
             .onEach { output ->
@@ -159,7 +145,7 @@ class OverviewViewModel @Inject constructor(
                             availableVehicles = output.contracts
                         )
                     }
-                    else -> { /* Ignore errors for this secondary view */ }
+                    else -> { }
                 }
             }
             .launchIn(viewModelScope)
@@ -192,9 +178,6 @@ class OverviewViewModel @Inject constructor(
             .launchIn(viewModelScope)
     }
 
-    /**
-     * Loads the predictive projection.
-     */
     private fun loadProjection() {
         getTripProjectionUseCase(GetTripProjectionUseCase.Input)
             .onEach { output ->
@@ -215,9 +198,7 @@ class OverviewViewModel @Inject constructor(
                     if (prefs.showProjectionBanner) {
                         val lastState = prefs.lastKnownOverLimit
                         if (lastState == null || lastState != currentOverLimit) {
-                            // Significant change or first time -> Show the banner
                             updateState { copy(showProjectionBanner = true) }
-                            // Persist the new state as last known
                             updatePreferencesUseCase(UpdatePreferencesUseCase.Input(lastKnownOverLimit = currentOverLimit))
                                 .launchIn(viewModelScope)
                         }
@@ -228,9 +209,15 @@ class OverviewViewModel @Inject constructor(
             }.launchIn(viewModelScope)
     }
 
-    /**
-     * Persists a new odometer record.
-     */
+    private fun loadPreferences() {
+        getPreferencesUseCase(GetPreferencesUseCase.Input)
+            .onEach { output ->
+                if (output is GetPreferencesUseCase.Output.Success) {
+                    updateState { copy(autoTrackingEnabled = output.preferences.autoTrackingEnabled) }
+                }
+            }.launchIn(viewModelScope)
+    }
+
     private fun handleSaveRecord(timestamp: Long) {
         val odometerValue = state.value.newOdometerValue.toIntOrNull() ?: return
         val label = state.value.newRecordLabel.takeIf { it.isNotBlank() }
@@ -253,10 +240,7 @@ class OverviewViewModel @Inject constructor(
                             analytics.track(AnalyticsEvent.Custom("fuel_entry_added", mapOf("amount" to fuelAmount)))
                         }
                         updateState { copy(isSaving = false, showBottomSheet = false, isLoading = false) }
-                        
-                        // If we were confirming a GPS trip, clear the tracking state
-                            trackingRepository.clear()
-
+                        clearTrackingUseCase(ClearTrackingUseCase.Input).launchIn(viewModelScope)
                     }
                     is AddOdometerRecordUseCase.Output.Failure -> {
                         updateState {
@@ -271,30 +255,18 @@ class OverviewViewModel @Inject constructor(
             .launchIn(viewModelScope)
     }
 
-    /**
-     * Orchestrates the calculation of all UI metrics based on the contract and current mileage.
-     */
     private fun calculateMetrics(renting: RentingContract, actualKmsDrivenSinceStart: Double) {
         val currentTime = System.currentTimeMillis()
-
         val totalDays = renting.durationMonths * DAYS_IN_MONTH
-
         val daysPassed = (currentTime - renting.startDate) / MILLIS_IN_DAY.toDouble()
             .coerceAtLeast(0.0)
-
         val baseDailyBudget = renting.totalKms / totalDays
-
         val monthlyBudget = renting.totalKms.toDouble() / renting.durationMonths
-
         val theoreticalKms = daysPassed * baseDailyBudget
-
         val balance = theoreticalKms - actualKmsDrivenSinceStart
-
         val timeUsedPercentage = (daysPassed / totalDays).coerceIn(0.0, 1.0).toFloat()
         val kmsUsedPercentage = (actualKmsDrivenSinceStart / renting.totalKms).coerceIn(0.0, 1.0).toFloat()
         val differencePercentage = ((timeUsedPercentage - kmsUsedPercentage) * 100)
-
-        // Total accumulated odometer
         val currentOdometer = renting.startOdometer + actualKmsDrivenSinceStart
         updateState {
             copy(
@@ -312,21 +284,22 @@ class OverviewViewModel @Inject constructor(
     }
 
     private fun handleOnRegisterRentingClicked() {
-        logger.d("OverviewViewModel", "Effect launched: NavigateToOnboarding")
         launchEffect(Effect.NavigateToOnboarding())
     }
 
     private fun observeTracking() {
-        trackingRepository.isTracking
-            .onEach { isTracking -> updateState { copy(isTracking = isTracking) } }
-            .launchIn(viewModelScope)
-
-        trackingRepository.currentDistanceMeters
-            .onEach { distance -> updateState { copy(trackedDistance = distance) } }
-            .launchIn(viewModelScope)
-
-        trackingRepository.startTime
-            .onEach { startTime -> updateState { copy(tripStartTime = startTime) } }
+        observeTrackingStateUseCase(ObserveTrackingStateUseCase.Input)
+            .onEach { output ->
+                if (output is ObserveTrackingStateUseCase.Output.Success) {
+                    updateState { 
+                        copy(
+                            isTracking = output.isTracking,
+                            trackedDistance = output.trackedDistance,
+                            tripStartTime = output.startTime
+                        ) 
+                    }
+                }
+            }
             .launchIn(viewModelScope)
     }
 
@@ -343,16 +316,17 @@ class OverviewViewModel @Inject constructor(
     private fun handleConfirmTrackedTrip() {
         val totalKms = state.value.trackedDistance / 1000.0
         val tripKms = totalKms.toInt()
-        
-        // Prepare bottom sheet with the actual trip distance (Additive Model)
         updateState {
             copy(
                 showBottomSheet = true,
                 newOdometerValue = tripKms.toString()
             )
         }
-        
-        // Reset tracking repository for next trip
-        trackingRepository.stopTracking()
+        stopTrackingUseCase(StopTrackingUseCase.Input).launchIn(viewModelScope)
+    }
+
+    private fun handleCancelTrackedTrip() {
+        analytics.track(AnalyticsEvent.Custom("tracking_cancelled"))
+        clearTrackingUseCase(ClearTrackingUseCase.Input).launchIn(viewModelScope)
     }
 }

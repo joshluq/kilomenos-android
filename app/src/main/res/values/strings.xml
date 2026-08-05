@@ -301,6 +301,10 @@
     <string name="acc_locked">Bloqueado</string>
     <string name="acc_crop_image">Recortar imagen</string>
     <string name="acc_close">Cerrar</string>
+    <string name="acc_scan_odometer">Escanear odómetro</string>
+
+    <!-- OCR Scanner -->
+    <string name="scanner_permission_button">Conceder Permiso</string>
 
     <!-- Reminders -->
     <string name="reminder_channel_name">Recordatorios de actividad</string>
@@ -308,4 +312,9 @@
     <string name="reminder_notification_title">¿Cómo va ese odómetro? 🚗</string>
     <string name="reminder_notification_message">No has actualizado tus kilómetros en unos días. ¡Regístralos ahora para mantener tu balance al día!</string>
 
+    <!-- Background Location & Activity Recognition Rationale -->
+    <string name="overview_permissions_required_title">Configuración requerida</string>
+    <string name="overview_permissions_required_desc">Para que el Auto-Tracking funcione, necesitamos permiso para detectar tu actividad física y acceder a la ubicación \"Siempre\". Esto permite registrar tus viajes automáticamente incluso con la pantalla apagada.</string>
+    <string name="overview_permissions_required_button">Configurar Permisos</string>
+    <string name="overview_permissions_grant_button">Conceder Permisos</string>
 </resources>

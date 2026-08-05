@@ -1,15 +1,35 @@
 package es.joshluq.kmsafe.ui.overview
 
-import android.content.res.Configuration
+import android.Manifest
 import android.content.Intent
+import android.content.res.Configuration
+import android.net.Uri
 import android.os.Build
+import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.animation.core.*
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
@@ -20,9 +40,30 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.HelpOutline
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.BrokenImage
+import androidx.compose.material.icons.filled.CarRental
+import androidx.compose.material.icons.filled.DirectionsCar
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Speed
+import androidx.compose.material.icons.filled.SyncProblem
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.Text
+import androidx.compose.material3.rememberDatePickerState
+import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -50,6 +91,11 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.SubcomposeAsyncImage
 import coil.request.ImageRequest
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.PermissionStatus
+import com.google.accompanist.permissions.isGranted
+import com.google.accompanist.permissions.rememberPermissionState
+import com.google.accompanist.permissions.shouldShowRationale
 import es.joshluq.canvaskit.components.buttons.CanvasKitButton
 import es.joshluq.canvaskit.components.buttons.CanvasKitButtonVariant
 import es.joshluq.canvaskit.components.cards.CanvasKitCard
@@ -90,6 +136,7 @@ fun OverviewRoute(
 ) {
     val viewModel: OverviewViewModel = hiltViewModel()
     val state = viewModel.state.collectAsStateWithLifecycle()
+
     OverviewScreen(
         state = state.value,
         onEvent = viewModel::sendEvent
@@ -118,6 +165,12 @@ fun OverviewRoute(
                     }
                     context.startService(intent)
                 }
+                Effect.OpenAppSettings -> {
+                    val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                        data = Uri.fromParts("package", context.packageName, null)
+                    }
+                    context.startActivity(intent)
+                }
             }
         }
     }
@@ -126,7 +179,7 @@ fun OverviewRoute(
 /**
  * Pure visual representation of the Overview screen.
  */
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalPermissionsApi::class)
 @Composable
 fun OverviewScreen(
     state: State,
@@ -136,10 +189,23 @@ fun OverviewScreen(
     val focusManager = LocalFocusManager.current
     val keyboardController = LocalSoftwareKeyboardController.current
 
-    val permissionLauncher = rememberLauncherForActivityResult(
+    // ACCOMPANIST: Permissions for Auto-Tracking
+    val activityRecognitionState = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+        rememberPermissionState(Manifest.permission.ACTIVITY_RECOGNITION)
+    } else {
+        null
+    }
+
+    val backgroundLocationState = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+        rememberPermissionState(Manifest.permission.ACCESS_BACKGROUND_LOCATION)
+    } else {
+        null
+    }
+
+    val multiplePermissionsLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
     ) { permissions ->
-        if (permissions.all { it.value }) {
+        if (permissions.values.all { it }) {
             onEvent(Event.OnStartTrackingClicked)
         }
     }
@@ -159,32 +225,74 @@ fun OverviewScreen(
         contentWindowInsets = WindowInsets(),
         floatingActionButton = {
             if (state.hasRenting) {
-                FloatingActionButton(
-                    onClick = safeClick { 
-                        keyboardController?.hide()
-                        onEvent(Event.OnUpdateOdometerClicked) 
-                    },
-                    containerColor = CanvasKitTheme.colors.brandAccent,
-                    contentColor = CanvasKitTheme.colors.onBrandAccent,
-                    shape = CircleShape
+                Column(
+                    horizontalAlignment = Alignment.End,
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    Icon(
-                        Icons.Default.Add,
-                        contentDescription = stringResource(R.string.overview_update_odometer_title)
-                    )
+                    FloatingActionButton(
+                        onClick = safeClick { 
+                            keyboardController?.hide()
+                            onEvent(Event.OnUpdateOdometerClicked) 
+                        },
+                        containerColor = CanvasKitTheme.colors.brandAccent,
+                        contentColor = CanvasKitTheme.colors.onBrandAccent,
+                        shape = CircleShape
+                    ) {
+                        Icon(
+                            Icons.Default.Add,
+                            contentDescription = stringResource(R.string.overview_update_odometer_title)
+                        )
+                    }
                 }
             }
         }
     ) { innerPadding ->
         Box(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
             Column {
+                val isActivityGranted = activityRecognitionState?.status?.isGranted ?: true
+                val isBackgroundGranted = backgroundLocationState?.status?.isGranted ?: true
+
                 when {
-                    state.hasRenting -> RentingState(state, onEvent, permissionLauncher)
+                    state.autoTrackingEnabled && (!isActivityGranted || !isBackgroundGranted) -> {
+                        val activityRationale = activityRecognitionState?.status?.shouldShowRationale ?: false
+                        val backgroundRationale = backgroundLocationState?.status?.shouldShowRationale ?: false
+                        val showSettingsLink = activityRationale || backgroundRationale
+
+                        AutoTrackingPermissionsRationale(
+                            shouldShowSettingsRationale = showSettingsLink,
+                            onRequestPermissions = {
+                                if (showSettingsLink) {
+                                    onEvent(Event.OnRequestPermissionsRationale)
+                                } else {
+                                    if (activityRecognitionState?.status is PermissionStatus.Denied) {
+                                        activityRecognitionState.launchPermissionRequest()
+                                    } else if (backgroundLocationState?.status is PermissionStatus.Denied) {
+                                        backgroundLocationState.launchPermissionRequest()
+                                    }
+                                }
+                            }
+                        )
+                    }
+                    state.hasRenting -> {
+                        RentingState(
+                            state = state, 
+                            onEvent = onEvent,
+                            onStartTracking = {
+                                val permissions = mutableListOf(
+                                    Manifest.permission.ACCESS_FINE_LOCATION,
+                                    Manifest.permission.ACCESS_COARSE_LOCATION
+                                )
+                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                                    permissions.add(Manifest.permission.POST_NOTIFICATIONS)
+                                }
+                                multiplePermissionsLauncher.launch(permissions.toTypedArray())
+                            }
+                        )
+                    }
                     else -> EmptyState(state = state, onRegisterClick = { onEvent(Event.OnRegisterRentingClicked) })
                 }
             }
 
-            // Toast-style Banner (Error)
             CanvasKitBanner(
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
@@ -241,10 +349,45 @@ fun OverviewScreen(
 }
 
 @Composable
+private fun AutoTrackingPermissionsRationale(
+    shouldShowSettingsRationale: Boolean,
+    onRequestPermissions: () -> Unit
+) {
+    CanvasKitStateView(
+        modifier = Modifier.fillMaxSize(),
+        title = stringResource(R.string.overview_permissions_required_title),
+        description = stringResource(R.string.overview_permissions_required_desc),
+        icon = {
+            Icon(
+                imageVector = Icons.Default.DirectionsCar,
+                contentDescription = null,
+                modifier = Modifier.size(CanvasKitTheme.spacing.xxxl),
+                tint = CanvasKitTheme.colors.brandAccent
+            )
+        },
+        action = {
+            CanvasKitButton(
+                onClick = onRequestPermissions,
+                modifier = Modifier.fillMaxWidth()
+            ) { contentColor ->
+                Text(
+                    text = if (shouldShowSettingsRationale) {
+                        stringResource(R.string.overview_permissions_required_button)
+                    } else {
+                        stringResource(R.string.overview_permissions_grant_button)
+                    },
+                    color = contentColor
+                )
+            }
+        }
+    )
+}
+
+@Composable
 private fun RentingState(
     state: State, 
     onEvent: (Event) -> Unit,
-    permissionLauncher: ActivityResultLauncher<Array<String>>
+    onStartTracking: () -> Unit
 ) {
     val keyboardController = LocalSoftwareKeyboardController.current
 
@@ -261,7 +404,24 @@ private fun RentingState(
             )
         }
         Spacer(modifier = Modifier.height(2.dp))
-        TrackingSection(state, onEvent, permissionLauncher)
+        
+        TrackingCard(
+            isTracking = state.isTracking,
+            distanceMeters = state.trackedDistance,
+            onStart = onStartTracking,
+            onStop = { 
+                keyboardController?.hide()
+                onEvent(Event.OnStopTrackingClicked) 
+            },
+            onConfirm = { 
+                keyboardController?.hide()
+                onEvent(Event.OnConfirmTrackedTripClicked) 
+            },
+            onCancel = { 
+                keyboardController?.hide()
+                onEvent(Event.OnCancelTrackedTripClicked) 
+            }
+        )
 
         MainBalanceCard(
             vehicleName = state.renting?.vehicleName ?: "",
@@ -282,43 +442,6 @@ private fun RentingState(
         ChartsSection(state)
         Spacer(modifier = Modifier.height(8.dp))
     }
-}
-
-@Composable
-private fun TrackingSection(
-    state: State, 
-    onEvent: (Event) -> Unit,
-    permissionLauncher: ActivityResultLauncher<Array<String>>
-) {
-    val keyboardController = LocalSoftwareKeyboardController.current
-
-    TrackingCard(
-        isTracking = state.isTracking,
-        distanceMeters = state.trackedDistance,
-        onStart = {
-            keyboardController?.hide()
-            val permissions = mutableListOf(
-                android.Manifest.permission.ACCESS_FINE_LOCATION,
-                android.Manifest.permission.ACCESS_COARSE_LOCATION
-            )
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                permissions.add(android.Manifest.permission.POST_NOTIFICATIONS)
-            }
-            permissionLauncher.launch(permissions.toTypedArray())
-        },
-        onStop = { 
-            keyboardController?.hide()
-            onEvent(Event.OnStopTrackingClicked) 
-        },
-        onConfirm = { 
-            keyboardController?.hide()
-            onEvent(Event.OnConfirmTrackedTripClicked) 
-        },
-        onCancel = { 
-            keyboardController?.hide()
-            onEvent(Event.OnCancelTrackedTripClicked) 
-        }
-    )
 }
 
 @Composable

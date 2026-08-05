@@ -301,6 +301,10 @@
     <string name="acc_locked">Locked</string>
     <string name="acc_crop_image">Crop image</string>
     <string name="acc_close">Close</string>
+    <string name="acc_scan_odometer">Scan odometer</string>
+
+    <!-- OCR Scanner -->
+    <string name="scanner_permission_button">Grant Permission</string>
 
     <!-- Reminders -->
     <string name="reminder_channel_name">Activity Reminders</string>
@@ -308,4 +312,9 @@
     <string name="reminder_notification_title">How is that odometer going? 🚗</string>
     <string name="reminder_notification_message">You haven\'t updated your kilometers in a few days. Register them now to keep your balance up to date!</string>
 
+    <!-- Background Location & Activity Recognition Rationale -->
+    <string name="overview_permissions_required_title">Configuration required</string>
+    <string name="overview_permissions_required_desc">For Auto-Tracking to work, we need permission to detect your physical activity and access location \"Always\". This allows recording your trips automatically even with the screen off.</string>
+    <string name="overview_permissions_required_button">Configure Permissions</string>
+    <string name="overview_permissions_grant_button">Grant Permissions</string>
 </resources>

@@ -5,13 +5,8 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import es.joshluq.foundationkit.log.LoggerKit
 import es.joshluq.foundationkit.usecase.FlowUseCase
 import es.joshluq.foundationkit.viewmodel.ScreenViewModel
-import es.joshluq.kmsafe.data.location.AutoTrackingManager
-import es.joshluq.kmsafe.di.GetPreferences
-import es.joshluq.kmsafe.di.IsUserPremium
-import es.joshluq.kmsafe.di.UpdatePreferences
-import es.joshluq.kmsafe.domain.usecase.GetPreferencesUseCase
-import es.joshluq.kmsafe.domain.usecase.IsUserPremiumUseCase
-import es.joshluq.kmsafe.domain.usecase.UpdatePreferencesUseCase
+import es.joshluq.kmsafe.di.*
+import es.joshluq.kmsafe.domain.usecase.*
 import es.joshluq.kmsafe.ui.util.ConsentManager
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
@@ -25,7 +20,10 @@ class PreferencesViewModel @Inject constructor(
     @JvmSuppressWildcards FlowUseCase<UpdatePreferencesUseCase.Input, UpdatePreferencesUseCase.Output>,
     @param:IsUserPremium private val isUserPremiumUseCase:
     @JvmSuppressWildcards FlowUseCase<IsUserPremiumUseCase.Input, IsUserPremiumUseCase.Output>,
-    private val autoTrackingManager: AutoTrackingManager,
+    @param:StartAutoTracking private val startAutoTrackingUseCase:
+    @JvmSuppressWildcards FlowUseCase<StartAutoTrackingUseCase.Input, StartAutoTrackingUseCase.Output>,
+    @param:StopAutoTracking private val stopAutoTrackingUseCase:
+    @JvmSuppressWildcards FlowUseCase<StopAutoTrackingUseCase.Input, StopAutoTrackingUseCase.Output>,
     private val consentManager: ConsentManager,
     private val logger: LoggerKit
 ) : ScreenViewModel<State, Event, Effect>() {
@@ -99,9 +97,9 @@ class PreferencesViewModel @Inject constructor(
                 if (output is UpdatePreferencesUseCase.Output.Success) {
                     updateState { copy(autoTrackingEnabled = enabled) }
                     if (enabled) {
-                        autoTrackingManager.startAutoTracking()
+                        startAutoTrackingUseCase(StartAutoTrackingUseCase.Input).launchIn(viewModelScope)
                     } else {
-                        autoTrackingManager.stopAutoTracking()
+                        stopAutoTrackingUseCase(StopAutoTrackingUseCase.Input).launchIn(viewModelScope)
                     }
                 }
             }.launchIn(viewModelScope)
