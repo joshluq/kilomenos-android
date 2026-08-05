@@ -1,12 +1,10 @@
 package es.joshluq.kmsafe.data.location
 
-import android.Manifest
 import android.annotation.SuppressLint
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.os.Build
-import androidx.annotation.RequiresPermission
 import com.google.android.gms.location.ActivityRecognition
 import com.google.android.gms.location.ActivityTransition
 import com.google.android.gms.location.ActivityTransitionRequest
@@ -42,8 +40,6 @@ class AutoTrackingManager @Inject constructor(
      */
     @SuppressLint("MissingPermission")
     fun startAutoTracking() {
-        logger.d("AutoTrackingManager", "Registering for activity transitions...")
-
         val transitions = listOf(
             ActivityTransition.Builder()
                 .setActivityType(DetectedActivity.IN_VEHICLE)
@@ -58,9 +54,6 @@ class AutoTrackingManager @Inject constructor(
         val request = ActivityTransitionRequest(transitions)
 
         activityRecognitionClient.requestActivityTransitionUpdates(request, pendingIntent)
-            .addOnSuccessListener {
-                logger.i("AutoTrackingManager", "Successfully registered for auto-tracking.")
-            }
             .addOnFailureListener { e ->
                 logger.e("AutoTrackingManager", "Failed to register for auto-tracking", e)
             }
@@ -71,11 +64,7 @@ class AutoTrackingManager @Inject constructor(
      */
     @SuppressLint("MissingPermission")
     fun stopAutoTracking() {
-        logger.d("AutoTrackingManager", "Unregistering from activity transitions...")
         activityRecognitionClient.removeActivityTransitionUpdates(pendingIntent)
-            .addOnSuccessListener {
-                logger.i("AutoTrackingManager", "Successfully unregistered from auto-tracking.")
-            }
             .addOnFailureListener { e ->
                 logger.e("AutoTrackingManager", "Failed to unregister from auto-tracking", e)
             }
