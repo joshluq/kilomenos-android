@@ -205,8 +205,8 @@
     <string name="tracking_card_active_mode">MODO CO-PILOTO</string>
     <string name="tracking_card_idle_mode">ASISTENTE DE VIAJE</string>
     <string name="tracking_card_kms_label">KILÓMETROS RECORRIDOS</string>
-    <string name="tracking_card_save_action">SAVE</string>
-    <string name="tracking_card_cancel_action">CANCEL</string>
+    <string name="tracking_card_save_action">Guardar</string>
+    <string name="tracking_card_cancel_action">Cancelar</string>
     <string name="tracking_card_start_action">START</string>
     <string name="tracking_card_stop_action">STOP TRIP</string>
     <string name="tracking_trip_label">Viaje GPS</string>
