@@ -46,6 +46,10 @@ class OverviewViewModel @Inject constructor(
     @JvmSuppressWildcards FlowUseCase<StopTrackingUseCase.Input, StopTrackingUseCase.Output>,
     @param:ClearTracking private val clearTrackingUseCase:
     @JvmSuppressWildcards FlowUseCase<ClearTrackingUseCase.Input, ClearTrackingUseCase.Output>,
+    @param:StartAutoTracking private val startAutoTrackingUseCase:
+    @JvmSuppressWildcards FlowUseCase<StartAutoTrackingUseCase.Input, StartAutoTrackingUseCase.Output>,
+    @param:StopAutoTracking private val stopAutoTrackingUseCase:
+    @JvmSuppressWildcards FlowUseCase<StopAutoTrackingUseCase.Input, StopAutoTrackingUseCase.Output>,
     private val analytics: AnalyticskitManager,
     private val logger: LoggerKit
 ) : ScreenViewModel<State, Event, Effect>() {
@@ -96,7 +100,9 @@ class OverviewViewModel @Inject constructor(
             Event.OnStopTrackingClicked -> handleStopTracking()
             Event.OnConfirmTrackedTripClicked -> handleConfirmTrackedTrip()
             Event.OnCancelTrackedTripClicked -> handleCancelTrackedTrip()
-            Event.OnRequestPermissionsRationale -> launchEffect(Effect.OpenAppSettings)
+            Event.OnRequestPermissionsRationale -> launchEffect(Effect.NavigateToPermissions)
+            Event.OnPermissionsRationaleSuccess -> handleAutoTrackingToggled(true)
+            is Event.OnAutoTrackingToggled -> handleAutoTrackingToggled(event.enabled)
         }
     }
 
@@ -328,5 +334,19 @@ class OverviewViewModel @Inject constructor(
     private fun handleCancelTrackedTrip() {
         analytics.track(AnalyticsEvent.Custom("tracking_cancelled"))
         clearTrackingUseCase(ClearTrackingUseCase.Input).launchIn(viewModelScope)
+    }
+
+    private fun handleAutoTrackingToggled(enabled: Boolean) {
+        updatePreferencesUseCase(UpdatePreferencesUseCase.Input(autoTrackingEnabled = enabled))
+            .onEach { output ->
+                if (output is UpdatePreferencesUseCase.Output.Success) {
+                    updateState { copy(autoTrackingEnabled = enabled) }
+                    if (enabled) {
+                        startAutoTrackingUseCase(StartAutoTrackingUseCase.Input).launchIn(viewModelScope)
+                    } else {
+                        stopAutoTrackingUseCase(StopAutoTrackingUseCase.Input).launchIn(viewModelScope)
+                    }
+                }
+            }.launchIn(viewModelScope)
     }
 }

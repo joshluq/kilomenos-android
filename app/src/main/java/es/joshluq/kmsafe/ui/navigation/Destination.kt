@@ -100,4 +100,10 @@ sealed interface Destination {
      */
     @Serializable
     data class ImageCropper(val uri: String) : Destination
+
+    /**
+     * Auto Tracking Permissions Rationale destination.
+     */
+    @Serializable
+    object AutoTrackingPermissions : Destination
 }

@@ -12,13 +12,15 @@ import es.joshluq.kmsafe.ui.projection.ProjectionAnalysisRoute
 @Composable
 fun DashboardNavigation(
     navController: NavHostController,
+    appNavController: NavHostController,
     onNavigateToOnboarding: (String?, Boolean) -> Unit,
     onNavigateToVehicles: () -> Unit,
     onNavigateToDataManagement: () -> Unit,
     onNavigateToPreferences: () -> Unit,
     onNavigateToRecordDetail: (String) -> Unit,
     onNavigateToLogin: () -> Unit,
-    onNavigateToPremiumPaywall: () -> Unit
+    onNavigateToPremiumPaywall: () -> Unit,
+    onNavigateToPermissions: () -> Unit
 ) {
     NavHost(
         navController = navController,
@@ -26,12 +28,14 @@ fun DashboardNavigation(
     ) {
         composable<Destination.Overview> {
             OverviewRoute(
+                appNavController = appNavController,
                 onNavigateToOnboarding = onNavigateToOnboarding,
                 onNavigateToProjection = {
                     navController.navigate(Destination.ProjectionAnalysis) {
                         launchSingleTop = true
                     }
-                }
+                },
+                onNavigateToPermissions = onNavigateToPermissions
             )
         }
 

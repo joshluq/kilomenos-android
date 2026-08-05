@@ -7,6 +7,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
 import es.joshluq.kmsafe.ui.common.cropper.CropImageScreen
+import es.joshluq.kmsafe.ui.common.permissions.AutoTrackingPermissionsRationale
 import es.joshluq.kmsafe.ui.dashboard.DashboardRoute
 import es.joshluq.kmsafe.ui.datamanagement.DataManagementRoute
 import es.joshluq.kmsafe.ui.launch.LaunchRoute
@@ -101,6 +102,7 @@ fun AppNavigation(
 
         composable<Destination.Dashboard> {
             DashboardRoute(
+                navController = navController,
                 onNavigateToOnboarding = { vehicleId, isEdit ->
                     navController.navigate(Destination.RentingDetails(vehicleId, isEdit))
                 },
@@ -123,6 +125,9 @@ fun AppNavigation(
                 },
                 onNavigateToRecordDetail = { recordId ->
                     navController.navigate(Destination.RecordDetail(recordId))
+                },
+                onNavigateToPermissions = {
+                    navController.navigate(Destination.AutoTrackingPermissions)
                 }
             )
         }
@@ -151,10 +156,27 @@ fun AppNavigation(
 
         composable<Destination.Preferences> {
             PreferencesRoute(
+                navController = navController,
                 onNavigateBack = {
                     navController.popBackStack()
                 },
-                onShowPrivacyOptions = onShowPrivacyOptions
+                onShowPrivacyOptions = onShowPrivacyOptions,
+                onNavigateToPermissions = {
+                    navController.navigate(Destination.AutoTrackingPermissions)
+                }
+            )
+        }
+
+        composable<Destination.AutoTrackingPermissions> {
+            AutoTrackingPermissionsRationale(
+                onAllPermissionsGranted = {
+                    navController.previousBackStackEntry?.savedStateHandle?.set("permissions_granted", true)
+                    navController.popBackStack()
+                },
+                onDismiss = {
+                    navController.previousBackStackEntry?.savedStateHandle?.set("permissions_granted", false)
+                    navController.popBackStack()
+                }
             )
         }
 

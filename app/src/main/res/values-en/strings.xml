@@ -313,8 +313,14 @@
     <string name="reminder_notification_message">You haven\'t updated your kilometers in a few days. Register them now to keep your balance up to date!</string>
 
     <!-- Background Location & Activity Recognition Rationale -->
-    <string name="overview_permissions_required_title">Configuration required</string>
-    <string name="overview_permissions_required_desc">For Auto-Tracking to work, we need permission to detect your physical activity and access location \"Always\". This allows recording your trips automatically even with the screen off.</string>
-    <string name="overview_permissions_required_button">Configure Permissions</string>
-    <string name="overview_permissions_grant_button">Grant Permissions</string>
+    <string name="overview_permissions_required_title">Required Configuration</string>
+    <string name="overview_permissions_required_desc">You have enabled Auto-Tracking. To allow the app to detect your trips automatically, we need to configure some permissions.</string>
+    <string name="overview_permissions_step_activity_title">1. Motion Detection</string>
+    <string name="overview_permissions_step_activity_desc">Allows knowing when you enter a vehicle.</string>
+    <string name="overview_permissions_step_location_title">2. Location \"Always\"</string>
+    <string name="overview_permissions_step_location_desc">Allows recording the route even if the app is closed. You must select \"Allow all the time\" in settings.</string>
+    <string name="overview_permissions_step_notifications_title">3. Notifications</string>
+    <string name="overview_permissions_step_notifications_desc">Allows showing the real-time tracking status in your status bar.</string>
+    <string name="overview_permissions_button_continue">Continue</string>
+    <string name="overview_permissions_button_settings">Go to Settings</string>
 </resources>

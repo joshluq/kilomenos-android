@@ -44,7 +44,6 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.BrokenImage
 import androidx.compose.material.icons.filled.CarRental
-import androidx.compose.material.icons.filled.DirectionsCar
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Speed
 import androidx.compose.material.icons.filled.SyncProblem
@@ -89,13 +88,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.currentBackStackEntryAsState
 import coil.compose.SubcomposeAsyncImage
 import coil.request.ImageRequest
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
-import com.google.accompanist.permissions.PermissionStatus
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
-import com.google.accompanist.permissions.shouldShowRationale
 import es.joshluq.canvaskit.components.buttons.CanvasKitButton
 import es.joshluq.canvaskit.components.buttons.CanvasKitButtonVariant
 import es.joshluq.canvaskit.components.cards.CanvasKitCard
@@ -131,11 +130,32 @@ import kotlin.math.absoluteValue
  */
 @Composable
 fun OverviewRoute(
+    appNavController: NavHostController,
     onNavigateToOnboarding: (String?, Boolean) -> Unit,
-    onNavigateToProjection: () -> Unit
+    onNavigateToProjection: () -> Unit,
+    onNavigateToPermissions: () -> Unit
 ) {
     val viewModel: OverviewViewModel = hiltViewModel()
     val state = viewModel.state.collectAsStateWithLifecycle()
+
+    val permissionsResult by appNavController.currentBackStackEntryAsState().value
+        ?.savedStateHandle
+        ?.getStateFlow<Boolean?>("permissions_granted", null)
+        ?.collectAsStateWithLifecycle() ?: remember { mutableStateOf(null) }
+
+    LaunchedEffect(permissionsResult) {
+        when (permissionsResult) {
+            true -> {
+                viewModel.sendEvent(Event.OnPermissionsRationaleSuccess)
+                appNavController.currentBackStackEntry?.savedStateHandle?.set("permissions_granted", null)
+            }
+            false -> {
+                viewModel.sendEvent(Event.OnAutoTrackingToggled(false))
+                appNavController.currentBackStackEntry?.savedStateHandle?.set("permissions_granted", null)
+            }
+            else -> { /* No-op */ }
+        }
+    }
 
     OverviewScreen(
         state = state.value,
@@ -149,6 +169,7 @@ fun OverviewRoute(
             when (effect) {
                 is Effect.NavigateToOnboarding -> onNavigateToOnboarding(effect.vehicleId, effect.isEdit)
                 Effect.NavigateToProjection -> onNavigateToProjection()
+                Effect.NavigateToPermissions -> onNavigateToPermissions()
                 Effect.StartTrackingService -> {
                     val intent = Intent(context, LocationTrackingService::class.java).apply {
                         action = LocationTrackingService.ACTION_START
@@ -189,7 +210,6 @@ fun OverviewScreen(
     val focusManager = LocalFocusManager.current
     val keyboardController = LocalSoftwareKeyboardController.current
 
-    // ACCOMPANIST: Permissions for Auto-Tracking
     val activityRecognitionState = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
         rememberPermissionState(Manifest.permission.ACTIVITY_RECOGNITION)
     } else {
@@ -198,6 +218,12 @@ fun OverviewScreen(
 
     val backgroundLocationState = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
         rememberPermissionState(Manifest.permission.ACCESS_BACKGROUND_LOCATION)
+    } else {
+        null
+    }
+
+    val notificationsPermissionState = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        rememberPermissionState(Manifest.permission.POST_NOTIFICATIONS)
     } else {
         null
     }
@@ -251,48 +277,36 @@ fun OverviewScreen(
             Column {
                 val isActivityGranted = activityRecognitionState?.status?.isGranted ?: true
                 val isBackgroundGranted = backgroundLocationState?.status?.isGranted ?: true
+                val isNotificationsGranted = notificationsPermissionState?.status?.isGranted ?: true
 
-                when {
-                    state.autoTrackingEnabled && (!isActivityGranted || !isBackgroundGranted) -> {
-                        val activityRationale = activityRecognitionState?.status?.shouldShowRationale ?: false
-                        val backgroundRationale = backgroundLocationState?.status?.shouldShowRationale ?: false
-                        val showSettingsLink = activityRationale || backgroundRationale
+                if (state.hasRenting) {
+                    RentingState(
+                        state = state,
+                        onEvent = onEvent,
+                        onStartTracking = {
+                            val permissions = mutableListOf(
+                                Manifest.permission.ACCESS_FINE_LOCATION,
+                                Manifest.permission.ACCESS_COARSE_LOCATION
+                            )
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                                permissions.add(Manifest.permission.POST_NOTIFICATIONS)
+                            }
+                            multiplePermissionsLauncher.launch(permissions.toTypedArray())
+                        }
+                    )
+                } else {
+                    EmptyState(
+                        state = state,
+                        onRegisterClick = { onEvent(Event.OnRegisterRentingClicked) })
+                }
 
-                        AutoTrackingPermissionsRationale(
-                            shouldShowSettingsRationale = showSettingsLink,
-                            onRequestPermissions = {
-                                if (showSettingsLink) {
-                                    onEvent(Event.OnRequestPermissionsRationale)
-                                } else {
-                                    if (activityRecognitionState?.status is PermissionStatus.Denied) {
-                                        activityRecognitionState.launchPermissionRequest()
-                                    } else if (backgroundLocationState?.status is PermissionStatus.Denied) {
-                                        backgroundLocationState.launchPermissionRequest()
-                                    }
-                                }
-                            }
-                        )
+                // BUSINESS RULE: If auto-tracking is enabled but Critical Permissions are missing -> Navigate to Permissions Screen
+                LaunchedEffect(state.autoTrackingEnabled, isActivityGranted, isBackgroundGranted, isNotificationsGranted) {
+                    if (state.autoTrackingEnabled && (!isActivityGranted || !isBackgroundGranted || !isNotificationsGranted)) {
+                        onEvent(Event.OnRequestPermissionsRationale)
                     }
-                    state.hasRenting -> {
-                        RentingState(
-                            state = state, 
-                            onEvent = onEvent,
-                            onStartTracking = {
-                                val permissions = mutableListOf(
-                                    Manifest.permission.ACCESS_FINE_LOCATION,
-                                    Manifest.permission.ACCESS_COARSE_LOCATION
-                                )
-                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                                    permissions.add(Manifest.permission.POST_NOTIFICATIONS)
-                                }
-                                multiplePermissionsLauncher.launch(permissions.toTypedArray())
-                            }
-                        )
-                    }
-                    else -> EmptyState(state = state, onRegisterClick = { onEvent(Event.OnRegisterRentingClicked) })
                 }
             }
-
             CanvasKitBanner(
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
@@ -346,41 +360,6 @@ fun OverviewScreen(
             }
         }
     }
-}
-
-@Composable
-private fun AutoTrackingPermissionsRationale(
-    shouldShowSettingsRationale: Boolean,
-    onRequestPermissions: () -> Unit
-) {
-    CanvasKitStateView(
-        modifier = Modifier.fillMaxSize(),
-        title = stringResource(R.string.overview_permissions_required_title),
-        description = stringResource(R.string.overview_permissions_required_desc),
-        icon = {
-            Icon(
-                imageVector = Icons.Default.DirectionsCar,
-                contentDescription = null,
-                modifier = Modifier.size(CanvasKitTheme.spacing.xxxl),
-                tint = CanvasKitTheme.colors.brandAccent
-            )
-        },
-        action = {
-            CanvasKitButton(
-                onClick = onRequestPermissions,
-                modifier = Modifier.fillMaxWidth()
-            ) { contentColor ->
-                Text(
-                    text = if (shouldShowSettingsRationale) {
-                        stringResource(R.string.overview_permissions_required_button)
-                    } else {
-                        stringResource(R.string.overview_permissions_grant_button)
-                    },
-                    color = contentColor
-                )
-            }
-        }
-    )
 }
 
 @Composable

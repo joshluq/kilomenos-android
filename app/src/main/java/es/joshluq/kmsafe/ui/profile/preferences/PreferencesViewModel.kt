@@ -42,10 +42,10 @@ class PreferencesViewModel @Inject constructor(
             is Event.OnRememberEmailToggled -> handleRememberEmailToggled(event.enabled)
             is Event.OnProjectionBannerToggled -> handleProjectionBannerToggled(event.enabled)
             is Event.OnAutoTrackingToggled -> handleAutoTrackingToggled(event.enabled)
-            is Event.OnPermissionResult -> handlePermissionResult(event.permission, event.isGranted)
             Event.OnManagePrivacyClicked -> launchEffect(Effect.ShowPrivacyOptions)
             Event.OnBackClicked -> launchEffect(Effect.NavigateBack)
             Event.OnDismissError -> updateState { copy(error = null) }
+            Event.OnPermissionsRationaleSuccess -> executeAutoTrackingToggle(true)
         }
     }
 
@@ -92,6 +92,15 @@ class PreferencesViewModel @Inject constructor(
     }
 
     private fun handleAutoTrackingToggled(enabled: Boolean) {
+        // If enabling, navigate to permissions rationale screen
+        if (enabled) {
+            launchEffect(Effect.NavigateToPermissions)
+        } else {
+            executeAutoTrackingToggle(false)
+        }
+    }
+
+    private fun executeAutoTrackingToggle(enabled: Boolean) {
         updatePreferencesUseCase(UpdatePreferencesUseCase.Input(autoTrackingEnabled = enabled))
             .onEach { output ->
                 if (output is UpdatePreferencesUseCase.Output.Success) {
@@ -103,11 +112,5 @@ class PreferencesViewModel @Inject constructor(
                     }
                 }
             }.launchIn(viewModelScope)
-    }
-
-    private fun handlePermissionResult(permission: String, isGranted: Boolean) {
-        if (!isGranted && permission == android.Manifest.permission.ACTIVITY_RECOGNITION) {
-            handleAutoTrackingToggled(false)
-        }
     }
 }
