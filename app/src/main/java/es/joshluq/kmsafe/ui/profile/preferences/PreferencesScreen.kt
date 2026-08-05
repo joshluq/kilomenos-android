@@ -421,7 +421,7 @@ fun PreferencesScreenPreview() {
                 rememberEmail = true,
                 isLoading = false,
                 isPrivacyOptionsRequired = true,
-                isUserPremium = true
+                isUserPremium = false
             ),
             onEvent = {}
         )

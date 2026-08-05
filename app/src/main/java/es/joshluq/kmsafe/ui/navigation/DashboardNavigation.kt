@@ -35,7 +35,8 @@ fun DashboardNavigation(
                         launchSingleTop = true
                     }
                 },
-                onNavigateToPermissions = onNavigateToPermissions
+                onNavigateToPermissions = onNavigateToPermissions,
+                onNavigateToPremiumPaywall = onNavigateToPremiumPaywall
             )
         }
 

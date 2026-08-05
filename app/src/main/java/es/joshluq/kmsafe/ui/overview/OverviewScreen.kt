@@ -42,6 +42,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.HelpOutline
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.BrokenImage
 import androidx.compose.material.icons.filled.CarRental
 import androidx.compose.material.icons.filled.Edit
@@ -133,7 +134,8 @@ fun OverviewRoute(
     appNavController: NavHostController,
     onNavigateToOnboarding: (String?, Boolean) -> Unit,
     onNavigateToProjection: () -> Unit,
-    onNavigateToPermissions: () -> Unit
+    onNavigateToPermissions: () -> Unit,
+    onNavigateToPremiumPaywall: () -> Unit
 ) {
     val viewModel: OverviewViewModel = hiltViewModel()
     val state = viewModel.state.collectAsStateWithLifecycle()
@@ -170,6 +172,7 @@ fun OverviewRoute(
                 is Effect.NavigateToOnboarding -> onNavigateToOnboarding(effect.vehicleId, effect.isEdit)
                 Effect.NavigateToProjection -> onNavigateToProjection()
                 Effect.NavigateToPermissions -> onNavigateToPermissions()
+                Effect.NavigateToPremiumPaywall -> onNavigateToPremiumPaywall()
                 Effect.StartTrackingService -> {
                     val intent = Intent(context, LocationTrackingService::class.java).apply {
                         action = LocationTrackingService.ACTION_START
@@ -273,7 +276,9 @@ fun OverviewScreen(
             }
         }
     ) { innerPadding ->
-        Box(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
+        Box(modifier = Modifier
+            .fillMaxSize()
+            .padding(innerPadding)) {
             Column {
                 val isActivityGranted = activityRecognitionState?.status?.isGranted ?: true
                 val isBackgroundGranted = backgroundLocationState?.status?.isGranted ?: true
@@ -705,7 +710,9 @@ fun MonthlyBarChart(monthlyUsage: List<MonthlyUsageUiModel>) {
         ) {
             if (monthlyUsage.isEmpty()) {
                 Box(
-                    modifier = Modifier.fillMaxWidth().weight(1f),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
@@ -715,7 +722,9 @@ fun MonthlyBarChart(monthlyUsage: List<MonthlyUsageUiModel>) {
                 }
             } else {
                 Row(
-                    modifier = Modifier.fillMaxWidth().weight(1f),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f),
                     horizontalArrangement = Arrangement.SpaceEvenly,
                     verticalAlignment = Alignment.Bottom
                 ) {
@@ -855,7 +864,9 @@ private fun ComparisonChart(timeP: Float, kmsP: Float, diff: Float) {
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             Box(
-                modifier = Modifier.weight(1f).fillMaxWidth(),
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth(),
                 contentAlignment = Alignment.Center
             ) {
                 DonutChart(timeP, kmsP)
@@ -1074,14 +1085,25 @@ private fun OverviewTopBar(state: State, onEvent: (Event) -> Unit) {
             }
         },
         actions = {
-            if (state.isSyncPending) {
-                IconButton(onClick = { /* No-op, just indicator */ }) {
+            if (!state.isPremium) {
+                IconButton(onClick = safeClick { onEvent(Event.OnPremiumUpgradeClicked) }) {
                     Icon(
-                        imageVector = Icons.Default.SyncProblem,
-                        contentDescription = stringResource(R.string.acc_sync_pending),
-                        tint = CanvasKitTheme.colors.brandAccent.copy(alpha = alpha),
-                        modifier = Modifier.size(20.dp)
+                        imageVector = Icons.Default.AutoAwesome,
+                        contentDescription = stringResource(R.string.acc_upgrade_premium),
+                        tint = CanvasKitTheme.colors.brandAccent,
+                        modifier = Modifier.size(22.dp)
                     )
+                }
+            } else {
+                if (state.isSyncPending) {
+                    IconButton(onClick = { /* No-op, just indicator */ }) {
+                        Icon(
+                            imageVector = Icons.Default.SyncProblem,
+                            contentDescription = stringResource(R.string.acc_sync_pending),
+                            tint = CanvasKitTheme.colors.brandAccent.copy(alpha = alpha),
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
                 }
             }
         },
@@ -1185,7 +1207,7 @@ internal class OverviewStateProvider : PreviewParameterProvider<State> {
     override val values: Sequence<State> = sequenceOf(
         State(
             isLoading = false,
-            isPremium = true,
+            isPremium = false,
             renting = RentingContract(
                 id = "1",
                 vehicleName = "Volkswagen ID.3",
