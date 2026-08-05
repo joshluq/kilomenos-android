@@ -102,6 +102,10 @@ class OverviewViewModel @Inject constructor(
             Event.OnCancelTrackedTripClicked -> handleCancelTrackedTrip()
             Event.OnRequestPermissionsRationale -> launchEffect(Effect.NavigateToPermissions)
             Event.OnPermissionsRationaleSuccess -> handleAutoTrackingToggled(true)
+            Event.OnPremiumUpgradeClicked -> {
+                analytics.track(AnalyticsEvent.Custom("premium_upgrade_clicked", mapOf("source" to "top_bar")))
+                launchEffect(Effect.NavigateToPremiumPaywall)
+            }
             is Event.OnAutoTrackingToggled -> handleAutoTrackingToggled(event.enabled)
         }
     }

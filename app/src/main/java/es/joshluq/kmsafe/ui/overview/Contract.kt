@@ -72,6 +72,7 @@ sealed interface Event : UiEvent {
     data object OnCancelTrackedTripClicked : Event
     data object OnRequestPermissionsRationale : Event
     data object OnPermissionsRationaleSuccess : Event
+    data object OnPremiumUpgradeClicked : Event
     data class OnAutoTrackingToggled(val enabled: Boolean) : Event
 }
 
@@ -88,4 +89,5 @@ sealed interface Effect : UiEffect {
     data object StopTrackingService : Effect
     data object OpenAppSettings : Effect
     data object NavigateToPermissions : Effect
+    data object NavigateToPremiumPaywall : Effect
 }

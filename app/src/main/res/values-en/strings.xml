@@ -295,6 +295,7 @@
     <string name="acc_edit_contract">Edit contract</string>
     <string name="acc_delete_vehicle">Delete vehicle</string>
     <string name="acc_vehicle_info">Vehicle information</string>
+    <string name="acc_upgrade_premium">Get Premium</string>
     <string name="acc_open_menu">Open menu</string>
     <string name="acc_chart_help">Chart help</string>
     <string name="acc_sync_pending">Sync pending</string>

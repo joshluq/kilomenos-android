@@ -295,6 +295,7 @@
     <string name="acc_edit_contract">Editar contrato</string>
     <string name="acc_delete_vehicle">Eliminar vehículo</string>
     <string name="acc_vehicle_info">Información del vehículo</string>
+    <string name="acc_upgrade_premium">Hacerse Premium</string>
     <string name="acc_open_menu">Abrir menú</string>
     <string name="acc_chart_help">Ayuda sobre el gráfico</string>
     <string name="acc_sync_pending">Sincronización pendiente</string>
