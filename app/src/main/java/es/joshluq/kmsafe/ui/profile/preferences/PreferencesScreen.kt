@@ -1,8 +1,6 @@
 package es.joshluq.kmsafe.ui.profile.preferences
 
-import android.Manifest
 import android.content.res.Configuration
-import android.os.Build
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -23,7 +21,8 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.google.accompanist.permissions.*
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.currentBackStackEntryAsState
 import es.joshluq.canvaskit.components.cards.CanvasKitCard
 import es.joshluq.canvaskit.components.feedback.CanvasKitAlertVariant
 import es.joshluq.canvaskit.components.feedback.CanvasKitBanner
@@ -35,17 +34,40 @@ import es.joshluq.kmsafe.ui.util.safeClick
 
 @Composable
 fun PreferencesRoute(
+    navController: NavHostController,
     onNavigateBack: () -> Unit,
-    onShowPrivacyOptions: () -> Unit
+    onShowPrivacyOptions: () -> Unit,
+    onNavigateToPermissions: () -> Unit
 ) {
     val viewModel: PreferencesViewModel = hiltViewModel()
     val state by viewModel.state.collectAsStateWithLifecycle()
+
+    val permissionsResult by navController.currentBackStackEntryAsState().value
+        ?.savedStateHandle
+        ?.getStateFlow<Boolean?>("permissions_granted", null)
+        ?.collectAsStateWithLifecycle() ?: remember { mutableStateOf(null) }
+
+    LaunchedEffect(permissionsResult) {
+        when (permissionsResult) {
+            true -> {
+                viewModel.sendEvent(Event.OnPermissionsRationaleSuccess)
+                navController.currentBackStackEntry?.savedStateHandle?.set("permissions_granted", null)
+            }
+            false -> {
+                // If they cancelled, we ensure the switch is OFF
+                viewModel.sendEvent(Event.OnAutoTrackingToggled(false))
+                navController.currentBackStackEntry?.savedStateHandle?.set("permissions_granted", null)
+            }
+            else -> { /* No-op */ }
+        }
+    }
 
     LaunchedEffect(viewModel.effects) {
         viewModel.effects.collect { effect ->
             when (effect) {
                 Effect.NavigateBack -> onNavigateBack()
                 Effect.ShowPrivacyOptions -> onShowPrivacyOptions()
+                Effect.NavigateToPermissions -> onNavigateToPermissions()
             }
         }
     }
@@ -56,28 +78,13 @@ fun PreferencesRoute(
     )
 }
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalPermissionsApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PreferencesScreen(
     state: State,
     onEvent: (Event) -> Unit
 ) {
     var showCredits by remember { mutableStateOf(false) }
-
-    val activityRecognitionState = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-        rememberPermissionState(Manifest.permission.ACTIVITY_RECOGNITION)
-    } else {
-        null
-    }
-
-    // Synchronize permission result with ViewModel
-    LaunchedEffect(activityRecognitionState?.status) {
-        activityRecognitionState?.let {
-            if (it.status.isGranted && !state.autoTrackingEnabled && state.isUserPremium) {
-                onEvent(Event.OnAutoTrackingToggled(true))
-            }
-        }
-    }
 
     if (showCredits) {
         SoftwareCreditsDialog(onDismiss = { showCredits = false })
@@ -164,17 +171,7 @@ fun PreferencesScreen(
                                 stringResource(R.string.preferences_auto_tracking_locked_desc)
                             },
                             checked = state.autoTrackingEnabled,
-                            onCheckedChange = { enabled ->
-                                if (enabled) {
-                                    if (activityRecognitionState != null && !activityRecognitionState.status.isGranted) {
-                                        activityRecognitionState.launchPermissionRequest()
-                                    } else {
-                                        onEvent(Event.OnAutoTrackingToggled(true))
-                                    }
-                                } else {
-                                    onEvent(Event.OnAutoTrackingToggled(false))
-                                }
-                            },
+                            onCheckedChange = { onEvent(Event.OnAutoTrackingToggled(it)) },
                             enabled = state.isUserPremium,
                             trailingIcon = if (!state.isUserPremium) {
                                 {
@@ -234,7 +231,6 @@ fun PreferencesScreen(
 
                 if (state.isPrivacyOptionsRequired) {
                     Spacer(modifier = Modifier.height(CanvasKitTheme.spacing.md))
-
                     Text(
                         text = stringResource(R.string.profile_privacy_section),
                         style = CanvasKitTheme.typography.labelSmall,

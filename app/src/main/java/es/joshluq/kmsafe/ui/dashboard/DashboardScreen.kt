@@ -44,13 +44,15 @@ import kotlinx.coroutines.flow.Flow
  */
 @Composable
 fun DashboardRoute(
+    navController: NavHostController,
     onNavigateToOnboarding: (String?, Boolean) -> Unit,
     onNavigateToVehicles: () -> Unit,
     onNavigateToDataManagement: () -> Unit,
     onNavigateToPreferences: () -> Unit,
     onNavigateToRecordDetail: (String) -> Unit,
     onNavigateToLogin: () -> Unit,
-    onNavigateToPremiumPaywall: () -> Unit
+    onNavigateToPremiumPaywall: () -> Unit,
+    onNavigateToPermissions: () -> Unit
 ) {
     val viewModel: DashboardViewModel = hiltViewModel()
     val state = viewModel.state.collectAsStateWithLifecycle()
@@ -58,13 +60,15 @@ fun DashboardRoute(
         state = state.value,
         effects = viewModel.effects,
         onEvent = viewModel::sendEvent,
+        appNavController = navController,
         onNavigateToOnboarding = onNavigateToOnboarding,
         onNavigateToVehicles = onNavigateToVehicles,
         onNavigateToDataManagement = onNavigateToDataManagement,
         onNavigateToPreferences = onNavigateToPreferences,
         onNavigateToRecordDetail = onNavigateToRecordDetail,
         onNavigateToLogin = onNavigateToLogin,
-        onNavigateToPremiumPaywall = onNavigateToPremiumPaywall
+        onNavigateToPremiumPaywall = onNavigateToPremiumPaywall,
+        onNavigateToPermissions = onNavigateToPermissions
     )
 }
 
@@ -77,13 +81,15 @@ fun DashboardScreen(
     state: State,
     effects: Flow<Effect>? = null,
     onEvent: (Event) -> Unit,
+    appNavController: NavHostController,
     onNavigateToOnboarding: (String?, Boolean) -> Unit,
     onNavigateToVehicles: () -> Unit,
     onNavigateToDataManagement: () -> Unit,
     onNavigateToPreferences: () -> Unit,
     onNavigateToRecordDetail: (String) -> Unit,
     onNavigateToLogin: () -> Unit,
-    onNavigateToPremiumPaywall: () -> Unit
+    onNavigateToPremiumPaywall: () -> Unit,
+    onNavigateToPermissions: () -> Unit
 ) {
     val navController = rememberNavController()
     val navBackStackEntry = navController.currentBackStackEntryAsState()
@@ -119,13 +125,15 @@ fun DashboardScreen(
         Column(modifier = Modifier.padding(bottom = 104.dp)) {
             DashboardNavigation(
                 navController = navController,
+                appNavController = appNavController,
                 onNavigateToOnboarding = onNavigateToOnboarding,
                 onNavigateToVehicles = onNavigateToVehicles,
                 onNavigateToDataManagement = onNavigateToDataManagement,
                 onNavigateToPreferences = onNavigateToPreferences,
                 onNavigateToRecordDetail = onNavigateToRecordDetail,
                 onNavigateToLogin = onNavigateToLogin,
-                onNavigateToPremiumPaywall = onNavigateToPremiumPaywall
+                onNavigateToPremiumPaywall = onNavigateToPremiumPaywall,
+                onNavigateToPermissions = onNavigateToPermissions
             )
         }
 

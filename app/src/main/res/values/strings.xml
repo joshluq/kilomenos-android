@@ -313,8 +313,14 @@
     <string name="reminder_notification_message">No has actualizado tus kilómetros en unos días. ¡Regístralos ahora para mantener tu balance al día!</string>
 
     <!-- Background Location & Activity Recognition Rationale -->
-    <string name="overview_permissions_required_title">Configuración requerida</string>
-    <string name="overview_permissions_required_desc">Para que el Auto-Tracking funcione, necesitamos permiso para detectar tu actividad física y acceder a la ubicación \"Siempre\". Esto permite registrar tus viajes automáticamente incluso con la pantalla apagada.</string>
-    <string name="overview_permissions_required_button">Configurar Permisos</string>
-    <string name="overview_permissions_grant_button">Conceder Permisos</string>
+    <string name="overview_permissions_required_title">Configuración necesaria</string>
+    <string name="overview_permissions_required_desc">Has activado el Auto-Tracking. Para que la app detecte tus viajes automáticamente, necesitamos configurar algunos permisos.</string>
+    <string name="overview_permissions_step_activity_title">1. Detección de movimiento</string>
+    <string name="overview_permissions_step_activity_desc">Permite saber cuándo entras en un vehículo.</string>
+    <string name="overview_permissions_step_location_title">2. Ubicación \"Siempre\"</string>
+    <string name="overview_permissions_step_location_desc">Permite registrar el recorrido aunque la app esté cerrada. Debes seleccionar \"Permitir todo el tiempo\" en los ajustes.</string>
+    <string name="overview_permissions_step_notifications_title">3. Notificaciones</string>
+    <string name="overview_permissions_step_notifications_desc">Permite mostrar el estado del seguimiento en tiempo real en tu barra de estado.</string>
+    <string name="overview_permissions_button_continue">Continuar</string>
+    <string name="overview_permissions_button_settings">Ir a Ajustes</string>
 </resources>

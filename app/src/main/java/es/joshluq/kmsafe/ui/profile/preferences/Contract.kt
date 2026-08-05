@@ -23,13 +23,14 @@ sealed interface Event : UiEvent {
     data class OnRememberEmailToggled(val enabled: Boolean) : Event
     data class OnProjectionBannerToggled(val enabled: Boolean) : Event
     data class OnAutoTrackingToggled(val enabled: Boolean) : Event
-    data class OnPermissionResult(val permission: String, val isGranted: Boolean) : Event
-    object OnManagePrivacyClicked : Event
-    object OnBackClicked : Event
-    object OnDismissError : Event
+    data object OnManagePrivacyClicked : Event
+    data object OnBackClicked : Event
+    data object OnDismissError : Event
+    data object OnPermissionsRationaleSuccess : Event
 }
 
 sealed interface Effect : UiEffect {
-    object ShowPrivacyOptions : Effect
-    object NavigateBack : Effect
+    data object ShowPrivacyOptions : Effect
+    data object NavigateBack : Effect
+    data object NavigateToPermissions : Effect
 }
