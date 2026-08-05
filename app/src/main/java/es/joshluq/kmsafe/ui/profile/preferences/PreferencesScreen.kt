@@ -54,7 +54,6 @@ fun PreferencesRoute(
                 navController.currentBackStackEntry?.savedStateHandle?.set("permissions_granted", null)
             }
             false -> {
-                // If they cancelled, we ensure the switch is OFF
                 viewModel.sendEvent(Event.OnAutoTrackingToggled(false))
                 navController.currentBackStackEntry?.savedStateHandle?.set("permissions_granted", null)
             }

@@ -33,6 +33,7 @@ import es.joshluq.kmsafe.R
 import java.io.File
 import java.io.FileOutputStream
 import androidx.core.net.toUri
+import es.joshluq.kmsafe.ui.util.safeClick
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -61,7 +62,7 @@ fun CropImageScreen(
             CanvasKitTopBar(
                 title = { Text("Ajustar Foto", style = CanvasKitTheme.typography.bodyLarge) },
                 navigationIcon = {
-                    IconButton(onClick = onCancel) {
+                    IconButton(onClick = safeClick { onCancel() }) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = stringResource(R.string.acc_back),

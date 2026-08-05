@@ -20,7 +20,7 @@ import androidx.compose.ui.composed
  */
 @Composable
 fun safeClick(
-    debounceTime: Long = 500L,
+    debounceTime: Long = 800L,
     onClick: () -> Unit
 ): () -> Unit {
     var lastClickTime by remember { mutableLongStateOf(0L) }

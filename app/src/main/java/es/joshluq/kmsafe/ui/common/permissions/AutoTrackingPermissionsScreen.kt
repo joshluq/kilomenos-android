@@ -17,6 +17,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -29,10 +30,11 @@ import es.joshluq.canvaskit.components.buttons.CanvasKitButtonVariant
 import es.joshluq.canvaskit.components.cards.CanvasKitCard
 import es.joshluq.canvaskit.foundations.theme.CanvasKitTheme
 import es.joshluq.kmsafe.R
+import es.joshluq.kmsafe.ui.util.safeClick
 
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
-fun AutoTrackingPermissionsRationale(
+fun AutoTrackingPermissionsScreen(
     onAllPermissionsGranted: () -> Unit,
     onDismiss: () -> Unit
 ) {
@@ -154,11 +156,10 @@ fun AutoTrackingPermissionsRationale(
             }
 
             CanvasKitButton(
-                onClick = onDismiss,
+                onClick = safeClick  { onDismiss() },
                 modifier = Modifier.fillMaxWidth(),
                 variant = CanvasKitButtonVariant.Ghost
             ) {
-                @Suppress("DEPRECATION")
                 Text(
                     text = stringResource(R.string.history_close_button),
                     color = CanvasKitTheme.colors.textSecondary
@@ -175,7 +176,7 @@ private fun PermissionStepItem(
     title: String,
     description: String,
     isGranted: Boolean,
-    icon: androidx.compose.ui.graphics.vector.ImageVector
+    icon: ImageVector
 ) {
     CanvasKitCard(
         modifier = Modifier.fillMaxWidth()
