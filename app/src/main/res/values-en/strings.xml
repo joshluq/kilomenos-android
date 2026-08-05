@@ -205,10 +205,10 @@
     <string name="tracking_card_active_mode">CO-PILOT MODE</string>
     <string name="tracking_card_idle_mode">TRIP ASSISTANT</string>
     <string name="tracking_card_kms_label">KILOMETERS TRAVELED</string>
-    <string name="tracking_card_save_action">SAVE</string>
-    <string name="tracking_card_cancel_action">CANCEL</string>
-    <string name="tracking_card_start_action">START</string>
-    <string name="tracking_card_stop_action">STOP TRIP</string>
+    <string name="tracking_card_save_action">Save</string>
+    <string name="tracking_card_cancel_action">Cancel</string>
+    <string name="tracking_card_start_action">Start</string>
+    <string name="tracking_card_stop_action">Stop Trip</string>
     <string name="tracking_trip_label">GPS Trip</string>
     <string name="tracking_channel_name">Trip Tracking</string>
     <string name="tracking_notification_title">KiloMenos Tracking</string>
