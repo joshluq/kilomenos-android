@@ -67,7 +67,6 @@ class LocationTrackingService : Service() {
     }
 
     private fun startTracking() {
-        logger.d("LocationService", "Starting tracking service")
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             startForeground(
                 NOTIFICATION_ID,
@@ -127,7 +126,6 @@ class LocationTrackingService : Service() {
     }
 
     private fun stopTracking() {
-        logger.d("LocationService", "Stopping tracking service")
         fusedLocationClient.removeLocationUpdates(locationCallback)
         trackingRepository.stopTracking()
         stopForeground(STOP_FOREGROUND_REMOVE)
