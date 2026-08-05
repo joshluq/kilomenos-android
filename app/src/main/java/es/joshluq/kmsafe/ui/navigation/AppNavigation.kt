@@ -7,7 +7,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
 import es.joshluq.kmsafe.ui.common.cropper.CropImageScreen
-import es.joshluq.kmsafe.ui.common.permissions.AutoTrackingPermissionsRationale
+import es.joshluq.kmsafe.ui.common.permissions.AutoTrackingPermissionsScreen
 import es.joshluq.kmsafe.ui.dashboard.DashboardRoute
 import es.joshluq.kmsafe.ui.datamanagement.DataManagementRoute
 import es.joshluq.kmsafe.ui.launch.LaunchRoute
@@ -168,7 +168,7 @@ fun AppNavigation(
         }
 
         composable<Destination.AutoTrackingPermissions> {
-            AutoTrackingPermissionsRationale(
+            AutoTrackingPermissionsScreen(
                 onAllPermissionsGranted = {
                     navController.previousBackStackEntry?.savedStateHandle?.set("permissions_granted", true)
                     navController.popBackStack()
