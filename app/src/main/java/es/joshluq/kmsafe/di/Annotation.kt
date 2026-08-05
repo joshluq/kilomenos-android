@@ -274,3 +274,38 @@ annotation class GetPreferences
 @Qualifier
 @Retention(AnnotationRetention.BINARY)
 annotation class UpdatePreferences
+
+/**
+ * Qualifier for the ObserveTrackingStateUseCase.
+ */
+@Qualifier
+@Retention(AnnotationRetention.BINARY)
+annotation class ObserveTrackingState
+
+/**
+ * Qualifier for the ClearTrackingUseCase.
+ */
+@Qualifier
+@Retention(AnnotationRetention.BINARY)
+annotation class ClearTracking
+
+/**
+ * Qualifier for the StopTrackingUseCase.
+ */
+@Qualifier
+@Retention(AnnotationRetention.BINARY)
+annotation class StopTracking
+
+/**
+ * Qualifier for the StartAutoTrackingUseCase.
+ */
+@Qualifier
+@Retention(AnnotationRetention.BINARY)
+annotation class StartAutoTracking
+
+/**
+ * Qualifier for the StopAutoTrackingUseCase.
+ */
+@Qualifier
+@Retention(AnnotationRetention.BINARY)
+annotation class StopAutoTracking

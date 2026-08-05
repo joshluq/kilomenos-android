@@ -40,4 +40,14 @@ interface TrackingRepository {
      * Clears all tracking data and returns to initial state.
      */
     fun clear()
+
+    /**
+     * Registers for background activity transitions (Auto-Tracking).
+     */
+    fun startAutoTracking()
+
+    /**
+     * Unregisters from background activity transitions.
+     */
+    fun stopAutoTracking()
 }

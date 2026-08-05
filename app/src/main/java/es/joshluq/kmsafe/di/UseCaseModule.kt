@@ -232,4 +232,34 @@ abstract class UseCaseModule {
     abstract fun bindGetCurrentUserUseCase(
         useCase: GetCurrentUserUseCase
     ): FlowUseCase<GetCurrentUserUseCase.Input, GetCurrentUserUseCase.Output>
+
+    @Binds
+    @ObserveTrackingState
+    abstract fun bindObserveTrackingStateUseCase(
+        useCase: ObserveTrackingStateUseCase
+    ): FlowUseCase<ObserveTrackingStateUseCase.Input, ObserveTrackingStateUseCase.Output>
+
+    @Binds
+    @ClearTracking
+    abstract fun bindClearTrackingUseCase(
+        useCase: ClearTrackingUseCase
+    ): FlowUseCase<ClearTrackingUseCase.Input, ClearTrackingUseCase.Output>
+
+    @Binds
+    @StopTracking
+    abstract fun bindStopTrackingUseCase(
+        useCase: StopTrackingUseCase
+    ): FlowUseCase<StopTrackingUseCase.Input, StopTrackingUseCase.Output>
+
+    @Binds
+    @StartAutoTracking
+    abstract fun bindStartAutoTrackingUseCase(
+        useCase: StartAutoTrackingUseCase
+    ): FlowUseCase<StartAutoTrackingUseCase.Input, StartAutoTrackingUseCase.Output>
+
+    @Binds
+    @StopAutoTracking
+    abstract fun bindStopAutoTrackingUseCase(
+        useCase: StopAutoTrackingUseCase
+    ): FlowUseCase<StopAutoTrackingUseCase.Input, StopAutoTrackingUseCase.Output>
 }

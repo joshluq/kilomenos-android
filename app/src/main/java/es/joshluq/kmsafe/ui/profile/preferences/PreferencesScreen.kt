@@ -1,11 +1,8 @@
 package es.joshluq.kmsafe.ui.profile.preferences
 
 import android.Manifest
-import android.content.pm.PackageManager
 import android.content.res.Configuration
 import android.os.Build
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -18,16 +15,15 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
-import androidx.core.content.ContextCompat
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.google.accompanist.permissions.*
 import es.joshluq.canvaskit.components.cards.CanvasKitCard
 import es.joshluq.canvaskit.components.feedback.CanvasKitAlertVariant
 import es.joshluq.canvaskit.components.feedback.CanvasKitBanner
@@ -60,21 +56,24 @@ fun PreferencesRoute(
     )
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalPermissionsApi::class)
 @Composable
 fun PreferencesScreen(
     state: State,
     onEvent: (Event) -> Unit
 ) {
-    val context = LocalContext.current
     var showCredits by remember { mutableStateOf(false) }
 
-    val permissionLauncher = rememberLauncherForActivityResult(
-        ActivityResultContracts.RequestPermission()
-    ) { isGranted ->
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            onEvent(Event.OnPermissionResult(Manifest.permission.ACTIVITY_RECOGNITION, isGranted))
-            if (isGranted) {
+    val activityRecognitionState = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+        rememberPermissionState(Manifest.permission.ACTIVITY_RECOGNITION)
+    } else {
+        null
+    }
+
+    // Synchronize permission result with ViewModel
+    LaunchedEffect(activityRecognitionState?.status) {
+        activityRecognitionState?.let {
+            if (it.status.isGranted && !state.autoTrackingEnabled && state.isUserPremium) {
                 onEvent(Event.OnAutoTrackingToggled(true))
             }
         }
@@ -167,13 +166,8 @@ fun PreferencesScreen(
                             checked = state.autoTrackingEnabled,
                             onCheckedChange = { enabled ->
                                 if (enabled) {
-                                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                                        val status = ContextCompat.checkSelfPermission(context, Manifest.permission.ACTIVITY_RECOGNITION)
-                                        if (status == PackageManager.PERMISSION_GRANTED) {
-                                            onEvent(Event.OnAutoTrackingToggled(true))
-                                        } else {
-                                            permissionLauncher.launch(Manifest.permission.ACTIVITY_RECOGNITION)
-                                        }
+                                    if (activityRecognitionState != null && !activityRecognitionState.status.isGranted) {
+                                        activityRecognitionState.launchPermissionRequest()
                                     } else {
                                         onEvent(Event.OnAutoTrackingToggled(true))
                                     }

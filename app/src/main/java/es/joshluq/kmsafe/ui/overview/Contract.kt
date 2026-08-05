@@ -35,6 +35,7 @@ data class State(
     val newRecordFuel: String = "",
     val isSyncPending: Boolean = false,
     val isTracking: Boolean = false,
+    val autoTrackingEnabled: Boolean = false,
     val trackedDistance: Double = 0.0,
     val tripStartTime: Long? = null,
     val error: TextProvider? = null
@@ -69,6 +70,7 @@ sealed interface Event : UiEvent {
     data object OnStopTrackingClicked : Event
     data object OnConfirmTrackedTripClicked : Event
     data object OnCancelTrackedTripClicked : Event
+    data object OnRequestPermissionsRationale : Event
 }
 
 /**
@@ -82,4 +84,5 @@ sealed interface Effect : UiEffect {
     data object NavigateToProjection : Effect
     data object StartTrackingService : Effect
     data object StopTrackingService : Effect
+    data object OpenAppSettings : Effect
 }

@@ -8,7 +8,9 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class TrackingRepositoryImpl @Inject constructor() : TrackingRepository {
+class TrackingRepositoryImpl @Inject constructor(
+    private val autoTrackingManager: AutoTrackingManager
+) : TrackingRepository {
 
     private val _currentDistanceMeters = MutableStateFlow(0.0)
     override val currentDistanceMeters: StateFlow<Double> = _currentDistanceMeters.asStateFlow()
@@ -33,12 +35,19 @@ class TrackingRepositoryImpl @Inject constructor() : TrackingRepository {
 
     override fun stopTracking() {
         _isTracking.value = false
-        // We don't reset meters immediately so the UI can show the final result before saving
     }
 
     override fun clear() {
         _isTracking.value = false
         _currentDistanceMeters.value = 0.0
         _startTime.value = null
+    }
+
+    override fun startAutoTracking() {
+        autoTrackingManager.startAutoTracking()
+    }
+
+    override fun stopAutoTracking() {
+        autoTrackingManager.stopAutoTracking()
     }
 }
