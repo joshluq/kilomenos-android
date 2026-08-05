@@ -14,6 +14,7 @@ import es.joshluq.foundationkit.usecase.FlowUseCase
 import es.joshluq.kmsafe.di.IsUserPremium
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -31,31 +32,46 @@ class ActivityTransitionReceiver : BroadcastReceiver() {
     @IsUserPremium
     lateinit var isUserPremiumUseCase: @JvmSuppressWildcards FlowUseCase<IsUserPremiumUseCase.Input, IsUserPremiumUseCase.Output>
 
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+
     override fun onReceive(context: Context, intent: Intent) {
-        logger.d("ActivityReceiver", "onReceive triggered with action: ${intent.action}")
+        val pendingResult = goAsync()
+        
+        logger.i("ActivityReceiver", "onReceive triggered with action: ${intent.action}")
 
         if (!ActivityTransitionResult.hasResult(intent)) {
             logger.w("ActivityReceiver", "Received intent without ActivityTransitionResult")
+            pendingResult.finish()
             return
         }
 
-        val result = ActivityTransitionResult.extractResult(intent) ?: return
+        val result = ActivityTransitionResult.extractResult(intent) ?: run {
+            pendingResult.finish()
+            return
+        }
         
-        CoroutineScope(Dispatchers.IO).launch {
-            // Check Premium Status first
-            val output = isUserPremiumUseCase(IsUserPremiumUseCase.Input).first()
-            val isPremium = (output is IsUserPremiumUseCase.Output.Success && output.isPremium)
+        scope.launch {
+            try {
+                // Check Premium Status first
+                // Use a timeout or ensure first() returns promptly
+                val output = isUserPremiumUseCase(IsUserPremiumUseCase.Input).first()
+                val isPremium = (output is IsUserPremiumUseCase.Output.Success && output.isPremium)
 
-            if (!isPremium) {
-                logger.d("ActivityReceiver", "Ignored: User is not premium.")
-                return@launch
-            }
-
-            for (event in result.transitionEvents) {
-                logger.i("ActivityReceiver", "Transition Event: Type=${event.activityType}, Transition=${event.transitionType}")
-                when (event.activityType) {
-                    DetectedActivity.IN_VEHICLE -> handleVehicleTransition(context, event.transitionType)
+                if (!isPremium) {
+                    logger.w("ActivityReceiver", "Ignored: User is not premium.")
+                    return@launch
                 }
+
+                for (event in result.transitionEvents) {
+                    logger.i("ActivityReceiver", "Transition Event: Type=${event.activityType}, Transition=${event.transitionType}")
+                    if (event.activityType == DetectedActivity.IN_VEHICLE) {
+                        handleVehicleTransition(context, event.transitionType)
+                    }
+                }
+            } catch (e: Exception) {
+                logger.e("ActivityReceiver", "Error processing transition result", e)
+            } finally {
+                pendingResult.finish()
             }
         }
     }

@@ -11,7 +11,7 @@ import es.joshluq.kmsafe.BuildConfig
  * This provider is designed for remote debugging of background processes.
  */
 class CrashlyticsLogProvider(
-    override val minLogLevel: LogLevel = if (BuildConfig.DEBUG) LogLevel.DEBUG else LogLevel.ERROR
+    override val minLogLevel: LogLevel = LogLevel.INFO // Talkative for remote debugging
 ) : LogProvider {
 
     private val crashlytics = FirebaseCrashlytics.getInstance()
