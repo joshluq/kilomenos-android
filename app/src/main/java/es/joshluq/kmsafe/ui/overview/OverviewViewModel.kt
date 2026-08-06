@@ -27,6 +27,7 @@ import es.joshluq.kmsafe.domain.model.Feature
 import es.joshluq.kmsafe.domain.model.RentingContract
 import es.joshluq.kmsafe.domain.usecase.*
 import es.joshluq.kmsafe.ui.overview.model.toUiModel
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import javax.inject.Inject
@@ -74,12 +75,11 @@ class OverviewViewModel @Inject constructor(
     }
 
     init {
-        observeEntitlements()
+        syncInitialData()
         loadContractData()
         loadProjection()
         loadAllVehicles()
         observeTracking()
-        loadPreferences()
     }
 
     override fun createInitialState(): State = State.Empty
@@ -125,25 +125,32 @@ class OverviewViewModel @Inject constructor(
         }
     }
 
-    private fun observeEntitlements() {
-        getEntitlementsUseCase(GetEntitlementsUseCase.Input("", forceRefresh = false))
-            .onEach { output ->
-                if (output is GetEntitlementsUseCase.Output.Success) {
-                    val entitlements = output.entitlements
-                    val hasPremiumAccess = entitlements.isFeatureActive(Feature.AUTO_TRACKING)
-                    val isTrialable = entitlements.isFeatureTrialable(Feature.AUTO_TRACKING)
-                    
-                    updateState { 
-                        copy(
-                            isPremium = hasPremiumAccess,
-                            isAutoTrackingTrialable = isTrialable,
-                            subscriptionLevel = entitlements.subscriptionLevel
-                        ) 
-                    }
-                    evaluatePromotion()
-                    loadContractData()
+    private fun syncInitialData() {
+        val entitlementsFlow = getEntitlementsUseCase(GetEntitlementsUseCase.Input("", forceRefresh = false))
+        val preferencesFlow = getPreferencesUseCase(GetPreferencesUseCase.Input)
+
+        combine(entitlementsFlow, preferencesFlow) { entitlementsOutput, preferencesOutput ->
+            if (entitlementsOutput is GetEntitlementsUseCase.Output.Success && 
+                preferencesOutput is GetPreferencesUseCase.Output.Success) {
+                
+                val entitlements = entitlementsOutput.entitlements
+                val prefs = preferencesOutput.preferences
+                
+                val hasPremiumAccess = entitlements.isFeatureActive(Feature.AUTO_TRACKING)
+                val isTrialable = entitlements.isFeatureTrialable(Feature.AUTO_TRACKING)
+
+                updateState {
+                    copy(
+                        isPremium = hasPremiumAccess,
+                        isAutoTrackingTrialable = isTrialable,
+                        subscriptionLevel = entitlements.subscriptionLevel,
+                        autoTrackingEnabled = prefs.autoTrackingEnabled,
+                        autoTrackingPromotionDismissed = prefs.autoTrackingPromotionDismissed
+                    )
                 }
-            }.launchIn(viewModelScope)
+                evaluatePromotion()
+            }
+        }.launchIn(viewModelScope)
     }
 
     private fun loadContractData() {
@@ -239,22 +246,6 @@ class OverviewViewModel @Inject constructor(
                     } else {
                         updateState { copy(showProjectionBanner = false) }
                     }
-                }
-            }.launchIn(viewModelScope)
-    }
-
-    private fun loadPreferences() {
-        getPreferencesUseCase(GetPreferencesUseCase.Input)
-            .onEach { output ->
-                if (output is GetPreferencesUseCase.Output.Success) {
-                    val prefs = output.preferences
-                    updateState { 
-                        copy(
-                            autoTrackingEnabled = prefs.autoTrackingEnabled,
-                            autoTrackingPromotionDismissed = prefs.autoTrackingPromotionDismissed
-                        ) 
-                    }
-                    evaluatePromotion()
                 }
             }.launchIn(viewModelScope)
     }

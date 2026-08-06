@@ -282,7 +282,7 @@ private fun HistoryFilters(
             label = "",
             value = query,
             onValueChange = onQueryChange,
-            placeholder = stringResource(R.string.overview_record_label_placeholder),
+            placeholder = stringResource(R.string.history_search_label),
             leadingIcon = {
                 Icon(
                     imageVector = Icons.Default.Search,

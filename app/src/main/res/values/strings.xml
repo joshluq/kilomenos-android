@@ -176,6 +176,7 @@
 
     <!-- History -->
     <string name="history_empty_state_title">No hay registros mensuales</string>
+    <string name="history_search_label">Buscar</string>
     <string name="history_empty_state_description">Actualiza tu kilometraje periódicamente para visualizar aquí la evolución de tu contrato.</string>
     <string name="history_register_error">No se pudo borrar el registro</string>
     <string name="history_load_error">No se pudo sincronizar el historial</string>

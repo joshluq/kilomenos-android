@@ -175,6 +175,7 @@
     <string name="onboarding_saving_button">Saving&#8230;</string>
 
     <!-- History -->
+    <string name="history_search_label">Search</string>
     <string name="history_empty_state_title">No monthly records</string>
     <string name="history_empty_state_description">Update your odometer periodically to visualize your contract\'s evolution here.</string>
     <string name="history_register_error">Could not delete record</string>
