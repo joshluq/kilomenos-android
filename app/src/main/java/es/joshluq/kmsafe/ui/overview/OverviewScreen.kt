@@ -137,7 +137,8 @@ fun OverviewRoute(
     onNavigateToOnboarding: (String?, Boolean) -> Unit,
     onNavigateToProjection: () -> Unit,
     onNavigateToPermissions: () -> Unit,
-    onNavigateToPremiumPaywall: () -> Unit
+    onNavigateToPremiumPaywall: () -> Unit,
+    onNavigateToPreferences: () -> Unit
 ) {
     val viewModel: OverviewViewModel = hiltViewModel()
     val state = viewModel.state.collectAsStateWithLifecycle()
@@ -175,6 +176,7 @@ fun OverviewRoute(
                 Effect.NavigateToProjection -> onNavigateToProjection()
                 Effect.NavigateToPermissions -> onNavigateToPermissions()
                 Effect.NavigateToPremiumPaywall -> onNavigateToPremiumPaywall()
+                Effect.NavigateToPreferences -> onNavigateToPreferences()
                 Effect.StartTrackingService -> {
                     val intent = Intent(context, LocationTrackingService::class.java).apply {
                         action = LocationTrackingService.ACTION_START
@@ -370,8 +372,7 @@ fun OverviewScreen(
         if (state.showAutoTrackingPromotion) {
             AutoTrackingPromotionDialog(
                 onConfigClicked = {
-                    onEvent(Event.OnDismissAutoTrackingPromotion)
-                    onEvent(Event.OnRequestPermissionsRationale)
+                    onEvent(Event.OnAutoTrackingPromotionAccepted)
                 },
                 onDismiss = { onEvent(Event.OnDismissAutoTrackingPromotion) }
             )

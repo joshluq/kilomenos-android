@@ -120,7 +120,15 @@ class OverviewViewModel @Inject constructor(
                 analytics.track(AnalyticsEvent.Custom("premium_upgrade_clicked", mapOf("source" to "top_bar")))
                 launchEffect(Effect.NavigateToPremiumPaywall)
             }
-            Event.OnDismissAutoTrackingPromotion -> handleDismissPromotion()
+            Event.OnDismissAutoTrackingPromotion -> {
+                analytics.track(AnalyticsEvent.Custom("autotracking_promotion_dismissed"))
+                handleDismissPromotion()
+            }
+            Event.OnAutoTrackingPromotionAccepted -> {
+                analytics.track(AnalyticsEvent.Custom("autotracking_promotion_accepted"))
+                handleDismissPromotion()
+                launchEffect(Effect.NavigateToPreferences)
+            }
             is Event.OnAutoTrackingToggled -> handleAutoTrackingToggled(event.enabled)
         }
     }

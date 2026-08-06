@@ -36,7 +36,8 @@ fun DashboardNavigation(
                     }
                 },
                 onNavigateToPermissions = onNavigateToPermissions,
-                onNavigateToPremiumPaywall = onNavigateToPremiumPaywall
+                onNavigateToPremiumPaywall = onNavigateToPremiumPaywall,
+                onNavigateToPreferences = onNavigateToPreferences
             )
         }
 

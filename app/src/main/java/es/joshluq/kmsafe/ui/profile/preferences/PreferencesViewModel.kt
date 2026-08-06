@@ -2,6 +2,8 @@ package es.joshluq.kmsafe.ui.profile.preferences
 
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import es.joshluq.analyticskit.domain.model.AnalyticsEvent
+import es.joshluq.analyticskit.sdk.AnalyticskitManager
 import es.joshluq.foundationkit.log.LoggerKit
 import es.joshluq.foundationkit.text.TextProvider
 import es.joshluq.foundationkit.usecase.FlowUseCase
@@ -31,6 +33,7 @@ class PreferencesViewModel @Inject constructor(
     @param:StopAutoTracking private val stopAutoTrackingUseCase:
     @JvmSuppressWildcards FlowUseCase<StopAutoTrackingUseCase.Input, StopAutoTrackingUseCase.Output>,
     private val consentManager: ConsentManager,
+    private val analytics: AnalyticskitManager,
     private val logger: LoggerKit
 ) : ScreenViewModel<State, Event, Effect>() {
 
@@ -45,15 +48,30 @@ class PreferencesViewModel @Inject constructor(
     override fun handleEvent(event: Event) {
         logger.d("PreferencesViewModel", "Event received: $event")
         when (event) {
-            is Event.OnRememberEmailToggled -> handleRememberEmailToggled(event.enabled)
-            is Event.OnProjectionBannerToggled -> handleProjectionBannerToggled(event.enabled)
-            is Event.OnAutoTrackingToggled -> handleAutoTrackingToggled(event.enabled)
-            Event.OnManagePrivacyClicked -> launchEffect(Effect.ShowPrivacyOptions)
+            is Event.OnRememberEmailToggled -> {
+                analytics.track(AnalyticsEvent.Custom("remember_email_toggled", mapOf("enabled" to event.enabled)))
+                handleRememberEmailToggled(event.enabled)
+            }
+            is Event.OnProjectionBannerToggled -> {
+                analytics.track(AnalyticsEvent.Custom("projection_banner_toggled", mapOf("enabled" to event.enabled)))
+                handleProjectionBannerToggled(event.enabled)
+            }
+            is Event.OnAutoTrackingToggled -> {
+                analytics.track(AnalyticsEvent.Custom("autotracking_toggled_intent", mapOf("enabled" to event.enabled)))
+                handleAutoTrackingToggled(event.enabled)
+            }
+            Event.OnManagePrivacyClicked -> {
+                analytics.track(AnalyticsEvent.Custom("manage_privacy_clicked"))
+                launchEffect(Effect.ShowPrivacyOptions)
+            }
             Event.OnBackClicked -> launchEffect(Effect.NavigateBack)
             Event.OnDismissError -> updateState { copy(error = null) }
             Event.OnPermissionsRationaleSuccess -> executeAutoTrackingToggle(true)
             Event.OnStartTrialClicked -> handleStartTrial()
-            Event.OnDismissTrialOffer -> updateState { copy(showTrialOffer = false) }
+            Event.OnDismissTrialOffer -> {
+                analytics.track(AnalyticsEvent.Custom("premium_trial_offer_dismissed"))
+                updateState { copy(showTrialOffer = false) }
+            }
         }
     }
 
@@ -120,6 +138,7 @@ class PreferencesViewModel @Inject constructor(
     }
 
     private fun handleStartTrial() {
+        analytics.track(AnalyticsEvent.Custom("premium_trial_started"))
         updateState { copy(showTrialOffer = false, isLoading = true) }
         val fingerprint = fingerprintProvider.getFingerprint()
         startTrialUseCase(StartTrialUseCase.Input(fingerprint))
