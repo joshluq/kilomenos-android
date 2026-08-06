@@ -38,6 +38,9 @@ data class State(
     val isSyncPending: Boolean = false,
     val isTracking: Boolean = false,
     val autoTrackingEnabled: Boolean = false,
+    val isAutoTrackingTrialable: Boolean = false,
+    val autoTrackingPromotionDismissed: Boolean = false,
+    val showAutoTrackingPromotion: Boolean = false,
     val trackedDistance: Double = 0.0,
     val tripStartTime: Long? = null,
     val error: TextProvider? = null
@@ -75,6 +78,7 @@ sealed interface Event : UiEvent {
     data object OnRequestPermissionsRationale : Event
     data object OnPermissionsRationaleSuccess : Event
     data object OnPremiumUpgradeClicked : Event
+    data object OnDismissAutoTrackingPromotion : Event
     data class OnAutoTrackingToggled(val enabled: Boolean) : Event
 }
 

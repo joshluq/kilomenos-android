@@ -120,6 +120,7 @@ class OverviewViewModel @Inject constructor(
                 analytics.track(AnalyticsEvent.Custom("premium_upgrade_clicked", mapOf("source" to "top_bar")))
                 launchEffect(Effect.NavigateToPremiumPaywall)
             }
+            Event.OnDismissAutoTrackingPromotion -> handleDismissPromotion()
             is Event.OnAutoTrackingToggled -> handleAutoTrackingToggled(event.enabled)
         }
     }
@@ -130,13 +131,16 @@ class OverviewViewModel @Inject constructor(
                 if (output is GetEntitlementsUseCase.Output.Success) {
                     val entitlements = output.entitlements
                     val hasPremiumAccess = entitlements.isFeatureActive(Feature.AUTO_TRACKING)
+                    val isTrialable = entitlements.isFeatureTrialable(Feature.AUTO_TRACKING)
                     
                     updateState { 
                         copy(
                             isPremium = hasPremiumAccess,
+                            isAutoTrackingTrialable = isTrialable,
                             subscriptionLevel = entitlements.subscriptionLevel
                         ) 
                     }
+                    evaluatePromotion()
                     loadContractData()
                 }
             }.launchIn(viewModelScope)
@@ -243,9 +247,33 @@ class OverviewViewModel @Inject constructor(
         getPreferencesUseCase(GetPreferencesUseCase.Input)
             .onEach { output ->
                 if (output is GetPreferencesUseCase.Output.Success) {
-                    updateState { copy(autoTrackingEnabled = output.preferences.autoTrackingEnabled) }
+                    val prefs = output.preferences
+                    updateState { 
+                        copy(
+                            autoTrackingEnabled = prefs.autoTrackingEnabled,
+                            autoTrackingPromotionDismissed = prefs.autoTrackingPromotionDismissed
+                        ) 
+                    }
+                    evaluatePromotion()
                 }
             }.launchIn(viewModelScope)
+    }
+
+    private fun evaluatePromotion() {
+        val currentState = state.value
+        if (currentState.autoTrackingPromotionDismissed || currentState.autoTrackingEnabled) {
+            updateState { copy(showAutoTrackingPromotion = false) }
+            return
+        }
+
+        val shouldShow = currentState.isPremium || currentState.isAutoTrackingTrialable
+        updateState { copy(showAutoTrackingPromotion = shouldShow) }
+    }
+
+    private fun handleDismissPromotion() {
+        updateState { copy(showAutoTrackingPromotion = false) }
+        updatePreferencesUseCase(UpdatePreferencesUseCase.Input(autoTrackingPromotionDismissed = true))
+            .launchIn(viewModelScope)
     }
 
     private fun handleSaveRecord(timestamp: Long) {

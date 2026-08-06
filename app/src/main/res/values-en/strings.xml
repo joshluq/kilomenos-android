@@ -334,4 +334,10 @@
     <string name="overview_permissions_step_notifications_desc">Allows showing the real-time tracking status in your status bar.</string>
     <string name="overview_permissions_button_continue">Continue</string>
     <string name="overview_permissions_button_settings">Go to Settings</string>
+
+    <!-- Auto-Tracking Promotion -->
+    <string name="overview_promotion_autotracking_title">Simplify your trips! 🚗</string>
+    <string name="overview_promotion_autotracking_desc">Auto-Tracking is available for you. Forget about registering kilometers manually; the app will do it for you when it detects you are driving.</string>
+    <string name="overview_promotion_autotracking_confirm">Set up now</string>
+    <string name="overview_promotion_autotracking_dismiss">Not now, don\'t show again</string>
 </resources>

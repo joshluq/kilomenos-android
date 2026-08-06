@@ -43,6 +43,11 @@ interface PreferencesRepository {
     suspend fun setLastKnownOverLimit(userId: String, overLimit: Boolean?)
 
     /**
+     * Updates the auto-tracking promotion dismissal state for a specific user.
+     */
+    suspend fun setAutoTrackingPromotionDismissed(userId: String, dismissed: Boolean)
+
+    /**
      * Clears all stored preferences (global and user-specific).
      */
     suspend fun clearPreferences()

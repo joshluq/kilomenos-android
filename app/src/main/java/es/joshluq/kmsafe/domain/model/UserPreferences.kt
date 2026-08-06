@@ -14,5 +14,6 @@ data class UserPreferences(
     val lastEmail: String = "",
     val showProjectionBanner: Boolean = true,
     val lastKnownOverLimit: Boolean? = null,
-    val autoTrackingEnabled: Boolean = false
+    val autoTrackingEnabled: Boolean = false,
+    val autoTrackingPromotionDismissed: Boolean = false
 )

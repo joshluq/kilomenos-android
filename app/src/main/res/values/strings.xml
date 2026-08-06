@@ -334,4 +334,10 @@
     <string name="overview_permissions_step_notifications_desc">Permite mostrar el estado del seguimiento en tiempo real en tu barra de estado.</string>
     <string name="overview_permissions_button_continue">Continuar</string>
     <string name="overview_permissions_button_settings">Ir a Ajustes</string>
+
+    <!-- Auto-Tracking Promotion -->
+    <string name="overview_promotion_autotracking_title">¡Simplifica tus viajes! 🚗</string>
+    <string name="overview_promotion_autotracking_desc">Tienes disponible el Seguimiento Automático. Olvida registrar tus kilómetros manualmente; la app lo hará por ti al detectar que conduces.</string>
+    <string name="overview_promotion_autotracking_confirm">Configurar ahora</string>
+    <string name="overview_promotion_autotracking_dismiss">Ahora no, no volver a mostrar</string>
 </resources>

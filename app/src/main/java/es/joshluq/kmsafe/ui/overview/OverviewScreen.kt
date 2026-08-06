@@ -366,6 +366,16 @@ fun OverviewScreen(
                 UpdateOdometerContent(state, onEvent)
             }
         }
+
+        if (state.showAutoTrackingPromotion) {
+            AutoTrackingPromotionDialog(
+                onConfigClicked = {
+                    onEvent(Event.OnDismissAutoTrackingPromotion)
+                    onEvent(Event.OnRequestPermissionsRationale)
+                },
+                onDismiss = { onEvent(Event.OnDismissAutoTrackingPromotion) }
+            )
+        }
     }
 }
 
@@ -1181,6 +1191,55 @@ private fun ChartInfoDialog(
                         text = stringResource(R.string.history_close_button),
                         color = contentColor
                     )
+                }
+            }
+        )
+    }
+}
+
+@Composable
+private fun AutoTrackingPromotionDialog(
+    onConfigClicked: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    CanvasKitDialog(onDismissRequest = onDismiss) {
+        CanvasKitDialogContent(
+            title = {
+                Text(
+                    text = stringResource(R.string.overview_promotion_autotracking_title),
+                    style = CanvasKitTheme.typography.bodyLarge,
+                    fontWeight = FontWeight.Bold
+                )
+            },
+            content = {
+                Text(
+                    text = stringResource(R.string.overview_promotion_autotracking_desc),
+                    style = CanvasKitTheme.typography.bodyMedium,
+                    color = CanvasKitTheme.colors.textSecondary
+                )
+            },
+            buttons = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    CanvasKitButton(
+                        onClick = onConfigClicked,
+                        modifier = Modifier.fillMaxWidth()
+                    ) { contentColor ->
+                        Text(
+                            text = stringResource(R.string.overview_promotion_autotracking_confirm),
+                            color = contentColor
+                        )
+                    }
+                    CanvasKitButton(
+                        variant = CanvasKitButtonVariant.Ghost,
+                        onClick = onDismiss,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        @Suppress("DEPRECATION")
+                        Text(
+                            text = stringResource(R.string.overview_promotion_autotracking_dismiss),
+                            color = CanvasKitTheme.colors.textSecondary
+                        )
+                    }
                 }
             }
         )

@@ -25,6 +25,7 @@ class UpdatePreferencesUseCase @Inject constructor(
                     input.showProjectionBanner?.let { repository.setShowProjectionBanner(user.id, it) }
                     input.lastKnownOverLimit?.let { repository.setLastKnownOverLimit(user.id, it) }
                     input.autoTrackingEnabled?.let { repository.setAutoTrackingEnabled(user.id, it) }
+                    input.autoTrackingPromotionDismissed?.let { repository.setAutoTrackingPromotionDismissed(user.id, it) }
                 }
 
                 emit(Output.Success as Output)
@@ -37,7 +38,8 @@ class UpdatePreferencesUseCase @Inject constructor(
         val lastEmail: String? = null,
         val showProjectionBanner: Boolean? = null,
         val lastKnownOverLimit: Boolean? = null,
-        val autoTrackingEnabled: Boolean? = null
+        val autoTrackingEnabled: Boolean? = null,
+        val autoTrackingPromotionDismissed: Boolean? = null
     ) : UseCaseInput
 
     sealed interface Output : UseCaseOutput {

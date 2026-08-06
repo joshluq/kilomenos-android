@@ -1,5 +1,6 @@
 package es.joshluq.kmsafe.data.util
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.provider.Settings
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -15,8 +16,9 @@ class DeviceFingerprintProvider @Inject constructor(
     @ApplicationContext private val context: Context
 ) {
     /**
-     * Returns a SHA-256 hash of the Android ID.
+     * Returns SHA-256 hash of the Android ID.
      */
+    @SuppressLint("HardwareIds")
     fun getFingerprint(): String {
         val androidId = Settings.Secure.getString(context.contentResolver, Settings.Secure.ANDROID_ID)
         return androidId?.hashSha256() ?: "unknown_device"

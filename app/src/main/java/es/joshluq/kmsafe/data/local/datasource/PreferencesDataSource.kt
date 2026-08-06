@@ -23,6 +23,7 @@ class PreferencesDataSource @Inject constructor(
         private fun bannerKey(userId: String) = "ui_${userId}_show_projection_banner"
         private fun limitKey(userId: String) = "ui_${userId}_last_known_over_limit"
         private fun autoTrackingKey(userId: String) = "settings_${userId}_auto_tracking_enabled"
+        private fun promotionDismissedKey(userId: String) = "ui_${userId}_auto_tracking_promotion_dismissed"
     }
 
     /**
@@ -44,13 +45,18 @@ class PreferencesDataSource @Inject constructor(
             storage.read<Boolean>(autoTrackingKey(userId)) ?: false
         } else false
 
+        val promotionDismissed = if (userId.isNotEmpty()) {
+            storage.read<Boolean>(promotionDismissedKey(userId)) ?: false
+        } else false
+
         emit(
             UserPreferences(
                 rememberEmail = rememberEmail,
                 lastEmail = lastEmail,
                 showProjectionBanner = showBanner,
                 lastKnownOverLimit = lastLimit,
-                autoTrackingEnabled = autoTracking
+                autoTrackingEnabled = autoTracking,
+                autoTrackingPromotionDismissed = promotionDismissed
             )
         )
     }
@@ -89,6 +95,11 @@ class PreferencesDataSource @Inject constructor(
     suspend fun setAutoTrackingEnabled(userId: String, enabled: Boolean) {
         if (userId.isEmpty()) return
         storage.save(autoTrackingKey(userId), enabled)
+    }
+
+    suspend fun setAutoTrackingPromotionDismissed(userId: String, dismissed: Boolean) {
+        if (userId.isEmpty()) return
+        storage.save(promotionDismissedKey(userId), dismissed)
     }
 
     suspend fun clearAllPreferences() {

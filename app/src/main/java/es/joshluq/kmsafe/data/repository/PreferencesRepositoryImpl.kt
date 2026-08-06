@@ -39,6 +39,10 @@ class PreferencesRepositoryImpl @Inject constructor(
         dataSource.setAutoTrackingEnabled(userId, enabled)
     }
 
+    override suspend fun setAutoTrackingPromotionDismissed(userId: String, dismissed: Boolean) {
+        dataSource.setAutoTrackingPromotionDismissed(userId, dismissed)
+    }
+
     override suspend fun setLastKnownOverLimit(userId: String, overLimit: Boolean?) {
         dataSource.setLastKnownOverLimit(userId, overLimit)
     }
