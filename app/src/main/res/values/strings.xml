@@ -41,6 +41,10 @@
     <string name="premium_benefit_autotracking_desc">Olvida darle al botón. La app detecta cuándo conduces y activa el GPS por ti.</string>
     <string name="premium_paywall_save_money_highlight">Ahorra en penalizaciones con un control total y automático.</string>
     <string name="premium_upgrade_button">Subir a Premium ahora</string>
+    <string name="premium_trial_offer_title">Prueba Premium Gratis</string>
+    <string name="premium_trial_offer_message">Disfruta de 7 días de acceso completo a todas las funciones, incluyendo Auto-Tracking y sincronización en la nube. Sin compromisos.</string>
+    <string name="premium_trial_offer_confirm">Empezar prueba de 7 días</string>
+    <string name="premium_trial_offer_cancel">Ahora no</string>
     <string name="premium_paywall_migrating_msg">Asegurando tus datos en la nube…</string>
     <string name="premium_continue_free">Continuar con la versión gratuita</string>
     <string name="premium_limit_vehicle_title">Límite de vehículos</string>

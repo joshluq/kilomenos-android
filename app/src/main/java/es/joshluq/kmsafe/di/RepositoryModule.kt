@@ -6,11 +6,13 @@ import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import es.joshluq.kmsafe.data.repository.AuthRepositoryImpl
 import es.joshluq.kmsafe.data.repository.DataManagementRepositoryImpl
+import es.joshluq.kmsafe.data.repository.EntitlementsRepositoryImpl
 import es.joshluq.kmsafe.data.repository.HistoryRepositoryImpl
 import es.joshluq.kmsafe.data.repository.PreferencesRepositoryImpl
 import es.joshluq.kmsafe.data.repository.RentingRepositoryImpl
 import es.joshluq.kmsafe.domain.repository.AuthRepository
 import es.joshluq.kmsafe.domain.repository.DataManagementRepository
+import es.joshluq.kmsafe.domain.repository.EntitlementsRepository
 import es.joshluq.kmsafe.domain.repository.HistoryRepository
 import es.joshluq.kmsafe.domain.repository.PreferencesRepository
 import es.joshluq.kmsafe.domain.repository.RentingRepository
@@ -64,4 +66,10 @@ abstract class RepositoryModule {
     abstract fun bindTrackingRepository(
         repository: TrackingRepositoryImpl
     ): TrackingRepository
+
+    @Singleton
+    @Binds
+    abstract fun bindEntitlementsRepository(
+        repository: EntitlementsRepositoryImpl
+    ): EntitlementsRepository
 }

@@ -11,12 +11,14 @@ import es.joshluq.foundationkit.usecase.FlowUseCase
 import es.joshluq.foundationkit.usecase.UseCase
 import es.joshluq.foundationkit.viewmodel.ScreenViewModel
 import es.joshluq.kmsafe.R
+import es.joshluq.kmsafe.data.util.DeviceFingerprintProvider
 import es.joshluq.kmsafe.di.*
 import es.joshluq.kmsafe.domain.model.SubscriptionLevel
 import es.joshluq.kmsafe.domain.model.User
 import es.joshluq.kmsafe.domain.usecase.*
 import es.joshluq.kmsafe.data.remote.auth.GoogleAuthManager
 import es.joshluq.kmsafe.ui.util.toText
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
@@ -43,6 +45,9 @@ class LoginViewModel @Inject constructor(
     @JvmSuppressWildcards FlowUseCase<GetPreferencesUseCase.Input, GetPreferencesUseCase.Output>,
     @param:UpdatePreferences private val updatePreferencesUseCase:
     @JvmSuppressWildcards FlowUseCase<UpdatePreferencesUseCase.Input, UpdatePreferencesUseCase.Output>,
+    @param:GetEntitlements private val getEntitlementsUseCase:
+    @JvmSuppressWildcards FlowUseCase<GetEntitlementsUseCase.Input, GetEntitlementsUseCase.Output>,
+    private val fingerprintProvider: DeviceFingerprintProvider,
     private val googleAuthManager: GoogleAuthManager,
     private val analytics: AnalyticskitManager,
     private val logger: LoggerKit
@@ -219,17 +224,24 @@ class LoginViewModel @Inject constructor(
 
     private fun proceedWithPostLogin(user: User) {
         logger.d("LoginViewModel", "Proceeding with mandatory sync before navigation")
-        syncContractsUseCase(SyncContractsUseCase.Input).onEach { syncOutput ->
-            when (syncOutput) {
-                SyncContractsUseCase.Output.Progress -> updateState { copy(isLoading = true) }
-                is SyncContractsUseCase.Output.Failure -> {
-                    logger.w("LoginViewModel", "Sync failed, but navigating based on level (Local-First)")
-                    handlePostLoginNavigation(user)
-                }
-                SyncContractsUseCase.Output.Success -> {
-                    logger.i("LoginViewModel", "Sync success, navigating based on level")
-                    handlePostLoginNavigation(user)
-                }
+        updateState { copy(isLoading = true) }
+
+        val fingerprint = fingerprintProvider.getFingerprint()
+        val contractsFlow = syncContractsUseCase(SyncContractsUseCase.Input)
+        val entitlementsFlow = getEntitlementsUseCase(GetEntitlementsUseCase.Input(fingerprint, forceRefresh = true))
+
+        combine(contractsFlow, entitlementsFlow) { contracts, entitlements ->
+            val isContractsDone = contracts is SyncContractsUseCase.Output.Success || 
+                contracts is SyncContractsUseCase.Output.Failure
+            val isEntitlementsDone = entitlements is GetEntitlementsUseCase.Output.Success || 
+                entitlements is GetEntitlementsUseCase.Output.Failure
+            
+            isContractsDone && isEntitlementsDone
+        }.onEach { isBothDone ->
+            if (isBothDone) {
+                logger.i("LoginViewModel", "Post-login sync success, navigating based on level")
+                updateState { copy(isLoading = false) }
+                handlePostLoginNavigation(user)
             }
         }.launchIn(viewModelScope)
     }

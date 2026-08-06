@@ -10,7 +10,9 @@ import es.joshluq.foundationkit.usecase.FlowUseCase
 import es.joshluq.foundationkit.viewmodel.ScreenViewModel
 import es.joshluq.kmsafe.R
 import es.joshluq.kmsafe.di.*
+import es.joshluq.kmsafe.domain.model.Feature
 import es.joshluq.kmsafe.domain.model.RentingContract
+import es.joshluq.kmsafe.domain.model.SubscriptionLevel
 import es.joshluq.kmsafe.domain.usecase.*
 import es.joshluq.kmsafe.ui.overview.model.toUiModel
 import kotlinx.coroutines.flow.launchIn
@@ -34,8 +36,8 @@ class OverviewViewModel @Inject constructor(
     @JvmSuppressWildcards FlowUseCase<GetAllContractsUseCase.Input, GetAllContractsUseCase.Output>,
     @param:SelectContract private val selectContractUseCase:
     @JvmSuppressWildcards FlowUseCase<SelectContractUseCase.Input, SelectContractUseCase.Output>,
-    @param:IsUserPremium private val isUserPremiumUseCase:
-    @JvmSuppressWildcards FlowUseCase<IsUserPremiumUseCase.Input, IsUserPremiumUseCase.Output>,
+    @param:GetEntitlements private val getEntitlementsUseCase:
+    @JvmSuppressWildcards FlowUseCase<GetEntitlementsUseCase.Input, GetEntitlementsUseCase.Output>,
     @param:GetPreferences private val getPreferencesUseCase:
     @JvmSuppressWildcards FlowUseCase<GetPreferencesUseCase.Input, GetPreferencesUseCase.Output>,
     @param:UpdatePreferences private val updatePreferencesUseCase:
@@ -60,7 +62,7 @@ class OverviewViewModel @Inject constructor(
     }
 
     init {
-        checkSubscription()
+        observeEntitlements()
         loadContractData()
         loadProjection()
         loadAllVehicles()
@@ -110,16 +112,22 @@ class OverviewViewModel @Inject constructor(
         }
     }
 
-    private fun checkSubscription() {
-        isUserPremiumUseCase(IsUserPremiumUseCase.Input)
+    private fun observeEntitlements() {
+        getEntitlementsUseCase(GetEntitlementsUseCase.Input("", forceRefresh = false))
             .onEach { output ->
-                if (output is IsUserPremiumUseCase.Output.Success) {
-                    val isPremium = output.isPremium
-                    updateState { copy(isPremium = isPremium) }
+                if (output is GetEntitlementsUseCase.Output.Success) {
+                    val entitlements = output.entitlements
+                    val hasPremiumAccess = entitlements.isFeatureActive(Feature.AUTO_TRACKING)
+                    
+                    updateState { 
+                        copy(
+                            isPremium = hasPremiumAccess,
+                            subscriptionLevel = entitlements.subscriptionLevel
+                        ) 
+                    }
                     loadContractData()
                 }
-            }
-            .launchIn(viewModelScope)
+            }.launchIn(viewModelScope)
     }
 
     private fun loadContractData() {

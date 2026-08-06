@@ -9,12 +9,12 @@ import es.joshluq.foundationkit.text.TextProvider
 import es.joshluq.foundationkit.usecase.FlowUseCase
 import es.joshluq.foundationkit.viewmodel.ScreenViewModel
 import es.joshluq.kmsafe.R
+import es.joshluq.kmsafe.di.CheckFeatureAccess
 import es.joshluq.kmsafe.di.ExportData
-import es.joshluq.kmsafe.di.GetCurrentUser
 import es.joshluq.kmsafe.di.ImportData
+import es.joshluq.kmsafe.domain.model.Feature
 import es.joshluq.kmsafe.domain.usecase.CheckFeatureAccessUseCase
 import es.joshluq.kmsafe.domain.usecase.ExportDataUseCase
-import es.joshluq.kmsafe.domain.usecase.GetCurrentUserUseCase
 import es.joshluq.kmsafe.domain.usecase.ImportDataUseCase
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
@@ -26,15 +26,14 @@ class DataManagementViewModel @Inject constructor(
     @JvmSuppressWildcards FlowUseCase<ExportDataUseCase.Input, ExportDataUseCase.Output>,
     @param:ImportData private val importDataUseCase:
     @JvmSuppressWildcards FlowUseCase<ImportDataUseCase.Input, ImportDataUseCase.Output>,
-    @param:GetCurrentUser private val getCurrentUserUseCase:
-    @JvmSuppressWildcards FlowUseCase<GetCurrentUserUseCase.Input, GetCurrentUserUseCase.Output>,
-    private val checkFeatureAccessUseCase: CheckFeatureAccessUseCase,
+    @param:CheckFeatureAccess private val checkFeatureAccessUseCase:
+    @JvmSuppressWildcards FlowUseCase<CheckFeatureAccessUseCase.Input, CheckFeatureAccessUseCase.Output>,
     private val analytics: AnalyticskitManager,
     private val logger: LoggerKit
 ) : ScreenViewModel<State, Event, Effect>() {
 
     init {
-        observeUser()
+        observeEntitlements()
     }
 
     override fun createInitialState(): State = State.Empty
@@ -50,15 +49,11 @@ class DataManagementViewModel @Inject constructor(
         }
     }
 
-    private fun observeUser() {
-        getCurrentUserUseCase(GetCurrentUserUseCase.Input)
+    private fun observeEntitlements() {
+        checkFeatureAccessUseCase(CheckFeatureAccessUseCase.Input(Feature.CLOUD_SYNC))
             .onEach { output ->
-                if (output is GetCurrentUserUseCase.Output.Success) {
-                    val isPremium = checkFeatureAccessUseCase(
-                        output.user,
-                        CheckFeatureAccessUseCase.Feature.ADVANCED_REPORTS
-                    )
-                    updateState { copy(isPremium = isPremium) }
+                if (output is CheckFeatureAccessUseCase.Output.Success) {
+                    updateState { copy(isPremium = output.isGranted) }
                 }
             }
             .launchIn(viewModelScope)
@@ -67,7 +62,7 @@ class DataManagementViewModel @Inject constructor(
     private fun handleExport(format: ExportDataUseCase.Format) {
         analytics.track(AnalyticsEvent.Custom("export_clicked", mapOf("format" to format.name)))
         
-        if (format == ExportDataUseCase.Format.JSON && !state.value.isPremium) {
+        if ((format == ExportDataUseCase.Format.JSON) && !state.value.isPremium) {
             analytics.track(AnalyticsEvent.Custom("premium_limit_reached", mapOf("feature_id" to "json_export")))
             updateState { copy(showPremiumLimit = true) }
             return

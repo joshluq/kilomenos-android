@@ -10,6 +10,8 @@ data class State(
     val showProjectionBanner: Boolean = true,
     val autoTrackingEnabled: Boolean = false,
     val isUserPremium: Boolean = false,
+    val canStartTrial: Boolean = false,
+    val showTrialOffer: Boolean = false,
     val isPrivacyOptionsRequired: Boolean = false,
     val isLoading: Boolean = false,
     val error: TextProvider? = null
@@ -27,6 +29,8 @@ sealed interface Event : UiEvent {
     data object OnBackClicked : Event
     data object OnDismissError : Event
     data object OnPermissionsRationaleSuccess : Event
+    data object OnStartTrialClicked : Event
+    data object OnDismissTrialOffer : Event
 }
 
 sealed interface Effect : UiEffect {

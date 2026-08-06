@@ -9,9 +9,12 @@ import es.joshluq.foundationkit.viewmodel.ScreenViewModel
 import es.joshluq.kmsafe.R
 import es.joshluq.kmsafe.di.DeleteAccount
 import es.joshluq.kmsafe.di.GetCurrentUser
+import es.joshluq.kmsafe.di.GetEntitlements
 import es.joshluq.kmsafe.di.SignOut
+import es.joshluq.kmsafe.domain.model.SubscriptionLevel
 import es.joshluq.kmsafe.domain.usecase.DeleteAccountUseCase
 import es.joshluq.kmsafe.domain.usecase.GetCurrentUserUseCase
+import es.joshluq.kmsafe.domain.usecase.GetEntitlementsUseCase
 import es.joshluq.kmsafe.domain.usecase.SignOutUseCase
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
@@ -25,11 +28,14 @@ class ProfileViewModel @Inject constructor(
     @JvmSuppressWildcards FlowUseCase<GetCurrentUserUseCase.Input, GetCurrentUserUseCase.Output>,
     @param:DeleteAccount private val deleteAccountUseCase:
     @JvmSuppressWildcards FlowUseCase<DeleteAccountUseCase.Input, DeleteAccountUseCase.Output>,
+    @param:GetEntitlements private val getEntitlementsUseCase:
+    @JvmSuppressWildcards FlowUseCase<GetEntitlementsUseCase.Input, GetEntitlementsUseCase.Output>,
     private val logger: LoggerKit
 ) : ScreenViewModel<State, Event, Effect>() {
 
     init {
         observeUser()
+        observeEntitlements()
     }
 
     override fun createInitialState(): State = State()
@@ -79,9 +85,26 @@ class ProfileViewModel @Inject constructor(
             .launchIn(viewModelScope)
     }
 
+    private fun observeEntitlements() {
+        getEntitlementsUseCase(GetEntitlementsUseCase.Input("", forceRefresh = false))
+            .onEach { output ->
+                if (output is GetEntitlementsUseCase.Output.Success) {
+                    val user = state.value.user
+                    if (user != null) {
+                        updateState {
+                            copy(
+                                user = user.copy(subscriptionLevel = output.entitlements.subscriptionLevel)
+                            )
+                        }
+                    }
+                }
+            }.launchIn(viewModelScope)
+    }
+
     private fun handleLogout() {
         val user = state.value.user
-        val clearData = user?.subscriptionLevel == es.joshluq.kmsafe.domain.model.SubscriptionLevel.PREMIUM
+        val clearData = user?.subscriptionLevel == SubscriptionLevel.PREMIUM || 
+            user?.subscriptionLevel == SubscriptionLevel.TRIAL
 
         signOutUseCase(SignOutUseCase.Input(clearLocalData = clearData)).onEach { output ->
             when (output) {

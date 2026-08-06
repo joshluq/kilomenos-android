@@ -3,9 +3,12 @@ package es.joshluq.kmsafe.ui.profile.preferences
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import es.joshluq.foundationkit.log.LoggerKit
+import es.joshluq.foundationkit.text.TextProvider
 import es.joshluq.foundationkit.usecase.FlowUseCase
 import es.joshluq.foundationkit.viewmodel.ScreenViewModel
+import es.joshluq.kmsafe.data.util.DeviceFingerprintProvider
 import es.joshluq.kmsafe.di.*
+import es.joshluq.kmsafe.domain.model.Feature
 import es.joshluq.kmsafe.domain.usecase.*
 import es.joshluq.kmsafe.ui.util.ConsentManager
 import kotlinx.coroutines.flow.launchIn
@@ -18,8 +21,11 @@ class PreferencesViewModel @Inject constructor(
     @JvmSuppressWildcards FlowUseCase<GetPreferencesUseCase.Input, GetPreferencesUseCase.Output>,
     @param:UpdatePreferences private val updatePreferencesUseCase:
     @JvmSuppressWildcards FlowUseCase<UpdatePreferencesUseCase.Input, UpdatePreferencesUseCase.Output>,
-    @param:IsUserPremium private val isUserPremiumUseCase:
-    @JvmSuppressWildcards FlowUseCase<IsUserPremiumUseCase.Input, IsUserPremiumUseCase.Output>,
+    @param:GetEntitlements private val getEntitlementsUseCase:
+    @JvmSuppressWildcards FlowUseCase<GetEntitlementsUseCase.Input, GetEntitlementsUseCase.Output>,
+    @param:StartTrial private val startTrialUseCase:
+    @JvmSuppressWildcards FlowUseCase<StartTrialUseCase.Input, StartTrialUseCase.Output>,
+    private val fingerprintProvider: DeviceFingerprintProvider,
     @param:StartAutoTracking private val startAutoTrackingUseCase:
     @JvmSuppressWildcards FlowUseCase<StartAutoTrackingUseCase.Input, StartAutoTrackingUseCase.Output>,
     @param:StopAutoTracking private val stopAutoTrackingUseCase:
@@ -29,7 +35,7 @@ class PreferencesViewModel @Inject constructor(
 ) : ScreenViewModel<State, Event, Effect>() {
 
     init {
-        checkPremiumStatus()
+        observeEntitlements()
         loadPreferences()
         updateState { copy(isPrivacyOptionsRequired = consentManager.isPrivacyOptionsRequired()) }
     }
@@ -46,14 +52,22 @@ class PreferencesViewModel @Inject constructor(
             Event.OnBackClicked -> launchEffect(Effect.NavigateBack)
             Event.OnDismissError -> updateState { copy(error = null) }
             Event.OnPermissionsRationaleSuccess -> executeAutoTrackingToggle(true)
+            Event.OnStartTrialClicked -> handleStartTrial()
+            Event.OnDismissTrialOffer -> updateState { copy(showTrialOffer = false) }
         }
     }
 
-    private fun checkPremiumStatus() {
-        isUserPremiumUseCase(IsUserPremiumUseCase.Input)
+    private fun observeEntitlements() {
+        getEntitlementsUseCase(GetEntitlementsUseCase.Input("", forceRefresh = false))
             .onEach { output ->
-                if (output is IsUserPremiumUseCase.Output.Success) {
-                    updateState { copy(isUserPremium = output.isPremium) }
+                if (output is GetEntitlementsUseCase.Output.Success) {
+                    val entitlements = output.entitlements
+                    updateState {
+                        copy(
+                            isUserPremium = entitlements.isFeatureActive(Feature.AUTO_TRACKING),
+                            canStartTrial = entitlements.isFeatureTrialable(Feature.AUTO_TRACKING)
+                        )
+                    }
                 }
             }.launchIn(viewModelScope)
     }
@@ -92,12 +106,41 @@ class PreferencesViewModel @Inject constructor(
     }
 
     private fun handleAutoTrackingToggled(enabled: Boolean) {
+        if (enabled && !state.value.isUserPremium && state.value.canStartTrial) {
+            updateState { copy(showTrialOffer = true) }
+            return
+        }
+
         // If enabling, navigate to permissions rationale screen
         if (enabled) {
             launchEffect(Effect.NavigateToPermissions)
         } else {
             executeAutoTrackingToggle(false)
         }
+    }
+
+    private fun handleStartTrial() {
+        updateState { copy(showTrialOffer = false, isLoading = true) }
+        val fingerprint = fingerprintProvider.getFingerprint()
+        startTrialUseCase(StartTrialUseCase.Input(fingerprint))
+            .onEach { output ->
+                when (output) {
+                    is StartTrialUseCase.Output.Success -> {
+                        updateState { copy(isLoading = false) }
+                        // The observeEntitlements flow will update isUserPremium
+                        // Now we can proceed to permissions
+                        launchEffect(Effect.NavigateToPermissions)
+                    }
+                    is StartTrialUseCase.Output.Failure -> {
+                        updateState {
+                            copy(
+                                isLoading = false,
+                                error = TextProvider.Dynamic(output.message)
+                            )
+                        }
+                    }
+                }
+            }.launchIn(viewModelScope)
     }
 
     private fun executeAutoTrackingToggle(enabled: Boolean) {

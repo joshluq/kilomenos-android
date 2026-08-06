@@ -41,6 +41,10 @@
     <string name="premium_benefit_autotracking_desc">Forget the button. The app detects when you drive and starts GPS for you.</string>
     <string name="premium_paywall_save_money_highlight">Save on penalties with total and automatic control.</string>
     <string name="premium_upgrade_button">Upgrade to Premium now</string>
+    <string name="premium_trial_offer_title">Try Premium for Free</string>
+    <string name="premium_trial_offer_message">Enjoy 7 days of full access to all features, including Auto-Tracking and cloud synchronization. No strings attached.</string>
+    <string name="premium_trial_offer_confirm">Start 7-day trial</string>
+    <string name="premium_trial_offer_cancel">Not now</string>
     <string name="premium_paywall_migrating_msg">Securing your data in the cloud&#8230;</string>
     <string name="premium_continue_free">Continue with free version</string>
     <string name="premium_limit_vehicle_title">Vehicle Limit</string>

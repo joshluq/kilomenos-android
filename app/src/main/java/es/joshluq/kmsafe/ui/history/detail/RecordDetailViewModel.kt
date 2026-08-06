@@ -9,14 +9,15 @@ import es.joshluq.foundationkit.text.TextProvider
 import es.joshluq.foundationkit.usecase.FlowUseCase
 import es.joshluq.foundationkit.viewmodel.ScreenViewModel
 import es.joshluq.kmsafe.R
+import es.joshluq.kmsafe.di.CheckFeatureAccess
 import es.joshluq.kmsafe.di.DeleteOdometerRecord
 import es.joshluq.kmsafe.di.GetOdometerRecord
-import es.joshluq.kmsafe.di.IsUserPremium
 import es.joshluq.kmsafe.di.UpdateOdometerRecord
+import es.joshluq.kmsafe.domain.model.Feature
 import es.joshluq.kmsafe.domain.model.OdometerRecord
+import es.joshluq.kmsafe.domain.usecase.CheckFeatureAccessUseCase
 import es.joshluq.kmsafe.domain.usecase.DeleteOdometerRecordUseCase
 import es.joshluq.kmsafe.domain.usecase.GetOdometerRecordUseCase
-import es.joshluq.kmsafe.domain.usecase.IsUserPremiumUseCase
 import es.joshluq.kmsafe.domain.usecase.UpdateOdometerRecordUseCase
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
@@ -31,8 +32,8 @@ class RecordDetailViewModel @Inject constructor(
     @JvmSuppressWildcards FlowUseCase<DeleteOdometerRecordUseCase.Input, DeleteOdometerRecordUseCase.Output>,
     @param:UpdateOdometerRecord private val updateOdometerRecordUseCase:
     @JvmSuppressWildcards FlowUseCase<UpdateOdometerRecordUseCase.Input, UpdateOdometerRecordUseCase.Output>,
-    @param:IsUserPremium private val isUserPremiumUseCase:
-    @JvmSuppressWildcards FlowUseCase<IsUserPremiumUseCase.Input, IsUserPremiumUseCase.Output>,
+    @param:CheckFeatureAccess private val checkFeatureAccessUseCase:
+    @JvmSuppressWildcards FlowUseCase<CheckFeatureAccessUseCase.Input, CheckFeatureAccessUseCase.Output>,
     private val analytics: AnalyticskitManager
 ) : ScreenViewModel<RecordDetailState, RecordDetailEvent, RecordDetailEffect>() {
 
@@ -74,12 +75,13 @@ class RecordDetailViewModel @Inject constructor(
     }
 
     private fun checkSubscription() {
-        isUserPremiumUseCase(IsUserPremiumUseCase.Input)
+        checkFeatureAccessUseCase(CheckFeatureAccessUseCase.Input(Feature.CLOUD_SYNC))
             .onEach { output ->
-                if (output is IsUserPremiumUseCase.Output.Success) {
-                    updateState { copy(isPremium = output.isPremium) }
+                if (output is CheckFeatureAccessUseCase.Output.Success) {
+                    updateState { copy(isPremium = output.isGranted) }
                 }
-            }.launchIn(viewModelScope)
+            }
+            .launchIn(viewModelScope)
     }
 
     private fun loadRecord() {

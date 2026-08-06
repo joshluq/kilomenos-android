@@ -6,6 +6,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.PrivacyTip
@@ -26,8 +27,12 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import es.joshluq.canvaskit.components.cards.CanvasKitCard
 import es.joshluq.canvaskit.components.feedback.CanvasKitAlertVariant
 import es.joshluq.canvaskit.components.feedback.CanvasKitBanner
+import es.joshluq.canvaskit.components.feedback.CanvasKitDialog
+import es.joshluq.canvaskit.components.feedback.CanvasKitDialogContent
 import es.joshluq.canvaskit.components.layout.CanvasKitLoadingScaffold
 import es.joshluq.canvaskit.components.navigation.CanvasKitTopBar
+import es.joshluq.canvaskit.components.buttons.CanvasKitButton
+import es.joshluq.canvaskit.components.buttons.CanvasKitButtonVariant
 import es.joshluq.canvaskit.foundations.theme.CanvasKitTheme
 import es.joshluq.kmsafe.R
 import es.joshluq.kmsafe.ui.util.safeClick
@@ -87,6 +92,13 @@ fun PreferencesScreen(
 
     if (showCredits) {
         SoftwareCreditsDialog(onDismiss = { showCredits = false })
+    }
+
+    if (state.showTrialOffer) {
+        TrialOfferDialog(
+            onConfirm = { onEvent(Event.OnStartTrialClicked) },
+            onDismiss = { onEvent(Event.OnDismissTrialOffer) }
+        )
     }
 
     CanvasKitLoadingScaffold(
@@ -171,13 +183,22 @@ fun PreferencesScreen(
                             },
                             checked = state.autoTrackingEnabled,
                             onCheckedChange = { onEvent(Event.OnAutoTrackingToggled(it)) },
-                            enabled = state.isUserPremium,
-                            trailingIcon = if (!state.isUserPremium) {
+                            enabled = state.isUserPremium || state.canStartTrial,
+                            trailingIcon = if (!state.isUserPremium && !state.canStartTrial) {
                                 {
                                     Icon(
                                         imageVector = Icons.Default.Lock,
                                         contentDescription = null,
                                         tint = CanvasKitTheme.colors.textSecondary,
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                }
+                            } else if (state.canStartTrial) {
+                                {
+                                    Icon(
+                                        imageVector = Icons.Default.AutoAwesome,
+                                        contentDescription = null,
+                                        tint = CanvasKitTheme.colors.brandAccent,
                                         modifier = Modifier.size(20.dp)
                                     )
                                 }
@@ -276,6 +297,54 @@ fun PreferencesScreen(
                 onDismiss = { onEvent(Event.OnDismissError) }
             )
         }
+    }
+}
+
+@Composable
+private fun TrialOfferDialog(
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    CanvasKitDialog(onDismissRequest = onDismiss) {
+        CanvasKitDialogContent(
+            title = {
+                Text(
+                    text = stringResource(R.string.premium_trial_offer_title),
+                    style = CanvasKitTheme.typography.bodyLarge,
+                    fontWeight = FontWeight.Bold
+                )
+            },
+            content = {
+                Text(
+                    text = stringResource(R.string.premium_trial_offer_message),
+                    style = CanvasKitTheme.typography.bodyMedium,
+                    color = CanvasKitTheme.colors.textSecondary
+                )
+            },
+            buttons = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    CanvasKitButton(
+                        onClick = onConfirm,
+                        modifier = Modifier.fillMaxWidth()
+                    ) { contentColor ->
+                        Text(
+                            text = stringResource(R.string.premium_trial_offer_confirm),
+                            color = contentColor
+                        )
+                    }
+                    CanvasKitButton(
+                        variant = CanvasKitButtonVariant.Ghost,
+                        onClick = onDismiss,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(
+                            text = stringResource(R.string.premium_trial_offer_cancel),
+                            color = CanvasKitTheme.colors.textSecondary
+                        )
+                    }
+                }
+            }
+        )
     }
 }
 

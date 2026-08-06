@@ -8,13 +8,14 @@ import es.joshluq.foundationkit.text.TextProvider
 import es.joshluq.foundationkit.usecase.FlowUseCase
 import es.joshluq.foundationkit.viewmodel.ScreenViewModel
 import es.joshluq.kmsafe.R
+import es.joshluq.kmsafe.di.CheckFeatureAccess
 import es.joshluq.kmsafe.di.DeleteOdometerRecord
 import es.joshluq.kmsafe.di.GetHistory
-import es.joshluq.kmsafe.di.IsUserPremium
+import es.joshluq.kmsafe.domain.model.Feature
 import es.joshluq.kmsafe.domain.model.OdometerRecord
+import es.joshluq.kmsafe.domain.usecase.CheckFeatureAccessUseCase
 import es.joshluq.kmsafe.domain.usecase.DeleteOdometerRecordUseCase
 import es.joshluq.kmsafe.domain.usecase.GetHistoryUseCase
-import es.joshluq.kmsafe.domain.usecase.IsUserPremiumUseCase
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
@@ -29,8 +30,8 @@ class HistoryViewModel @Inject constructor(
     @JvmSuppressWildcards FlowUseCase<GetHistoryUseCase.Input, GetHistoryUseCase.Output>,
     @param:DeleteOdometerRecord private val deleteOdometerRecordUseCase:
     @JvmSuppressWildcards FlowUseCase<DeleteOdometerRecordUseCase.Input, DeleteOdometerRecordUseCase.Output>,
-    @param:IsUserPremium private val isUserPremiumUseCase:
-    @JvmSuppressWildcards FlowUseCase<IsUserPremiumUseCase.Input, IsUserPremiumUseCase.Output>,
+    @param:CheckFeatureAccess private val checkFeatureAccessUseCase:
+    @JvmSuppressWildcards FlowUseCase<CheckFeatureAccessUseCase.Input, CheckFeatureAccessUseCase.Output>,
     private val dispatchers: DispatcherProvider,
     private val logger: LoggerKit
 ) : ScreenViewModel<HistoryState, HistoryEvent, HistoryEffect>() {
@@ -70,10 +71,10 @@ class HistoryViewModel @Inject constructor(
     }
 
     private fun checkSubscription() {
-        isUserPremiumUseCase(IsUserPremiumUseCase.Input)
+        checkFeatureAccessUseCase(CheckFeatureAccessUseCase.Input(Feature.CLOUD_SYNC))
             .onEach { output ->
-                if (output is IsUserPremiumUseCase.Output.Success) {
-                    updateState { copy(isPremium = output.isPremium) }
+                if (output is CheckFeatureAccessUseCase.Output.Success) {
+                    updateState { copy(isPremium = output.isGranted) }
                 }
             }
             .launchIn(viewModelScope)

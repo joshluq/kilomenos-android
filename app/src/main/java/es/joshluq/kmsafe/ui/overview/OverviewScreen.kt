@@ -55,6 +55,7 @@ import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.rememberModalBottomSheetState
@@ -113,6 +114,7 @@ import es.joshluq.canvaskit.components.sheets.CanvasKitBottomSheet
 import es.joshluq.canvaskit.foundations.theme.CanvasKitTheme
 import es.joshluq.kmsafe.BuildConfig
 import es.joshluq.kmsafe.R
+import es.joshluq.kmsafe.domain.model.SubscriptionLevel
 import es.joshluq.kmsafe.data.location.LocationTrackingService
 import es.joshluq.kmsafe.domain.model.RentingContract
 import es.joshluq.kmsafe.domain.model.TripProjection
@@ -1085,6 +1087,22 @@ private fun OverviewTopBar(state: State, onEvent: (Event) -> Unit) {
             }
         },
         actions = {
+            if (state.subscriptionLevel == SubscriptionLevel.TRIAL) {
+                Surface(
+                    color = CanvasKitTheme.colors.brandAccent.copy(alpha = 0.1f),
+                    shape = RoundedCornerShape(16.dp),
+                    modifier = Modifier.padding(end = 8.dp)
+                ) {
+                    Text(
+                        text = "TRIAL",
+                        style = CanvasKitTheme.typography.labelSmall,
+                        color = CanvasKitTheme.colors.brandAccent,
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+
             if (!state.isPremium) {
                 IconButton(onClick = safeClick { onEvent(Event.OnPremiumUpgradeClicked) }) {
                     Icon(

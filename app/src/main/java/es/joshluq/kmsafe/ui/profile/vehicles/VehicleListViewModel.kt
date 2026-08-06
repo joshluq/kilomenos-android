@@ -7,15 +7,15 @@ import es.joshluq.analyticskit.sdk.AnalyticskitManager
 import es.joshluq.foundationkit.log.LoggerKit
 import es.joshluq.foundationkit.usecase.FlowUseCase
 import es.joshluq.foundationkit.viewmodel.ScreenViewModel
+import es.joshluq.kmsafe.di.CheckFeatureAccess
 import es.joshluq.kmsafe.di.DeleteContract
 import es.joshluq.kmsafe.di.GetAllContracts
-import es.joshluq.kmsafe.di.GetCurrentUser
 import es.joshluq.kmsafe.di.SelectContract
 import es.joshluq.kmsafe.di.SyncContracts
+import es.joshluq.kmsafe.domain.model.Feature
 import es.joshluq.kmsafe.domain.usecase.CheckFeatureAccessUseCase
 import es.joshluq.kmsafe.domain.usecase.DeleteContractUseCase
 import es.joshluq.kmsafe.domain.usecase.GetAllContractsUseCase
-import es.joshluq.kmsafe.domain.usecase.GetCurrentUserUseCase
 import es.joshluq.kmsafe.domain.usecase.SelectContractUseCase
 import es.joshluq.kmsafe.domain.usecase.SyncContractsUseCase
 import kotlinx.coroutines.flow.launchIn
@@ -32,9 +32,8 @@ class VehicleListViewModel @Inject constructor(
     @JvmSuppressWildcards FlowUseCase<DeleteContractUseCase.Input, DeleteContractUseCase.Output>,
     @param:SyncContracts private val syncContractsUseCase:
     @JvmSuppressWildcards FlowUseCase<SyncContractsUseCase.Input, SyncContractsUseCase.Output>,
-    @param:GetCurrentUser private val getCurrentUserUseCase:
-    @JvmSuppressWildcards FlowUseCase<GetCurrentUserUseCase.Input, GetCurrentUserUseCase.Output>,
-    private val checkFeatureAccessUseCase: CheckFeatureAccessUseCase,
+    @param:CheckFeatureAccess private val checkFeatureAccessUseCase:
+    @JvmSuppressWildcards FlowUseCase<CheckFeatureAccessUseCase.Input, CheckFeatureAccessUseCase.Output>,
     private val analytics: AnalyticskitManager,
     private val logger: LoggerKit
 ) : ScreenViewModel<State, Event, Effect>() {
@@ -68,14 +67,10 @@ class VehicleListViewModel @Inject constructor(
     }
 
     private fun handleAddVehicle() {
-        getCurrentUserUseCase(GetCurrentUserUseCase.Input)
+        checkFeatureAccessUseCase(CheckFeatureAccessUseCase.Input(Feature.MULTI_VEHICLE))
             .onEach { output ->
-                if (output is GetCurrentUserUseCase.Output.Success) {
-                    val hasMultiVehicleAccess = checkFeatureAccessUseCase(
-                        output.user,
-                        CheckFeatureAccessUseCase.Feature.MULTI_VEHICLE
-                    )
-                    if (state.value.vehicles.isNotEmpty() && !hasMultiVehicleAccess) {
+                if (output is CheckFeatureAccessUseCase.Output.Success) {
+                    if (state.value.vehicles.isNotEmpty() && !output.isGranted) {
                         analytics.track(
                             AnalyticsEvent.Custom("premium_limit_reached", mapOf("feature_id" to "multi_vehicle"))
                         )
@@ -112,13 +107,7 @@ class VehicleListViewModel @Inject constructor(
     }
 
     private fun selectVehicle(id: String) {
-        selectContractUseCase(SelectContractUseCase.Input(id))
-            .onEach { output ->
-                if (output is SelectContractUseCase.Output.Success) {
-                    // Selection is reactive via loadVehicles observing the DB
-                }
-            }
-            .launchIn(viewModelScope)
+        selectContractUseCase(SelectContractUseCase.Input(id)).launchIn(viewModelScope)
     }
 
     private fun deleteVehicle() {

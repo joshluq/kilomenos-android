@@ -9,9 +9,10 @@ import com.google.android.gms.location.DetectedActivity
 import com.google.android.gms.location.ActivityTransition
 import dagger.hilt.android.AndroidEntryPoint
 import es.joshluq.foundationkit.log.LoggerKit
-import es.joshluq.kmsafe.domain.usecase.IsUserPremiumUseCase
+import es.joshluq.kmsafe.di.CheckFeatureAccess
+import es.joshluq.kmsafe.domain.model.Feature
+import es.joshluq.kmsafe.domain.usecase.CheckFeatureAccessUseCase
 import es.joshluq.foundationkit.usecase.FlowUseCase
-import es.joshluq.kmsafe.di.IsUserPremium
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -29,8 +30,8 @@ class ActivityTransitionReceiver : BroadcastReceiver() {
     lateinit var logger: LoggerKit
 
     @Inject
-    @IsUserPremium
-    lateinit var isUserPremiumUseCase: @JvmSuppressWildcards FlowUseCase<IsUserPremiumUseCase.Input, IsUserPremiumUseCase.Output>
+    @CheckFeatureAccess
+    lateinit var checkFeatureAccessUseCase: @JvmSuppressWildcards FlowUseCase<CheckFeatureAccessUseCase.Input, CheckFeatureAccessUseCase.Output>
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
@@ -50,12 +51,11 @@ class ActivityTransitionReceiver : BroadcastReceiver() {
         
         scope.launch {
             try {
-                // Check Premium Status first
-                // Use a timeout or ensure first() returns promptly
-                val output = isUserPremiumUseCase(IsUserPremiumUseCase.Input).first()
-                val isPremium = (output is IsUserPremiumUseCase.Output.Success && output.isPremium)
+                // Check Access for Auto-Tracking feature
+                val output = checkFeatureAccessUseCase(CheckFeatureAccessUseCase.Input(Feature.AUTO_TRACKING)).first()
+                val isGranted = (output is CheckFeatureAccessUseCase.Output.Success) && output.isGranted
 
-                if (!isPremium) {
+                if (!isGranted) {
                     return@launch
                 }
 

@@ -9,6 +9,7 @@ import es.joshluq.authkit.sdk.AuthKit
 import es.joshluq.kmsafe.BuildConfig
 import es.joshluq.kmsafe.data.remote.api.AuthApiService
 import es.joshluq.kmsafe.data.remote.api.AuthenticatedAuthApiService
+import es.joshluq.kmsafe.data.remote.api.EntitlementsApiService
 import es.joshluq.kmsafe.data.remote.api.RentingApiService
 import es.joshluq.kmsafe.data.remote.api.StorageApiService
 import okhttp3.Interceptor
@@ -116,5 +117,11 @@ object NetworkModule {
     @Singleton
     fun provideStorageApiService(@Authenticated retrofit: Retrofit): StorageApiService {
         return retrofit.create(StorageApiService::class.java)
+    }
+
+    @Provides
+    @Singleton
+    fun provideEntitlementsApiService(@Authenticated retrofit: Retrofit): EntitlementsApiService {
+        return retrofit.create(EntitlementsApiService::class.java)
     }
 }

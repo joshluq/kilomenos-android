@@ -101,13 +101,6 @@ annotation class ExportData
 annotation class ImportData
 
 /**
- * Qualifier for the IsUserPremiumUseCase.
- */
-@Qualifier
-@Retention(AnnotationRetention.BINARY)
-annotation class IsUserPremium
-
-/**
  * Qualifier for the UploadVehicleImageUseCase.
  */
 @Qualifier
@@ -309,3 +302,24 @@ annotation class StartAutoTracking
 @Qualifier
 @Retention(AnnotationRetention.BINARY)
 annotation class StopAutoTracking
+
+/**
+ * Qualifier for the GetEntitlementsUseCase.
+ */
+@Qualifier
+@Retention(AnnotationRetention.BINARY)
+annotation class GetEntitlements
+
+/**
+ * Qualifier for the StartTrialUseCase.
+ */
+@Qualifier
+@Retention(AnnotationRetention.BINARY)
+annotation class StartTrial
+
+/**
+ * Qualifier for the CheckFeatureAccessUseCase.
+ */
+@Qualifier
+@Retention(AnnotationRetention.BINARY)
+annotation class CheckFeatureAccess

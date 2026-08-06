@@ -3,28 +3,27 @@ package es.joshluq.kmsafe.domain.usecase
 import es.joshluq.foundationkit.usecase.FlowUseCase
 import es.joshluq.foundationkit.usecase.UseCaseInput
 import es.joshluq.foundationkit.usecase.UseCaseOutput
-import es.joshluq.kmsafe.domain.model.Feature
+import es.joshluq.kmsafe.domain.model.Entitlements
 import es.joshluq.kmsafe.domain.repository.EntitlementsRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 
 /**
- * Use case to check if a specific feature is enabled based on user entitlements.
+ * Use case to initiate the 7-day trial period.
  */
-class CheckFeatureAccessUseCase @Inject constructor(
+class StartTrialUseCase @Inject constructor(
     private val repository: EntitlementsRepository
-) : FlowUseCase<CheckFeatureAccessUseCase.Input, CheckFeatureAccessUseCase.Output> {
+) : FlowUseCase<StartTrialUseCase.Input, StartTrialUseCase.Output> {
 
     override fun invoke(input: Input): Flow<Output> {
-        return repository.observeEntitlements().map { entitlements ->
-            Output.Success(entitlements.isFeatureActive(input.feature))
-        }
+        return repository.startTrial(input.deviceFingerprint).map { Output.Success(it) }
     }
 
-    data class Input(val feature: Feature) : UseCaseInput
+    data class Input(val deviceFingerprint: String) : UseCaseInput
 
     sealed interface Output : UseCaseOutput {
-        data class Success(val isGranted: Boolean) : Output
+        data class Success(val entitlements: Entitlements) : Output
+        data class Failure(val message: String) : Output
     }
 }

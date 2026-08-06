@@ -132,12 +132,6 @@ abstract class UseCaseModule {
     ): FlowUseCase<ImportDataUseCase.Input, ImportDataUseCase.Output>
 
     @Binds
-    @IsUserPremium
-    abstract fun bindIsUserPremiumUseCase(
-        useCase: IsUserPremiumUseCase
-    ): FlowUseCase<IsUserPremiumUseCase.Input, IsUserPremiumUseCase.Output>
-
-    @Binds
     @GetAllContracts
     abstract fun bindGetAllContractsUseCase(
         useCase: GetAllContractsUseCase
@@ -262,4 +256,22 @@ abstract class UseCaseModule {
     abstract fun bindStopAutoTrackingUseCase(
         useCase: StopAutoTrackingUseCase
     ): FlowUseCase<StopAutoTrackingUseCase.Input, StopAutoTrackingUseCase.Output>
+
+    @Binds
+    @GetEntitlements
+    abstract fun bindGetEntitlementsUseCase(
+        useCase: GetEntitlementsUseCase
+    ): FlowUseCase<GetEntitlementsUseCase.Input, GetEntitlementsUseCase.Output>
+
+    @Binds
+    @StartTrial
+    abstract fun bindStartTrialUseCase(
+        useCase: StartTrialUseCase
+    ): FlowUseCase<StartTrialUseCase.Input, StartTrialUseCase.Output>
+
+    @Binds
+    @CheckFeatureAccess
+    abstract fun bindCheckFeatureAccessUseCase(
+        useCase: CheckFeatureAccessUseCase
+    ): FlowUseCase<CheckFeatureAccessUseCase.Input, CheckFeatureAccessUseCase.Output>
 }

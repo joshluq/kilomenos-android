@@ -5,6 +5,7 @@ import es.joshluq.foundationkit.viewmodel.UiEffect
 import es.joshluq.foundationkit.viewmodel.UiEvent
 import es.joshluq.foundationkit.viewmodel.UiState
 import es.joshluq.kmsafe.domain.model.RentingContract
+import es.joshluq.kmsafe.domain.model.SubscriptionLevel
 import es.joshluq.kmsafe.domain.model.TripProjection
 import es.joshluq.kmsafe.ui.overview.model.MonthlyUsageUiModel
 
@@ -31,6 +32,7 @@ data class State(
     val availableVehicles: List<RentingContract> = emptyList(),
     val showVehicleSwitcher: Boolean = false,
     val isPremium: Boolean = false,
+    val subscriptionLevel: SubscriptionLevel = SubscriptionLevel.FREE,
     val newRecordLabel: String = "",
     val newRecordFuel: String = "",
     val isSyncPending: Boolean = false,
