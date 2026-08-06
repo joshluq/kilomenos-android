@@ -5,7 +5,6 @@ import es.joshluq.kmsafe.domain.model.Entitlements
 import es.joshluq.kmsafe.domain.model.Feature
 import es.joshluq.kmsafe.domain.model.SubscriptionLevel
 import java.text.SimpleDateFormat
-import java.util.Date
 import java.util.Locale
 import java.util.TimeZone
 
@@ -21,14 +20,11 @@ fun EntitlementsResponse.toDomain(): Entitlements {
     }
 
     val parsedDate = trialExpiresAt?.let { ts ->
-        try {
-            val sdf = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.getDefault()).apply {
+        runCatching {
+            SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.getDefault()).apply {
                 timeZone = TimeZone.getTimeZone("UTC")
-            }
-            sdf.parse(ts)?.time
-        } catch (e: Exception) {
-            null
-        }
+            }.parse(ts)?.time
+        }.getOrNull()
     }
 
     val features = enabledFeatures?.mapNotNull { Feature.fromId(it) }?.toSet() ?: emptySet()

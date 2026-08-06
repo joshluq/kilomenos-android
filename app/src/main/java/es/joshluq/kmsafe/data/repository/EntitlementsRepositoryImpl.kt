@@ -27,30 +27,26 @@ class EntitlementsRepositoryImpl @Inject constructor(
     override fun getEntitlements(deviceFingerprint: String): Flow<Entitlements> = flow {
         val currentTime = System.currentTimeMillis()
         if (currentTime - lastFetchTime > CACHE_TTL_MILLIS) {
-            try {
+            runCatching {
                 val response = apiService.getEntitlements(deviceFingerprint)
                 if (response.isSuccessful) {
                     val domainEntitlements = response.body()?.toDomain() ?: Entitlements.Default
                     _entitlements.value = domainEntitlements
                     lastFetchTime = currentTime
                 }
-            } catch (e: Exception) {
-                // Keep current cached version on error
             }
         }
         emit(_entitlements.value)
     }
 
     override fun startTrial(deviceFingerprint: String): Flow<Entitlements> = flow {
-        try {
+        runCatching {
             val response = apiService.startTrial(StartTrialRequest(deviceFingerprint))
             if (response.isSuccessful) {
                 val domainEntitlements = response.body()?.entitlements?.toDomain() ?: Entitlements.Default
                 _entitlements.value = domainEntitlements
                 lastFetchTime = System.currentTimeMillis()
             }
-        } catch (e: Exception) {
-            // Log or handle error
         }
         emit(_entitlements.value)
     }
