@@ -15,7 +15,11 @@ data class Entitlements(
      * Returns whether a specific feature is currently active and usable.
      */
     fun isFeatureActive(feature: Feature): Boolean {
-        return enabledFeatures.contains(feature)
+        return when (subscriptionLevel) {
+            SubscriptionLevel.PREMIUM -> true
+            SubscriptionLevel.TRIAL -> enabledFeatures.contains(feature)
+            SubscriptionLevel.FREE -> false
+        }
     }
 
     /**

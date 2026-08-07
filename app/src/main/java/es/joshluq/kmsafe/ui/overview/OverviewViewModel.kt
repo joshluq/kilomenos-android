@@ -156,7 +156,13 @@ class OverviewViewModel @Inject constructor(
                         autoTrackingPromotionDismissed = prefs.autoTrackingPromotionDismissed
                     )
                 }
-                evaluatePromotion()
+                
+                evaluatePromotion(
+                    isPremium = hasPremiumAccess,
+                    isTrialable = isTrialable,
+                    isEnabled = prefs.autoTrackingEnabled,
+                    isDismissed = prefs.autoTrackingPromotionDismissed
+                )
             }
         }.launchIn(viewModelScope)
     }
@@ -258,14 +264,13 @@ class OverviewViewModel @Inject constructor(
             }.launchIn(viewModelScope)
     }
 
-    private fun evaluatePromotion() {
-        val currentState = state.value
-        if (currentState.autoTrackingPromotionDismissed || currentState.autoTrackingEnabled) {
+    private fun evaluatePromotion(isPremium: Boolean, isTrialable: Boolean, isEnabled: Boolean, isDismissed: Boolean) {
+        if (isDismissed || isEnabled) {
             updateState { copy(showAutoTrackingPromotion = false) }
             return
         }
 
-        val shouldShow = currentState.isPremium || currentState.isAutoTrackingTrialable
+        val shouldShow = isPremium || isTrialable
         updateState { copy(showAutoTrackingPromotion = shouldShow) }
     }
 
