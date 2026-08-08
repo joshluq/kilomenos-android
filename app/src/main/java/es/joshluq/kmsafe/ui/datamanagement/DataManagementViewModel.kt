@@ -44,6 +44,10 @@ class DataManagementViewModel @Inject constructor(
             is Event.OnExportClicked -> handleExport(event.format)
             Event.OnImportRequested -> handleImportRequested()
             is Event.OnImportClicked -> handleImport(event.content)
+            Event.OnUpgradeClicked -> {
+                analytics.track(AnalyticsEvent.Custom("premium_upgrade_clicked", mapOf("source" to "data_management_limit")))
+                launchEffect(Effect.NavigateToPremiumPaywall)
+            }
             Event.OnDismissError -> updateState { copy(error = null, successMessage = null) }
             Event.OnDismissPremiumLimit -> updateState { copy(showPremiumLimit = false) }
         }

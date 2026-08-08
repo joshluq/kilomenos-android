@@ -28,6 +28,7 @@ sealed interface Event : UiEvent {
     object OnDeleteCancelled : Event
     object OnAddVehicleClicked : Event
     object OnBackClicked : Event
+    object OnUpgradeClicked : Event
     object OnDismissPremiumLimit : Event
     object OnDismissError : Event
 }
@@ -38,5 +39,6 @@ sealed interface Event : UiEvent {
 sealed interface Effect : UiEffect {
     object NavigateBack : Effect
     object NavigateToAddVehicle : Effect
+    object NavigateToPremiumPaywall : Effect
     data class NavigateToVehicleDetails(val id: String) : Effect
 }

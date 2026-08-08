@@ -57,6 +57,10 @@ class VehicleListViewModel @Inject constructor(
             Event.OnDeleteConfirmed -> deleteVehicle()
             Event.OnDeleteCancelled -> updateState { copy(vehicleToDelete = null) }
             Event.OnAddVehicleClicked -> handleAddVehicle()
+            Event.OnUpgradeClicked -> {
+                analytics.track(AnalyticsEvent.Custom("premium_upgrade_clicked", mapOf("source" to "vehicle_list_limit")))
+                launchEffect(Effect.NavigateToPremiumPaywall)
+            }
             Event.OnBackClicked -> {
                 logger.d("VehicleListViewModel", "Effect launched: NavigateBack")
                 launchEffect(Effect.NavigateBack)

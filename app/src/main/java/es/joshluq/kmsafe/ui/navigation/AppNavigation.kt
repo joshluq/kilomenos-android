@@ -142,6 +142,9 @@ fun AppNavigation(
                 },
                 onNavigateToAddVehicle = {
                     navController.navigate(Destination.RentingDetails(null, isEdit = false))
+                },
+                onNavigateToPremiumPaywall = {
+                    navController.navigate(Destination.PremiumPaywall)
                 }
             )
         }
@@ -150,6 +153,9 @@ fun AppNavigation(
             DataManagementRoute(
                 onNavigateBack = {
                     navController.popBackStack()
+                },
+                onNavigateToPremiumPaywall = {
+                    navController.navigate(Destination.PremiumPaywall)
                 }
             )
         }

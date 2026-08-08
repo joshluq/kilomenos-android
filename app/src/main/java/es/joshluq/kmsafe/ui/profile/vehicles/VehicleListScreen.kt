@@ -55,6 +55,7 @@ fun VehicleListRoute(
     onNavigateBack: () -> Unit,
     onNavigateToVehicleDetails: (String) -> Unit,
     onNavigateToAddVehicle: () -> Unit,
+    onNavigateToPremiumPaywall: () -> Unit,
     viewModel: VehicleListViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -65,7 +66,8 @@ fun VehicleListRoute(
         onEvent = viewModel::sendEvent,
         onNavigateBack = onNavigateBack,
         onNavigateToVehicleDetails = onNavigateToVehicleDetails,
-        onNavigateToAddVehicle = onNavigateToAddVehicle
+        onNavigateToAddVehicle = onNavigateToAddVehicle,
+        onNavigateToPremiumPaywall = onNavigateToPremiumPaywall
     )
 }
 
@@ -77,13 +79,15 @@ fun VehicleListScreen(
     onEvent: (Event) -> Unit,
     onNavigateBack: () -> Unit,
     onNavigateToVehicleDetails: (String) -> Unit,
-    onNavigateToAddVehicle: () -> Unit
+    onNavigateToAddVehicle: () -> Unit,
+    onNavigateToPremiumPaywall: () -> Unit
 ) {
     LaunchedEffect(effects) {
         effects?.collect { effect ->
             when (effect) {
                 Effect.NavigateBack -> onNavigateBack()
                 Effect.NavigateToAddVehicle -> onNavigateToAddVehicle()
+                Effect.NavigateToPremiumPaywall -> onNavigateToPremiumPaywall()
                 is Effect.NavigateToVehicleDetails -> onNavigateToVehicleDetails(effect.id)
             }
         }
@@ -224,7 +228,10 @@ fun VehicleListScreen(
         }
 
         if (state.showPremiumLimit) {
-            PremiumLimitDialog(onDismiss = { onEvent(Event.OnDismissPremiumLimit) })
+            PremiumLimitDialog(
+                onUpgrade = { onEvent(Event.OnUpgradeClicked) },
+                onDismiss = { onEvent(Event.OnDismissPremiumLimit) }
+            )
         }
     }
 }
@@ -320,7 +327,10 @@ private fun VehicleItem(
 }
 
 @Composable
-private fun PremiumLimitDialog(onDismiss: () -> Unit) {
+private fun PremiumLimitDialog(
+    onUpgrade: () -> Unit,
+    onDismiss: () -> Unit
+) {
     CanvasKitDialog(onDismissRequest = onDismiss) {
         CanvasKitDialogContent(
             title = {
@@ -347,7 +357,7 @@ private fun PremiumLimitDialog(onDismiss: () -> Unit) {
                     )
                 }
                 CanvasKitButton(
-                    onClick = onDismiss, // Future: Navigate to Paywall
+                    onClick = onUpgrade,
                     variant = CanvasKitButtonVariant.Ghost
                 ) { _ ->
                     Text(
@@ -371,7 +381,8 @@ fun VehicleListScreenEmptyPreview() {
             onEvent = {},
             onNavigateBack = {},
             onNavigateToVehicleDetails = {},
-            onNavigateToAddVehicle = {}
+            onNavigateToAddVehicle = {},
+            onNavigateToPremiumPaywall = {}
         )
     }
 }
@@ -386,7 +397,8 @@ fun VehicleListScreenLoadingPreview() {
             onEvent = {},
             onNavigateBack = {},
             onNavigateToVehicleDetails = {},
-            onNavigateToAddVehicle = {}
+            onNavigateToAddVehicle = {},
+            onNavigateToPremiumPaywall = {}
         )
     }
 }
@@ -426,7 +438,8 @@ fun VehicleListScreenPreview() {
             onEvent = {},
             onNavigateBack = {},
             onNavigateToVehicleDetails = {},
-            onNavigateToAddVehicle = {}
+            onNavigateToAddVehicle = {},
+            onNavigateToPremiumPaywall = {}
         )
     }
 }

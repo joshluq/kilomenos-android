@@ -24,6 +24,7 @@ sealed interface Event : UiEvent {
     object OnImportRequested : Event
     data class OnImportClicked(val content: String) : Event
     object OnDismissError : Event
+    object OnUpgradeClicked : Event
     object OnDismissPremiumLimit : Event
 }
 
@@ -31,4 +32,5 @@ sealed interface Effect : UiEffect {
     data class CreateFile(val filename: String) : Effect
     object LaunchImportPicker : Effect
     object NavigateBack : Effect
+    object NavigateToPremiumPaywall : Effect
 }

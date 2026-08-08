@@ -56,7 +56,8 @@ import es.joshluq.kmsafe.ui.util.safeClick
 
 @Composable
 fun DataManagementRoute(
-    onNavigateBack: () -> Unit
+    onNavigateBack: () -> Unit,
+    onNavigateToPremiumPaywall: () -> Unit
 ) {
     val viewModel: DataManagementViewModel = hiltViewModel()
     val state = viewModel.state.collectAsStateWithLifecycle()
@@ -95,6 +96,7 @@ fun DataManagementRoute(
                     importLauncher.launch("application/json")
                 }
                 Effect.NavigateBack -> onNavigateBack()
+                Effect.NavigateToPremiumPaywall -> onNavigateToPremiumPaywall()
             }
         }
     }
@@ -102,7 +104,8 @@ fun DataManagementRoute(
     DataManagementScreen(
         state = state.value,
         onEvent = viewModel::sendEvent,
-        onNavigateBack = onNavigateBack
+        onNavigateBack = onNavigateBack,
+        onNavigateToPremiumPaywall = onNavigateToPremiumPaywall
     )
 }
 
@@ -111,7 +114,8 @@ fun DataManagementRoute(
 fun DataManagementScreen(
     state: State,
     onEvent: (Event) -> Unit,
-    onNavigateBack: () -> Unit
+    onNavigateBack: () -> Unit,
+    onNavigateToPremiumPaywall: () -> Unit
 ) {
     CanvasKitLoadingScaffold(
         isLoading = state.isLoading,
@@ -213,13 +217,19 @@ fun DataManagementScreen(
         }
 
         if (state.showPremiumLimit) {
-            PremiumDataDialog(onDismiss = { onEvent(Event.OnDismissPremiumLimit) })
+            PremiumDataDialog(
+                onUpgrade = { onEvent(Event.OnUpgradeClicked) },
+                onDismiss = { onEvent(Event.OnDismissPremiumLimit) }
+            )
         }
     }
 }
 
 @Composable
-private fun PremiumDataDialog(onDismiss: () -> Unit) {
+private fun PremiumDataDialog(
+    onUpgrade: () -> Unit,
+    onDismiss: () -> Unit
+) {
     CanvasKitDialog(onDismissRequest = onDismiss) {
         CanvasKitDialogContent(
             title = {
@@ -246,7 +256,7 @@ private fun PremiumDataDialog(onDismiss: () -> Unit) {
                     )
                 }
                 CanvasKitButton(
-                    onClick = onDismiss, // Future: Navigate to Paywall
+                    onClick = onUpgrade,
                     variant = CanvasKitButtonVariant.Ghost
                 ) { _ ->
                     Text(
@@ -314,7 +324,8 @@ fun DataManagementScreenPreview() {
         DataManagementScreen(
             state = State(isLoading = false, lastExportedContent = null),
             onEvent = {},
-            onNavigateBack = {}
+            onNavigateBack = {},
+            onNavigateToPremiumPaywall = {}
         )
     }
 }
