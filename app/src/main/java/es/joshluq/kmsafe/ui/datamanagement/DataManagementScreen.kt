@@ -104,8 +104,7 @@ fun DataManagementRoute(
     DataManagementScreen(
         state = state.value,
         onEvent = viewModel::sendEvent,
-        onNavigateBack = onNavigateBack,
-        onNavigateToPremiumPaywall = onNavigateToPremiumPaywall
+        onNavigateBack = onNavigateBack
     )
 }
 
@@ -114,8 +113,7 @@ fun DataManagementRoute(
 fun DataManagementScreen(
     state: State,
     onEvent: (Event) -> Unit,
-    onNavigateBack: () -> Unit,
-    onNavigateToPremiumPaywall: () -> Unit
+    onNavigateBack: () -> Unit
 ) {
     CanvasKitLoadingScaffold(
         isLoading = state.isLoading,
@@ -324,8 +322,7 @@ fun DataManagementScreenPreview() {
         DataManagementScreen(
             state = State(isLoading = false, lastExportedContent = null),
             onEvent = {},
-            onNavigateBack = {},
-            onNavigateToPremiumPaywall = {}
+            onNavigateBack = {}
         )
     }
 }
