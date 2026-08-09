@@ -18,7 +18,6 @@ import es.joshluq.kmsafe.di.SyncContracts
 import es.joshluq.kmsafe.di.UpdatePreferences
 import es.joshluq.kmsafe.di.ValidateCredentials
 import es.joshluq.kmsafe.domain.model.SubscriptionLevel
-import es.joshluq.kmsafe.domain.model.User
 import es.joshluq.kmsafe.domain.usecase.ClearLocalDataUseCase
 import es.joshluq.kmsafe.domain.usecase.EvaluateIdentityConflictUseCase
 import es.joshluq.kmsafe.domain.usecase.GetEntitlementsUseCase
@@ -27,12 +26,10 @@ import es.joshluq.kmsafe.domain.usecase.SyncContractsUseCase
 import es.joshluq.kmsafe.domain.usecase.UpdatePreferencesUseCase
 import es.joshluq.kmsafe.domain.usecase.ValidateCredentialsUseCase
 import es.joshluq.kmsafe.ui.util.toText
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-import kotlin.time.Duration.Companion.milliseconds
 
 @HiltViewModel
 class SignupViewModel @Inject constructor(
