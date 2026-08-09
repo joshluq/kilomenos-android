@@ -14,6 +14,7 @@ import es.joshluq.kmsafe.data.remote.auth.UserSessionDataSource
 import es.joshluq.kmsafe.data.remote.request.AddOdometerRecordRequest
 import es.joshluq.kmsafe.data.remote.request.UpdateOdometerRecordRequest
 import es.joshluq.kmsafe.data.worker.SyncManager
+import es.joshluq.kmsafe.domain.model.Feature
 import es.joshluq.kmsafe.domain.model.KmException
 import es.joshluq.kmsafe.domain.model.OdometerRecord
 import es.joshluq.kmsafe.domain.model.SyncStatus
@@ -59,10 +60,10 @@ class HistoryRepositoryImpl @Inject constructor(
         val recordToSave = record.copy(syncStatus = SyncStatus.PENDING)
         dao.insertRecord(recordToSave.toEntity())
 
-        // Remote Sync (Only if session is active and user is Premium)
+        // Remote Sync (Only if session is active and user has Cloud Sync feature)
         if (sessionDataSource.getSessionState().first() is SessionState.Active) {
             runCatching {
-                if (sessionDataSource.isPremium()) {
+                if (sessionDataSource.hasFeature(Feature.CLOUD_SYNC.id)) {
                     val response = apiService.addOdometerRecord(
                         contractId = record.contractId,
                         request = AddOdometerRecordRequest(
@@ -97,11 +98,10 @@ class HistoryRepositoryImpl @Inject constructor(
         val recordToUpdate = record.copy(syncStatus = SyncStatus.PENDING)
         dao.insertRecord(recordToUpdate.toEntity())
 
-        // Remote Sync (Premium feature)
-        val isPremium = sessionDataSource.isPremium()
-
-        if (sessionDataSource.getSessionState().first() is SessionState.Active && isPremium) {
-            logger.d("HistoryRepository", "Session active and Premium, attempting remote update sync")
+        // Remote Sync (Cloud Sync feature)
+        if (sessionDataSource.getSessionState().first() is SessionState.Active && 
+            sessionDataSource.hasFeature(Feature.CLOUD_SYNC.id)) {
+            logger.d("HistoryRepository", "Session active and Cloud Sync enabled, attempting remote update sync")
             runCatching {
                 val response = apiService.updateOdometerRecord(
                     recordId = record.id,
@@ -132,11 +132,10 @@ class HistoryRepositoryImpl @Inject constructor(
         // Local-First: Delete from DB
         dao.deleteRecord(record.toEntity())
 
-        // Remote Sync (Premium feature)
-        val isPremium = sessionDataSource.isPremium()
-
-        if (sessionDataSource.getSessionState().first() is SessionState.Active && isPremium) {
-            logger.d("HistoryRepository", "Session active and Premium, attempting remote deletion sync")
+        // Remote Sync (Cloud Sync feature)
+        if (sessionDataSource.getSessionState().first() is SessionState.Active && 
+            sessionDataSource.hasFeature(Feature.CLOUD_SYNC.id)) {
+            logger.d("HistoryRepository", "Session active and Cloud Sync enabled, attempting remote deletion sync")
             runCatching {
                 val response = apiService.deleteOdometerRecord(record.id)
                 if (response.isSuccessful) {
@@ -153,8 +152,8 @@ class HistoryRepositoryImpl @Inject constructor(
     override fun syncHistory(contractId: String): Flow<Unit> = flow {
         logger.d("HistoryRepository", "Starting history synchronization for contract: $contractId")
 
-        if (!sessionDataSource.isPremium()) {
-            logger.d("HistoryRepository", "Sync skipped: User is not Premium")
+        if (!sessionDataSource.hasFeature(Feature.CLOUD_SYNC.id)) {
+            logger.d("HistoryRepository", "Sync skipped: Cloud Sync feature not enabled")
             return@flow
         }
 

@@ -9,9 +9,9 @@ import kotlinx.coroutines.flow.Flow
 interface EntitlementsRepository {
     /**
      * Retrieves the current user entitlements from the local cache
-     * or remote server if the cache is expired.
+     * or remote server if the cache is expired or [forceRefresh] is true.
      */
-    fun getEntitlements(deviceFingerprint: String): Flow<Entitlements>
+    fun getEntitlements(deviceFingerprint: String, forceRefresh: Boolean = false): Flow<Entitlements>
 
     /**
      * Initiates the 7-day trial period for the current user and device.
@@ -22,4 +22,9 @@ interface EntitlementsRepository {
      * Checks if a specific feature is enabled in the current entitlements.
      */
     fun observeEntitlements(): Flow<Entitlements>
+
+    /**
+     * Clears the local entitlements cache.
+     */
+    fun clearCache()
 }

@@ -12,21 +12,27 @@ import es.joshluq.foundationkit.viewmodel.ScreenViewModel
 import es.joshluq.kmsafe.R
 import es.joshluq.kmsafe.di.ClearLocalData
 import es.joshluq.kmsafe.di.EvaluateIdentityConflict
+import es.joshluq.kmsafe.di.GetEntitlements
 import es.joshluq.kmsafe.di.SignUp
+import es.joshluq.kmsafe.di.SyncContracts
 import es.joshluq.kmsafe.di.UpdatePreferences
 import es.joshluq.kmsafe.di.ValidateCredentials
 import es.joshluq.kmsafe.domain.model.SubscriptionLevel
 import es.joshluq.kmsafe.domain.model.User
 import es.joshluq.kmsafe.domain.usecase.ClearLocalDataUseCase
 import es.joshluq.kmsafe.domain.usecase.EvaluateIdentityConflictUseCase
+import es.joshluq.kmsafe.domain.usecase.GetEntitlementsUseCase
 import es.joshluq.kmsafe.domain.usecase.SignUpUseCase
+import es.joshluq.kmsafe.domain.usecase.SyncContractsUseCase
 import es.joshluq.kmsafe.domain.usecase.UpdatePreferencesUseCase
 import es.joshluq.kmsafe.domain.usecase.ValidateCredentialsUseCase
 import es.joshluq.kmsafe.ui.util.toText
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import kotlin.time.Duration.Companion.milliseconds
 
 @HiltViewModel
 class SignupViewModel @Inject constructor(
@@ -40,6 +46,10 @@ class SignupViewModel @Inject constructor(
     @JvmSuppressWildcards FlowUseCase<EvaluateIdentityConflictUseCase.Input, EvaluateIdentityConflictUseCase.Output>,
     @param:UpdatePreferences private val updatePreferencesUseCase:
     @JvmSuppressWildcards FlowUseCase<UpdatePreferencesUseCase.Input, UpdatePreferencesUseCase.Output>,
+    @param:GetEntitlements private val getEntitlementsUseCase:
+    @JvmSuppressWildcards FlowUseCase<GetEntitlementsUseCase.Input, GetEntitlementsUseCase.Output>,
+    @param:SyncContracts private val syncContractsUseCase:
+    @JvmSuppressWildcards FlowUseCase<SyncContractsUseCase.Input, SyncContractsUseCase.Output>,
     private val analytics: AnalyticskitManager,
     private val logger: LoggerKit
 ) : ScreenViewModel<State, Event, Effect>() {
@@ -151,19 +161,53 @@ class SignupViewModel @Inject constructor(
                     saveEmailPreference(output.user.email)
 
                     if (shouldClearDataOnSuccess) {
-                        clearLocalDataAndProceed(output.user)
+                        clearLocalDataAndProceed()
                     } else {
-                        handlePostSignupNavigation(output.user)
+                        proceedWithPostSignup()
                     }
                 }
             }
         }.launchIn(viewModelScope)
     }
 
-    private fun clearLocalDataAndProceed(user: User) {
+    private fun clearLocalDataAndProceed() {
         clearLocalDataUseCase(ClearLocalDataUseCase.Input).onEach { output ->
             if (output is ClearLocalDataUseCase.Output.Success) {
-                handlePostSignupNavigation(user)
+                proceedWithPostSignup()
+            }
+        }.launchIn(viewModelScope)
+    }
+
+    private fun proceedWithPostSignup() {
+        logger.d("SignupViewModel", "Proceeding with mandatory sync before navigation")
+        updateState { copy(isLoading = true) }
+
+        // 1. Fetch Entitlements FIRST (to seed the session properly)
+        getEntitlementsUseCase(GetEntitlementsUseCase.Input("", forceRefresh = true))
+            .onEach { output ->
+                when (output) {
+                    is GetEntitlementsUseCase.Output.Success -> {
+                        logger.i("SignupViewModel", "Entitlements synced. Starting contract sync.")
+                        syncContracts(output.entitlements.subscriptionLevel)
+                    }
+                    is GetEntitlementsUseCase.Output.Failure -> {
+                        logger.w("SignupViewModel", "Entitlements sync failed. Proceeding as FREE.")
+                        syncContracts(SubscriptionLevel.FREE)
+                    }
+                }
+            }.launchIn(viewModelScope)
+    }
+
+    private fun syncContracts(level: SubscriptionLevel) {
+        syncContractsUseCase(SyncContractsUseCase.Input).onEach { syncOutput ->
+            when (syncOutput) {
+                SyncContractsUseCase.Output.Progress -> Unit
+                is SyncContractsUseCase.Output.Failure,
+                SyncContractsUseCase.Output.Success -> {
+                    logger.i("SignupViewModel", "Post-signup sync complete. Navigating.")
+                    updateState { copy(isLoading = false) }
+                    handlePostSignupNavigation(level)
+                }
             }
         }.launchIn(viewModelScope)
     }
@@ -177,8 +221,8 @@ class SignupViewModel @Inject constructor(
         ).launchIn(viewModelScope)
     }
 
-    private fun handlePostSignupNavigation(user: User) {
-        if (user.subscriptionLevel == SubscriptionLevel.PREMIUM) {
+    private fun handlePostSignupNavigation(level: SubscriptionLevel) {
+        if (level == SubscriptionLevel.PREMIUM) {
             launchEffect(Effect.NavigateToDashboard)
         } else {
             launchEffect(Effect.NavigateToPremiumPaywall)

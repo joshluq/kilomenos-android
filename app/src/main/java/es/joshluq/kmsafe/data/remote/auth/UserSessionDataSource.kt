@@ -18,17 +18,14 @@ interface UserSessionDataSource {
     /** Returns a flow of the current session state. */
     fun getSessionState(): Flow<SessionState>
 
-    /** Returns whether the current user has a Premium subscription. */
-    suspend fun isPremium(): Boolean
+    /** Returns whether a specific feature is enabled in the current session. */
+    suspend fun hasFeature(featureId: String): Boolean
 
     /** Starts a new session with the provided tokens. */
     suspend fun startSession(tokens: TokenHolder)
 
     /** Saves user data for the current session. */
     suspend fun saveSessionData(data: UserSessionModel)
-
-    /** Updates the subscription level of the current session. */
-    suspend fun updateSubscriptionLevel(level: String)
 
     /** Ends the current session. */
     suspend fun endSession()
@@ -50,8 +47,10 @@ class UserSessionDataSourceImpl @Inject constructor(
         return authKit.session.state
     }
 
-    override suspend fun isPremium(): Boolean {
-        return getCurrentUserSession()?.subscriptionLevel == "PREMIUM"
+    override suspend fun hasFeature(featureId: String): Boolean {
+        val session = getCurrentUserSession() ?: return false
+        val entitlements = session.entitlements ?: return false
+        return entitlements.subscriptionLevel == "PREMIUM" || entitlements.enabledFeatures.contains(featureId)
     }
 
     override suspend fun startSession(tokens: TokenHolder) {
@@ -60,12 +59,6 @@ class UserSessionDataSourceImpl @Inject constructor(
 
     override suspend fun saveSessionData(data: UserSessionModel) {
         authKit.session.saveSessionData(data)
-    }
-
-    override suspend fun updateSubscriptionLevel(level: String) {
-        getCurrentUserSession()?.let {
-            saveSessionData(it.copy(subscriptionLevel = level))
-        }
     }
 
     override suspend fun endSession() {

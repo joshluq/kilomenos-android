@@ -4,6 +4,7 @@ import es.joshluq.foundationkit.text.TextProvider
 import es.joshluq.foundationkit.viewmodel.UiEffect
 import es.joshluq.foundationkit.viewmodel.UiEvent
 import es.joshluq.foundationkit.viewmodel.UiState
+import es.joshluq.kmsafe.domain.model.Entitlements
 import es.joshluq.kmsafe.domain.model.User
 
 data class State(
@@ -11,6 +12,7 @@ data class State(
     val showLogoutConfirmation: Boolean = false,
     val showDeleteConfirmation: Boolean = false,
     val user: User? = null,
+    val entitlements: Entitlements? = null,
     val error: TextProvider? = null
 ) : UiState
 

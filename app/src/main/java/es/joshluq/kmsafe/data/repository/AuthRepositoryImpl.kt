@@ -11,6 +11,7 @@ import es.joshluq.kmsafe.data.local.AppDatabase
 import es.joshluq.kmsafe.data.local.datasource.PreferencesDataSource
 import es.joshluq.kmsafe.data.mapper.ErrorMapper
 import es.joshluq.kmsafe.data.mapper.toDomain
+import es.joshluq.kmsafe.data.mapper.toModel
 import es.joshluq.kmsafe.data.mapper.toSessionModel
 import es.joshluq.kmsafe.data.remote.api.AuthApiService
 import es.joshluq.kmsafe.data.remote.api.AuthenticatedAuthApiService
@@ -19,6 +20,7 @@ import es.joshluq.kmsafe.data.remote.request.OAuthSignInRequest
 import es.joshluq.kmsafe.data.remote.request.SignInRequest
 import es.joshluq.kmsafe.data.remote.request.SignUpRequest
 import es.joshluq.kmsafe.data.remote.request.UpdateSubscriptionRequest
+import es.joshluq.kmsafe.domain.model.Entitlements
 import es.joshluq.kmsafe.domain.model.KmError
 import es.joshluq.kmsafe.domain.model.KmException
 import es.joshluq.kmsafe.domain.model.SubscriptionLevel
@@ -26,6 +28,7 @@ import es.joshluq.kmsafe.domain.model.User
 import es.joshluq.kmsafe.domain.repository.AuthRepository
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
@@ -61,12 +64,19 @@ class AuthRepositoryImpl @Inject constructor(
                     Token.Access(body.session.accessToken ?: ""),
                     Token.Refresh(body.session.refreshToken ?: "")
                 )
-                val user = body.user.toDomain(body.subscriptionLevel)
+                val user = body.user.toDomain()
+                
+                // Seed initial entitlements from login response
+                val initialLevel = when (body.subscriptionLevel?.uppercase()) {
+                    "PREMIUM" -> SubscriptionLevel.PREMIUM
+                    "TRIAL" -> SubscriptionLevel.TRIAL
+                    else -> SubscriptionLevel.FREE
+                }
+                val initialEntitlements = Entitlements.Default.copy(subscriptionLevel = initialLevel)
 
                 sessionDataSource.startSession(tokens)
-                sessionDataSource.saveSessionData(user.toSessionModel())
+                sessionDataSource.saveSessionData(user.toSessionModel(initialEntitlements.toModel()))
 
-                analytics.addGlobalProperty("subscription_level", user.subscriptionLevel.name)
                 analytics.track(AnalyticsEvent.Custom("login_success", mapOf("user_id" to user.id, "method" to "credentials")))
 
                 emit(user)
@@ -95,12 +105,19 @@ class AuthRepositoryImpl @Inject constructor(
                     Token.Access(body.session.accessToken ?: ""),
                     Token.Refresh(body.session.refreshToken ?: "")
                 )
-                val user = body.user.toDomain(body.subscriptionLevel)
+                val user = body.user.toDomain()
+
+                // Seed initial entitlements from login response
+                val initialLevel = when (body.subscriptionLevel?.uppercase()) {
+                    "PREMIUM" -> SubscriptionLevel.PREMIUM
+                    "TRIAL" -> SubscriptionLevel.TRIAL
+                    else -> SubscriptionLevel.FREE
+                }
+                val initialEntitlements = Entitlements.Default.copy(subscriptionLevel = initialLevel)
 
                 sessionDataSource.startSession(tokens)
-                sessionDataSource.saveSessionData(user.toSessionModel())
+                sessionDataSource.saveSessionData(user.toSessionModel(initialEntitlements.toModel()))
 
-                analytics.addGlobalProperty("subscription_level", user.subscriptionLevel.name)
                 analytics.track(AnalyticsEvent.Custom("login_success", mapOf("user_id" to user.id, "method" to "google")))
 
                 emit(user)
@@ -130,17 +147,24 @@ class AuthRepositoryImpl @Inject constructor(
                         Token.Access(body.session.accessToken ?: ""),
                         Token.Refresh(body.session.refreshToken ?: "")
                     )
-                    val user = body.user.toDomain(body.subscriptionLevel)
+                    val user = body.user.toDomain()
+                    
+                    // Seed initial entitlements
+                    val initialLevel = when (body.subscriptionLevel.uppercase()) {
+                        "PREMIUM" -> SubscriptionLevel.PREMIUM
+                        "TRIAL" -> SubscriptionLevel.TRIAL
+                        else -> SubscriptionLevel.FREE
+                    }
+                    val initialEntitlements = Entitlements.Default.copy(subscriptionLevel = initialLevel)
 
                     sessionDataSource.startSession(tokens)
-                    sessionDataSource.saveSessionData(user.toSessionModel())
+                    sessionDataSource.saveSessionData(user.toSessionModel(initialEntitlements.toModel()))
 
-                    analytics.addGlobalProperty("subscription_level", user.subscriptionLevel.name)
                     analytics.track(AnalyticsEvent.Custom("signup_success", mapOf("user_id" to user.id)))
 
                     emit(user)
                 } else {
-                    emit(body.user.toDomain(body.subscriptionLevel))
+                    emit(body.user.toDomain())
                 }
             } else {
                 val errorMsg = body?.error ?: "Sign up failed"
@@ -171,7 +195,11 @@ class AuthRepositoryImpl @Inject constructor(
             if (body != null && body.success) {
                 logger.i("AuthRepository", "Subscription update success. Level: ${body.subscriptionLevel}")
 
-                sessionDataSource.updateSubscriptionLevel(body.subscriptionLevel)
+                // Trigger an entitlements update to sync the new status
+                val entitlements = getEntitlements().first()
+                updateEntitlements(entitlements.copy(
+                    subscriptionLevel = level
+                ))
 
                 val currentUser = sessionDataSource.getCurrentUserSession()?.toDomain()
                 if (currentUser != null) {
@@ -201,6 +229,31 @@ class AuthRepositoryImpl @Inject constructor(
             } else {
                 flowOf(null)
             }
+        }
+    }
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    override fun getEntitlements(): Flow<Entitlements> {
+        return sessionDataSource.getSessionState().flatMapLatest { state ->
+            if (state is SessionState.Active) {
+                flow {
+                    val session = sessionDataSource.getCurrentUserSession()
+                    emit(session?.entitlements?.toDomain() ?: Entitlements.Default)
+                }
+            } else {
+                flowOf(Entitlements.Default)
+            }
+        }
+    }
+
+    override suspend fun updateEntitlements(entitlements: Entitlements) {
+        val currentSession = sessionDataSource.getCurrentUserSession()
+        if (currentSession != null) {
+            val updatedSession = currentSession.copy(entitlements = entitlements.toModel())
+            sessionDataSource.saveSessionData(updatedSession)
+            
+            // Sync analytics
+            analytics.addGlobalProperty("subscription_level", entitlements.subscriptionLevel.name)
         }
     }
 

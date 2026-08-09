@@ -18,7 +18,7 @@ class GetEntitlementsUseCase @Inject constructor(
 
     override fun invoke(input: Input): Flow<Output> {
         return if (input.forceRefresh) {
-            repository.getEntitlements(input.deviceFingerprint).map { Output.Success(it) }
+            repository.getEntitlements(input.deviceFingerprint, forceRefresh = true).map { Output.Success(it) }
         } else {
             repository.observeEntitlements().map { Output.Success(it) }
         }

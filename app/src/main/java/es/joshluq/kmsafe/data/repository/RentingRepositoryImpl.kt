@@ -18,6 +18,7 @@ import es.joshluq.kmsafe.data.remote.auth.UserSessionDataSource
 import es.joshluq.kmsafe.data.remote.request.CreateRentingContractRequest
 import es.joshluq.kmsafe.data.remote.request.UpdateRentingContractRequest
 import es.joshluq.kmsafe.data.worker.SyncManager
+import es.joshluq.kmsafe.domain.model.Feature
 import es.joshluq.kmsafe.domain.model.KmError
 import es.joshluq.kmsafe.domain.model.KmException
 import es.joshluq.kmsafe.domain.model.RentingContract
@@ -59,10 +60,10 @@ class RentingRepositoryImpl @Inject constructor(
 
         var finalId = contract.id
 
-        // 2. Remote Sync (Only if session is active and user is Premium)
+        // 2. Remote Sync (Only if session is active and user has Cloud Sync feature)
         if (sessionDataSource.getSessionState().first() is SessionState.Active) {
             runCatching {
-                if (sessionDataSource.isPremium()) {
+                if (sessionDataSource.hasFeature(Feature.CLOUD_SYNC.id)) {
                     val request = CreateRentingContractRequest(
                         vehicleName = contract.vehicleName,
                         startDate = contract.startDate.toIsoString(),
@@ -113,8 +114,8 @@ class RentingRepositoryImpl @Inject constructor(
         rentingDao.insertContract(contractToUpdate.toEntity())
 
         // 2. Remote update
-        val isPremium = sessionDataSource.isPremium()
-        if (sessionDataSource.getSessionState().first() is SessionState.Active && isPremium) {
+        if (sessionDataSource.getSessionState().first() is SessionState.Active && 
+            sessionDataSource.hasFeature(Feature.CLOUD_SYNC.id)) {
             runCatching {
                 val request = UpdateRentingContractRequest(
                     vehicleName = contract.vehicleName,
@@ -180,9 +181,9 @@ class RentingRepositoryImpl @Inject constructor(
             }
         }
 
-        val isPremium = sessionDataSource.isPremium()
-        if (sessionDataSource.getSessionState().first() is SessionState.Active && isPremium) {
-            logger.d("RentingRepository", "Session active and Premium, attempting remote selection sync")
+        if (sessionDataSource.getSessionState().first() is SessionState.Active && 
+            sessionDataSource.hasFeature(Feature.CLOUD_SYNC.id)) {
+            logger.d("RentingRepository", "Session active and Cloud Sync enabled, attempting remote selection sync")
             runCatching {
                 val response = apiService.selectContract(id)
                 if (response.isSuccessful) {
@@ -209,9 +210,9 @@ class RentingRepositoryImpl @Inject constructor(
         odometerDao.deleteRecordsByContractId(id)
         rentingDao.deleteContract(id)
 
-        val isPremium = sessionDataSource.isPremium()
-        if (sessionDataSource.getSessionState().first() is SessionState.Active && isPremium) {
-            logger.d("RentingRepository", "Session active and Premium, attempting remote deletion sync")
+        if (sessionDataSource.getSessionState().first() is SessionState.Active && 
+            sessionDataSource.hasFeature(Feature.CLOUD_SYNC.id)) {
+            logger.d("RentingRepository", "Session active and Cloud Sync enabled, attempting remote deletion sync")
             runCatching {
                 val response = apiService.deleteContract(id)
                 if (response.isSuccessful) {
@@ -229,8 +230,8 @@ class RentingRepositoryImpl @Inject constructor(
     override fun syncContracts(): Flow<List<RentingContract>> = flow {
         logger.d("RentingRepository", "Starting contract synchronization")
 
-        if (!sessionDataSource.isPremium()) {
-            logger.d("RentingRepository", "Sync skipped: User is not Premium")
+        if (!sessionDataSource.hasFeature(Feature.CLOUD_SYNC.id)) {
+            logger.d("RentingRepository", "Sync skipped: Cloud Sync feature not enabled")
             emit(emptyList())
             return@flow
         }

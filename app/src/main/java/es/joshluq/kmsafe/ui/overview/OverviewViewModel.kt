@@ -25,7 +25,6 @@ import es.joshluq.kmsafe.di.StopTracking
 import es.joshluq.kmsafe.di.UpdatePreferences
 import es.joshluq.kmsafe.domain.model.Feature
 import es.joshluq.kmsafe.domain.model.RentingContract
-import es.joshluq.kmsafe.domain.model.SubscriptionLevel
 import es.joshluq.kmsafe.domain.usecase.*
 import es.joshluq.kmsafe.ui.overview.model.toUiModel
 import kotlinx.coroutines.flow.combine
@@ -145,7 +144,7 @@ class OverviewViewModel @Inject constructor(
                 val entitlements = entitlementsOutput.entitlements
                 val prefs = preferencesOutput.preferences
                 
-                val hasPremiumAccess = entitlements.subscriptionLevel == SubscriptionLevel.PREMIUM
+                val hasPremiumAccess = entitlements.isFeatureActive(Feature.AUTO_TRACKING)
                 val isTrialable = entitlements.isFeatureTrialable(Feature.AUTO_TRACKING)
 
                 updateState {
@@ -175,7 +174,7 @@ class OverviewViewModel @Inject constructor(
                     is GetOverviewDataUseCase.Output.Success -> {
                         if (output.contract != null) {
                             calculateMetrics(output.contract, output.actualKmsDrivenSinceStart)
-                            updateState { copy(isSyncPending = isPremium && output.isSyncPending) }
+                            updateState { copy(isSyncPending = output.isSyncPending) }
                         } else {
                             updateState { copy(isLoading = false, renting = null) }
                         }

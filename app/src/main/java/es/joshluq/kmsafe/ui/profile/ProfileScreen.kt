@@ -107,7 +107,7 @@ fun ProfileScreen(
 
                 state.user?.let { user ->
                     UserHeader(user)
-                    SubscriptionCard(user.subscriptionLevel, onEvent)
+                    SubscriptionCard(state.entitlements?.subscriptionLevel ?: SubscriptionLevel.FREE, onEvent)
                 }
 
                 Spacer(modifier = Modifier.height(CanvasKitTheme.spacing.sm))
@@ -192,7 +192,7 @@ fun ProfileScreen(
         }
 
         if (state.showLogoutConfirmation) {
-            val messageRes = if (state.user?.subscriptionLevel == SubscriptionLevel.PREMIUM) {
+            val messageRes = if (state.entitlements?.subscriptionLevel == SubscriptionLevel.PREMIUM) {
                 R.string.profile_logout_confirmation_message_premium
             } else {
                 R.string.profile_logout_confirmation_message_free

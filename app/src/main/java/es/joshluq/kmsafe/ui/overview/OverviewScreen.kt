@@ -395,7 +395,7 @@ private fun RentingState(
             .verticalScroll(rememberScrollState()),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        if (!state.isPremium) {
+        if (state.isPremium == false) {
             AdMobBanner(
                 adUnitId = BuildConfig.ADMOB_BANNER_ID
             )
@@ -1038,17 +1038,6 @@ private fun UpdateOdometerContent(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun OverviewTopBar(state: State, onEvent: (Event) -> Unit) {
-    val infiniteTransition = rememberInfiniteTransition(label = "SyncPulsate")
-    val alpha by infiniteTransition.animateFloat(
-        initialValue = 0.4f,
-        targetValue = 1f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(1000),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "SyncAlpha"
-    )
-
     CanvasKitTopBar(
         title = {
             Row(
@@ -1098,46 +1087,69 @@ private fun OverviewTopBar(state: State, onEvent: (Event) -> Unit) {
             }
         },
         actions = {
-            if (state.subscriptionLevel == SubscriptionLevel.TRIAL) {
-                Surface(
-                    color = CanvasKitTheme.colors.brandAccent.copy(alpha = 0.1f),
-                    shape = RoundedCornerShape(16.dp),
-                    modifier = Modifier.padding(end = 8.dp)
-                ) {
-                    Text(
-                        text = "TRIAL",
-                        style = CanvasKitTheme.typography.labelSmall,
-                        color = CanvasKitTheme.colors.brandAccent,
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-            }
-
-            if (!state.isPremium) {
-                IconButton(onClick = safeClick { onEvent(Event.OnPremiumUpgradeClicked) }) {
-                    Icon(
-                        imageVector = Icons.Default.AutoAwesome,
-                        contentDescription = stringResource(R.string.acc_upgrade_premium),
-                        tint = CanvasKitTheme.colors.brandAccent,
-                        modifier = Modifier.size(22.dp)
-                    )
-                }
-            } else {
-                if (state.isSyncPending) {
-                    IconButton(onClick = { /* No-op, just indicator */ }) {
-                        Icon(
-                            imageVector = Icons.Default.SyncProblem,
-                            contentDescription = stringResource(R.string.acc_sync_pending),
-                            tint = CanvasKitTheme.colors.brandAccent.copy(alpha = alpha),
-                            modifier = Modifier.size(20.dp)
-                        )
-                    }
-                }
-            }
+            OverviewTopbarActions(state, onEvent)
         },
         centeredTitle = true
     )
+}
+
+@Composable
+private fun OverviewTopbarActions(
+    state: State,
+    onEvent: (Event) -> Unit
+) {
+
+    if (state.subscriptionLevel == SubscriptionLevel.TRIAL) {
+        Surface(
+            color = CanvasKitTheme.colors.brandAccent.copy(alpha = 0.1f),
+            shape = RoundedCornerShape(16.dp),
+            modifier = Modifier.padding(end = 8.dp)
+        ) {
+            Text(
+                text = "TRIAL",
+                style = CanvasKitTheme.typography.labelSmall,
+                color = CanvasKitTheme.colors.brandAccent,
+                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                fontWeight = FontWeight.Bold
+            )
+        }
+    }
+
+    when (state.isPremium) {
+        false -> {
+            IconButton(onClick = safeClick { onEvent(Event.OnPremiumUpgradeClicked) }) {
+                Icon(
+                    imageVector = Icons.Default.AutoAwesome,
+                    contentDescription = stringResource(R.string.acc_upgrade_premium),
+                    tint = CanvasKitTheme.colors.brandAccent,
+                    modifier = Modifier.size(22.dp)
+                )
+            }
+        }
+        true -> {
+            if (state.isSyncPending) {
+                val infiniteTransition = rememberInfiniteTransition(label = "SyncPulsate")
+                val alpha by infiniteTransition.animateFloat(
+                    initialValue = 0.4f,
+                    targetValue = 1f,
+                    animationSpec = infiniteRepeatable(
+                        animation = tween(1000),
+                        repeatMode = RepeatMode.Reverse
+                    ),
+                    label = "SyncAlpha"
+                )
+                IconButton(onClick = { /* No-op, just indicator */ }) {
+                    Icon(
+                        imageVector = Icons.Default.SyncProblem,
+                        contentDescription = stringResource(R.string.acc_sync_pending),
+                        tint = CanvasKitTheme.colors.brandAccent.copy(alpha = alpha),
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+            }
+        }
+        else -> Unit
+    }
 }
 
 @Composable
@@ -1250,7 +1262,7 @@ private fun AutoTrackingPromotionDialog(
 @Composable
 private fun EmptyState(state: State, onRegisterClick: () -> Unit) {
     Column {
-        if (!state.isPremium) {
+        if (state.isPremium == false) {
             AdMobBanner(
                 adUnitId = BuildConfig.ADMOB_BANNER_ID
             )

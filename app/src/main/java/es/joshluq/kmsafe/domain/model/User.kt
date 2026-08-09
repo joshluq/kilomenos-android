@@ -7,6 +7,5 @@ package es.joshluq.kmsafe.domain.model
 data class User(
     val id: String,
     val email: String,
-    val name: String,
-    val subscriptionLevel: SubscriptionLevel = SubscriptionLevel.FREE
+    val name: String
 )

@@ -1,6 +1,7 @@
 package es.joshluq.kmsafe.domain.repository
 
 import es.joshluq.authkit.session.model.SessionState
+import es.joshluq.kmsafe.domain.model.Entitlements
 import es.joshluq.kmsafe.domain.model.SubscriptionLevel
 import es.joshluq.kmsafe.domain.model.User
 import kotlinx.coroutines.flow.Flow
@@ -9,6 +10,16 @@ import kotlinx.coroutines.flow.Flow
  * Repository interface for Authentication operations.
  */
 interface AuthRepository {
+    /**
+     * Returns a flow of the current user entitlements.
+     */
+    fun getEntitlements(): Flow<Entitlements>
+
+    /**
+     * Updates the user's entitlements in the current session.
+     */
+    suspend fun updateEntitlements(entitlements: Entitlements)
+
     /**
      * Attempts to sign in a user with [email] and [password].
      */

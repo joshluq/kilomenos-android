@@ -12,5 +12,5 @@ data class UserSessionModel(
     val id: String,
     val email: String,
     val name: String,
-    val subscriptionLevel: String = "FREE"
+    val entitlements: EntitlementsModel? = null
 ) : SessionData

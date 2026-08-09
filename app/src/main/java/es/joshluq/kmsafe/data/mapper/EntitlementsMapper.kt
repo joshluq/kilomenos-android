@@ -1,5 +1,6 @@
 package es.joshluq.kmsafe.data.mapper
 
+import es.joshluq.kmsafe.data.remote.model.EntitlementsModel
 import es.joshluq.kmsafe.data.remote.response.EntitlementsResponse
 import es.joshluq.kmsafe.domain.model.Entitlements
 import es.joshluq.kmsafe.domain.model.Feature
@@ -37,5 +38,34 @@ fun EntitlementsResponse.toDomain(): Entitlements {
         enabledFeatures = features,
         canStartTrial = canStartTrial ?: false,
         trialFeatures = trialFeaturesScope
+    )
+}
+
+/**
+ * Maps domain [Entitlements] to data [EntitlementsModel] for session storage.
+ */
+fun Entitlements.toModel(): EntitlementsModel {
+    return EntitlementsModel(
+        subscriptionLevel = subscriptionLevel.name,
+        isTrialActive = isTrialActive,
+        trialExpiresAt = trialExpiresAt,
+        enabledFeatures = enabledFeatures.map { it.id },
+        canStartTrial = canStartTrial,
+        trialFeatures = trialFeatures.map { it.id }
+    )
+}
+
+/**
+ * Maps data [EntitlementsModel] to domain [Entitlements].
+ */
+fun EntitlementsModel.toDomain(): Entitlements {
+    return Entitlements(
+        subscriptionLevel = runCatching { SubscriptionLevel.valueOf(subscriptionLevel) }
+            .getOrDefault(SubscriptionLevel.FREE),
+        isTrialActive = isTrialActive,
+        trialExpiresAt = trialExpiresAt,
+        enabledFeatures = enabledFeatures.mapNotNull { Feature.fromId(it) }.toSet(),
+        canStartTrial = canStartTrial,
+        trialFeatures = trialFeatures.mapNotNull { Feature.fromId(it) }.toSet()
     )
 }

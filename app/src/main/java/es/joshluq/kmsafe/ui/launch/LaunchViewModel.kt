@@ -13,11 +13,8 @@ import es.joshluq.kmsafe.domain.usecase.CheckSessionUseCase
 import es.joshluq.kmsafe.domain.usecase.GetEntitlementsUseCase
 import es.joshluq.kmsafe.domain.usecase.SyncContractsUseCase
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.flow.take
 import javax.inject.Inject
 import kotlin.time.Duration.Companion.milliseconds
 
@@ -63,24 +60,36 @@ class LaunchViewModel @Inject constructor(
 
     private fun fetchInitialData() {
         val fingerprint = fingerprintProvider.getFingerprint()
-        val contractsFlow = syncContractsUseCase(SyncContractsUseCase.Input)
-        val entitlementsFlow = getEntitlementsUseCase(GetEntitlementsUseCase.Input(fingerprint, forceRefresh = true))
+        
+        // 1. Fetch Entitlements FIRST
+        getEntitlementsUseCase(GetEntitlementsUseCase.Input(fingerprint, forceRefresh = true))
+            .onEach { output ->
+                when (output) {
+                    is GetEntitlementsUseCase.Output.Success -> {
+                        logger.d("LaunchViewModel", "Entitlements sync finished. Starting contract sync.")
+                        // 2. Fetch Contracts SECOND
+                        fetchContracts()
+                    }
+                    is GetEntitlementsUseCase.Output.Failure -> {
+                        logger.e("LaunchViewModel", "Entitlements sync failed: ${output.message}")
+                        fetchContracts() // Proceed anyway to allow local-first access
+                    }
+                }
+            }.launchIn(viewModelScope)
+    }
 
-        combine(contractsFlow, entitlementsFlow) { contracts, entitlements ->
-            val isContractsDone = contracts is SyncContractsUseCase.Output.Success || 
-                contracts is SyncContractsUseCase.Output.Failure
-            val isEntitlementsDone = entitlements is GetEntitlementsUseCase.Output.Success || 
-                entitlements is GetEntitlementsUseCase.Output.Failure
-            
-            isContractsDone && isEntitlementsDone
-        }
-        .filter { it }
-        .take(1)
-        .onEach {
-            logger.d("LaunchViewModel", "Initial data sync finished, navigating to Dashboard")
-            delay(500.milliseconds) // Small delay for UX transition
-            launchEffect(LaunchEffect.NavigateToDashboard)
-        }
-        .launchIn(viewModelScope)
+    private fun fetchContracts() {
+        syncContractsUseCase(SyncContractsUseCase.Input)
+            .onEach { syncOutput ->
+                when (syncOutput) {
+                    SyncContractsUseCase.Output.Progress -> Unit
+                    is SyncContractsUseCase.Output.Failure,
+                    SyncContractsUseCase.Output.Success -> {
+                        logger.d("LaunchViewModel", "Initial data sync finished, navigating to Dashboard")
+                        delay(500.milliseconds)
+                        launchEffect(LaunchEffect.NavigateToDashboard)
+                    }
+                }
+            }.launchIn(viewModelScope)
     }
 }

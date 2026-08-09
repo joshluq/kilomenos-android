@@ -27,6 +27,13 @@ import es.joshluq.kmsafe.BuildConfig
 import es.joshluq.kmsafe.MainActivity
 import es.joshluq.kmsafe.R
 import es.joshluq.kmsafe.domain.repository.TrackingRepository
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -41,6 +48,7 @@ class LocationTrackingService : Service() {
     @Inject
     lateinit var analytics: AnalyticskitManager
 
+    private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private lateinit var fusedLocationClient: FusedLocationProviderClient
     private var lastLocation: Location? = null
 
@@ -56,6 +64,20 @@ class LocationTrackingService : Service() {
         super.onCreate()
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
         createNotificationChannel()
+        observeDistance()
+    }
+
+    private fun observeDistance() {
+        trackingRepository.currentDistanceMeters
+            .onEach { distance ->
+                updateNotification(distance)
+            }
+            .launchIn(serviceScope)
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        serviceScope.cancel()
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -88,7 +110,9 @@ class LocationTrackingService : Service() {
                 locationCallback,
                 Looper.getMainLooper()
             )
-            trackingRepository.startTracking()
+            serviceScope.launch {
+                trackingRepository.startTracking()
+            }
         } catch (e: SecurityException) {
             logger.e("LocationService", "Permission missing for tracking", e)
             stopSelf()
@@ -117,8 +141,9 @@ class LocationTrackingService : Service() {
             lastLocation?.let { last ->
                 val distance = last.distanceTo(location)
                 if (distance > 1.0) { // Ignore micro-movements
-                    trackingRepository.updateDistance(distance.toDouble())
-                    updateNotification(trackingRepository.currentDistanceMeters.value)
+                    serviceScope.launch {
+                        trackingRepository.updateDistance(distance.toDouble())
+                    }
                 }
             }
             lastLocation = location
@@ -127,7 +152,9 @@ class LocationTrackingService : Service() {
 
     private fun stopTracking() {
         fusedLocationClient.removeLocationUpdates(locationCallback)
-        trackingRepository.stopTracking()
+        serviceScope.launch {
+            trackingRepository.stopTracking()
+        }
         stopForeground(STOP_FOREGROUND_REMOVE)
         stopSelf()
     }

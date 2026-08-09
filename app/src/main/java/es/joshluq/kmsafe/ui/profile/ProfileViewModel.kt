@@ -89,22 +89,15 @@ class ProfileViewModel @Inject constructor(
         getEntitlementsUseCase(GetEntitlementsUseCase.Input("", forceRefresh = false))
             .onEach { output ->
                 if (output is GetEntitlementsUseCase.Output.Success) {
-                    val user = state.value.user
-                    if (user != null) {
-                        updateState {
-                            copy(
-                                user = user.copy(subscriptionLevel = output.entitlements.subscriptionLevel)
-                            )
-                        }
-                    }
+                    updateState { copy(entitlements = output.entitlements) }
                 }
             }.launchIn(viewModelScope)
     }
 
     private fun handleLogout() {
-        val user = state.value.user
-        val clearData = user?.subscriptionLevel == SubscriptionLevel.PREMIUM || 
-            user?.subscriptionLevel == SubscriptionLevel.TRIAL
+        val entitlements = state.value.entitlements
+        val clearData = entitlements?.subscriptionLevel == SubscriptionLevel.PREMIUM || 
+            entitlements?.subscriptionLevel == SubscriptionLevel.TRIAL
 
         signOutUseCase(SignOutUseCase.Input(clearLocalData = clearData)).onEach { output ->
             when (output) {

@@ -18,7 +18,6 @@ import es.joshluq.kmsafe.domain.model.User
 import es.joshluq.kmsafe.domain.usecase.*
 import es.joshluq.kmsafe.data.remote.auth.GoogleAuthManager
 import es.joshluq.kmsafe.ui.util.toText
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
@@ -199,16 +198,16 @@ class LoginViewModel @Inject constructor(
         saveEmailPreference(user.email)
 
         if (shouldClearDataOnSuccess) {
-            clearLocalDataAndProceed(user)
+            clearLocalDataAndProceed()
         } else {
-            proceedWithPostLogin(user)
+            proceedWithPostLogin()
         }
     }
 
-    private fun clearLocalDataAndProceed(user: User) {
+    private fun clearLocalDataAndProceed() {
         clearLocalDataUseCase(ClearLocalDataUseCase.Input).onEach { output ->
             if (output is ClearLocalDataUseCase.Output.Success) {
-                proceedWithPostLogin(user)
+                proceedWithPostLogin()
             }
         }.launchIn(viewModelScope)
     }
@@ -222,32 +221,44 @@ class LoginViewModel @Inject constructor(
         ).launchIn(viewModelScope)
     }
 
-    private fun proceedWithPostLogin(user: User) {
+    private fun proceedWithPostLogin() {
         logger.d("LoginViewModel", "Proceeding with mandatory sync before navigation")
         updateState { copy(isLoading = true) }
 
         val fingerprint = fingerprintProvider.getFingerprint()
-        val contractsFlow = syncContractsUseCase(SyncContractsUseCase.Input)
-        val entitlementsFlow = getEntitlementsUseCase(GetEntitlementsUseCase.Input(fingerprint, forceRefresh = true))
 
-        combine(contractsFlow, entitlementsFlow) { contracts, entitlements ->
-            val isContractsDone = contracts is SyncContractsUseCase.Output.Success || 
-                contracts is SyncContractsUseCase.Output.Failure
-            val isEntitlementsDone = entitlements is GetEntitlementsUseCase.Output.Success || 
-                entitlements is GetEntitlementsUseCase.Output.Failure
-            
-            isContractsDone && isEntitlementsDone
-        }.onEach { isBothDone ->
-            if (isBothDone) {
-                logger.i("LoginViewModel", "Post-login sync success, navigating based on level")
-                updateState { copy(isLoading = false) }
-                handlePostLoginNavigation(user)
+        // 1. Fetch Entitlements FIRST
+        getEntitlementsUseCase(GetEntitlementsUseCase.Input(fingerprint, forceRefresh = true))
+            .onEach { output ->
+                when (output) {
+                    is GetEntitlementsUseCase.Output.Success -> {
+                        logger.i("LoginViewModel", "Entitlements synced. Starting contract sync.")
+                        syncContracts(output.entitlements.subscriptionLevel)
+                    }
+                    is GetEntitlementsUseCase.Output.Failure -> {
+                        logger.w("LoginViewModel", "Entitlements sync failed. Proceeding as FREE.")
+                        syncContracts(SubscriptionLevel.FREE)
+                    }
+                }
+            }.launchIn(viewModelScope)
+    }
+
+    private fun syncContracts(level: SubscriptionLevel) {
+        syncContractsUseCase(SyncContractsUseCase.Input).onEach { syncOutput ->
+            when (syncOutput) {
+                SyncContractsUseCase.Output.Progress -> Unit
+                is SyncContractsUseCase.Output.Failure,
+                SyncContractsUseCase.Output.Success -> {
+                    logger.i("LoginViewModel", "Post-login sync complete. Navigating.")
+                    updateState { copy(isLoading = false) }
+                    handlePostLoginNavigation(level)
+                }
             }
         }.launchIn(viewModelScope)
     }
 
-    private fun handlePostLoginNavigation(user: User) {
-        if (user.subscriptionLevel == SubscriptionLevel.PREMIUM) {
+    private fun handlePostLoginNavigation(level: SubscriptionLevel) {
+        if (level == SubscriptionLevel.PREMIUM) {
             launchEffect(Effect.NavigateToDashboard)
         } else {
             launchEffect(Effect.NavigateToPremiumPaywall)

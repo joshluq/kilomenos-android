@@ -31,7 +31,7 @@ data class State(
     val showProjectionBanner: Boolean = false,
     val availableVehicles: List<RentingContract> = emptyList(),
     val showVehicleSwitcher: Boolean = false,
-    val isPremium: Boolean = false,
+    val isPremium: Boolean? = null,
     val subscriptionLevel: SubscriptionLevel = SubscriptionLevel.FREE,
     val newRecordLabel: String = "",
     val newRecordFuel: String = "",
