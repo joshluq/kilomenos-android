@@ -359,6 +359,25 @@ fun OverviewScreen(
                     }
                 )
             }
+
+            // Bluetooth Suggestion Banner (Premium only)
+            CanvasKitBanner(
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .padding(top = if (state.showProjectionBanner) 64.dp else 0.dp)
+                    .safeClickable { 
+                        state.renting?.let { onEvent(Event.OnEditContractClicked(it.id)) } 
+                    },
+                variant = CanvasKitAlertVariant.Info,
+                visible = state.showBluetoothSuggestionBanner,
+                onDismiss = { onEvent(Event.OnDismissBluetoothSuggestionBanner) },
+                message = {
+                    Text(
+                        text = stringResource(R.string.onboarding_bluetooth_suggestion_banner),
+                        style = CanvasKitTheme.typography.bodyMedium
+                    )
+                }
+            )
         }
 
         if (state.showBottomSheet) {

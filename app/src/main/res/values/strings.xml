@@ -161,6 +161,14 @@
     <string name="onboarding_start_odometer_placeholder">Ej. 0 (si era nuevo)</string>
     <string name="onboarding_current_odometer_label">Odómetro a día de hoy</string>
     <string name="onboarding_current_odometer_placeholder">Ej. 15000</string>
+    <string name="onboarding_bluetooth_label">Coche vinculado (Bluetooth)</string>
+    <string name="onboarding_bluetooth_placeholder">Opcional: Selecciona tu coche</string>
+    <string name="onboarding_bluetooth_picker_title">Seleccionar Dispositivo</string>
+    <string name="onboarding_bluetooth_permission_denied">Se requiere permiso de Bluetooth para listar dispositivos.</string>
+    <string name="onboarding_bluetooth_suggestion_title">Configuración inteligente 🚗</string>
+    <string name="onboarding_bluetooth_suggestion_desc">Hemos detectado una conexión Bluetooth. ¿Es este tu coche? Vincúlalo para que el seguimiento sea 100% preciso.</string>
+    <string name="onboarding_bluetooth_suggestion_button">Vincular ahora</string>
+    <string name="onboarding_bluetooth_suggestion_banner">Optimiza el auto-tracking vinculando el Bluetooth de tu vehículo.</string>
     <string name="onboarding_save_button">Guardar Configuración</string>
     <string name="onboarding_date_picker_confirm">Aceptar</string>
     <string name="onboarding_date_picker_cancel">Cancelar</string>

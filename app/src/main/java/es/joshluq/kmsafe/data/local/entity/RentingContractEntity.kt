@@ -18,6 +18,7 @@ import es.joshluq.kmsafe.domain.model.SyncStatus
  * @property currentOdometer Current mileage at registration.
  * @property isSelected Whether this contract is currently selected.
  * @property vehicleImageUrl The URL of the vehicle image.
+ * @property bluetoothDeviceAddress The MAC address of the paired car bluetooth.
  * @property syncStatus Current synchronization status.
  */
 @Entity(tableName = "renting_contract")
@@ -32,6 +33,7 @@ data class RentingContractEntity(
     val currentOdometer: Int,
     val isSelected: Boolean = false,
     val vehicleImageUrl: String? = null,
+    val bluetoothDeviceAddress: String? = null,
     val syncStatus: String = "SYNCED"
 )
 
@@ -49,6 +51,7 @@ fun RentingContractEntity.toDomain(): RentingContract = RentingContract(
     currentOdometer = currentOdometer,
     isSelected = isSelected,
     vehicleImageUrl = vehicleImageUrl,
+    bluetoothDeviceAddress = bluetoothDeviceAddress,
     syncStatus = SyncStatus.valueOf(syncStatus)
 )
 
@@ -66,5 +69,6 @@ fun RentingContract.toEntity(): RentingContractEntity = RentingContractEntity(
     currentOdometer = currentOdometer,
     isSelected = isSelected,
     vehicleImageUrl = vehicleImageUrl,
+    bluetoothDeviceAddress = bluetoothDeviceAddress,
     syncStatus = syncStatus.name
 )

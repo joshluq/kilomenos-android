@@ -1,6 +1,7 @@
 package es.joshluq.kmsafe.di
 
 import android.content.Context
+import android.util.Log
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -25,6 +26,7 @@ import es.joshluq.kmsafe.data.remote.auth.AuthTokenRefresher
 import es.joshluq.kmsafe.data.remote.auth.UserSessionDataSource
 import es.joshluq.kmsafe.data.remote.auth.UserSessionDataSourceImpl
 import es.joshluq.kmsafe.data.util.JacksonSerializerProvider
+import java.security.KeyStore
 import javax.inject.Provider
 import javax.inject.Singleton
 
@@ -47,6 +49,7 @@ object AuthModule {
         logger: LoggerKit,
         tokenRefresherProvider: Provider<AuthTokenRefresher>
     ): AuthKit {
+        cleanInvalidKey(ENCRYPTION_ALIAS)
         return AuthKit.init(context) {
             storeName = STORE_NAME
             this.logger = logger
@@ -78,6 +81,7 @@ object AuthModule {
         @ApplicationContext context: Context,
         logger: LoggerKit
     ): EncryptionKit {
+        cleanInvalidKey(ENCRYPTION_ALIAS)
         return EncryptionKit.build(context) {
             alias = ENCRYPTION_ALIAS
             this.logger = logger
@@ -106,5 +110,34 @@ object AuthModule {
         serializerProvider: SerializerProvider
     ): StorageProvider {
         return encryptionKit.createSecureStorage(dataStore, serializerProvider)
+    }
+
+    /**
+     * Cleans up the Keystore by deleting the key associated with the provided alias if it's invalid.
+     * This prevents crashes like java.security.InvalidKeyException: Keystore cannot load the key.
+     */
+    private fun cleanInvalidKey(alias: String) {
+        try {
+            val keyStore = KeyStore.getInstance("AndroidKeyStore")
+            keyStore.load(null)
+            if (keyStore.containsAlias(alias)) {
+                val key = try {
+                    // Try to access the key to see if it's valid
+                    keyStore.getKey(alias, null)
+                } catch (e: Exception) {
+                    // If an exception occurs (like InvalidKeyException), it's corrupted
+                    Log.w("AuthModule", "Exception while loading key: $alias", e)
+                    null
+                }
+
+                if (key == null) {
+                    // If the key is null or an exception occurred, delete it so it can be recreated
+                    Log.w("AuthModule", "Deleting corrupted or inaccessible key: $alias")
+                    keyStore.deleteEntry(alias)
+                }
+            }
+        } catch (e: Exception) {
+            Log.e("AuthModule", "Error checking/cleaning Keystore", e)
+        }
     }
 }

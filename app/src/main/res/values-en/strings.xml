@@ -161,6 +161,14 @@
     <string name="onboarding_start_odometer_placeholder">e.g. 0 (if it was new)</string>
     <string name="onboarding_current_odometer_label">Odometer today</string>
     <string name="onboarding_current_odometer_placeholder">e.g. 15000</string>
+    <string name="onboarding_bluetooth_label">Linked Car (Bluetooth)</string>
+    <string name="onboarding_bluetooth_placeholder">Optional: Select your car</string>
+    <string name="onboarding_bluetooth_picker_title">Select Device</string>
+    <string name="onboarding_bluetooth_permission_denied">Bluetooth permission is required to list devices.</string>
+    <string name="onboarding_bluetooth_suggestion_title">Smart Setup 🚗</string>
+    <string name="onboarding_bluetooth_suggestion_desc">Bluetooth connection detected. Is this your car? Link it now for 100% accurate tracking.</string>
+    <string name="onboarding_bluetooth_suggestion_button">Link Now</string>
+    <string name="onboarding_bluetooth_suggestion_banner">Optimize auto-tracking by linking your vehicle\'s Bluetooth.</string>
     <string name="onboarding_save_button">Save Configuration</string>
     <string name="onboarding_date_picker_confirm">Accept</string>
     <string name="onboarding_date_picker_cancel">Cancel</string>

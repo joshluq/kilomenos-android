@@ -30,6 +30,9 @@ data class State(
     val isReadOnly: Boolean = false,
     val isEditMode: Boolean = false,
     val renting: RentingContract? = null,
+    val bluetoothDeviceName: String? = null,
+    val bluetoothDeviceAddress: String? = null,
+    val showBluetoothPicker: Boolean = false,
     val error: TextProvider? = null
 ) : UiState {
 
@@ -50,6 +53,8 @@ sealed interface Event : UiEvent {
     data class OnCurrentOdometerChanged(val currentOdometer: String) : Event
     data class OnOriginalImageSelected(val uri: android.net.Uri?) : Event
     data class OnImageSelected(val uri: android.net.Uri?) : Event
+    data class OnBluetoothDeviceSelected(val name: String, val address: String) : Event
+    data object OnToggleBluetoothPicker : Event
     data object OnEditModeRequested : Event
     data object OnToggleDatePicker : Event
     data object OnRegisterClicked : Event

@@ -17,7 +17,7 @@ import es.joshluq.kmsafe.data.local.entity.RentingContractEntity
         RentingContractEntity::class,
         OdometerRecordEntity::class
     ],
-    version = 8,
+    version = 9,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -252,6 +252,16 @@ abstract class AppDatabase : RoomDatabase() {
                 )
                 db.execSQL("DROP TABLE odometer_record")
                 db.execSQL("ALTER TABLE odometer_record_new RENAME TO odometer_record")
+            }
+        }
+
+        /**
+         * Migration from version 8 to 9:
+         * - Add 'bluetoothDeviceAddress' column to 'renting_contract' table.
+         */
+        val MIGRATION_8_9 = object : Migration(8, 9) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE renting_contract ADD COLUMN bluetoothDeviceAddress TEXT")
             }
         }
     }

@@ -43,6 +43,7 @@ data class State(
     val showAutoTrackingPromotion: Boolean = false,
     val trackedDistance: Double = 0.0,
     val tripStartTime: Long? = null,
+    val showBluetoothSuggestionBanner: Boolean = false,
     val error: TextProvider? = null
 ) : UiState {
 
@@ -80,6 +81,7 @@ sealed interface Event : UiEvent {
     data object OnPremiumUpgradeClicked : Event
     data object OnDismissAutoTrackingPromotion : Event
     data object OnAutoTrackingPromotionAccepted : Event
+    data object OnDismissBluetoothSuggestionBanner : Event
     data class OnAutoTrackingToggled(val enabled: Boolean) : Event
     data object OnWelcomeGuideClicked : Event
 }

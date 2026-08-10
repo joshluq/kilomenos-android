@@ -58,6 +58,11 @@ class LocationTrackingService : Service() {
         
         const val ACTION_START = "ACTION_START"
         const val ACTION_STOP = "ACTION_STOP"
+
+        // BUSINESS RULE: To avoid false positives (e.g. gym, walking, GPS drift)
+        // We only count distance if the precision is high and there is a minimum speed.
+        private const val MIN_SPEED_THRESHOLD_MPS = 1.5 // ~5.4 km/h (Walking/Driving speed)
+        private const val MAX_HORIZONTAL_ACCURACY_METERS = 30.0 // Acceptable GPS precision
     }
 
     override fun onCreate() {
@@ -135,6 +140,19 @@ class LocationTrackingService : Service() {
             if (isMock) {
                 logger.w("LocationService", "Fake location detected. Ignoring update.")
                 analytics.track(AnalyticsEvent.Custom("security_gps_spoofing_detected"))
+                return
+            }
+
+            // FILTER 1: Accuracy check. Indoors (gym) GPS accuracy is usually poor (> 50m).
+            if (location.hasAccuracy() && location.accuracy > MAX_HORIZONTAL_ACCURACY_METERS) {
+                logger.d("LocationService", "Low accuracy: ${location.accuracy}m. Skipping update.")
+                return
+            }
+
+            // FILTER 2: Speed check. Prevent distance accumulation when stationary or moving very slowly.
+            // If speed is below threshold, we update 'lastLocation' to keep a fresh reference but don't add distance.
+            if (location.hasSpeed() && location.speed < MIN_SPEED_THRESHOLD_MPS) {
+                lastLocation = location
                 return
             }
 

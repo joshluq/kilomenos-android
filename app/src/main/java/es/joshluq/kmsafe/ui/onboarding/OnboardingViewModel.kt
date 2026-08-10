@@ -73,6 +73,14 @@ class OnboardingViewModel @Inject constructor(
             is Event.OnImageSelected -> updateState { copy(selectedImageUri = event.uri) }
             Event.OnEditModeRequested -> updateState { copy(isReadOnly = false, isEditMode = true) }
             Event.OnDismissError -> updateState { copy(error = null) }
+            is Event.OnToggleBluetoothPicker -> updateState { copy(showBluetoothPicker = !showBluetoothPicker) }
+            is Event.OnBluetoothDeviceSelected -> updateState { 
+                copy(
+                    bluetoothDeviceName = event.name, 
+                    bluetoothDeviceAddress = event.address,
+                    showBluetoothPicker = false
+                ) 
+            }
             is Event.OnToggleDatePicker -> handleOnToggleDatePicker()
             is Event.OnRegisterClicked -> handleOnRegisterClicked()
         }
@@ -103,6 +111,7 @@ class OnboardingViewModel @Inject constructor(
                                 startOdometer = contract.startOdometer.toString(),
                                 currentOdometer = contract.currentOdometer.toString(),
                                 vehicleImageUrl = contract.vehicleImageUrl,
+                                bluetoothDeviceAddress = contract.bluetoothDeviceAddress,
                                 renting = contract,
                                 isReadOnly = !isEditParam,
                                 isEditMode = isEditParam
@@ -224,7 +233,8 @@ class OnboardingViewModel @Inject constructor(
                 startOdometer = startOdometer,
                 currentOdometer = currentOdometer,
                 isSelected = currentState.renting?.isSelected ?: true,
-                vehicleImageUrl = currentState.vehicleImageUrl
+                vehicleImageUrl = currentState.vehicleImageUrl,
+                bluetoothDeviceAddress = currentState.bluetoothDeviceAddress
             )
         )
     }

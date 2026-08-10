@@ -89,7 +89,10 @@ class OverviewViewModel @Inject constructor(
         logger.d("OverviewViewModel", "Event received: $event")
         when (event) {
             Event.OnRegisterRentingClicked -> handleOnRegisterRentingClicked()
-            is Event.OnEditContractClicked -> launchEffect(Effect.NavigateToOnboarding(event.id, isEdit = true))
+            is Event.OnEditContractClicked -> {
+                updateState { copy(showBluetoothSuggestionBanner = false) }
+                launchEffect(Effect.NavigateToOnboarding(event.id, isEdit = true))
+            }
             Event.OnUpdateOdometerClicked -> updateState {
                 copy(
                     showBottomSheet = true,
@@ -131,6 +134,7 @@ class OverviewViewModel @Inject constructor(
                 launchEffect(Effect.NavigateToPreferences)
             }
             is Event.OnAutoTrackingToggled -> handleAutoTrackingToggled(event.enabled)
+            Event.OnDismissBluetoothSuggestionBanner -> updateState { copy(showBluetoothSuggestionBanner = false) }
             Event.OnWelcomeGuideClicked -> launchEffect(Effect.NavigateToWelcomeDiscovery)
         }
     }
@@ -149,16 +153,21 @@ class OverviewViewModel @Inject constructor(
                 val hasPremiumAccess = entitlements.subscriptionLevel == SubscriptionLevel.PREMIUM
                 val isTrialable = entitlements.isFeatureTrialable(Feature.AUTO_TRACKING)
 
+                // Bluetooth Suggestion Evaluation (Single Source of Truth)
+                val isAutoTrackingEnabled =  prefs.autoTrackingEnabled
+                val bluetoothDeviceAddress = state.value.renting?.bluetoothDeviceAddress
+                val showBluetoothSuggestion = hasPremiumAccess && isAutoTrackingEnabled && (bluetoothDeviceAddress == null)
                 updateState {
                     copy(
                         isPremium = hasPremiumAccess,
                         isAutoTrackingTrialable = isTrialable,
                         subscriptionLevel = entitlements.subscriptionLevel,
-                        autoTrackingEnabled = prefs.autoTrackingEnabled,
-                        autoTrackingPromotionDismissed = prefs.autoTrackingPromotionDismissed
+                        autoTrackingEnabled = isAutoTrackingEnabled,
+                        autoTrackingPromotionDismissed = prefs.autoTrackingPromotionDismissed,
+                        showBluetoothSuggestionBanner = showBluetoothSuggestion
                     )
                 }
-                
+
                 evaluatePromotion(
                     isPremium = hasPremiumAccess,
                     isTrialable = isTrialable,
@@ -399,11 +408,15 @@ class OverviewViewModel @Inject constructor(
             .onEach { output ->
                 if (output is UpdatePreferencesUseCase.Output.Success) {
                     updateState { copy(autoTrackingEnabled = enabled) }
+                    
                     if (enabled) {
                         startAutoTrackingUseCase(StartAutoTrackingUseCase.Input).launchIn(viewModelScope)
                     } else {
                         stopAutoTrackingUseCase(StopAutoTrackingUseCase.Input).launchIn(viewModelScope)
                     }
+                    
+                    // Re-trigger evaluation of the banner after toggle
+                    state.value.renting?.let { calculateMetrics(it, (it.currentOdometer - it.startOdometer).toDouble()) }
                 }
             }.launchIn(viewModelScope)
     }
