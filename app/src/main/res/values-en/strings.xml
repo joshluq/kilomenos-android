@@ -25,6 +25,7 @@
     <string name="profile_upgrade_button">Upgrade to\nPremium</string>
     <string name="profile_upgrade_benefit">Your data is safe in the cloud.</string>
     <string name="profile_upgrade_coming_soon">Coming Soon!</string>
+    <string name="profile_welcome_guide_option">How KiloMenos works</string>
 
     <!-- Premium -->
     <string name="premium_paywall_title">KiloMenos Premium</string>
@@ -84,7 +85,7 @@
 
     <!-- Overview -->
     <string name="overview_empty_state_title">Start tracking your mileage</string>
-    <string name="overview_empty_state_description">Set up your first renting contract to monitor your balance and optimize your investment.</string>
+    <string name="overview_empty_state_description">To start, register your renting contract. This will allow us to calculate your daily balance and warn you if you exceed your kilometers before the end of your contract.</string>
     <string name="overview_kilometer_balance">Kilometer Balance</string>
     <string name="overview_daily_limit">Ideal daily limit</string>
     <string name="overview_monthly_limit">Ideal monthly limit</string>
@@ -341,4 +342,16 @@
     <string name="overview_promotion_autotracking_desc">Auto-Tracking is available for you. Forget about registering kilometers manually; the app will do it for you when it detects you are driving.</string>
     <string name="overview_promotion_autotracking_confirm">Set up now</string>
     <string name="overview_promotion_autotracking_dismiss">Not now, don\'t show again</string>
+
+    <!-- Welcome Discovery -->
+    <string name="welcome_discovery_title">Welcome to KiloMenos</string>
+    <string name="welcome_discovery_slide1_title">Control your Balance</string>
+    <string name="welcome_discovery_slide1_desc">We calculate the difference between the km you should have driven according to your contract and those you have actually traveled.</string>
+    <string name="welcome_discovery_slide2_title">Configure your Contract</string>
+    <string name="welcome_discovery_slide2_desc">Tell us how long your renting lasts and how many km you have included. We take care of the rest.</string>
+    <string name="welcome_discovery_slide3_title">First Registration</string>
+    <string name="welcome_discovery_slide3_desc">You only need to register your current odometer to start seeing your savings in real time.</string>
+    <string name="welcome_discovery_action_next">Next</string>
+    <string name="welcome_discovery_action_start">Set up my vehicle</string>
+    <string name="welcome_discovery_action_skip">Skip</string>
 </resources>

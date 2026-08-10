@@ -138,7 +138,8 @@ fun OverviewRoute(
     onNavigateToProjection: () -> Unit,
     onNavigateToPermissions: () -> Unit,
     onNavigateToPremiumPaywall: () -> Unit,
-    onNavigateToPreferences: () -> Unit
+    onNavigateToPreferences: () -> Unit,
+    onNavigateToWelcomeDiscovery: () -> Unit
 ) {
     val viewModel: OverviewViewModel = hiltViewModel()
     val state = viewModel.state.collectAsStateWithLifecycle()
@@ -199,6 +200,8 @@ fun OverviewRoute(
                     }
                     context.startActivity(intent)
                 }
+
+                Effect.NavigateToWelcomeDiscovery -> onNavigateToWelcomeDiscovery()
             }
         }
     }
@@ -306,7 +309,9 @@ fun OverviewScreen(
                 } else {
                     EmptyState(
                         state = state,
-                        onRegisterClick = { onEvent(Event.OnRegisterRentingClicked) })
+                        onRegisterClick = { onEvent(Event.OnRegisterRentingClicked) },
+                        onHowItWorksClick = { onEvent(Event.OnWelcomeGuideClicked) }
+                    )
                 }
 
                 // BUSINESS RULE: If auto-tracking is enabled but Critical Permissions are missing -> Navigate to Permissions Screen
@@ -1247,7 +1252,6 @@ private fun AutoTrackingPromotionDialog(
                         onClick = onDismiss,
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        @Suppress("DEPRECATION")
                         Text(
                             text = stringResource(R.string.overview_promotion_autotracking_dismiss),
                             color = CanvasKitTheme.colors.textSecondary
@@ -1260,7 +1264,11 @@ private fun AutoTrackingPromotionDialog(
 }
 
 @Composable
-private fun EmptyState(state: State, onRegisterClick: () -> Unit) {
+private fun EmptyState(
+    state: State, 
+    onRegisterClick: () -> Unit,
+    onHowItWorksClick: () -> Unit
+) {
     Column {
         if (state.isPremium == false) {
             AdMobBanner(
@@ -1279,15 +1287,29 @@ private fun EmptyState(state: State, onRegisterClick: () -> Unit) {
                 )
             },
             action = {
-                CanvasKitButton(
-                    onClick = safeClick { onRegisterClick() },
-                    modifier = Modifier.fillMaxWidth()
-                ) { contentColor ->
-                    Text(
-                        stringResource(R.string.overview_register_renting_button),
-                        color = contentColor
-                    )
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    CanvasKitButton(
+                        onClick = safeClick { onRegisterClick() },
+                        modifier = Modifier.fillMaxWidth()
+                    ) { contentColor ->
+                        Text(
+                            stringResource(R.string.overview_register_renting_button),
+                            color = contentColor
+                        )
+                    }
+                    CanvasKitButton(
+                        onClick = safeClick { onHowItWorksClick() },
+                        variant = CanvasKitButtonVariant.Ghost,
+                        modifier = Modifier.fillMaxWidth()
+                    ) { _ ->
+                        Text(
+                            stringResource(R.string.profile_welcome_guide_option),
+                            color = CanvasKitTheme.colors.brandAccent,
+                            style = CanvasKitTheme.typography.labelLarge
+                        )
+                    }
                 }
+
             }
         )
     }

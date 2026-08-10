@@ -71,6 +71,10 @@ class ProfileViewModel @Inject constructor(
                 handleDeleteAccount()
             }
             Event.OnDeleteAccountCancelled -> updateState { copy(showDeleteConfirmation = false) }
+            Event.OnWelcomeGuideClicked -> {
+                logger.d("ProfileViewModel", "Effect launched: NavigateToWelcomeDiscovery")
+                launchEffect(Effect.NavigateToWelcomeDiscovery)
+            }
             Event.OnDismissError -> updateState { copy(error = null) }
         }
     }

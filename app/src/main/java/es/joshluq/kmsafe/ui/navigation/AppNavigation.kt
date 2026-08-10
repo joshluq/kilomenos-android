@@ -13,6 +13,7 @@ import es.joshluq.kmsafe.ui.datamanagement.DataManagementRoute
 import es.joshluq.kmsafe.ui.launch.LaunchRoute
 import es.joshluq.kmsafe.ui.login.LoginRoute
 import es.joshluq.kmsafe.ui.onboarding.OnboardingRoute
+import es.joshluq.kmsafe.ui.onboarding.WelcomeDiscoveryScreen
 import es.joshluq.kmsafe.ui.premium.PremiumPaywallRoute
 import es.joshluq.kmsafe.ui.profile.preferences.PreferencesRoute
 import es.joshluq.kmsafe.ui.history.detail.RecordDetailRoute
@@ -75,6 +76,11 @@ fun AppNavigation(
                         popUpTo(Destination.Login) { inclusive = true }
                     }
                 },
+                onNavigateToWelcomeDiscovery = {
+                    navController.navigate(Destination.WelcomeDiscovery) {
+                        popUpTo(Destination.Login) { inclusive = true }
+                    }
+                },
                 onNavigateToPremiumPaywall = {
                     // Navigate to Dashboard as base and clear auth stack
                     navController.navigate(Destination.Dashboard) {
@@ -82,6 +88,26 @@ fun AppNavigation(
                     }
                     // Then show paywall on top
                     navController.navigate(Destination.PremiumPaywall)
+                }
+            )
+        }
+
+        composable<Destination.WelcomeDiscovery> {
+            WelcomeDiscoveryScreen(
+                onNavigateToRentingSetup = {
+                    // Pattern: Seed Dashboard as base first
+                    navController.navigate(Destination.Dashboard) {
+                        popUpTo(Destination.WelcomeDiscovery) { inclusive = true }
+                    }
+                    // Then show RentingDetails on top
+                    navController.navigate(Destination.RentingDetails(null, false))
+                },
+                onSkip = {
+                    if (!navController.popBackStack()) {
+                        navController.navigate(Destination.Dashboard) {
+                            popUpTo(Destination.WelcomeDiscovery) { inclusive = true }
+                        }
+                    }
                 }
             )
         }
@@ -128,6 +154,9 @@ fun AppNavigation(
                 },
                 onNavigateToPermissions = {
                     navController.navigate(Destination.AutoTrackingPermissions)
+                },
+                onNavigateToWelcomeDiscovery = {
+                    navController.navigate(Destination.WelcomeDiscovery)
                 }
             )
         }

@@ -46,5 +46,6 @@ sealed interface Event : UiEvent {
 sealed interface Effect : UiEffect {
     object NavigateBack : Effect
     object NavigateToDashboard : Effect
+    object NavigateToWelcomeDiscovery : Effect
     object NavigateToPremiumPaywall : Effect
 }

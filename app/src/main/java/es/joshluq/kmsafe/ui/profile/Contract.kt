@@ -27,6 +27,7 @@ sealed interface Event : UiEvent {
     object OnDeleteAccountClicked : Event
     object OnDeleteAccountConfirmed : Event
     object OnDeleteAccountCancelled : Event
+    object OnWelcomeGuideClicked : Event
     object OnDismissError : Event
 }
 
@@ -36,5 +37,6 @@ sealed interface Effect : UiEffect {
     object NavigateToPreferences : Effect
     object NavigateToLogin : Effect
     object NavigateToPremiumPaywall : Effect
+    object NavigateToWelcomeDiscovery : Effect
     data class ShowMessage(val message: String) : Effect
 }

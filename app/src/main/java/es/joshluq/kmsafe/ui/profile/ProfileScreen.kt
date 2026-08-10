@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.HelpOutline
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.CarRental
 import androidx.compose.material.icons.filled.DeleteForever
@@ -47,6 +48,7 @@ fun ProfileRoute(
     onNavigateToPreferences: () -> Unit,
     onNavigateToLogin: () -> Unit,
     onNavigateToPremiumPaywall: () -> Unit,
+    onNavigateToWelcomeDiscovery: () -> Unit,
     viewModel: ProfileViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -59,6 +61,7 @@ fun ProfileRoute(
                 Effect.NavigateToPreferences -> onNavigateToPreferences()
                 Effect.NavigateToLogin -> onNavigateToLogin()
                 Effect.NavigateToPremiumPaywall -> onNavigateToPremiumPaywall()
+                Effect.NavigateToWelcomeDiscovery -> onNavigateToWelcomeDiscovery()
                 is Effect.ShowMessage -> { /* Handle simple toast if needed */ }
             }
         }
@@ -147,6 +150,12 @@ fun ProfileScreen(
                     style = CanvasKitTheme.typography.labelSmall,
                     color = CanvasKitTheme.colors.textSecondary,
                     modifier = Modifier.padding(start = CanvasKitTheme.spacing.xs)
+                )
+
+                SettingsItem(
+                    label = stringResource(R.string.profile_welcome_guide_option),
+                    icon = Icons.AutoMirrored.Filled.HelpOutline,
+                    onClick = safeClick { onEvent(Event.OnWelcomeGuideClicked) }
                 )
 
                 SettingsItem(

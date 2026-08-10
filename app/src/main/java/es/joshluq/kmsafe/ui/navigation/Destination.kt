@@ -51,6 +51,12 @@ sealed interface Destination {
     object PremiumPaywall : Destination
 
     /**
+     * Welcome Discovery destination.
+     */
+    @Serializable
+    object WelcomeDiscovery : Destination
+
+    /**
      * RentingDetails destination (Onboarding screen).
      */
     @Serializable

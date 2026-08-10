@@ -131,6 +131,7 @@ class OverviewViewModel @Inject constructor(
                 launchEffect(Effect.NavigateToPreferences)
             }
             is Event.OnAutoTrackingToggled -> handleAutoTrackingToggled(event.enabled)
+            Event.OnWelcomeGuideClicked -> launchEffect(Effect.NavigateToWelcomeDiscovery)
         }
     }
 

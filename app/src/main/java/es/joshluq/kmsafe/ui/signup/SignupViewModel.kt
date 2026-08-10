@@ -222,7 +222,7 @@ class SignupViewModel @Inject constructor(
         if (level == SubscriptionLevel.PREMIUM) {
             launchEffect(Effect.NavigateToDashboard)
         } else {
-            launchEffect(Effect.NavigateToPremiumPaywall)
+            launchEffect(Effect.NavigateToWelcomeDiscovery)
         }
     }
 }

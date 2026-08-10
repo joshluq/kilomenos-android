@@ -52,7 +52,8 @@ fun DashboardRoute(
     onNavigateToRecordDetail: (String) -> Unit,
     onNavigateToLogin: () -> Unit,
     onNavigateToPremiumPaywall: () -> Unit,
-    onNavigateToPermissions: () -> Unit
+    onNavigateToPermissions: () -> Unit,
+    onNavigateToWelcomeDiscovery: () -> Unit
 ) {
     val viewModel: DashboardViewModel = hiltViewModel()
     val state = viewModel.state.collectAsStateWithLifecycle()
@@ -68,7 +69,8 @@ fun DashboardRoute(
         onNavigateToRecordDetail = onNavigateToRecordDetail,
         onNavigateToLogin = onNavigateToLogin,
         onNavigateToPremiumPaywall = onNavigateToPremiumPaywall,
-        onNavigateToPermissions = onNavigateToPermissions
+        onNavigateToPermissions = onNavigateToPermissions,
+        onNavigateToWelcomeDiscovery = onNavigateToWelcomeDiscovery
     )
 }
 
@@ -89,7 +91,8 @@ fun DashboardScreen(
     onNavigateToRecordDetail: (String) -> Unit,
     onNavigateToLogin: () -> Unit,
     onNavigateToPremiumPaywall: () -> Unit,
-    onNavigateToPermissions: () -> Unit
+    onNavigateToPermissions: () -> Unit,
+    onNavigateToWelcomeDiscovery: () -> Unit
 ) {
     val navController = rememberNavController()
     val navBackStackEntry = navController.currentBackStackEntryAsState()
@@ -133,7 +136,8 @@ fun DashboardScreen(
                 onNavigateToRecordDetail = onNavigateToRecordDetail,
                 onNavigateToLogin = onNavigateToLogin,
                 onNavigateToPremiumPaywall = onNavigateToPremiumPaywall,
-                onNavigateToPermissions = onNavigateToPermissions
+                onNavigateToPermissions = onNavigateToPermissions,
+                onNavigateToWelcomeDiscovery = onNavigateToWelcomeDiscovery
             )
         }
 

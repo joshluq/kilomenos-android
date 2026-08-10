@@ -20,7 +20,8 @@ fun DashboardNavigation(
     onNavigateToRecordDetail: (String) -> Unit,
     onNavigateToLogin: () -> Unit,
     onNavigateToPremiumPaywall: () -> Unit,
-    onNavigateToPermissions: () -> Unit
+    onNavigateToPermissions: () -> Unit,
+    onNavigateToWelcomeDiscovery: () -> Unit
 ) {
     NavHost(
         navController = navController,
@@ -37,7 +38,8 @@ fun DashboardNavigation(
                 },
                 onNavigateToPermissions = onNavigateToPermissions,
                 onNavigateToPremiumPaywall = onNavigateToPremiumPaywall,
-                onNavigateToPreferences = onNavigateToPreferences
+                onNavigateToPreferences = onNavigateToPreferences,
+                onNavigateToWelcomeDiscovery = onNavigateToWelcomeDiscovery
             )
         }
 
@@ -57,7 +59,8 @@ fun DashboardNavigation(
                 onNavigateToVehicles = onNavigateToVehicles,
                 onNavigateToPreferences = onNavigateToPreferences,
                 onNavigateToLogin = onNavigateToLogin,
-                onNavigateToPremiumPaywall = onNavigateToPremiumPaywall
+                onNavigateToPremiumPaywall = onNavigateToPremiumPaywall,
+                onNavigateToWelcomeDiscovery = onNavigateToWelcomeDiscovery
             )
         }
     }

@@ -81,6 +81,7 @@ sealed interface Event : UiEvent {
     data object OnDismissAutoTrackingPromotion : Event
     data object OnAutoTrackingPromotionAccepted : Event
     data class OnAutoTrackingToggled(val enabled: Boolean) : Event
+    data object OnWelcomeGuideClicked : Event
 }
 
 /**
@@ -98,4 +99,5 @@ sealed interface Effect : UiEffect {
     data object NavigateToPermissions : Effect
     data object NavigateToPremiumPaywall : Effect
     data object NavigateToPreferences : Effect
+    data object NavigateToWelcomeDiscovery : Effect
 }

@@ -73,6 +73,7 @@ import kotlinx.coroutines.flow.Flow
 fun SignupRoute(
     onNavigateBack: () -> Unit,
     onNavigateToDashboard: () -> Unit,
+    onNavigateToWelcomeDiscovery: () -> Unit,
     onNavigateToPremiumPaywall: () -> Unit,
     viewModel: SignupViewModel = hiltViewModel()
 ) {
@@ -84,6 +85,7 @@ fun SignupRoute(
         onEvent = viewModel::sendEvent,
         onNavigateBack = onNavigateBack,
         onNavigateToDashboard = onNavigateToDashboard,
+        onNavigateToWelcomeDiscovery = onNavigateToWelcomeDiscovery,
         onNavigateToPremiumPaywall = onNavigateToPremiumPaywall
     )
 }
@@ -96,6 +98,7 @@ fun SignupScreen(
     onEvent: (Event) -> Unit,
     onNavigateBack: () -> Unit,
     onNavigateToDashboard: () -> Unit,
+    onNavigateToWelcomeDiscovery: () -> Unit,
     onNavigateToPremiumPaywall: () -> Unit
 ) {
     val uriHandler = LocalUriHandler.current
@@ -107,6 +110,7 @@ fun SignupScreen(
             when (effect) {
                 Effect.NavigateBack -> onNavigateBack()
                 Effect.NavigateToDashboard -> onNavigateToDashboard()
+                Effect.NavigateToWelcomeDiscovery -> onNavigateToWelcomeDiscovery()
                 Effect.NavigateToPremiumPaywall -> onNavigateToPremiumPaywall()
             }
         }
@@ -383,6 +387,7 @@ fun SignupScreenPreview() {
             onEvent = {},
             onNavigateBack = {},
             onNavigateToDashboard = {},
+            onNavigateToWelcomeDiscovery = {},
             onNavigateToPremiumPaywall = {}
         )
     }
