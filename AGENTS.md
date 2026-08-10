@@ -64,6 +64,21 @@ Planned and Achieved high-value implementations:
 3.  ✅ **Legibility Fix**: Chart legends and interactive info dialogs.
 4.  ✅ **GDPR/EAA**: Full European regulation compliance.
 5.  ✅ **GPS Tracking (Fase 1)**: Foreground Service for manual trip recording.
-6.  📅 **Computer Vision (OCR)**: ML Kit for dashboard scanning.
-7.  📅 **Smart Tracking (Fase 2)**: Activity Recognition for automated trip detection.
-8.  📅 **Reporting Engine**: PDF generator for professional reports.
+6.  ✅ **Resilient Tracking**: Disk-persisted tracking state (Stateless Repositories).
+7.  📅 **Computer Vision (OCR)**: ML Kit for dashboard scanning.
+8.  📅 **Smart Tracking (Fase 2)**: Activity Recognition for automated trip detection.
+9.  📅 **Reporting Engine**: PDF generator for professional reports.
+
+## 8. Stateless Repositories (Anti-Pattern Prevention)
+All repositories MUST be **stateless**.
+- **Forbidden**: Using `MutableStateFlow` or `var` variables inside a Repository to store business state (e.g., accumulated distance, permissions).
+- **Mandatory**: Delegate persistence to a `DataSource` (Room/DataStore) or the `AuthKit` session. The repository should only orquestrate reactive flows.
+
+## 9. SSOT: Identity vs. Access (Entitlements)
+- **Identity**: Managed by the `User` object (ID, Email, Name).
+- **Access/Permissions**: Managed by the `Entitlements` object persisted in the **encrypted session**.
+- **Rule**: Never query the `User` object for subscription levels. Always use the `GetEntitlementsUseCase` or `CheckFeatureAccessUseCase`.
+
+## 10. Critical Sequential Flows
+To avoid race conditions during app initialization (Cold Start):
+- **Login/Launch**: MUST synchronize `Entitlements` first. Only after a response (Success/Failure) is the contract/vehicle synchronization allowed to start. This ensures the sync engine knows the user's rights before evaluating data promotion.

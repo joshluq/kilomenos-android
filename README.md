@@ -25,6 +25,8 @@ Register your trips in real-time with high precision. Use the "Co-Pilot" mode to
 
 ### 3. Resilience and Offline-First 📡
 KiloMenos is designed to work anywhere. Your data is always saved locally first and automatically synchronized with the cloud using **WorkManager** as soon as a network connection is detected.
+*   ✅ **Zero Data Loss**: Trip tracking state persists on disk, ensuring current trips survive system restarts, battery depletion, or low-memory process kills.
+*   ✅ **Dynamic Entitlements**: A granular feature-gating system allows instant access to Premium features or Trial periods without app updates.
 
 ### 4. Professional Analytics 📊
 Interactive charts with legends and contextual help to understand your consumption patterns at a glance.
