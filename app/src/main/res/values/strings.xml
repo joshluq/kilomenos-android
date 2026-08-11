@@ -208,6 +208,9 @@
     <string name="history_no_history_yet">No hay historial todavía</string>
     <string name="history_detail_time_label">Hora</string>
     <string name="history_detail_consumption_title">CONSUMO ESTIMADO</string>
+    <string name="history_detail_route_title">RUTA DEL VIAJE</string>
+    <string name="history_detail_route_premium_teaser">Vuelve a vivir tu ruta. Disponible para usuarios PREMIUM.</string>
+    <string name="history_detail_no_route">No se capturó ninguna ruta para este registro.</string>
 
     <!-- Tracking -->
     <string name="tracking_card_status_pending">Detectando conducción…</string>

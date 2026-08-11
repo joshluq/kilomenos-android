@@ -42,6 +42,8 @@ data class State(
     val autoTrackingPromotionDismissed: Boolean = false,
     val showAutoTrackingPromotion: Boolean = false,
     val trackedDistance: Double = 0.0,
+    val currentRoutePolyline: String? = null,
+    val currentPointCount: Int = 0,
     val tripStartTime: Long? = null,
     val showBluetoothSuggestionBanner: Boolean = false,
     val error: TextProvider? = null

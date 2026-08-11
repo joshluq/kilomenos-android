@@ -12,13 +12,11 @@ import es.joshluq.kmsafe.R
 import es.joshluq.kmsafe.di.CheckFeatureAccess
 import es.joshluq.kmsafe.di.DeleteOdometerRecord
 import es.joshluq.kmsafe.di.GetOdometerRecord
+import es.joshluq.kmsafe.di.GetRoute
 import es.joshluq.kmsafe.di.UpdateOdometerRecord
 import es.joshluq.kmsafe.domain.model.Feature
 import es.joshluq.kmsafe.domain.model.OdometerRecord
-import es.joshluq.kmsafe.domain.usecase.CheckFeatureAccessUseCase
-import es.joshluq.kmsafe.domain.usecase.DeleteOdometerRecordUseCase
-import es.joshluq.kmsafe.domain.usecase.GetOdometerRecordUseCase
-import es.joshluq.kmsafe.domain.usecase.UpdateOdometerRecordUseCase
+import es.joshluq.kmsafe.domain.usecase.*
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import javax.inject.Inject
@@ -34,6 +32,8 @@ class RecordDetailViewModel @Inject constructor(
     @JvmSuppressWildcards FlowUseCase<UpdateOdometerRecordUseCase.Input, UpdateOdometerRecordUseCase.Output>,
     @param:CheckFeatureAccess private val checkFeatureAccessUseCase:
     @JvmSuppressWildcards FlowUseCase<CheckFeatureAccessUseCase.Input, CheckFeatureAccessUseCase.Output>,
+    @param:GetRoute private val getRouteUseCase:
+    @JvmSuppressWildcards FlowUseCase<GetRouteUseCase.Input, GetRouteUseCase.Output>,
     private val analytics: AnalyticskitManager
 ) : ScreenViewModel<RecordDetailState, RecordDetailEvent, RecordDetailEffect>() {
 
@@ -99,6 +99,11 @@ class RecordDetailViewModel @Inject constructor(
                                 consumptionL100km = consumption
                             )
                         }
+                        
+                        // Load route if user is premium and record has route
+                        if (state.value.isPremium && output.record.hasRoute) {
+                            loadRoute(output.record.id)
+                        }
                     }
                     is GetOdometerRecordUseCase.Output.Failure -> {
                         updateState {
@@ -107,6 +112,21 @@ class RecordDetailViewModel @Inject constructor(
                                 error = TextProvider.Resource(R.string.history_load_error)
                             )
                         }
+                    }
+                }
+            }.launchIn(viewModelScope)
+    }
+
+    private fun loadRoute(id: String) {
+        getRouteUseCase(GetRouteUseCase.Input(id))
+            .onEach { output ->
+                when (output) {
+                    GetRouteUseCase.Output.Progress -> updateState { copy(isRouteLoading = true) }
+                    is GetRouteUseCase.Output.Success -> updateState { 
+                        copy(isRouteLoading = false, route = output.route) 
+                    }
+                    is GetRouteUseCase.Output.Failure -> updateState { 
+                        copy(isRouteLoading = false) 
                     }
                 }
             }.launchIn(viewModelScope)

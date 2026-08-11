@@ -5,6 +5,7 @@ import es.joshluq.foundationkit.viewmodel.UiEffect
 import es.joshluq.foundationkit.viewmodel.UiEvent
 import es.joshluq.foundationkit.viewmodel.UiState
 import es.joshluq.kmsafe.domain.model.OdometerRecord
+import es.joshluq.kmsafe.domain.model.TripRoute
 
 data class RecordDetailState(
     val record: OdometerRecord? = null,
@@ -19,6 +20,8 @@ data class RecordDetailState(
     val editingOdometerValue: String = "",
     val editingLabel: String = "",
     val editingFuel: String = "",
+    val route: TripRoute? = null,
+    val isRouteLoading: Boolean = false,
     val error: TextProvider? = null
 ) : UiState {
     companion object {

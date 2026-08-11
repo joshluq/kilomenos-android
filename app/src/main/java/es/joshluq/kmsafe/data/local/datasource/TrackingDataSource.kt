@@ -30,6 +30,8 @@ class TrackingDataSource @Inject constructor(
         private const val KEY_IS_TRACKING = "tracking_active"
         private const val KEY_START_TIME = "tracking_start_timestamp"
         private const val KEY_DISTANCE = "tracking_distance_meters"
+        private const val KEY_ROUTE_POLYLINE = "tracking_route_polyline"
+        private const val KEY_POINT_COUNT = "tracking_point_count"
     }
 
     fun isTracking(): Flow<Boolean> = _updates.flatMapLatest {
@@ -44,16 +46,28 @@ class TrackingDataSource @Inject constructor(
         flow { emit(storage.read<Double>(KEY_DISTANCE) ?: 0.0) }
     }
 
+    fun getRoutePolyline(): Flow<String?> = _updates.flatMapLatest {
+        flow { emit(storage.read<String>(KEY_ROUTE_POLYLINE)) }
+    }
+
+    fun getPointCount(): Flow<Int> = _updates.flatMapLatest {
+        flow { emit(storage.read<Int>(KEY_POINT_COUNT) ?: 0) }
+    }
+
     suspend fun startTracking(timestamp: Long) {
         storage.save(KEY_IS_TRACKING, true)
         storage.save(KEY_START_TIME, timestamp)
         storage.save(KEY_DISTANCE, 0.0)
+        storage.delete(KEY_ROUTE_POLYLINE)
+        storage.save(KEY_POINT_COUNT, 0)
         _updates.emit(Unit)
     }
 
-    suspend fun updateDistance(meters: Double) {
-        val current = storage.read<Double>(KEY_DISTANCE) ?: 0.0
-        storage.save(KEY_DISTANCE, current + meters)
+    suspend fun updateTracking(meters: Double, encodedPolyline: String, points: Int) {
+        val currentDistance = storage.read<Double>(KEY_DISTANCE) ?: 0.0
+        storage.save(KEY_DISTANCE, currentDistance + meters)
+        storage.save(KEY_ROUTE_POLYLINE, encodedPolyline)
+        storage.save(KEY_POINT_COUNT, points)
         _updates.emit(Unit)
     }
 

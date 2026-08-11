@@ -42,6 +42,9 @@ interface OdometerRecordDao {
     @Query("UPDATE odometer_record SET contractId = :newId WHERE contractId = :oldId")
     suspend fun updateContractId(oldId: String, newId: String)
 
+    @Query("SELECT * FROM odometer_record WHERE id = :recordId")
+    suspend fun getRecordByIdSync(recordId: String): OdometerRecordEntity?
+
     /**
      * Deletes all odometer records from the database.
      */

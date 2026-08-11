@@ -24,6 +24,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowOutward
 import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.filled.Map
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Today
 import androidx.compose.material.icons.outlined.HourglassEmpty
@@ -404,12 +405,25 @@ private fun HistoryItem(
                     }
                 }
             }
-            Icon(
-                imageVector = Icons.Default.ArrowOutward,
-                contentDescription = stringResource(R.string.history_detail_action),
-                tint = CanvasKitTheme.colors.textSecondary,
-                modifier = Modifier.size(16.dp)
-            )
+
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                if (item.record.hasRoute) {
+                    Icon(
+                        imageVector = Icons.Default.Map,
+                        contentDescription = null,
+                        tint = CanvasKitTheme.colors.brandAccent.copy(alpha = 0.6f),
+                        modifier = Modifier
+                            .size(16.dp)
+                            .padding(end = 4.dp)
+                    )
+                }
+                Icon(
+                    imageVector = Icons.Default.ArrowOutward,
+                    contentDescription = stringResource(R.string.history_detail_action),
+                    tint = CanvasKitTheme.colors.textSecondary,
+                    modifier = Modifier.size(16.dp)
+                )
+            }
         }
     }
 }

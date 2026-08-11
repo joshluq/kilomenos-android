@@ -19,9 +19,11 @@ class ObserveTrackingStateUseCase @Inject constructor(
         return combine(
             repository.isTracking,
             repository.currentDistanceMeters,
-            repository.startTime
-        ) { isTracking, distance, startTime ->
-            Output.Success(isTracking, distance, startTime)
+            repository.startTime,
+            repository.currentRoutePolyline,
+            repository.pointCount
+        ) { isTracking, distance, startTime, polyline, points ->
+            Output.Success(isTracking, distance, startTime, polyline, points)
         }
     }
 
@@ -31,7 +33,9 @@ class ObserveTrackingStateUseCase @Inject constructor(
         data class Success(
             val isTracking: Boolean,
             val trackedDistance: Double,
-            val startTime: Long?
+            val startTime: Long?,
+            val encodedPolyline: String?,
+            val pointCount: Int
         ) : Output
     }
 }

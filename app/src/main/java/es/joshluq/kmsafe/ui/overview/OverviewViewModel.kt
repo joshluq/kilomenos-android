@@ -307,7 +307,9 @@ class OverviewViewModel @Inject constructor(
                 odometerValue = odometerValue,
                 timestamp = timestamp,
                 label = label,
-                fuelAmount = fuelAmount
+                fuelAmount = fuelAmount,
+                encodedPolyline = state.value.currentRoutePolyline,
+                pointCount = state.value.currentPointCount
             )
         )
             .onEach { output ->
@@ -391,7 +393,9 @@ class OverviewViewModel @Inject constructor(
                         copy(
                             isTracking = output.isTracking,
                             trackedDistance = output.trackedDistance,
-                            tripStartTime = output.startTime
+                            tripStartTime = output.startTime,
+                            currentRoutePolyline = output.encodedPolyline,
+                            currentPointCount = output.pointCount
                         ) 
                     }
                 }

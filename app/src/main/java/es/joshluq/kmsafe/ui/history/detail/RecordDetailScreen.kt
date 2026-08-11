@@ -27,6 +27,8 @@ import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.LocalGasStation
+import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -51,6 +53,16 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.google.android.gms.maps.CameraUpdateFactory
+import com.google.android.gms.maps.model.JointType
+import com.google.android.gms.maps.model.LatLngBounds
+import com.google.android.gms.maps.model.RoundCap
+import com.google.maps.android.PolyUtil
+import com.google.maps.android.compose.GoogleMap
+import com.google.maps.android.compose.MapProperties
+import com.google.maps.android.compose.MapUiSettings
+import com.google.maps.android.compose.Polyline
+import com.google.maps.android.compose.rememberCameraPositionState
 import es.joshluq.canvaskit.components.buttons.CanvasKitButton
 import es.joshluq.canvaskit.components.buttons.CanvasKitButtonVariant
 import es.joshluq.canvaskit.components.cards.CanvasKitCard
@@ -152,6 +164,16 @@ fun RecordDetailScreen(
                         Spacer(modifier = Modifier.height(24.dp))
                     }
 
+                    // Route Map Section
+                    RouteMapCard(
+                        isPremium = state.isPremium,
+                        hasRoute = record.hasRoute,
+                        encodedPolyline = state.route?.encodedPolyline,
+                        isLoading = state.isRouteLoading
+                    )
+
+                    Spacer(modifier = Modifier.height(24.dp))
+
                     Spacer(modifier = Modifier.weight(1f))
 
                     // Action Buttons
@@ -180,6 +202,126 @@ fun RecordDetailScreen(
             if (state.showEditDialog) {
                 EditRecordDialog(state = state, onEvent = onEvent)
             }
+        }
+    }
+}
+
+@Composable
+private fun RouteMapCard(
+    isPremium: Boolean,
+    hasRoute: Boolean,
+    encodedPolyline: String?,
+    isLoading: Boolean
+) {
+    CanvasKitCard {
+        Column {
+            Text(
+                text = stringResource(R.string.history_detail_route_title),
+                style = CanvasKitTheme.typography.labelSmall,
+                color = CanvasKitTheme.colors.textSecondary,
+                fontWeight = FontWeight.Bold
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(200.dp)
+                    .clip(CanvasKitTheme.shapes.medium)
+                    .background(CanvasKitTheme.colors.backgroundSecondary),
+                contentAlignment = Alignment.Center
+            ) {
+                when {
+                    isLoading -> {
+                        CircularProgressIndicator(
+                            color = CanvasKitTheme.colors.brandAccent,
+                            modifier = Modifier.size(32.dp)
+                        )
+                    }
+                    !isPremium -> {
+                        TeaserOverlay(stringResource(R.string.history_detail_route_premium_teaser))
+                    }
+                    !hasRoute || encodedPolyline.isNullOrBlank() -> {
+                        Text(
+                            text = stringResource(R.string.history_detail_no_route),
+                            style = CanvasKitTheme.typography.bodyLarge,
+                            color = CanvasKitTheme.colors.textSecondary,
+                            modifier = Modifier.padding(16.dp)
+                        )
+                    }
+                    else -> {
+                        RouteMap(encodedPolyline)
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun RouteMap(encodedPolyline: String) {
+    val points = remember(encodedPolyline) { PolyUtil.decode(encodedPolyline) }
+    val cameraPositionState = rememberCameraPositionState()
+
+    if (points.isNotEmpty()) {
+        LaunchedEffect(points) {
+            val boundsBuilder = LatLngBounds.builder()
+            points.forEach { boundsBuilder.include(it) }
+            val bounds = boundsBuilder.build()
+            cameraPositionState.animate(CameraUpdateFactory.newLatLngBounds(bounds, 50))
+        }
+    }
+
+    GoogleMap(
+        modifier = Modifier.fillMaxSize(),
+        cameraPositionState = cameraPositionState,
+        properties = MapProperties(
+            isMyLocationEnabled = false,
+            // To prevent flickering or heavy load, we can simplify styling
+        ),
+        uiSettings = MapUiSettings(
+            zoomControlsEnabled = false,
+            myLocationButtonEnabled = false,
+            scrollGesturesEnabled = true,
+            zoomGesturesEnabled = true,
+            tiltGesturesEnabled = false,
+            rotationGesturesEnabled = false
+        )
+    ) {
+        Polyline(
+            points = points,
+            color = CanvasKitTheme.colors.brandAccent,
+            width = 8f,
+            startCap = RoundCap(),
+            endCap = RoundCap(),
+            jointType = JointType.ROUND
+        )
+    }
+}
+
+@Composable
+private fun TeaserOverlay(text: String) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(CanvasKitTheme.colors.textPrimary.copy(alpha = 0.05f)),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Icon(
+                imageVector = Icons.Default.Lock,
+                contentDescription = null,
+                tint = CanvasKitTheme.colors.textSecondary,
+                modifier = Modifier.size(32.dp)
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = text,
+                style = CanvasKitTheme.typography.labelSmall,
+                color = CanvasKitTheme.colors.textSecondary,
+                modifier = Modifier.padding(horizontal = 32.dp),
+                textAlign = androidx.compose.ui.text.style.TextAlign.Center
+            )
         }
     }
 }

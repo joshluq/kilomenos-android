@@ -22,14 +22,24 @@ interface TrackingRepository {
     val isTracking: Flow<Boolean>
 
     /**
+     * The current route encoded as a polyline string.
+     */
+    val currentRoutePolyline: Flow<String?>
+
+    /**
+     * The number of points in the current route.
+     */
+    val pointCount: Flow<Int>
+
+    /**
      * Starts a new trip tracking session.
      */
     suspend fun startTracking()
 
     /**
-     * Updates the accumulated distance.
+     * Updates the accumulated distance and optionally appends a new point to the route.
      */
-    suspend fun updateDistance(meters: Double)
+    suspend fun updateTracking(distanceMeters: Double, latitude: Double? = null, longitude: Double? = null)
 
     /**
      * Stops and resets the current tracking session.

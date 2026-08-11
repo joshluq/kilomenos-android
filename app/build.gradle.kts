@@ -115,6 +115,11 @@ dependencies {
 
     implementation("com.android.billingclient:billing-ktx:9.1.0")
 
+    // Maps Utils for Polyline Encoding
+    implementation("com.google.maps.android:android-maps-utils:5.1.1")
+    implementation("com.google.maps.android:maps-compose:8.4.0")
+    implementation("com.google.android.gms:play-services-maps:20.0.0")
+
     implementation(platform("com.google.firebase:firebase-bom:34.17.0"))
     implementation("com.google.firebase:firebase-analytics")
     implementation("com.google.firebase:firebase-crashlytics")

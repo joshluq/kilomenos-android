@@ -23,8 +23,9 @@ interface HistoryRepository {
 
     /**
      * Inserts a new odometer record.
+     * Optionally saves an associated trip route.
      */
-    suspend fun saveRecord(record: OdometerRecord)
+    suspend fun saveRecord(record: OdometerRecord, route: TripRoute? = null)
 
     /**
      * Updates an existing odometer record.

@@ -2,6 +2,7 @@ package es.joshluq.kmsafe.data.mapper
 
 import es.joshluq.kmsafe.data.remote.response.OdometerRecordResponse
 import es.joshluq.kmsafe.domain.model.OdometerRecord
+import java.text.ParsePosition
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -19,19 +20,16 @@ fun OdometerRecordResponse.toDomain(): OdometerRecord {
     )
 
     val parsedDate = timestamp?.let { ts ->
-        var date: Date? = null
-        for (format in formats) {
-            try {
-                val sdf = SimpleDateFormat(format, Locale.getDefault()).apply {
-                    timeZone = TimeZone.getTimeZone("UTC")
-                }
-                date = sdf.parse(ts)
-                if (date != null) break
-            } catch (e: Exception) {
-                // Try next format
+        formats.firstNotNullOfOrNull { format ->
+            val sdf = SimpleDateFormat(format, Locale.getDefault()).apply {
+                timeZone = TimeZone.getTimeZone("UTC")
             }
-        }
-        date?.time
+
+            val pos = ParsePosition(0)
+            val date = sdf.parse(ts, pos)
+
+            if (pos.index > 0) date else null
+        }?.time
     } ?: 0L
 
     return OdometerRecord(

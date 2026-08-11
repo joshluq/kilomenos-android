@@ -169,13 +169,26 @@ class LocationTrackingService : Service() {
 
             lastLocation?.let { last ->
                 val distance = last.distanceTo(location)
-                if (distance > 1.0) { // Ignore micro-movements
+                if (distance > 20.0) { // BUSINESS RULE: Capture points every 20 meters for a smooth but light polyline
                     serviceScope.launch {
-                        trackingRepository.updateDistance(distance.toDouble())
+                        trackingRepository.updateTracking(
+                            distanceMeters = distance.toDouble(),
+                            latitude = location.latitude,
+                            longitude = location.longitude
+                        )
                     }
+                    lastLocation = location // Update reference for distance filter
+                } else if (distance > 1.0) {
+                    // Update only distance for micro-movements, but don't record a map point yet
+                    serviceScope.launch {
+                        trackingRepository.updateTracking(
+                            distanceMeters = distance.toDouble()
+                        )
+                    }
+                    lastLocation = location
                 }
             }
-            lastLocation = location
+            if (lastLocation == null) lastLocation = location
         }
     }
 

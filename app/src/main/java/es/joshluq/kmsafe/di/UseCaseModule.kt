@@ -274,4 +274,10 @@ abstract class UseCaseModule {
     abstract fun bindCheckFeatureAccessUseCase(
         useCase: CheckFeatureAccessUseCase
     ): FlowUseCase<CheckFeatureAccessUseCase.Input, CheckFeatureAccessUseCase.Output>
+
+    @Binds
+    @GetRoute
+    abstract fun bindGetRouteUseCase(
+        useCase: GetRouteUseCase
+    ): FlowUseCase<GetRouteUseCase.Input, GetRouteUseCase.Output>
 }

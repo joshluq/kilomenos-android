@@ -318,6 +318,13 @@ annotation class GetEntitlements
 annotation class StartTrial
 
 /**
+ * Qualifier for the GetRouteUseCase.
+ */
+@Qualifier
+@Retention(AnnotationRetention.BINARY)
+annotation class GetRoute
+
+/**
  * Qualifier for the CheckFeatureAccessUseCase.
  */
 @Qualifier

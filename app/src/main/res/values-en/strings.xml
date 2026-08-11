@@ -208,6 +208,9 @@
     <string name="history_no_history_yet">No history yet</string>
     <string name="history_detail_time_label">Time</string>
     <string name="history_detail_consumption_title">ESTIMATED CONSUMPTION</string>
+    <string name="history_detail_route_title">TRIP ROUTE</string>
+    <string name="history_detail_route_premium_teaser">Relive your route. Available for PREMIUM users.</string>
+    <string name="history_detail_no_route">No route was captured for this record.</string>
 
     <!-- Tracking -->
     <string name="tracking_card_status_pending">Detecting driving&#8230;</string>

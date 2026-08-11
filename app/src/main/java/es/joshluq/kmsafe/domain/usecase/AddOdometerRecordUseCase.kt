@@ -4,6 +4,7 @@ import es.joshluq.foundationkit.usecase.FlowUseCase
 import es.joshluq.foundationkit.usecase.UseCaseInput
 import es.joshluq.foundationkit.usecase.UseCaseOutput
 import es.joshluq.kmsafe.domain.model.OdometerRecord
+import es.joshluq.kmsafe.domain.model.TripRoute
 import es.joshluq.kmsafe.domain.repository.HistoryRepository
 import es.joshluq.kmsafe.domain.repository.RentingRepository
 import kotlinx.coroutines.flow.Flow
@@ -34,10 +35,19 @@ class AddOdometerRecordUseCase @Inject constructor(
             odometerValue = input.odometerValue,
             isInitialRecord = false,
             label = input.label,
-            fuelAmount = input.fuelAmount
+            fuelAmount = input.fuelAmount,
+            hasRoute = input.encodedPolyline != null
         )
 
-        historyRepository.saveRecord(record)
+        val route = input.encodedPolyline?.let {
+            TripRoute(
+                recordId = record.id,
+                encodedPolyline = it,
+                pointCount = input.pointCount ?: 0
+            )
+        }
+
+        historyRepository.saveRecord(record, route)
         emit(Output.Success as Output)
     }
         .onStart { emit(Output.Progress) }
@@ -47,7 +57,9 @@ class AddOdometerRecordUseCase @Inject constructor(
         val odometerValue: Int,
         val timestamp: Long,
         val label: String? = null,
-        val fuelAmount: Double? = null
+        val fuelAmount: Double? = null,
+        val encodedPolyline: String? = null,
+        val pointCount: Int? = null
     ) : UseCaseInput
 
     sealed interface Output : UseCaseOutput {
