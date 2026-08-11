@@ -155,20 +155,18 @@ class OverviewViewModel @Inject constructor(
                 val hasPremiumAccess = entitlements.subscriptionLevel == SubscriptionLevel.PREMIUM
                 val isTrialable = entitlements.isFeatureTrialable(Feature.AUTO_TRACKING)
 
-                // Bluetooth Suggestion Evaluation (Single Source of Truth)
-                val isAutoTrackingEnabled =  prefs.autoTrackingEnabled
-                val bluetoothDeviceAddress = state.value.renting?.bluetoothDeviceAddress
-                val showBluetoothSuggestion = hasPremiumAccess && isAutoTrackingEnabled && (bluetoothDeviceAddress == null)
                 updateState {
                     copy(
                         isPremium = hasPremiumAccess,
                         isAutoTrackingTrialable = isTrialable,
                         subscriptionLevel = entitlements.subscriptionLevel,
-                        autoTrackingEnabled = isAutoTrackingEnabled,
-                        autoTrackingPromotionDismissed = prefs.autoTrackingPromotionDismissed,
-                        showBluetoothSuggestionBanner = showBluetoothSuggestion
+                        autoTrackingEnabled = prefs.autoTrackingEnabled,
+                        autoTrackingPromotionDismissed = prefs.autoTrackingPromotionDismissed
                     )
                 }
+
+                // Re-calculate metrics to refresh banner status with the new entitlements/prefs context
+                state.value.renting?.let { calculateMetrics(it, (it.currentOdometer - it.startOdometer).toDouble()) }
 
                 evaluatePromotion(
                     isPremium = hasPremiumAccess,
@@ -353,6 +351,18 @@ class OverviewViewModel @Inject constructor(
         val kmsUsedPercentage = (actualKmsDrivenSinceStart / renting.totalKms).coerceIn(0.0, 1.0).toFloat()
         val differencePercentage = ((timeUsedPercentage - kmsUsedPercentage) * 100)
         val currentOdometer = renting.startOdometer + actualKmsDrivenSinceStart
+
+        // Bluetooth Suggestion Evaluation (Single Source of Truth)
+        val isPremium = state.value.isPremium ?: false
+        val isAutoTrackingEnabled = state.value.autoTrackingEnabled
+        val hasBluetooth = renting.bluetoothDeviceAddress != null
+        val showBluetoothSuggestion = isPremium && isAutoTrackingEnabled && !hasBluetooth
+
+        logger.d(
+            "OverviewViewModel",
+            "Banner Eval: isPremium=$isPremium, autoTrack=$isAutoTrackingEnabled, hasBT=$hasBluetooth -> showBanner=$showBluetoothSuggestion"
+        )
+
         updateState {
             copy(
                 renting = renting,
@@ -362,7 +372,8 @@ class OverviewViewModel @Inject constructor(
                 totalKmsDriven = currentOdometer.toInt(),
                 timePercentage = timeUsedPercentage,
                 kmsPercentage = kmsUsedPercentage,
-                differencePercentage = differencePercentage
+                differencePercentage = differencePercentage,
+                showBluetoothSuggestionBanner = showBluetoothSuggestion
             )
         }
         loadMonthlyUsage()
