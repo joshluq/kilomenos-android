@@ -17,6 +17,7 @@ data class OdometerRecordEntity(
     val isInitialRecord: Boolean,
     val label: String? = null,
     val fuelAmount: Double? = null,
+    val hasRoute: Boolean = false,
     val syncStatus: String = "SYNCED"
 )
 
@@ -31,6 +32,7 @@ fun OdometerRecordEntity.toDomain(): OdometerRecord = OdometerRecord(
     isInitialRecord = isInitialRecord,
     label = label,
     fuelAmount = fuelAmount,
+    hasRoute = hasRoute,
     syncStatus = SyncStatus.valueOf(syncStatus)
 )
 
@@ -45,5 +47,6 @@ fun OdometerRecord.toEntity(): OdometerRecordEntity = OdometerRecordEntity(
     isInitialRecord = isInitialRecord,
     label = label,
     fuelAmount = fuelAmount,
+    hasRoute = hasRoute,
     syncStatus = syncStatus.name
 )

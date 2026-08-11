@@ -9,5 +9,5 @@ data class UpdateOdometerRecordRequest(
     @JsonProperty("odometer_value") val odometerValue: Int,
     @JsonProperty("timestamp") val timestamp: String,
     @JsonProperty("label") val label: String? = null,
-    @JsonProperty("fuel_amount") val fuelAmount: Double? = null
+    @JsonProperty("fuel_consumed") val fuelConsumed: Double? = null
 )

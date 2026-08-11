@@ -14,5 +14,6 @@ data class OdometerRecord(
     val isInitialRecord: Boolean,
     val label: String? = null,
     val fuelAmount: Double? = null,
+    val hasRoute: Boolean = false,
     val syncStatus: SyncStatus = SyncStatus.SYNCED
 )

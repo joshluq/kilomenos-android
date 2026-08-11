@@ -11,6 +11,7 @@ import es.joshluq.kmsafe.BuildConfig
 import es.joshluq.kmsafe.data.local.AppDatabase
 import es.joshluq.kmsafe.data.local.dao.OdometerRecordDao
 import es.joshluq.kmsafe.data.local.dao.RentingContractDao
+import es.joshluq.kmsafe.data.local.dao.TripRouteDao
 import javax.inject.Singleton
 
 /**
@@ -46,7 +47,8 @@ abstract class DataModule {
                 AppDatabase.MIGRATION_5_6,
                 AppDatabase.MIGRATION_6_7,
                 AppDatabase.MIGRATION_7_8,
-                AppDatabase.MIGRATION_8_9
+                AppDatabase.MIGRATION_8_9,
+                AppDatabase.MIGRATION_9_10
             ).build()
         }
 
@@ -66,6 +68,15 @@ abstract class DataModule {
         @Singleton
         fun provideOdometerRecordDao(database: AppDatabase): OdometerRecordDao {
             return database.odometerRecordDao()
+        }
+
+        /**
+         * Provides the [TripRouteDao] from the [AppDatabase].
+         */
+        @Provides
+        @Singleton
+        fun provideTripRouteDao(database: AppDatabase): TripRouteDao {
+            return database.tripRouteDao()
         }
     }
 }

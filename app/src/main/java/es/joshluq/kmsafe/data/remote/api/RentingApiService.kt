@@ -4,11 +4,8 @@ import es.joshluq.kmsafe.data.remote.request.AddOdometerRecordRequest
 import es.joshluq.kmsafe.data.remote.request.CreateRentingContractRequest
 import es.joshluq.kmsafe.data.remote.request.UpdateOdometerRecordRequest
 import es.joshluq.kmsafe.data.remote.request.UpdateRentingContractRequest
-import es.joshluq.kmsafe.data.remote.response.AddOdometerRecordResponse
-import es.joshluq.kmsafe.data.remote.response.AddRentingResponse
-import es.joshluq.kmsafe.data.remote.response.OdometerRecordListResponse
-import es.joshluq.kmsafe.data.remote.response.RentingListResponse
-import es.joshluq.kmsafe.data.remote.response.SelectContractResponse
+import es.joshluq.kmsafe.data.remote.request.UploadRouteRequest
+import es.joshluq.kmsafe.data.remote.response.*
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.DELETE
@@ -94,5 +91,30 @@ interface RentingApiService {
     suspend fun updateOdometerRecord(
         @Path("record_id") recordId: String,
         @Body request: UpdateOdometerRecordRequest
+    ): Response<Unit>
+
+    /**
+     * Uploads the trip route for a specific odometer record.
+     */
+    @PUT("odometer-records/{record_id}/route")
+    suspend fun uploadRoute(
+        @Path("record_id") recordId: String,
+        @Body request: UploadRouteRequest
+    ): Response<Unit>
+
+    /**
+     * Fetches the trip route for a specific odometer record.
+     */
+    @GET("odometer-records/{record_id}/route")
+    suspend fun getRoute(
+        @Path("record_id") recordId: String
+    ): Response<RouteResponse>
+
+    /**
+     * Deletes the trip route for a specific odometer record.
+     */
+    @DELETE("odometer-records/{record_id}/route")
+    suspend fun deleteRoute(
+        @Path("record_id") recordId: String
     ): Response<Unit>
 }

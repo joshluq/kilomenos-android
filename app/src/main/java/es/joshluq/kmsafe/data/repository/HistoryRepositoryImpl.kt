@@ -4,20 +4,17 @@ import es.joshluq.authkit.session.model.SessionState
 import es.joshluq.foundationkit.coroutines.DispatcherProvider
 import es.joshluq.foundationkit.log.LoggerKit
 import es.joshluq.kmsafe.data.local.dao.OdometerRecordDao
+import es.joshluq.kmsafe.data.local.dao.TripRouteDao
 import es.joshluq.kmsafe.data.local.entity.toDomain
 import es.joshluq.kmsafe.data.local.entity.toEntity
-import es.joshluq.kmsafe.data.mapper.ErrorMapper
-import es.joshluq.kmsafe.data.mapper.toDomain
-import es.joshluq.kmsafe.data.mapper.toIsoString
+import es.joshluq.kmsafe.data.mapper.*
 import es.joshluq.kmsafe.data.remote.api.RentingApiService
 import es.joshluq.kmsafe.data.remote.auth.UserSessionDataSource
 import es.joshluq.kmsafe.data.remote.request.AddOdometerRecordRequest
 import es.joshluq.kmsafe.data.remote.request.UpdateOdometerRecordRequest
+import es.joshluq.kmsafe.data.remote.request.UploadRouteRequest
 import es.joshluq.kmsafe.data.worker.SyncManager
-import es.joshluq.kmsafe.domain.model.Feature
-import es.joshluq.kmsafe.domain.model.KmException
-import es.joshluq.kmsafe.domain.model.OdometerRecord
-import es.joshluq.kmsafe.domain.model.SyncStatus
+import es.joshluq.kmsafe.domain.model.*
 import es.joshluq.kmsafe.domain.repository.HistoryRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
@@ -33,6 +30,7 @@ import javax.inject.Inject
  */
 class HistoryRepositoryImpl @Inject constructor(
     private val dao: OdometerRecordDao,
+    private val routeDao: TripRouteDao,
     private val apiService: RentingApiService,
     private val sessionDataSource: UserSessionDataSource,
     private val syncManager: SyncManager,
@@ -70,17 +68,40 @@ class HistoryRepositoryImpl @Inject constructor(
                             timestamp = record.timestamp.toIsoString(),
                             odometerValue = record.odometerValue,
                             label = record.label,
-                            fuelAmount = record.fuelAmount
+                            fuelConsumed = record.fuelAmount
                         )
                     )
                     if (response.isSuccessful) {
                         val remoteRecordDto = response.body()?.record
                         if (remoteRecordDto != null) {
                             val remoteRecord = remoteRecordDto.toDomain()
+                            
+                            // Swap ID logic for records and associated routes
                             if (remoteRecord.id != record.id) {
+                                logger.d("HistoryRepository", "Swapping record ID from ${record.id} to ${remoteRecord.id}")
+                                
+                                // 1. Check if there was an associated route
+                                routeDao.getRouteByRecordIdSync(record.id)?.let { localRouteEntity ->
+                                    val localRoute = localRouteEntity.toDomain()
+                                    // 2. Delete old and insert with new ID
+                                    routeDao.deleteRouteByRecordId(record.id)
+                                    routeDao.insertRoute(localRoute.copy(recordId = remoteRecord.id).toEntity())
+                                    
+                                    // 3. Sync the route with the new ID
+                                    saveRoute(localRoute.copy(recordId = remoteRecord.id))
+                                }
+                                
                                 dao.deleteRecord(recordToSave.toEntity())
                             }
+                            
                             dao.insertRecord(remoteRecord.copy(syncStatus = SyncStatus.SYNCED).toEntity())
+                            
+                            // If IDs didn't change but we have a route, ensure it's synced
+                            if (remoteRecord.id == record.id && record.hasRoute) {
+                                routeDao.getRouteByRecordIdSync(record.id)?.let { 
+                                    saveRoute(it.toDomain()) 
+                                }
+                            }
                         }
                     } else {
                         syncManager.scheduleSync()
@@ -109,7 +130,7 @@ class HistoryRepositoryImpl @Inject constructor(
                         odometerValue = record.odometerValue,
                         timestamp = record.timestamp.toIsoString(),
                         label = record.label,
-                        fuelAmount = record.fuelAmount
+                        fuelConsumed = record.fuelAmount
                     )
                 )
                 if (response.isSuccessful) {
@@ -171,4 +192,47 @@ class HistoryRepositoryImpl @Inject constructor(
             throw KmException(errorMapper.mapApiResponse(response))
         }
     }.flowOn(dispatchers.io)
+
+    override suspend fun saveRoute(route: TripRoute) = withContext(dispatchers.io) {
+        logger.d("HistoryRepository", "Saving trip route locally for record: ${route.recordId}")
+        routeDao.insertRoute(route.toEntity())
+        
+        // Remote Sync
+        if (sessionDataSource.getSessionState().first() is SessionState.Active && 
+            sessionDataSource.hasFeature(Feature.CLOUD_SYNC.id)) {
+            runCatching {
+                val request = UploadRouteRequest(
+                    encodedPolyline = route.encodedPolyline,
+                    pointCount = route.pointCount
+                )
+                val response = apiService.uploadRoute(route.recordId, request)
+                if (!response.isSuccessful) {
+                    syncManager.scheduleSync()
+                }
+            }.onFailure {
+                syncManager.scheduleSync()
+            }
+        }
+    }
+
+    override fun getRoute(recordId: String): Flow<TripRoute?> {
+        return routeDao.getRouteByRecordId(recordId).map { it?.toDomain() }
+    }
+
+    override suspend fun deleteRoute(recordId: String) = withContext(dispatchers.io) {
+        logger.d("HistoryRepository", "Deleting trip route for record: $recordId")
+        routeDao.deleteRouteByRecordId(recordId)
+        
+        if (sessionDataSource.getSessionState().first() is SessionState.Active && 
+            sessionDataSource.hasFeature(Feature.CLOUD_SYNC.id)) {
+            runCatching {
+                val response = apiService.deleteRoute(recordId)
+                if (!response.isSuccessful) {
+                    syncManager.scheduleSync()
+                }
+            }.onFailure {
+                syncManager.scheduleSync()
+            }
+        }
+    }
 }

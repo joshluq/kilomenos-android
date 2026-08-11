@@ -1,6 +1,7 @@
 package es.joshluq.kmsafe.domain.repository
 
 import es.joshluq.kmsafe.domain.model.OdometerRecord
+import es.joshluq.kmsafe.domain.model.TripRoute
 import kotlinx.coroutines.flow.Flow
 
 /**
@@ -39,4 +40,19 @@ interface HistoryRepository {
      * Synchronizes odometer records for a specific contract with the remote server.
      */
     fun syncHistory(contractId: String): Flow<Unit>
+
+    /**
+     * Saves a trip route linked to a record.
+     */
+    suspend fun saveRoute(route: TripRoute)
+
+    /**
+     * Fetches the trip route for a specific record.
+     */
+    fun getRoute(recordId: String): Flow<TripRoute?>
+
+    /**
+     * Deletes the trip route for a specific record.
+     */
+    suspend fun deleteRoute(recordId: String)
 }

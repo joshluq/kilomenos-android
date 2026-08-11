@@ -6,8 +6,10 @@ import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import es.joshluq.kmsafe.data.local.dao.OdometerRecordDao
 import es.joshluq.kmsafe.data.local.dao.RentingContractDao
+import es.joshluq.kmsafe.data.local.dao.TripRouteDao
 import es.joshluq.kmsafe.data.local.entity.OdometerRecordEntity
 import es.joshluq.kmsafe.data.local.entity.RentingContractEntity
+import es.joshluq.kmsafe.data.local.entity.TripRouteEntity
 
 /**
  * Main Room database for the KiloMenos application.
@@ -15,14 +17,16 @@ import es.joshluq.kmsafe.data.local.entity.RentingContractEntity
 @Database(
     entities = [
         RentingContractEntity::class,
-        OdometerRecordEntity::class
+        OdometerRecordEntity::class,
+        TripRouteEntity::class
     ],
-    version = 9,
+    version = 10,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
     abstract fun rentingContractDao(): RentingContractDao
     abstract fun odometerRecordDao(): OdometerRecordDao
+    abstract fun tripRouteDao(): TripRouteDao
 
     companion object {
         /**
@@ -262,6 +266,29 @@ abstract class AppDatabase : RoomDatabase() {
         val MIGRATION_8_9 = object : Migration(8, 9) {
             override fun migrate(db: SupportSQLiteDatabase) {
                 db.execSQL("ALTER TABLE renting_contract ADD COLUMN bluetoothDeviceAddress TEXT")
+            }
+        }
+        /**
+         * Migration from version 9 to 10:
+         * - Add 'hasRoute' column to 'odometer_record' table.
+         * - Create 'trip_route' table for storing encoded polylines.
+         */
+        val MIGRATION_9_10 = object : Migration(9, 10) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                // 1. Add column to odometer_record
+                db.execSQL("ALTER TABLE odometer_record ADD COLUMN hasRoute INTEGER NOT NULL DEFAULT 0")
+
+                // 2. Create trip_route table
+                db.execSQL(
+                    """
+                    CREATE TABLE trip_route (
+                        recordId TEXT PRIMARY KEY NOT NULL,
+                        encodedPolyline TEXT NOT NULL,
+                        pointCount INTEGER NOT NULL,
+                        FOREIGN KEY(recordId) REFERENCES odometer_record(id) ON DELETE CASCADE
+                    )
+                    """.trimIndent()
+                )
             }
         }
     }

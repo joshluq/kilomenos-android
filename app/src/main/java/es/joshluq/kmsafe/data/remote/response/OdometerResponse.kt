@@ -35,6 +35,9 @@ class OdometerRecordResponse {
     @JsonProperty("label")
     val label: String? = null
 
-    @JsonProperty("fuel_amount")
-    val fuelAmount: Double? = null
+    @JsonProperty("fuel_consumed")
+    val fuelConsumed: Double? = null
+
+    @JsonProperty("has_route")
+    val hasRoute: Boolean? = null
 }

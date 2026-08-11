@@ -41,7 +41,8 @@ fun OdometerRecordResponse.toDomain(): OdometerRecord {
         odometerValue = odometerValue ?: 0,
         isInitialRecord = isInitialRecord ?: false,
         label = label,
-        fuelAmount = fuelAmount
+        fuelAmount = fuelConsumed,
+        hasRoute = hasRoute ?: false
     )
 }
 
