@@ -16,6 +16,7 @@ import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationCallback
+import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority.PRIORITY_HIGH_ACCURACY
@@ -115,7 +116,7 @@ class LocationTrackingService : Service() {
                 trackingRepository.startTracking()
             }
 
-            val locationRequest = com.google.android.gms.location.LocationRequest.Builder(
+            val locationRequest = LocationRequest.Builder(
                 PRIORITY_HIGH_ACCURACY,
                 3000L
             ).setMinUpdateIntervalMillis(2000L).build()

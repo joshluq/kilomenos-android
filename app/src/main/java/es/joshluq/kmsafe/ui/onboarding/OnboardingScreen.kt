@@ -189,7 +189,9 @@ fun OnboardingScreen(
         containerColor = CanvasKitTheme.colors.backgroundSecondary,
         contentWindowInsets = WindowInsets()
     ) { innerPadding ->
-        Box(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
+        Box(modifier = Modifier
+            .fillMaxSize()
+            .padding(innerPadding)) {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -491,29 +493,44 @@ private fun EditableContent(
                 enabled = true
             )
         }
-
-        OnboardingTextField(
-            label = stringResource(R.string.onboarding_current_odometer_label),
-            value = state.currentOdometer,
-            onValueChange = { onEvent(Event.OnCurrentOdometerChanged(it)) },
-            errorMessage = state.currentOdometerError?.asString(),
-            trailingIcon = {
-                Text(
-                    text = stringResource(R.string.onboarding_km_suffix),
-                    color = CanvasKitTheme.colors.brandAccent
-                )
-            },
-            placeholder = stringResource(R.string.onboarding_current_odometer_placeholder),
-            keyboardOptions = KeyboardOptions(
-                keyboardType = KeyboardType.Number,
-                imeAction = ImeAction.Done
-            ),
-            keyboardActions = KeyboardActions(onDone = { 
-                keyboardController?.hide()
-                focusManager.clearFocus()
-            }),
-            enabled = true
-        )
+        if (state.isEditMode) {
+            OnboardingDisplayField(
+                label = stringResource(R.string.onboarding_current_odometer_label),
+                value = state.currentOdometer,
+                suffix = stringResource(R.string.onboarding_km_suffix),
+                trailingIcon = {
+                    Icon(
+                        imageVector = Icons.Default.Lock,
+                        contentDescription = null,
+                        tint = CanvasKitTheme.colors.textSecondary,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+            )
+        } else {
+            OnboardingTextField(
+                label = stringResource(R.string.onboarding_current_odometer_label),
+                value = state.currentOdometer,
+                onValueChange = { onEvent(Event.OnCurrentOdometerChanged(it)) },
+                errorMessage = state.currentOdometerError?.asString(),
+                trailingIcon = {
+                    Text(
+                        text = stringResource(R.string.onboarding_km_suffix),
+                        color = CanvasKitTheme.colors.brandAccent
+                    )
+                },
+                placeholder = stringResource(R.string.onboarding_current_odometer_placeholder),
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Number,
+                    imeAction = ImeAction.Done
+                ),
+                keyboardActions = KeyboardActions(onDone = {
+                    keyboardController?.hide()
+                    focusManager.clearFocus()
+                }),
+                enabled = true
+            )
+        }
 
         OnboardingDisplayField(
             label = stringResource(R.string.onboarding_bluetooth_label),
@@ -594,8 +611,8 @@ fun VehicleImagePicker(
                     error = {
                         Box(
                             modifier = Modifier
-                                    .fillMaxSize()
-                                    .background(CanvasKitTheme.colors.error.copy(alpha = 0.05f)),
+                                .fillMaxSize()
+                                .background(CanvasKitTheme.colors.error.copy(alpha = 0.05f)),
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(
@@ -620,8 +637,8 @@ fun VehicleImagePicker(
                     error = {
                         Box(
                             modifier = Modifier
-                                    .fillMaxSize()
-                                    .background(CanvasKitTheme.colors.error.copy(alpha = 0.05f)),
+                                .fillMaxSize()
+                                .background(CanvasKitTheme.colors.error.copy(alpha = 0.05f)),
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(
@@ -671,26 +688,26 @@ fun OnboardingDisplayField(
         }
         Box(
             modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp)
-                    .border(
-                        width = 1.dp,
-                        color = if (errorMessage != null) colors.error else colors.borderSubtle,
-                        shape = CanvasKitTheme.shapes.pill
-                    )
-                    .clip(CanvasKitTheme.shapes.pill)
-                    .then(
-                        if (onClick != null) {
-                            Modifier.safeClickable(
-                                interactionSource = interactionSource,
-                                indication = null, // To remove the dark flicker as requested
-                                onClick = onClick
-                            )
-                        } else {
-                            Modifier
-                        }
-                    )
-                    .padding(horizontal = 24.dp),
+                .fillMaxWidth()
+                .height(56.dp)
+                .border(
+                    width = 1.dp,
+                    color = if (errorMessage != null) colors.error else colors.borderSubtle,
+                    shape = CanvasKitTheme.shapes.pill
+                )
+                .clip(CanvasKitTheme.shapes.pill)
+                .then(
+                    if (onClick != null) {
+                        Modifier.safeClickable(
+                            interactionSource = interactionSource,
+                            indication = null, // To remove the dark flicker as requested
+                            onClick = onClick
+                        )
+                    } else {
+                        Modifier
+                    }
+                )
+                .padding(horizontal = 24.dp),
             contentAlignment = Alignment.CenterStart
         ) {
             Row(
@@ -790,8 +807,8 @@ private fun BluetoothPickerBottomSheet(
     ) {
         Column(
             modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(24.dp),
+                .fillMaxWidth()
+                .padding(24.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             Text(
