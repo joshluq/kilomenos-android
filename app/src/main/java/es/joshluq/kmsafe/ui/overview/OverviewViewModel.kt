@@ -150,6 +150,8 @@ class OverviewViewModel @Inject constructor(
                 val entitlements = entitlementsOutput.entitlements
                 val prefs = preferencesOutput.preferences
                 
+                logger.i("OverviewViewModel", "Initial data combined: SubLevel=${entitlements.subscriptionLevel}, AutoTracking=${prefs.autoTrackingEnabled}")
+                
                 val hasPremiumAccess = entitlements.subscriptionLevel == SubscriptionLevel.PREMIUM
                 val isTrialable = entitlements.isFeatureTrialable(Feature.AUTO_TRACKING)
 
@@ -183,6 +185,7 @@ class OverviewViewModel @Inject constructor(
             .onEach { output ->
                 when (output) {
                     is GetOverviewDataUseCase.Output.Success -> {
+                        logger.i("OverviewViewModel", "Active contract loaded: ${output.contract?.vehicleName ?: "No vehicle"}")
                         if (output.contract != null) {
                             calculateMetrics(output.contract, output.actualKmsDrivenSinceStart)
                             updateState { copy(isSyncPending = output.isSyncPending) }
@@ -190,11 +193,14 @@ class OverviewViewModel @Inject constructor(
                             updateState { copy(isLoading = false, renting = null) }
                         }
                     }
-                    is GetOverviewDataUseCase.Output.Failure -> updateState { 
-                        copy(
-                            isLoading = false,
-                            error = TextProvider.Resource(R.string.history_load_error)
-                        ) 
+                    is GetOverviewDataUseCase.Output.Failure -> {
+                        logger.e("OverviewViewModel", "Critical: Failed to load overview data")
+                        updateState { 
+                            copy(
+                                isLoading = false,
+                                error = TextProvider.Resource(R.string.history_load_error)
+                            ) 
+                        }
                     }
                     is GetOverviewDataUseCase.Output.Progress -> updateState { copy(isLoading = true) }
                 }
@@ -296,6 +302,8 @@ class OverviewViewModel @Inject constructor(
         val label = state.value.newRecordLabel.takeIf { it.isNotBlank() }
         val fuelAmount = state.value.newRecordFuel.toDoubleOrNull()
 
+        logger.i("OverviewViewModel", "Initiating odometer save: $odometerValue km, Label=$label")
+
         addOdometerRecordUseCase(
             AddOdometerRecordUseCase.Input(
                 odometerValue = odometerValue,
@@ -308,6 +316,7 @@ class OverviewViewModel @Inject constructor(
                 when (output) {
                     is AddOdometerRecordUseCase.Output.Progress -> updateState { copy(isSaving = true) }
                     is AddOdometerRecordUseCase.Output.Success -> {
+                        logger.i("OverviewViewModel", "Odometer record saved successfully")
                         analytics.track(AnalyticsEvent.Custom("odometer_updated", mapOf("value" to odometerValue)))
                         if (fuelAmount != null) {
                             analytics.track(AnalyticsEvent.Custom("fuel_entry_added", mapOf("amount" to fuelAmount)))
@@ -337,6 +346,9 @@ class OverviewViewModel @Inject constructor(
         val monthlyBudget = renting.totalKms.toDouble() / renting.durationMonths
         val theoreticalKms = daysPassed * baseDailyBudget
         val balance = theoreticalKms - actualKmsDrivenSinceStart
+        
+        logger.d("OverviewViewModel", "Metrics re-calculated for ${renting.vehicleName}: Balance=${balance.toInt()}, DaysPassed=${daysPassed.toInt()}")
+
         val timeUsedPercentage = (daysPassed / totalDays).coerceIn(0.0, 1.0).toFloat()
         val kmsUsedPercentage = (actualKmsDrivenSinceStart / renting.totalKms).coerceIn(0.0, 1.0).toFloat()
         val differencePercentage = ((timeUsedPercentage - kmsUsedPercentage) * 100)
@@ -382,6 +394,7 @@ class OverviewViewModel @Inject constructor(
     }
 
     private fun handleStopTracking() {
+        logger.d("OverviewViewModel", "handleStopTracking called. Launching Effect.StopTrackingService")
         analytics.track(AnalyticsEvent.Custom("tracking_stopped", mapOf("distance" to state.value.trackedDistance)))
         launchEffect(Effect.StopTrackingService)
     }
@@ -404,14 +417,17 @@ class OverviewViewModel @Inject constructor(
     }
 
     private fun handleAutoTrackingToggled(enabled: Boolean) {
+        logger.i("OverviewViewModel", "Auto-tracking preference toggled to: $enabled")
         updatePreferencesUseCase(UpdatePreferencesUseCase.Input(autoTrackingEnabled = enabled))
             .onEach { output ->
                 if (output is UpdatePreferencesUseCase.Output.Success) {
                     updateState { copy(autoTrackingEnabled = enabled) }
                     
                     if (enabled) {
+                        logger.d("OverviewViewModel", "Starting auto-tracking sensors")
                         startAutoTrackingUseCase(StartAutoTrackingUseCase.Input).launchIn(viewModelScope)
                     } else {
+                        logger.d("OverviewViewModel", "Stopping auto-tracking sensors")
                         stopAutoTrackingUseCase(StopAutoTrackingUseCase.Input).launchIn(viewModelScope)
                     }
                     

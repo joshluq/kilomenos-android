@@ -1,5 +1,6 @@
 package es.joshluq.kmsafe.data.local.datasource
 
+import es.joshluq.foundationkit.log.LoggerKit
 import es.joshluq.foundationkit.provider.StorageProvider
 import es.joshluq.foundationkit.provider.read
 import es.joshluq.foundationkit.provider.save
@@ -18,7 +19,8 @@ import javax.inject.Singleton
 @OptIn(ExperimentalCoroutinesApi::class)
 @Singleton
 class TrackingDataSource @Inject constructor(
-    private val storage: StorageProvider
+    private val storage: StorageProvider,
+    private val logger: LoggerKit
 ) {
     private val _updates = MutableSharedFlow<Unit>(replay = 1).apply { 
         tryEmit(Unit) 
@@ -56,11 +58,13 @@ class TrackingDataSource @Inject constructor(
     }
 
     suspend fun stopTracking() {
+        logger.d("TrackingDataSource", "stopTracking: setting IS_TRACKING to false")
         storage.save(KEY_IS_TRACKING, false)
         _updates.emit(Unit)
     }
 
     suspend fun clear() {
+        logger.d("TrackingDataSource", "clear: deleting tracking keys")
         storage.delete(KEY_IS_TRACKING)
         storage.delete(KEY_START_TIME)
         storage.delete(KEY_DISTANCE)

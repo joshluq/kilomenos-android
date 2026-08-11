@@ -88,6 +88,7 @@ class LocationTrackingService : Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        logger.d("LocationService", "onStartCommand received with action: ${intent?.action}")
         when (intent?.action) {
             ACTION_START -> startTracking()
             ACTION_STOP -> stopTracking()
@@ -179,12 +180,19 @@ class LocationTrackingService : Service() {
     }
 
     private fun stopTracking() {
+        logger.i("LocationService", "Stopping tracking process...")
         fusedLocationClient.removeLocationUpdates(locationCallback)
+        
         serviceScope.launch {
+            logger.d("LocationService", "Calling repository stopTracking")
             trackingRepository.stopTracking()
+            logger.d("LocationService", "Repository stopTracking call finished")
+            
+            // Move cleanup inside the scope to ensure order
+            stopForeground(STOP_FOREGROUND_REMOVE)
+            logger.d("LocationService", "Foreground removed, calling stopSelf")
+            stopSelf()
         }
-        stopForeground(STOP_FOREGROUND_REMOVE)
-        stopSelf()
     }
 
     private fun createNotification(distanceMeters: Double): android.app.Notification {
