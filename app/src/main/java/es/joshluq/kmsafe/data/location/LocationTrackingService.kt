@@ -31,6 +31,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
@@ -94,33 +95,41 @@ class LocationTrackingService : Service() {
     }
 
     private fun startTracking() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            startForeground(
-                NOTIFICATION_ID,
-                createNotification(0.0),
-                ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION
-            )
-        } else {
-            startForeground(NOTIFICATION_ID, createNotification(0.0))
-        }
-        
-        val locationRequest = com.google.android.gms.location.LocationRequest.Builder(
-            PRIORITY_HIGH_ACCURACY,
-            3000L
-        ).setMinUpdateIntervalMillis(2000L).build()
+        serviceScope.launch {
+            // Check if already tracking in repository to avoid resetting distance to 0
+            val isAlreadyTracking = trackingRepository.isTracking.first()
 
-        try {
-            fusedLocationClient.requestLocationUpdates(
-                locationRequest,
-                locationCallback,
-                Looper.getMainLooper()
-            )
-            serviceScope.launch {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                startForeground(
+                    NOTIFICATION_ID,
+                    createNotification(0.0),
+                    ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION
+                )
+            } else {
+                startForeground(NOTIFICATION_ID, createNotification(0.0))
+            }
+
+            if (isAlreadyTracking) {
+                logger.d("LocationService", "Service started but already tracking in repository. Skipping re-initialization.")
+            } else {
                 trackingRepository.startTracking()
             }
-        } catch (e: SecurityException) {
-            logger.e("LocationService", "Permission missing for tracking", e)
-            stopSelf()
+
+            val locationRequest = com.google.android.gms.location.LocationRequest.Builder(
+                PRIORITY_HIGH_ACCURACY,
+                3000L
+            ).setMinUpdateIntervalMillis(2000L).build()
+
+            try {
+                fusedLocationClient.requestLocationUpdates(
+                    locationRequest,
+                    locationCallback,
+                    Looper.getMainLooper()
+                )
+            } catch (e: SecurityException) {
+                logger.e("LocationService", "Permission missing for tracking", e)
+                stopSelf()
+            }
         }
     }
 
@@ -184,6 +193,14 @@ class LocationTrackingService : Service() {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
+        val stopIntent = Intent(this, LocationTrackingService::class.java).apply {
+            action = ACTION_STOP
+        }
+        val stopPendingIntent = PendingIntent.getService(
+            this, 0, stopIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
         val kms = distanceMeters / 1000.0
         val contentText = getString(R.string.tracking_notification_content, kms)
 
@@ -193,6 +210,11 @@ class LocationTrackingService : Service() {
             .setSmallIcon(R.drawable.ic_launcher_foreground) // Use app icon
             .setOngoing(true)
             .setContentIntent(pendingIntent)
+            .addAction(
+                R.drawable.ic_launcher_foreground, // Replace with appropriate stop icon if available
+                getString(R.string.tracking_card_stop_action),
+                stopPendingIntent
+            )
             .build()
     }
 

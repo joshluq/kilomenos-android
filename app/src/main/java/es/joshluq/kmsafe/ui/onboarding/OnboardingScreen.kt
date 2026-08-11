@@ -3,6 +3,8 @@ package es.joshluq.kmsafe.ui.onboarding
 import android.Manifest
 import android.annotation.SuppressLint
 import android.bluetooth.BluetoothAdapter
+import android.bluetooth.BluetoothManager
+import android.content.Context
 import android.content.res.Configuration
 import android.net.Uri
 import android.os.Build
@@ -776,7 +778,8 @@ private fun BluetoothPickerBottomSheet(
     onDeviceSelected: (String, String) -> Unit,
     sheetState: SheetState
 ) {
-    val bluetoothAdapter: BluetoothAdapter? = remember { BluetoothAdapter.getDefaultAdapter() }
+    val context = LocalContext.current
+    val bluetoothAdapter: BluetoothAdapter? = remember { (context.getSystemService(Context.BLUETOOTH_SERVICE) as? BluetoothManager)?.adapter }
     val bondedDevices = remember {
         bluetoothAdapter?.bondedDevices?.map { it.name to it.address } ?: emptyList()
     }

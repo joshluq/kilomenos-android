@@ -11,5 +11,6 @@ data class UpdateRentingContractRequest(
     @JsonProperty("duration_months") val durationMonths: Int,
     @JsonProperty("total_kms") val totalKms: Int,
     @JsonProperty("start_odometer") val startOdometer: Int,
-    @JsonProperty("vehicle_image_url") val vehicleImageUrl: String? = null
+    @JsonProperty("vehicle_image_url") val vehicleImageUrl: String? = null,
+    @JsonProperty("bluetooth_device_address") val bluetoothDeviceAddress: String? = null
 )

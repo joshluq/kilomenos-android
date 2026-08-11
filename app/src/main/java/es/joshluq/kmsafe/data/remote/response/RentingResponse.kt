@@ -46,4 +46,7 @@ class RentingContractResponse {
 
     @JsonProperty("vehicle_image_url")
     val vehicleImageUrl: String? = null
+
+    @JsonProperty("bluetooth_device_address")
+    val bluetoothDeviceAddress: String? = null
 }

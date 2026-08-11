@@ -72,7 +72,8 @@ class RentingRepositoryImpl @Inject constructor(
                         startOdometer = contract.startOdometer,
                         currentOdometer = contract.currentOdometer,
                         isSelected = contract.isSelected,
-                        vehicleImageUrl = contract.vehicleImageUrl
+                        vehicleImageUrl = contract.vehicleImageUrl,
+                        bluetoothDeviceAddress = contract.bluetoothDeviceAddress
                     )
                     val response = apiService.createContract(request)
                     if (response.isSuccessful) {
@@ -123,7 +124,8 @@ class RentingRepositoryImpl @Inject constructor(
                     durationMonths = contract.durationMonths,
                     totalKms = contract.totalKms,
                     startOdometer = contract.startOdometer,
-                    vehicleImageUrl = contract.vehicleImageUrl
+                    vehicleImageUrl = contract.vehicleImageUrl,
+                    bluetoothDeviceAddress = contract.bluetoothDeviceAddress
                 )
                 val response = apiService.updateContract(contract.id, request)
                 if (response.isSuccessful) {

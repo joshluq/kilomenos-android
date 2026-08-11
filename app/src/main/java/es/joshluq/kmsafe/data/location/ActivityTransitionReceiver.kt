@@ -1,6 +1,5 @@
 package es.joshluq.kmsafe.data.location
 
-import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothManager
 import android.bluetooth.BluetoothProfile
 import android.content.BroadcastReceiver
@@ -14,16 +13,22 @@ import dagger.hilt.android.AndroidEntryPoint
 import es.joshluq.foundationkit.log.LoggerKit
 import es.joshluq.kmsafe.di.CheckFeatureAccess
 import es.joshluq.kmsafe.di.GetRenting
+import es.joshluq.kmsafe.di.ObserveTrackingState
 import es.joshluq.kmsafe.domain.model.Feature
 import es.joshluq.kmsafe.domain.usecase.CheckFeatureAccessUseCase
 import es.joshluq.kmsafe.domain.usecase.GetRentingContractUseCase
+import es.joshluq.kmsafe.domain.usecase.ObserveTrackingStateUseCase
 import es.joshluq.foundationkit.usecase.FlowUseCase
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlin.coroutines.resume
 import javax.inject.Inject
+import kotlin.time.Duration.Companion.milliseconds
 
 /**
  * Receiver that handles transitions between physical activities (e.g., STILL to IN_VEHICLE).
@@ -41,6 +46,10 @@ class ActivityTransitionReceiver : BroadcastReceiver() {
     @Inject
     @GetRenting
     lateinit var getRentingContractUseCase: @JvmSuppressWildcards FlowUseCase<GetRentingContractUseCase.Input, GetRentingContractUseCase.Output>
+
+    @Inject
+    @ObserveTrackingState
+    lateinit var observeTrackingStateUseCase: @JvmSuppressWildcards FlowUseCase<ObserveTrackingStateUseCase.Input, ObserveTrackingStateUseCase.Output>
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
@@ -66,6 +75,16 @@ class ActivityTransitionReceiver : BroadcastReceiver() {
 
                 if (!isGranted) {
                     return@launch
+                }
+
+                // SECURITY GUARD: If already tracking or waiting for confirmation, don't restart.
+                // This prevents the user from being stuck in "Active Tracking" mode in the gym.
+                val trackingOutput = observeTrackingStateUseCase(ObserveTrackingStateUseCase.Input).first()
+                if (trackingOutput is ObserveTrackingStateUseCase.Output.Success) {
+                    if (trackingOutput.isTracking || trackingOutput.trackedDistance > 0.0) {
+                        logger.d("ActivityReceiver", "Tracking active or confirmation pending. Ignoring ENTER event.")
+                        return@launch
+                    }
                 }
 
                 // Bluetooth Validation: If a device is paired, check if it's connected
@@ -114,19 +133,47 @@ class ActivityTransitionReceiver : BroadcastReceiver() {
         }
     }
 
-    private fun isBluetoothDeviceConnected(context: Context, macAddress: String): Boolean {
-        logger.d("ActivityReceiver", "Checking if car Bluetooth is connected ($macAddress)")
+    private suspend fun isBluetoothDeviceConnected(context: Context, macAddress: String): Boolean {
+        val startTime = System.currentTimeMillis()
+        logger.d("ActivityReceiver", "Checking car Bluetooth ($macAddress)")
+        
         val bluetoothManager = context.getSystemService(Context.BLUETOOTH_SERVICE) as? BluetoothManager
         val adapter = bluetoothManager?.adapter ?: return false
         
-        return try {
-            val connectedA2dp = adapter.getProfileConnectionState(BluetoothProfile.A2DP) == BluetoothAdapter.STATE_CONNECTED
-            val connectedHeadset = adapter.getProfileConnectionState(BluetoothProfile.HEADSET) == BluetoothAdapter.STATE_CONNECTED
+        if (!adapter.isEnabled) {
+            logger.w("ActivityReceiver", "Bluetooth is disabled")
+            return false
+        }
+
+        return suspendCancellableCoroutine { continuation ->
+            val profileListener = object : BluetoothProfile.ServiceListener {
+                override fun onServiceConnected(profile: Int, proxy: BluetoothProfile) {
+                    val isMacConnected = proxy.connectedDevices.any { 
+                        it.address.equals(macAddress, ignoreCase = true) 
+                    }
+                    
+                    if (isMacConnected && !continuation.isCompleted) {
+                        val duration = System.currentTimeMillis() - startTime
+                        logger.i("ActivityReceiver", "Bluetooth CONFIRMED ($macAddress) in ${duration}ms")
+                        continuation.resume(true)
+                    }
+                    
+                    adapter.closeProfileProxy(profile, proxy)
+                }
+
+                override fun onServiceDisconnected(profile: Int) {}
+            }
+
+            adapter.getProfileProxy(context, profileListener, BluetoothProfile.HEADSET)
+            adapter.getProfileProxy(context, profileListener, BluetoothProfile.A2DP)
             
-            connectedA2dp || connectedHeadset
-        } catch (e: SecurityException) {
-            logger.e("ActivityReceiver", "Bluetooth permission missing in background", e)
-            true // Fallback to true if we can't check, to not break auto-tracking
+            scope.launch {
+                delay(2000.milliseconds)
+                if (!continuation.isCompleted) {
+                    logger.w("ActivityReceiver", "Bluetooth check TIMEOUT after 2000ms. Device ($macAddress) not found.")
+                    continuation.resume(false)
+                }
+            }
         }
     }
 }
