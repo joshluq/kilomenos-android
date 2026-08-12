@@ -15,6 +15,7 @@ import es.joshluq.canvaskit.foundations.theme.CanvasKitTheme
  */
 @Composable
 fun RentingStepLayout(
+    modifier: Modifier = Modifier,
     title: String,
     description: String? = null,
     primaryActionLabel: String,
@@ -22,7 +23,6 @@ fun RentingStepLayout(
     primaryActionEnabled: Boolean = true,
     primaryActionLoading: Boolean = false,
     secondaryAction: @Composable (ColumnScope.() -> Unit)? = null,
-    modifier: Modifier = Modifier,
     content: @Composable ColumnScope.() -> Unit
 ) {
     Column(

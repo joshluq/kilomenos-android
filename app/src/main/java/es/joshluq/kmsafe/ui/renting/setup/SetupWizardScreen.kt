@@ -44,7 +44,6 @@ import es.joshluq.canvaskit.foundations.theme.CanvasKitTheme
 import es.joshluq.kmsafe.R
 import es.joshluq.kmsafe.domain.model.SubscriptionLevel
 import es.joshluq.kmsafe.ui.renting.components.*
-import es.joshluq.kmsafe.ui.util.safeClick
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -349,7 +348,7 @@ private fun SmartActivationStep(state: State, onEvent: (Event) -> Unit) {
                 )
                 Spacer(modifier = Modifier.height(16.dp))
                 Text(
-                    text = state.bluetoothDeviceName ?: state.bluetoothDeviceAddress ?: "",
+                    text = state.bluetoothDeviceName ?: state.bluetoothDeviceAddress,
                     style = CanvasKitTheme.typography.headingMedium,
                     fontWeight = FontWeight.Bold
                 )

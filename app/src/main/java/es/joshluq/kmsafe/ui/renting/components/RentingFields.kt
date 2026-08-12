@@ -23,6 +23,7 @@ import es.joshluq.kmsafe.ui.util.safeClickable
  */
 @Composable
 fun RentingTextField(
+    modifier: Modifier = Modifier,
     label: String,
     value: String,
     onValueChange: (String) -> Unit,
@@ -32,8 +33,7 @@ fun RentingTextField(
     trailingIcon: @Composable (() -> Unit)? = null,
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
     keyboardActions: KeyboardActions = KeyboardActions.Default,
-    enabled: Boolean = true,
-    modifier: Modifier = Modifier
+    enabled: Boolean = true
 ) {
     val spacing = CanvasKitTheme.spacing
     Column(
@@ -62,14 +62,14 @@ fun RentingTextField(
  */
 @Composable
 fun RentingDisplayField(
+    modifier: Modifier = Modifier,
     label: String,
     value: String,
     placeholder: String? = null,
     suffix: String? = null,
     onClick: (() -> Unit)? = null,
     trailingIcon: @Composable (() -> Unit)? = null,
-    errorMessage: String? = null,
-    modifier: Modifier = Modifier
+    errorMessage: String? = null
 ) {
     val colors = CanvasKitTheme.colors
     val spacing = CanvasKitTheme.spacing

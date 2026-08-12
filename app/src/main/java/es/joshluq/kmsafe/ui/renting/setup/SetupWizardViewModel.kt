@@ -169,7 +169,7 @@ class SetupWizardViewModel @Inject constructor(
     private fun saveContract() {
         val s = state.value
         val sdf = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
-        val startTime = try { sdf.parse(s.startDate)?.time ?: 0L } catch (e: Exception) { 0L }
+        val startTime = runCatching { sdf.parse(s.startDate)?.time ?: 0L }.getOrDefault(0L)
         
         val initialContract = RentingContract(
             vehicleName = s.vehicleName,

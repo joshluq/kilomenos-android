@@ -29,11 +29,11 @@ import es.joshluq.kmsafe.R
  */
 @Composable
 fun VehiclePhotoSelector(
+    modifier: Modifier = Modifier,
     imageUrl: String?,
     selectedUri: Uri?,
     isReadOnly: Boolean = false,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    onClick: () -> Unit
 ) {
     val shape = RoundedCornerShape(16.dp)
     Box(

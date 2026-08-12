@@ -13,7 +13,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import es.joshluq.canvaskit.components.buttons.CanvasKitButton
@@ -24,7 +23,6 @@ import es.joshluq.canvaskit.components.layout.CanvasKitLoadingScaffold
 import es.joshluq.canvaskit.components.navigation.CanvasKitTopBar
 import es.joshluq.canvaskit.foundations.theme.CanvasKitTheme
 import es.joshluq.kmsafe.R
-import es.joshluq.kmsafe.domain.model.RentingContract
 import es.joshluq.kmsafe.ui.renting.components.ContractMetricCard
 import es.joshluq.kmsafe.ui.renting.components.RentingHeroHeader
 import es.joshluq.kmsafe.ui.util.safeClick
