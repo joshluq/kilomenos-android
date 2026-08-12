@@ -318,6 +318,13 @@ annotation class GetEntitlements
 annotation class StartTrial
 
 /**
+ * Qualifier for the GetImageBytesUseCase.
+ */
+@Qualifier
+@Retention(AnnotationRetention.BINARY)
+annotation class GetImageBytes
+
+/**
  * Qualifier for the GetRouteUseCase.
  */
 @Qualifier

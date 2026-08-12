@@ -1,40 +1,43 @@
 package es.joshluq.kmsafe.ui.renting.setup
 
-import android.content.Context
 import android.net.Uri
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import dagger.hilt.android.qualifiers.ApplicationContext
 import es.joshluq.analyticskit.domain.model.AnalyticsEvent
 import es.joshluq.analyticskit.sdk.AnalyticskitManager
 import es.joshluq.foundationkit.log.LoggerKit
 import es.joshluq.foundationkit.text.TextProvider
 import es.joshluq.foundationkit.usecase.FlowUseCase
+import es.joshluq.foundationkit.usecase.UseCase
 import es.joshluq.foundationkit.viewmodel.ScreenViewModel
 import es.joshluq.kmsafe.R
 import es.joshluq.kmsafe.di.GetEntitlements
+import es.joshluq.kmsafe.di.GetImageBytes
 import es.joshluq.kmsafe.di.SaveInitialContract
 import es.joshluq.kmsafe.di.UploadVehicleImage
 import es.joshluq.kmsafe.domain.model.RentingContract
 import es.joshluq.kmsafe.domain.model.SyncStatus
 import es.joshluq.kmsafe.domain.usecase.GetEntitlementsUseCase
+import es.joshluq.kmsafe.domain.usecase.GetImageBytesUseCase
 import es.joshluq.kmsafe.domain.usecase.SaveInitialContractUseCase
 import es.joshluq.kmsafe.domain.usecase.UploadVehicleImageUseCase
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
 import javax.inject.Inject
 
 @HiltViewModel
 class SetupWizardViewModel @Inject constructor(
-    @ApplicationContext private val context: Context,
     @param:SaveInitialContract private val saveInitialContractUseCase:
     @JvmSuppressWildcards FlowUseCase<SaveInitialContractUseCase.Input, SaveInitialContractUseCase.Output>,
     @param:GetEntitlements private val getEntitlementsUseCase:
     @JvmSuppressWildcards FlowUseCase<GetEntitlementsUseCase.Input, GetEntitlementsUseCase.Output>,
     @param:UploadVehicleImage private val uploadVehicleImage:
     @JvmSuppressWildcards FlowUseCase<UploadVehicleImageUseCase.Input, UploadVehicleImageUseCase.Output>,
+    @param:GetImageBytes private val getImageBytesUseCase:
+    @JvmSuppressWildcards UseCase<GetImageBytesUseCase.Input, GetImageBytesUseCase.Output>,
     private val analytics: AnalyticskitManager,
     private val logger: LoggerKit
 ) : ScreenViewModel<State, Event, Effect>() {
@@ -179,6 +182,7 @@ class SetupWizardViewModel @Inject constructor(
             startOdometer = s.startOdometer.toIntOrNull() ?: 0,
             currentOdometer = s.currentOdometer.toIntOrNull() ?: s.startOdometer.toIntOrNull() ?: 0,
             bluetoothDeviceAddress = s.bluetoothDeviceAddress,
+            bluetoothDeviceName = s.bluetoothDeviceName,
             excessDistancePrice = s.excessDistancePrice.toDoubleOrNull(),
             courtesyMarginKms = s.courtesyMarginKms.toIntOrNull() ?: 0,
             syncStatus = SyncStatus.PENDING
@@ -186,55 +190,52 @@ class SetupWizardViewModel @Inject constructor(
 
         val imageUri = s.selectedImageUri
         
-        val saveFlow = if (imageUri != null) {
-            val bytes = readBytes(imageUri)
-            if (bytes != null) {
-                val fileName = "vehicle_${UUID.randomUUID()}.jpg"
-                uploadVehicleImage(UploadVehicleImageUseCase.Input(bytes, fileName))
-                    .flatMapLatest { output ->
-                        when (output) {
-                            is UploadVehicleImageUseCase.Output.Success -> {
-                                saveInitialContractUseCase(SaveInitialContractUseCase.Input(initialContract.copy(vehicleImageUrl = output.imageUrl)))
+        viewModelScope.launch {
+            updateState { copy(isLoading = true) }
+            
+            val saveFlow = if (imageUri != null) {
+                val bytesResult = getImageBytesUseCase(GetImageBytesUseCase.Input(imageUri.toString()))
+                val bytes = (bytesResult.getOrNull() as? GetImageBytesUseCase.Output.Success)?.bytes
+                
+                if (bytes != null) {
+                    val fileName = "vehicle_${UUID.randomUUID()}.jpg"
+                    uploadVehicleImage(UploadVehicleImageUseCase.Input(bytes, fileName))
+                        .flatMapLatest { output ->
+                            when (output) {
+                                is UploadVehicleImageUseCase.Output.Success -> {
+                                    saveInitialContractUseCase(SaveInitialContractUseCase.Input(initialContract.copy(vehicleImageUrl = output.imageUrl)))
+                                }
+                                is UploadVehicleImageUseCase.Output.Failure -> throw Exception("Upload failed")
+                                else -> emptyFlow()
                             }
-                            is UploadVehicleImageUseCase.Output.Failure -> throw Exception("Upload failed")
-                            else -> emptyFlow()
                         }
-                    }
+                } else {
+                    saveInitialContractUseCase(SaveInitialContractUseCase.Input(initialContract))
+                }
             } else {
                 saveInitialContractUseCase(SaveInitialContractUseCase.Input(initialContract))
             }
-        } else {
-            saveInitialContractUseCase(SaveInitialContractUseCase.Input(initialContract))
-        }
 
-        saveFlow
-            .onStart { updateState { copy(isLoading = true) } }
-            .catch {
-                logger.e("SetupWizardVM", "Error saving contract", it)
-                updateState { copy(isLoading = false, error = TextProvider.Resource(R.string.onboarding_register_error)) }
-            }
-            .onEach { output ->
-                when (output) {
-                    is SaveInitialContractUseCase.Output.Success -> {
-                        analytics.track(AnalyticsEvent.Custom("renting_setup_completed", mapOf(
-                            "has_bluetooth" to (s.bluetoothDeviceAddress != null),
-                            "has_advanced" to (s.excessDistancePrice.isNotBlank())
-                        )))
-                        launchEffect(Effect.NavigateToDashboard)
-                    }
-                    is SaveInitialContractUseCase.Output.Failure -> {
-                        updateState { copy(isLoading = false, error = TextProvider.Resource(R.string.onboarding_register_error)) }
-                    }
-                    else -> {}
+            saveFlow
+                .catch {
+                    logger.e("SetupWizardVM", "Error saving contract", it)
+                    updateState { copy(isLoading = false, error = TextProvider.Resource(R.string.onboarding_register_error)) }
                 }
-            }.launchIn(viewModelScope)
-    }
-
-    private fun readBytes(uri: Uri): ByteArray? {
-        return try {
-            context.contentResolver.openInputStream(uri)?.use { it.readBytes() }
-        } catch (e: Exception) {
-            null
+                .onEach { output ->
+                    when (output) {
+                        is SaveInitialContractUseCase.Output.Success -> {
+                            analytics.track(AnalyticsEvent.Custom("renting_setup_completed", mapOf(
+                                "has_bluetooth" to (s.bluetoothDeviceAddress != null),
+                                "has_advanced" to (s.excessDistancePrice.isNotBlank())
+                            )))
+                            launchEffect(Effect.NavigateToDashboard)
+                        }
+                        is SaveInitialContractUseCase.Output.Failure -> {
+                            updateState { copy(isLoading = false, error = TextProvider.Resource(R.string.onboarding_register_error)) }
+                        }
+                        else -> {}
+                    }
+                }.collect()
         }
     }
 }

@@ -1,35 +1,29 @@
 package es.joshluq.kmsafe.ui.renting.edit
 
-import android.content.Context
 import android.net.Uri
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import dagger.hilt.android.qualifiers.ApplicationContext
 import es.joshluq.analyticskit.domain.model.AnalyticsEvent
 import es.joshluq.analyticskit.sdk.AnalyticskitManager
 import es.joshluq.foundationkit.log.LoggerKit
 import es.joshluq.foundationkit.text.TextProvider
 import es.joshluq.foundationkit.usecase.FlowUseCase
+import es.joshluq.foundationkit.usecase.UseCase
 import es.joshluq.foundationkit.viewmodel.ScreenViewModel
 import es.joshluq.kmsafe.R
-import es.joshluq.kmsafe.di.CheckFeatureAccess
-import es.joshluq.kmsafe.di.GetVehicleById
-import es.joshluq.kmsafe.di.UpdateContract
-import es.joshluq.kmsafe.di.UploadVehicleImage
+import es.joshluq.kmsafe.di.*
 import es.joshluq.kmsafe.domain.model.Feature
-import es.joshluq.kmsafe.domain.usecase.CheckFeatureAccessUseCase
-import es.joshluq.kmsafe.domain.usecase.GetVehicleByIdUseCase
-import es.joshluq.kmsafe.domain.usecase.UpdateContractUseCase
-import es.joshluq.kmsafe.domain.usecase.UploadVehicleImageUseCase
+import es.joshluq.kmsafe.domain.model.RentingContract
+import es.joshluq.kmsafe.domain.usecase.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.launch
 import java.util.*
 import javax.inject.Inject
 
 @HiltViewModel
 class EditContractViewModel @Inject constructor(
-    @ApplicationContext private val context: Context,
     savedStateHandle: SavedStateHandle,
     @param:GetVehicleById private val getVehicleByIdUseCase:
     @JvmSuppressWildcards FlowUseCase<GetVehicleByIdUseCase.Input, GetVehicleByIdUseCase.Output>,
@@ -39,6 +33,8 @@ class EditContractViewModel @Inject constructor(
     @JvmSuppressWildcards FlowUseCase<UploadVehicleImageUseCase.Input, UploadVehicleImageUseCase.Output>,
     @param:CheckFeatureAccess private val checkFeatureAccessUseCase:
     @JvmSuppressWildcards FlowUseCase<CheckFeatureAccessUseCase.Input, CheckFeatureAccessUseCase.Output>,
+    @param:GetImageBytes private val getImageBytesUseCase:
+    @JvmSuppressWildcards UseCase<GetImageBytesUseCase.Input, GetImageBytesUseCase.Output>,
     private val analytics: AnalyticskitManager,
     private val logger: LoggerKit
 ) : ScreenViewModel<State, Event, Effect>() {
@@ -137,6 +133,7 @@ class EditContractViewModel @Inject constructor(
                                 durationMonths = contract.durationMonths.toString(),
                                 totalKms = contract.totalKms.toString(),
                                 bluetoothDeviceAddress = contract.bluetoothDeviceAddress,
+                                bluetoothDeviceName = contract.bluetoothDeviceName,
                                 excessDistancePrice = contract.excessDistancePrice?.toString() ?: "",
                                 courtesyMarginKms = contract.courtesyMarginKms.toString()
                             ) 
@@ -161,51 +158,57 @@ class EditContractViewModel @Inject constructor(
             durationMonths = s.durationMonths.toIntOrNull() ?: baseContract.durationMonths,
             totalKms = s.totalKms.toIntOrNull() ?: baseContract.totalKms,
             bluetoothDeviceAddress = s.bluetoothDeviceAddress,
+            bluetoothDeviceName = s.bluetoothDeviceName,
             excessDistancePrice = s.excessDistancePrice.toDoubleOrNull(),
             courtesyMarginKms = s.courtesyMarginKms.toIntOrNull() ?: 0
         )
 
         val imageUri = s.selectedImageUri
         
-        val flow = if (imageUri != null) {
-            val bytes = readBytes(imageUri)
-            if (bytes != null) {
-                val fileName = "vehicle_${UUID.randomUUID()}.jpg"
-                uploadVehicleImageUseCase(UploadVehicleImageUseCase.Input(bytes, fileName))
-                    .flatMapLatest { output ->
-                        when (output) {
-                            is UploadVehicleImageUseCase.Output.Success -> {
-                                updateContractUseCase(UpdateContractUseCase.Input(updatedContract.copy(vehicleImageUrl = output.imageUrl)))
+        viewModelScope.launch {
+            updateState { copy(isSaving = true) }
+            
+            val flow = if (imageUri != null) {
+                val bytesResult = getImageBytesUseCase(GetImageBytesUseCase.Input(imageUri.toString()))
+                val bytes = (bytesResult.getOrNull() as? GetImageBytesUseCase.Output.Success)?.bytes
+                
+                if (bytes != null) {
+                    val fileName = "vehicle_${UUID.randomUUID()}.jpg"
+                    uploadVehicleImageUseCase(UploadVehicleImageUseCase.Input(bytes, fileName))
+                        .flatMapLatest { output ->
+                            when (output) {
+                                is UploadVehicleImageUseCase.Output.Success -> {
+                                    updateContractUseCase(UpdateContractUseCase.Input(updatedContract.copy(vehicleImageUrl = output.imageUrl)))
+                                }
+                                is UploadVehicleImageUseCase.Output.Failure -> throw Exception("Image upload failed")
+                                else -> emptyFlow()
                             }
-                            is UploadVehicleImageUseCase.Output.Failure -> throw Exception("Image upload failed")
-                            else -> emptyFlow()
                         }
-                    }
+                } else {
+                    updateContractUseCase(UpdateContractUseCase.Input(updatedContract))
+                }
             } else {
                 updateContractUseCase(UpdateContractUseCase.Input(updatedContract))
             }
-        } else {
-            updateContractUseCase(UpdateContractUseCase.Input(updatedContract))
-        }
 
-        flow
-            .onStart { updateState { copy(isSaving = true) } }
-            .catch {
-                logger.e("EditContractVM", "Error updating contract", it)
-                updateState { copy(isSaving = false, error = TextProvider.Resource(R.string.onboarding_register_error)) }
-            }
-            .onEach { output ->
-                when (output) {
-                    is UpdateContractUseCase.Output.Success -> {
-                        analytics.track(AnalyticsEvent.Custom("vehicle_updated", mapOf("id" to vehicleId)))
-                        launchEffect(Effect.NavigateBack)
-                    }
-                    is UpdateContractUseCase.Output.Failure -> {
-                        updateState { copy(isSaving = false, error = TextProvider.Resource(R.string.onboarding_register_error)) }
-                    }
-                    else -> {}
+            flow
+                .catch {
+                    logger.e("EditContractVM", "Error updating contract", it)
+                    updateState { copy(isSaving = false, error = TextProvider.Resource(R.string.onboarding_register_error)) }
                 }
-            }.launchIn(viewModelScope)
+                .onEach { output ->
+                    when (output) {
+                        is UpdateContractUseCase.Output.Success -> {
+                            analytics.track(AnalyticsEvent.Custom("vehicle_updated", mapOf("id" to vehicleId)))
+                            launchEffect(Effect.NavigateBack)
+                        }
+                        is UpdateContractUseCase.Output.Failure -> {
+                            updateState { copy(isSaving = false, error = TextProvider.Resource(R.string.onboarding_register_error)) }
+                        }
+                        else -> {}
+                    }
+                }.collect()
+        }
     }
 
     private fun validate(): Boolean {
@@ -223,13 +226,5 @@ class EditContractViewModel @Inject constructor(
             isValid = false
         }
         return isValid
-    }
-
-    private fun readBytes(uri: Uri): ByteArray? {
-        return try {
-            context.contentResolver.openInputStream(uri)?.use { it.readBytes() }
-        } catch (e: Exception) {
-            null
-        }
     }
 }

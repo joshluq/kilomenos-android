@@ -280,4 +280,10 @@ abstract class UseCaseModule {
     abstract fun bindGetRouteUseCase(
         useCase: GetRouteUseCase
     ): FlowUseCase<GetRouteUseCase.Input, GetRouteUseCase.Output>
+
+    @Binds
+    @GetImageBytes
+    abstract fun bindGetImageBytesUseCase(
+        useCase: GetImageBytesUseCase
+    ): UseCase<GetImageBytesUseCase.Input, GetImageBytesUseCase.Output>
 }
