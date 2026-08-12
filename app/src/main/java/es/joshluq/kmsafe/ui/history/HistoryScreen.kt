@@ -62,7 +62,7 @@ import es.joshluq.kmsafe.R
 import es.joshluq.kmsafe.domain.model.OdometerRecord
 import es.joshluq.kmsafe.domain.model.RecordWithIndicator
 import es.joshluq.kmsafe.ui.common.components.AdMobBanner
-import es.joshluq.kmsafe.ui.onboarding.OnboardingTextField
+import es.joshluq.kmsafe.ui.renting.components.RentingTextField
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -279,7 +279,7 @@ private fun HistoryFilters(
     onModeChange: (HistoryGroupingMode) -> Unit
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-        OnboardingTextField(
+        RentingTextField(
             label = "",
             value = query,
             onValueChange = onQueryChange,

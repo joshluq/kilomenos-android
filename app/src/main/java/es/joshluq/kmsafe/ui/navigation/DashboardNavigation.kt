@@ -21,7 +21,8 @@ fun DashboardNavigation(
     onNavigateToLogin: () -> Unit,
     onNavigateToPremiumPaywall: () -> Unit,
     onNavigateToPermissions: () -> Unit,
-    onNavigateToWelcomeDiscovery: () -> Unit
+    onNavigateToWelcomeDiscovery: () -> Unit,
+    onNavigateToVehicleDetail: (String) -> Unit
 ) {
     NavHost(
         navController = navController,
@@ -39,7 +40,8 @@ fun DashboardNavigation(
                 onNavigateToPermissions = onNavigateToPermissions,
                 onNavigateToPremiumPaywall = onNavigateToPremiumPaywall,
                 onNavigateToPreferences = onNavigateToPreferences,
-                onNavigateToWelcomeDiscovery = onNavigateToWelcomeDiscovery
+                onNavigateToWelcomeDiscovery = onNavigateToWelcomeDiscovery,
+                onNavigateToVehicleDetail = onNavigateToVehicleDetail
             )
         }
 

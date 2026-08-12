@@ -75,7 +75,7 @@ import es.joshluq.canvaskit.components.navigation.CanvasKitTopBar
 import es.joshluq.canvaskit.foundations.theme.CanvasKitTheme
 import es.joshluq.kmsafe.R
 import es.joshluq.kmsafe.domain.model.OdometerRecord
-import es.joshluq.kmsafe.ui.onboarding.OnboardingTextField
+import es.joshluq.kmsafe.ui.renting.components.RentingTextField
 import es.joshluq.kmsafe.ui.util.safeClick
 import es.joshluq.kmsafe.ui.util.safeClickable
 import java.text.SimpleDateFormat
@@ -571,7 +571,7 @@ fun EditRecordDialog(
             },
             content = {
                 Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                    OnboardingTextField(
+                    RentingTextField(
                         label = stringResource(R.string.overview_current_odometer_label),
                         value = state.editingOdometerValue,
                         onValueChange = { onEvent(RecordDetailEvent.OnEditingOdometerChanged(it)) },
@@ -589,7 +589,7 @@ fun EditRecordDialog(
                         keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Next) })
                     )
 
-                    OnboardingTextField(
+                    RentingTextField(
                         label = stringResource(R.string.overview_record_label_label),
                         value = state.editingLabel,
                         onValueChange = { onEvent(RecordDetailEvent.OnEditingLabelChanged(it)) },
@@ -607,7 +607,7 @@ fun EditRecordDialog(
                     )
 
                     if (state.isPremium) {
-                        OnboardingTextField(
+                        RentingTextField(
                             label = stringResource(R.string.overview_record_fuel_label),
                             value = state.editingFuel,
                             onValueChange = { onEvent(RecordDetailEvent.OnEditingFuelChanged(it)) },

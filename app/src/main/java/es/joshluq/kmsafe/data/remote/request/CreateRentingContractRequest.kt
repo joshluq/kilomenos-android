@@ -14,5 +14,8 @@ data class CreateRentingContractRequest(
     @JsonProperty("current_odometer") val currentOdometer: Int,
     @JsonProperty("is_selected") val isSelected: Boolean,
     @JsonProperty("vehicle_image_url") val vehicleImageUrl: String? = null,
-    @JsonProperty("bluetooth_device_address") val bluetoothDeviceAddress: String? = null
+    @JsonProperty("bluetooth_device_name") val bluetoothDeviceName: String? = null,
+    @JsonProperty("bluetooth_device_address") val bluetoothDeviceAddress: String? = null,
+    @JsonProperty("excess_km_price") val excessKmPrice: Double? = null,
+    @JsonProperty("courtesy_km_buffer") val courtesyKmBuffer: Int? = null
 )

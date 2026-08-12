@@ -33,7 +33,10 @@ data class RentingContractEntity(
     val currentOdometer: Int,
     val isSelected: Boolean = false,
     val vehicleImageUrl: String? = null,
+    val bluetoothDeviceName: String? = null,
     val bluetoothDeviceAddress: String? = null,
+    val excessDistancePrice: Double? = null,
+    val courtesyMarginKms: Int = 0,
     val syncStatus: String = "SYNCED"
 )
 
@@ -51,7 +54,10 @@ fun RentingContractEntity.toDomain(): RentingContract = RentingContract(
     currentOdometer = currentOdometer,
     isSelected = isSelected,
     vehicleImageUrl = vehicleImageUrl,
+    bluetoothDeviceName = bluetoothDeviceName,
     bluetoothDeviceAddress = bluetoothDeviceAddress,
+    excessDistancePrice = excessDistancePrice,
+    courtesyMarginKms = courtesyMarginKms,
     syncStatus = SyncStatus.valueOf(syncStatus)
 )
 
@@ -69,6 +75,9 @@ fun RentingContract.toEntity(): RentingContractEntity = RentingContractEntity(
     currentOdometer = currentOdometer,
     isSelected = isSelected,
     vehicleImageUrl = vehicleImageUrl,
+    bluetoothDeviceName = bluetoothDeviceName,
     bluetoothDeviceAddress = bluetoothDeviceAddress,
+    excessDistancePrice = excessDistancePrice,
+    courtesyMarginKms = courtesyMarginKms,
     syncStatus = syncStatus.name
 )

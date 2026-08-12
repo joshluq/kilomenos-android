@@ -73,7 +73,10 @@ class RentingRepositoryImpl @Inject constructor(
                         currentOdometer = contract.currentOdometer,
                         isSelected = contract.isSelected,
                         vehicleImageUrl = contract.vehicleImageUrl,
-                        bluetoothDeviceAddress = contract.bluetoothDeviceAddress
+                        bluetoothDeviceName = contract.bluetoothDeviceName,
+                        bluetoothDeviceAddress = contract.bluetoothDeviceAddress,
+                        excessKmPrice = contract.excessDistancePrice,
+                        courtesyKmBuffer = contract.courtesyMarginKms
                     )
                     val response = apiService.createContract(request)
                     if (response.isSuccessful) {
@@ -125,7 +128,10 @@ class RentingRepositoryImpl @Inject constructor(
                     totalKms = contract.totalKms,
                     startOdometer = contract.startOdometer,
                     vehicleImageUrl = contract.vehicleImageUrl,
-                    bluetoothDeviceAddress = contract.bluetoothDeviceAddress
+                    bluetoothDeviceName = contract.bluetoothDeviceName,
+                    bluetoothDeviceAddress = contract.bluetoothDeviceAddress,
+                    excessKmPrice = contract.excessDistancePrice,
+                    courtesyKmBuffer = contract.courtesyMarginKms
                 )
                 val response = apiService.updateContract(contract.id, request)
                 if (response.isSuccessful) {

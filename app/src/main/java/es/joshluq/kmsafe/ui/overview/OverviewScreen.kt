@@ -118,7 +118,7 @@ import es.joshluq.kmsafe.domain.model.SubscriptionLevel
 import es.joshluq.kmsafe.data.location.LocationTrackingService
 import es.joshluq.kmsafe.domain.model.RentingContract
 import es.joshluq.kmsafe.domain.model.TripProjection
-import es.joshluq.kmsafe.ui.onboarding.OnboardingTextField
+import es.joshluq.kmsafe.ui.renting.components.RentingTextField
 import es.joshluq.kmsafe.ui.common.components.AdMobBanner
 import es.joshluq.kmsafe.ui.common.components.BrandingLogo
 import es.joshluq.kmsafe.ui.overview.components.TrackingCard
@@ -139,7 +139,8 @@ fun OverviewRoute(
     onNavigateToPermissions: () -> Unit,
     onNavigateToPremiumPaywall: () -> Unit,
     onNavigateToPreferences: () -> Unit,
-    onNavigateToWelcomeDiscovery: () -> Unit
+    onNavigateToWelcomeDiscovery: () -> Unit,
+    onNavigateToVehicleDetail: (String) -> Unit
 ) {
     val viewModel: OverviewViewModel = hiltViewModel()
     val state = viewModel.state.collectAsStateWithLifecycle()
@@ -165,7 +166,8 @@ fun OverviewRoute(
 
     OverviewScreen(
         state = state.value,
-        onEvent = viewModel::sendEvent
+        onEvent = viewModel::sendEvent,
+        onNavigateToVehicleDetail = onNavigateToVehicleDetail
     )
 
     val context = LocalContext.current
@@ -214,7 +216,8 @@ fun OverviewRoute(
 @Composable
 fun OverviewScreen(
     state: State,
-    onEvent: (Event) -> Unit
+    onEvent: (Event) -> Unit,
+    onNavigateToVehicleDetail: (String) -> Unit
 ) {
     val bottomSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val focusManager = LocalFocusManager.current
@@ -304,7 +307,8 @@ fun OverviewScreen(
                                 permissions.add(Manifest.permission.POST_NOTIFICATIONS)
                             }
                             multiplePermissionsLauncher.launch(permissions.toTypedArray())
-                        }
+                        },
+                        onNavigateToVehicleDetail = onNavigateToVehicleDetail
                     )
                 } else {
                     EmptyState(
@@ -408,7 +412,8 @@ fun OverviewScreen(
 private fun RentingState(
     state: State, 
     onEvent: (Event) -> Unit,
-    onStartTracking: () -> Unit
+    onStartTracking: () -> Unit,
+    onNavigateToVehicleDetail: (String) -> Unit
 ) {
     val keyboardController = LocalSoftwareKeyboardController.current
 
@@ -452,6 +457,9 @@ private fun RentingState(
             onEditClick = { 
                 keyboardController?.hide()
                 state.renting?.let { onEvent(Event.OnEditContractClicked(it.id)) } 
+            },
+            onCardClick = {
+                state.renting?.let { onNavigateToVehicleDetail(it.id) }
             }
         )
 
@@ -471,7 +479,8 @@ private fun MainBalanceCard(
     balance: Int,
     totalKms: Int,
     imageUrl: String? = null,
-    onEditClick: () -> Unit
+    onEditClick: () -> Unit,
+    onCardClick: () -> Unit
 ) {
     val isPositive = balance >= 0
     val balanceColor = if (isPositive) CanvasKitTheme.colors.brandAccent else CanvasKitTheme.colors.error
@@ -479,6 +488,7 @@ private fun MainBalanceCard(
     CanvasKitCard(
         modifier = Modifier.fillMaxWidth(),
         variant = CanvasKitCardVariant.Elevated,
+        onClick = onCardClick,
         header = {
             Box(
                 modifier = Modifier.fillMaxWidth(),
@@ -995,7 +1005,7 @@ private fun UpdateOdometerContent(
 
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Column(modifier = Modifier.weight(1f)) {
-                OnboardingTextField(
+                RentingTextField(
                     label = stringResource(R.string.overview_current_odometer_label),
                     value = state.newOdometerValue,
                     onValueChange = { onEvent(Event.OnNewOdometerChanged(it)) },
@@ -1014,7 +1024,7 @@ private fun UpdateOdometerContent(
                 )
             }
             Column(modifier = Modifier.weight(1f)) {
-                OnboardingTextField(
+                RentingTextField(
                     label = stringResource(R.string.overview_record_label_label),
                     value = state.newRecordLabel,
                     onValueChange = { onEvent(Event.OnNewLabelChanged(it)) },
@@ -1395,5 +1405,11 @@ internal class OverviewStateProvider : PreviewParameterProvider<State> {
 @Preview(uiMode = Configuration.UI_MODE_NIGHT_YES or Configuration.UI_MODE_TYPE_NORMAL)
 @Composable
 fun OverviewScreenPreview(@PreviewParameter(OverviewStateProvider::class) state: State) {
-    CanvasKitTheme { OverviewScreen(state = state, onEvent = {}) }
+    CanvasKitTheme { 
+        OverviewScreen(
+            state = state, 
+            onEvent = {},
+            onNavigateToVehicleDetail = {}
+        ) 
+    }
 }

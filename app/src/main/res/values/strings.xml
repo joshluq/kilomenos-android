@@ -185,6 +185,38 @@
     <string name="onboarding_register_error">Ha ocurrido un error al registrar el renting. Por favor, inténtalo de nuevo.</string>
     <string name="onboarding_saving_button">Guardando…</string>
 
+    <!-- Vehicle Detail -->
+    <string name="vehicle_detail_title">Detalle del Vehículo</string>
+    <string name="vehicle_detail_contract_section">DATOS DEL CONTRATO</string>
+    <string name="vehicle_detail_odometer_section">ESTADO DEL CUENTAKILÓMETROS</string>
+    <string name="vehicle_detail_smart_section">VINCULACIÓN INTELIGENTE</string>
+    <string name="vehicle_detail_advanced_section">PROTECCIÓN ECONÓMICA</string>
+    <string name="vehicle_detail_no_bluetooth">Sin dispositivo vinculado</string>
+    <string name="vehicle_detail_no_advanced_data">Sin configurar</string>
+    <string name="vehicle_detail_delete_msg">¿Estás seguro de que quieres eliminar este vehículo? Se perderá todo su historial.</string>
+
+    <!-- Setup Wizard -->
+    <string name="setup_wizard_step_identity_title">¿A quién vamos a cuidar?</string>
+    <string name="setup_wizard_step_identity_desc">Ponle un nombre a tu vehículo y, si quieres, sube una foto para identificarlo rápido.</string>
+    <string name="setup_wizard_step_timeframe_title">El marco temporal</string>
+    <string name="setup_wizard_step_timeframe_desc">¿Cuándo empezó tu contrato y cuántos meses va a durar?</string>
+    <string name="setup_wizard_step_mileage_title">Tu presupuesto de KM</string>
+    <string name="setup_wizard_step_mileage_desc">Dinos el límite total de tu contrato y cuántos kilómetros tiene el coche ahora mismo.</string>
+    <string name="setup_wizard_step_bluetooth_title">⚡ Activación inteligente</string>
+    <string name="setup_wizard_step_bluetooth_desc_premium">Vincular el Bluetooth de tu coche permite que detectemos automáticamente tus viajes con total precisión.</string>
+    <string name="setup_wizard_step_bluetooth_desc_free">Vincular tu coche ahora te permitirá activar el seguimiento automático si en el futuro decides pasar a Premium.</string>
+    <string name="setup_wizard_step_bluetooth_action">Buscar mi coche</string>
+    <string name="setup_wizard_step_bluetooth_linked">¡Coche vinculado con éxito!</string>
+    <string name="setup_wizard_step_advanced_title">Escudo de precisión</string>
+    <string name="setup_wizard_step_advanced_desc">Configura el coste por km extra y tu margen de cortesía para una previsión económica exacta.</string>
+    <string name="setup_wizard_step_advanced_price_label">Coste por KM excedido</string>
+    <string name="setup_wizard_step_advanced_price_placeholder">Ej. 0.05</string>
+    <string name="setup_wizard_step_advanced_margin_label">Margen de cortesía (KM)</string>
+    <string name="setup_wizard_step_advanced_margin_placeholder">Ej. 500</string>
+    <string name="setup_wizard_action_next">Continuar</string>
+    <string name="setup_wizard_action_finish">Finalizar Configuración</string>
+    <string name="setup_wizard_action_skip">Configurar más tarde</string>
+
     <!-- History -->
     <string name="history_empty_state_title">No hay registros mensuales</string>
     <string name="history_search_label">Buscar</string>

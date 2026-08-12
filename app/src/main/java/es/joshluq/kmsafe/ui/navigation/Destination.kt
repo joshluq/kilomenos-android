@@ -57,13 +57,22 @@ sealed interface Destination {
     object WelcomeDiscovery : Destination
 
     /**
-     * RentingDetails destination (Onboarding screen).
+     * EditContract destination.
      */
     @Serializable
-    data class RentingDetails(
-        val vehicleId: String? = null,
-        val isEdit: Boolean = false
-    ) : Destination
+    data class EditContract(val vehicleId: String) : Destination
+
+    /**
+     * SetupWizard destination (New creation flow).
+     */
+    @Serializable
+    object SetupWizard : Destination
+
+    /**
+     * VehicleDetail destination (Dynamic visualization).
+     */
+    @Serializable
+    data class VehicleDetail(val vehicleId: String) : Destination
 
     /**
      * History destination.

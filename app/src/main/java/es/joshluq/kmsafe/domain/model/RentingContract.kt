@@ -17,6 +17,9 @@ data class RentingContract(
     val currentOdometer: Int,
     val isSelected: Boolean = false,
     val vehicleImageUrl: String? = null,
+    val bluetoothDeviceName: String? = null,
     val bluetoothDeviceAddress: String? = null,
+    val excessDistancePrice: Double? = null,
+    val courtesyMarginKms: Int = 0,
     val syncStatus: SyncStatus = SyncStatus.SYNCED
 )

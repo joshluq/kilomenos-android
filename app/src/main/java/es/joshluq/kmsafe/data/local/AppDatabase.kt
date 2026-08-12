@@ -20,7 +20,7 @@ import es.joshluq.kmsafe.data.local.entity.TripRouteEntity
         OdometerRecordEntity::class,
         TripRouteEntity::class
     ],
-    version = 10,
+    version = 12,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -289,6 +289,27 @@ abstract class AppDatabase : RoomDatabase() {
                     )
                     """.trimIndent()
                 )
+            }
+        }
+
+        /**
+         * Migration from version 10 to 11:
+         * - Add 'excessDistancePrice' column to 'renting_contract' table.
+         * - Add 'courtesyMarginKms' column to 'renting_contract' table.
+         */
+        val MIGRATION_10_11 = object : Migration(10, 11) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE renting_contract ADD COLUMN excessDistancePrice REAL")
+                db.execSQL("ALTER TABLE renting_contract ADD COLUMN courtesyMarginKms INTEGER NOT NULL DEFAULT 0")
+            }
+        }
+        /**
+         * Migration from version 11 to 12:
+         * - Add 'bluetoothDeviceName' column to 'renting_contract' table.
+         */
+        val MIGRATION_11_12 = object : Migration(11, 12) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE renting_contract ADD COLUMN bluetoothDeviceName TEXT")
             }
         }
     }

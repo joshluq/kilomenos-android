@@ -1,4 +1,4 @@
-package es.joshluq.kmsafe.ui.onboarding
+package es.joshluq.kmsafe.ui.renting.setup
 
 import android.content.res.Configuration
 import androidx.compose.foundation.background

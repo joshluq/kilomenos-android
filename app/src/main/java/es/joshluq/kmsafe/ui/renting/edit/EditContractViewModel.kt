@@ -1,0 +1,198 @@
+package es.joshluq.kmsafe.ui.renting.edit
+
+import android.content.Context
+import android.net.Uri
+import androidx.lifecycle.SavedStateHandle
+import androidx.lifecycle.viewModelScope
+import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
+import es.joshluq.analyticskit.domain.model.AnalyticsEvent
+import es.joshluq.analyticskit.sdk.AnalyticskitManager
+import es.joshluq.foundationkit.log.LoggerKit
+import es.joshluq.foundationkit.text.TextProvider
+import es.joshluq.foundationkit.usecase.FlowUseCase
+import es.joshluq.foundationkit.viewmodel.ScreenViewModel
+import es.joshluq.kmsafe.R
+import es.joshluq.kmsafe.di.CheckFeatureAccess
+import es.joshluq.kmsafe.di.GetVehicleById
+import es.joshluq.kmsafe.di.UpdateContract
+import es.joshluq.kmsafe.di.UploadVehicleImage
+import es.joshluq.kmsafe.domain.model.Feature
+import es.joshluq.kmsafe.domain.usecase.CheckFeatureAccessUseCase
+import es.joshluq.kmsafe.domain.usecase.GetVehicleByIdUseCase
+import es.joshluq.kmsafe.domain.usecase.UpdateContractUseCase
+import es.joshluq.kmsafe.domain.usecase.UploadVehicleImageUseCase
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.*
+import java.util.*
+import javax.inject.Inject
+
+@HiltViewModel
+class EditContractViewModel @Inject constructor(
+    @ApplicationContext private val context: Context,
+    savedStateHandle: SavedStateHandle,
+    @param:GetVehicleById private val getVehicleByIdUseCase:
+    @JvmSuppressWildcards FlowUseCase<GetVehicleByIdUseCase.Input, GetVehicleByIdUseCase.Output>,
+    @param:UpdateContract private val updateContractUseCase:
+    @JvmSuppressWildcards FlowUseCase<UpdateContractUseCase.Input, UpdateContractUseCase.Output>,
+    @param:UploadVehicleImage private val uploadVehicleImageUseCase:
+    @JvmSuppressWildcards FlowUseCase<UploadVehicleImageUseCase.Input, UploadVehicleImageUseCase.Output>,
+    @param:CheckFeatureAccess private val checkFeatureAccessUseCase:
+    @JvmSuppressWildcards FlowUseCase<CheckFeatureAccessUseCase.Input, CheckFeatureAccessUseCase.Output>,
+    private val analytics: AnalyticskitManager,
+    private val logger: LoggerKit
+) : ScreenViewModel<State, Event, Effect>() {
+
+    private val vehicleId: String = checkNotNull(savedStateHandle["vehicleId"])
+
+    init {
+        checkPremium()
+        loadVehicle()
+    }
+
+    override fun createInitialState(): State = State.Empty
+
+    override fun handleEvent(event: Event) {
+        when (event) {
+            Event.OnBackClicked -> launchEffect(Effect.NavigateBack)
+            Event.OnSaveClicked -> handleSave()
+            
+            is Event.OnVehicleNameChanged -> updateState { copy(vehicleName = event.value, vehicleNameError = null) }
+            is Event.OnOriginalImageSelected -> {
+                event.uri?.let { launchEffect(Effect.NavigateToCropper(it.toString())) }
+            }
+            is Event.OnImageSelected -> updateState { copy(selectedImageUri = event.uri) }
+            is Event.OnDurationMonthsChanged -> updateState { copy(durationMonths = event.value, durationMonthsError = null) }
+            is Event.OnTotalKmsChanged -> updateState { copy(totalKms = event.value, totalKmsError = null) }
+            is Event.OnBluetoothDeviceSelected -> updateState { 
+                copy(bluetoothDeviceName = event.name, bluetoothDeviceAddress = event.address, showBluetoothPicker = false) 
+            }
+            is Event.OnExcessDistancePriceChanged -> updateState { copy(excessDistancePrice = event.value) }
+            is Event.OnCourtesyMarginKmsChanged -> updateState { copy(courtesyMarginKms = event.value) }
+            
+            Event.OnToggleBluetoothPicker -> updateState { copy(showBluetoothPicker = !showBluetoothPicker) }
+            Event.OnDismissError -> updateState { copy(error = null) }
+        }
+    }
+
+    private fun checkPremium() {
+        checkFeatureAccessUseCase(CheckFeatureAccessUseCase.Input(Feature.CLOUD_SYNC))
+            .onEach { output ->
+                if (output is CheckFeatureAccessUseCase.Output.Success) {
+                    updateState { copy(isPremium = output.isGranted) }
+                }
+            }.launchIn(viewModelScope)
+    }
+
+    private fun loadVehicle() {
+        getVehicleByIdUseCase(GetVehicleByIdUseCase.Input(vehicleId))
+            .onEach { output ->
+                when (output) {
+                    is GetVehicleByIdUseCase.Output.Progress -> updateState { copy(isLoading = true) }
+                    is GetVehicleByIdUseCase.Output.Success -> {
+                        val contract = output.contract
+                        updateState { 
+                            copy(
+                                isLoading = false,
+                                renting = contract,
+                                vehicleName = contract.vehicleName,
+                                vehicleImageUrl = contract.vehicleImageUrl,
+                                durationMonths = contract.durationMonths.toString(),
+                                totalKms = contract.totalKms.toString(),
+                                bluetoothDeviceAddress = contract.bluetoothDeviceAddress,
+                                excessDistancePrice = contract.excessDistancePrice?.toString() ?: "",
+                                courtesyMarginKms = contract.courtesyMarginKms.toString()
+                            ) 
+                        }
+                    }
+                    is GetVehicleByIdUseCase.Output.Failure -> updateState { 
+                        copy(isLoading = false, error = TextProvider.Resource(R.string.history_load_error)) 
+                    }
+                }
+            }.launchIn(viewModelScope)
+    }
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    private fun handleSave() {
+        if (!validate()) return
+
+        val s = state.value
+        val baseContract = s.renting ?: return
+        
+        val updatedContract = baseContract.copy(
+            vehicleName = s.vehicleName,
+            durationMonths = s.durationMonths.toIntOrNull() ?: baseContract.durationMonths,
+            totalKms = s.totalKms.toIntOrNull() ?: baseContract.totalKms,
+            bluetoothDeviceAddress = s.bluetoothDeviceAddress,
+            excessDistancePrice = s.excessDistancePrice.toDoubleOrNull(),
+            courtesyMarginKms = s.courtesyMarginKms.toIntOrNull() ?: 0
+        )
+
+        val imageUri = s.selectedImageUri
+        
+        val flow = if (imageUri != null) {
+            val bytes = readBytes(imageUri)
+            if (bytes != null) {
+                val fileName = "vehicle_${UUID.randomUUID()}.jpg"
+                uploadVehicleImageUseCase(UploadVehicleImageUseCase.Input(bytes, fileName))
+                    .flatMapLatest { output ->
+                        when (output) {
+                            is UploadVehicleImageUseCase.Output.Success -> {
+                                updateContractUseCase(UpdateContractUseCase.Input(updatedContract.copy(vehicleImageUrl = output.imageUrl)))
+                            }
+                            is UploadVehicleImageUseCase.Output.Failure -> throw Exception("Image upload failed")
+                            else -> emptyFlow()
+                        }
+                    }
+            } else {
+                updateContractUseCase(UpdateContractUseCase.Input(updatedContract))
+            }
+        } else {
+            updateContractUseCase(UpdateContractUseCase.Input(updatedContract))
+        }
+
+        flow
+            .onStart { updateState { copy(isSaving = true) } }
+            .catch {
+                logger.e("EditContractVM", "Error updating contract", it)
+                updateState { copy(isSaving = false, error = TextProvider.Resource(R.string.onboarding_register_error)) }
+            }
+            .onEach { output ->
+                when (output) {
+                    is UpdateContractUseCase.Output.Success -> {
+                        analytics.track(AnalyticsEvent.Custom("vehicle_updated", mapOf("id" to vehicleId)))
+                        launchEffect(Effect.NavigateBack)
+                    }
+                    is UpdateContractUseCase.Output.Failure -> {
+                        updateState { copy(isSaving = false, error = TextProvider.Resource(R.string.onboarding_register_error)) }
+                    }
+                    else -> {}
+                }
+            }.launchIn(viewModelScope)
+    }
+
+    private fun validate(): Boolean {
+        var isValid = true
+        if (state.value.vehicleName.isBlank()) {
+            updateState { copy(vehicleNameError = TextProvider.Resource(R.string.onboarding_vehicle_name_feedback)) }
+            isValid = false
+        }
+        if (state.value.durationMonths.toIntOrNull() == null) {
+            updateState { copy(durationMonthsError = TextProvider.Resource(R.string.onboarding_number_feedback)) }
+            isValid = false
+        }
+        if (state.value.totalKms.toIntOrNull() == null) {
+            updateState { copy(totalKmsError = TextProvider.Resource(R.string.onboarding_number_feedback)) }
+            isValid = false
+        }
+        return isValid
+    }
+
+    private fun readBytes(uri: Uri): ByteArray? {
+        return try {
+            context.contentResolver.openInputStream(uri)?.use { it.readBytes() }
+        } catch (e: Exception) {
+            null
+        }
+    }
+}

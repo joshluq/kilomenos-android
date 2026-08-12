@@ -32,6 +32,9 @@ fun RentingContractResponse.toDomain(): RentingContract {
         currentOdometer = currentOdometer ?: 0,
         isSelected = isSelected ?: false,
         vehicleImageUrl = vehicleImageUrl,
-        bluetoothDeviceAddress = bluetoothDeviceAddress
+        bluetoothDeviceName = bluetoothDeviceName,
+        bluetoothDeviceAddress = bluetoothDeviceAddress,
+        excessDistancePrice = excessKmPrice,
+        courtesyMarginKms = courtesyKmBuffer ?: 0
     )
 }
