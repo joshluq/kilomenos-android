@@ -107,9 +107,9 @@ fun SetupWizardScreen(
                     )
                 },
                 navigationIcon = {
-                    IconButton(onClick = { 
+                    IconButton(onClick = safeClick {
                         keyboardController?.hide()
-                        onEvent(Event.OnBackClicked) 
+                        onEvent(Event.OnBackClicked)
                     }) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
@@ -123,7 +123,9 @@ fun SetupWizardScreen(
         },
         containerColor = CanvasKitTheme.colors.backgroundPrimary
     ) { innerPadding ->
-        Box(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
+        Box(modifier = Modifier
+            .fillMaxSize()
+            .padding(innerPadding)) {
             
             AnimatedContent(
                 targetState = state.currentStep,
@@ -161,7 +163,7 @@ fun SetupWizardScreen(
                 CanvasKitDatePickerDialog(
                     onDismissRequest = { onEvent(Event.OnToggleDatePicker) },
                     confirmButton = {
-                        TextButton(onClick = {
+                        TextButton(onClick = safeClick {
                             datePickerState.selectedDateMillis?.let { millis ->
                                 val date = Date(millis)
                                 val formatter = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
@@ -200,12 +202,12 @@ private fun VehicleIdentityStep(state: State, onEvent: (Event) -> Unit) {
         title = stringResource(R.string.setup_wizard_step_identity_title),
         description = stringResource(R.string.setup_wizard_step_identity_desc),
         primaryActionLabel = stringResource(R.string.setup_wizard_action_next),
-        onPrimaryActionClick = { onEvent(Event.OnNextClicked) }
+        onPrimaryActionClick = safeClick { onEvent(Event.OnNextClicked) }
     ) {
         VehiclePhotoSelector(
             imageUrl = state.vehicleImageUrl,
             selectedUri = state.selectedImageUri,
-            onClick = { photoPickerLauncher.launch("image/*") },
+            onClick = safeClick { photoPickerLauncher.launch("image/*") },
             modifier = Modifier.padding(bottom = 24.dp)
         )
 
@@ -228,14 +230,14 @@ private fun ContractTimeframeStep(state: State, onEvent: (Event) -> Unit) {
         title = stringResource(R.string.setup_wizard_step_timeframe_title),
         description = stringResource(R.string.setup_wizard_step_timeframe_desc),
         primaryActionLabel = stringResource(R.string.setup_wizard_action_next),
-        onPrimaryActionClick = { onEvent(Event.OnNextClicked) }
+        onPrimaryActionClick = safeClick { onEvent(Event.OnNextClicked) }
     ) {
         RentingDisplayField(
             label = stringResource(R.string.onboarding_start_date_label),
             value = state.startDate,
             placeholder = stringResource(R.string.onboarding_start_date_placeholder),
             errorMessage = state.startDateError?.asString(),
-            onClick = { onEvent(Event.OnToggleDatePicker) },
+            onClick = safeClick { onEvent(Event.OnToggleDatePicker) },
             trailingIcon = { Icon(Icons.Default.CalendarToday, contentDescription = null, tint = CanvasKitTheme.colors.brandAccent) },
             modifier = Modifier.padding(bottom = 16.dp)
         )
@@ -261,7 +263,7 @@ private fun MileageBudgetStep(state: State, onEvent: (Event) -> Unit) {
         title = stringResource(R.string.setup_wizard_step_mileage_title),
         description = stringResource(R.string.setup_wizard_step_mileage_desc),
         primaryActionLabel = stringResource(R.string.setup_wizard_action_next),
-        onPrimaryActionClick = { onEvent(Event.OnNextClicked) }
+        onPrimaryActionClick = safeClick { onEvent(Event.OnNextClicked) }
     ) {
         RentingTextField(
             label = stringResource(R.string.onboarding_total_kms_label),
@@ -302,10 +304,10 @@ private fun SmartActivationStep(state: State, onEvent: (Event) -> Unit) {
         description = if (isPremium) stringResource(R.string.setup_wizard_step_bluetooth_desc_premium) 
                       else stringResource(R.string.setup_wizard_step_bluetooth_desc_free),
         primaryActionLabel = stringResource(R.string.setup_wizard_action_next),
-        onPrimaryActionClick = { onEvent(Event.OnNextClicked) },
+        onPrimaryActionClick = safeClick { onEvent(Event.OnNextClicked) },
         secondaryAction = {
             TextButton(
-                onClick = { onEvent(Event.OnSkipStepClicked) },
+                onClick = safeClick { onEvent(Event.OnSkipStepClicked) },
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text(stringResource(R.string.setup_wizard_action_skip), color = CanvasKitTheme.colors.textSecondary)
@@ -332,7 +334,7 @@ private fun SmartActivationStep(state: State, onEvent: (Event) -> Unit) {
                 Spacer(modifier = Modifier.height(24.dp))
                 CanvasKitButton(
                     variant = CanvasKitButtonVariant.Secondary,
-                    onClick = {
+                    onClick = safeClick {
                         if (bluetoothPermissionState?.status?.isGranted != false) {
                             onEvent(Event.OnToggleBluetoothPicker)
                         } else {
@@ -351,7 +353,7 @@ private fun SmartActivationStep(state: State, onEvent: (Event) -> Unit) {
                 )
                 Spacer(modifier = Modifier.height(16.dp))
                 Text(
-                    text = state.bluetoothDeviceName ?: state.bluetoothDeviceAddress ?: "",
+                    text = state.bluetoothDeviceName ?: state.bluetoothDeviceAddress,
                     style = CanvasKitTheme.typography.headingMedium,
                     fontWeight = FontWeight.Bold
                 )
@@ -361,8 +363,8 @@ private fun SmartActivationStep(state: State, onEvent: (Event) -> Unit) {
                     color = CanvasKitTheme.colors.success
                 )
                 Spacer(modifier = Modifier.height(16.dp))
-                TextButton(onClick = { onEvent(Event.OnToggleBluetoothPicker) }) {
-                    Text(stringResource(R.string.onboarding_change_photo), color = CanvasKitTheme.colors.brandAccent)
+                TextButton(onClick = safeClick { onEvent(Event.OnToggleBluetoothPicker) }) {
+                    Text(stringResource(R.string.onboarding_change_bluetooth), color = CanvasKitTheme.colors.brandAccent)
                 }
             }
         }
@@ -377,11 +379,11 @@ private fun AdvancedProtectionStep(state: State, onEvent: (Event) -> Unit) {
         title = stringResource(R.string.setup_wizard_step_advanced_title),
         description = stringResource(R.string.setup_wizard_step_advanced_desc),
         primaryActionLabel = stringResource(R.string.setup_wizard_action_finish),
-        onPrimaryActionClick = { onEvent(Event.OnNextClicked) },
+        onPrimaryActionClick = safeClick { onEvent(Event.OnNextClicked) },
         primaryActionLoading = state.isLoading,
         secondaryAction = {
             TextButton(
-                onClick = { onEvent(Event.OnSkipStepClicked) },
+                onClick = safeClick { onEvent(Event.OnSkipStepClicked) },
                 enabled = !state.isLoading,
                 modifier = Modifier.fillMaxWidth()
             ) {
@@ -426,3 +428,19 @@ fun SetupWizardScreenPreview() {
         )
     }
 }
+@Preview(showBackground = true)
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES, showBackground = true)
+@Composable
+fun SetupWizardScreen3Preview() {
+    CanvasKitTheme {
+        SetupWizardScreen(
+            state = State(
+                currentStep = SetupStep.SMART_ACTIVATION,
+                vehicleName = "Tesla Model 3"
+            ),
+            onEvent = {}
+        )
+    }
+}
+
+

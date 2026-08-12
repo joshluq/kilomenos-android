@@ -118,33 +118,33 @@
     <string name="overview_chart_legend_budget">Presupuesto</string>
 
     <!-- Projection -->
-    <string name="projection_card_title">PROYECCIÓN FINAL</string>
-    <string name="projection_card_expected_balance">Saldo final estimado</string>
-    <string name="projection_card_projected_total">Total al entregar</string>
-    <string name="projection_card_daily_average">Media diaria real</string>
-    <string name="projection_card_not_enough_data">Calculando proyección (faltan %1$d días de datos)&#8230;</string>
-    <string name="projection_card_status_safe">Vas por buen camino. Te sobrarían %1$d km.</string>
-    <string name="projection_card_status_over">⚠️ Excederás tu límite por %1$d km.</string>
-    <string name="projection_analysis_financial_impact_title">IMPACTO ECONÓMICO</string>
-    <string name="projection_analysis_penalty_price_label">Precio por KM extra</string>
-    <string name="projection_analysis_estimated_penalty">Multa estimada</string>
-    <string name="projection_analysis_simulator_title">SIMULADOR "QUÉ PASARÍA SI…"</string>
-    <string name="projection_analysis_simulator_desc">Ajusta tu media diaria futura para ver el impacto:</string>
-    <string name="projection_analysis_simulated_balance">Saldo proyectado</string>
+    <string name="projection_card_title">TU FUTURO AL VOLANTE</string>
+    <string name="projection_card_expected_balance">Estado final previsto</string>
+    <string name="projection_card_projected_total">Lectura al entregar</string>
+    <string name="projection_card_daily_average">Tu ritmo actual</string>
+    <string name="projection_card_not_enough_data">Dibujando tu futuro (faltan %1$d días de datos)&#8230;</string>
+    <string name="projection_card_status_safe">¡Todo bajo control! Te sobrarían %1$d km.</string>
+    <string name="projection_card_status_over">⚠️ Atención: superarás tu límite por %1$d km.</string>
+    <string name="projection_analysis_financial_impact_title">PROTECCIÓN DE TU BOLSILLO</string>
+    <string name="projection_analysis_penalty_price_label">Coste pactado por KM extra</string>
+    <string name="projection_analysis_estimated_penalty">Gasto evitable estimado</string>
+    <string name="projection_analysis_simulator_title">SIMULADOR DE RITMO</string>
+    <string name="projection_analysis_simulator_desc">Ajusta tu conducción futura para ver el cambio:</string>
+    <string name="projection_analysis_simulated_balance">Nuevo saldo previsto</string>
     <string name="projection_analysis_daily_km_slider">%1$d km/día</string>
     <string name="projection_analysis_actual_average">Actual: %1$d km/día</string>
     <string name="projection_analysis_planned_trip_increment">+ %1$d km</string>
     <string name="projection_analysis_budget_protected">Presupuesto protegido</string>
     <string name="projection_analysis_timeline_exhaustion">Agotarás tus KM el:</string>
     <string name="projection_analysis_timeline_safe">Contrato cubierto hasta el final.</string>
-    <string name="projection_advisory_title">RECOMENDACIÓN</string>
-    <string name="projection_advisory_safe">Mantén tu ritmo actual. Estás en la zona segura.</string>
-    <string name="projection_advisory_action">Para no pagar multa, ajusta tu uso a %1$d km/día.</string>
-    <string name="projection_planner_title">PLANIFICADOR DE VIAJES</string>
-    <string name="projection_planner_desc">Simula un viaje largo (ej. vacaciones):</string>
+    <string name="projection_advisory_title">CONSEJO DE TU CO-PILOTO</string>
+    <string name="projection_advisory_safe">Vas perfecto. Sigue disfrutando del camino sin preocupaciones.</string>
+    <string name="projection_advisory_action">Para evitar gastos extra, ajusta tu ritmo a %1$d km/día.</string>
+    <string name="projection_planner_title">PLANIFICA TUS ESCAPADAS</string>
+    <string name="projection_planner_desc">Simula un viaje largo y mira si encaja:</string>
     <string name="projection_planner_add_trip">Añadir viaje (+%1$d km)</string>
-    <string name="projection_planner_impact_warning">⚠️ Este viaje te sacará de la zona segura.</string>
-    <string name="projection_planner_impact_safe">Viaje asumible dentro del presupuesto.</string>
+    <string name="projection_planner_impact_warning">⚠️ Este viaje te acerca al límite de tu contrato.</string>
+    <string name="projection_planner_impact_safe">Viaje totalmente asumible. ¡A disfrutar!</string>
 
     <!-- Onboarding -->
     <string name="onboarding_title">Configura tu Renting</string>
@@ -179,6 +179,7 @@
     <string name="onboarding_current_odometer_feedback">El odómetro actual debe ser igual o mayor al inicial</string>
     <string name="onboarding_date_feedback">Fecha requerida</string>
     <string name="onboarding_change_photo">Cambiar foto</string>
+    <string name="onboarding_change_bluetooth">Cambiar dispositivo Bluetooth</string>
     <string name="onboarding_photo_label">Foto del vehículo</string>
     <string name="onboarding_crop_title">Ajustar Foto</string>
     <string name="onboarding_crop_button">Aplicar Recorte</string>
@@ -196,19 +197,19 @@
     <string name="vehicle_detail_delete_msg">¿Estás seguro de que quieres eliminar este vehículo? Se perderá todo su historial.</string>
 
     <!-- Setup Wizard -->
-    <string name="setup_wizard_step_identity_title">¿A quién vamos a cuidar?</string>
-    <string name="setup_wizard_step_identity_desc">Ponle un nombre a tu vehículo y, si quieres, sube una foto para identificarlo rápido.</string>
-    <string name="setup_wizard_step_timeframe_title">El marco temporal</string>
-    <string name="setup_wizard_step_timeframe_desc">¿Cuándo empezó tu contrato y cuántos meses va a durar?</string>
-    <string name="setup_wizard_step_mileage_title">Tu presupuesto de KM</string>
-    <string name="setup_wizard_step_mileage_desc">Dinos el límite total de tu contrato y cuántos kilómetros tiene el coche ahora mismo.</string>
+    <string name="setup_wizard_step_identity_title">¿Qué vehículo vamos a proteger?</string>
+    <string name="setup_wizard_step_identity_desc">Dinos cómo llamas a tu coche y sube una foto para que el control de tus kilómetros sea más personal.</string>
+    <string name="setup_wizard_step_timeframe_title">Tu horizonte temporal</string>
+    <string name="setup_wizard_step_timeframe_desc">¿Cuándo empezó esta aventura y por cuántos meses estaremos juntos?</string>
+    <string name="setup_wizard_step_mileage_title">Tus kilómetros de libertad</string>
+    <string name="setup_wizard_step_mileage_desc">Dinos el límite de tu contrato; nosotros nos encargaremos de que no te lleves sorpresas.</string>
     <string name="setup_wizard_step_bluetooth_title">⚡ Activación inteligente</string>
     <string name="setup_wizard_step_bluetooth_desc_premium">Vincular el Bluetooth de tu coche permite que detectemos automáticamente tus viajes con total precisión.</string>
     <string name="setup_wizard_step_bluetooth_desc_free">Vincular tu coche ahora te permitirá activar el seguimiento automático si en el futuro decides pasar a Premium.</string>
     <string name="setup_wizard_step_bluetooth_action">Buscar mi coche</string>
     <string name="setup_wizard_step_bluetooth_linked">¡Coche vinculado con éxito!</string>
-    <string name="setup_wizard_step_advanced_title">Escudo de precisión</string>
-    <string name="setup_wizard_step_advanced_desc">Configura el coste por km extra y tu margen de cortesía para una previsión económica exacta.</string>
+    <string name="setup_wizard_step_advanced_title">Protección económica</string>
+    <string name="setup_wizard_step_advanced_desc">Configura el coste extra y tu margen de cortesía para que nuestra previsión sea exacta.</string>
     <string name="setup_wizard_step_advanced_price_label">Coste por KM excedido</string>
     <string name="setup_wizard_step_advanced_price_placeholder">Ej. 0.05</string>
     <string name="setup_wizard_step_advanced_margin_label">Margen de cortesía (KM)</string>
@@ -218,20 +219,20 @@
     <string name="setup_wizard_action_skip">Configurar más tarde</string>
 
     <!-- History -->
-    <string name="history_empty_state_title">No hay registros mensuales</string>
-    <string name="history_search_label">Buscar</string>
-    <string name="history_empty_state_description">Actualiza tu kilometraje periódicamente para visualizar aquí la evolución de tu contrato.</string>
+    <string name="history_empty_state_title">Tu historia empieza aquí</string>
+    <string name="history_search_label">Busca entre tus viajes</string>
+    <string name="history_empty_state_description">Registra tus kilómetros de vez en cuando para que podamos dibujar tu evolución.</string>
     <string name="history_register_error">No se pudo borrar el registro</string>
     <string name="history_load_error">No se pudo sincronizar el historial</string>
-    <string name="history_initial_kms_label">Kilómetros Iniciales</string>
-    <string name="history_total_kms_label">Kms. Totales Registrados</string>
-    <string name="history_records_count_label">%1$d registros realizados hasta ahora</string>
+    <string name="history_initial_kms_label">Tu punto de partida</string>
+    <string name="history_total_kms_label">Kilómetros recorridos juntos</string>
+    <string name="history_records_count_label">Llevamos %1$d hitos registrados</string>
     <string name="history_detail_action">Detalle</string>
     <string name="history_edit_action">Editar</string>
-    <string name="history_edit_title">Editar Registro</string>
-    <string name="history_edit_save">Guardar Cambios</string>
+    <string name="history_edit_title">Ajustar Registro</string>
+    <string name="history_edit_save">Confirmar Cambios</string>
     <string name="history_delete_action">Eliminar</string>
-    <string name="history_close_button">Cerrar</string>
+    <string name="history_close_button">Entendido</string>
     <string name="history_daily_records_title">Registros del %1$s</string>
     <string name="history_expand_desc">Expandir</string>
     <string name="history_collapse_desc">Colapsar</string>
@@ -239,7 +240,7 @@
     <string name="history_label_month">Mes</string>
     <string name="history_label_year">Año</string>
     <string name="history_delete_desc">Borrar</string>
-    <string name="history_no_history_yet">No hay historial todavía</string>
+    <string name="history_no_history_yet">Aún no hay viajes en tu historial</string>
     <string name="history_detail_time_label">Hora</string>
     <string name="history_detail_consumption_title">CONSUMO ESTIMADO</string>
     <string name="history_detail_route_title">RUTA DEL VIAJE</string>
