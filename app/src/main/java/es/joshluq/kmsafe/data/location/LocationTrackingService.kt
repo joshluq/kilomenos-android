@@ -51,6 +51,7 @@ class LocationTrackingService : Service() {
     lateinit var analytics: AnalyticskitManager
 
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    private var distanceJob: kotlinx.coroutines.Job? = null
     private lateinit var fusedLocationClient: FusedLocationProviderClient
     private var lastLocation: Location? = null
 
@@ -75,7 +76,8 @@ class LocationTrackingService : Service() {
     }
 
     private fun observeDistance() {
-        trackingRepository.currentDistanceMeters
+        distanceJob?.cancel()
+        distanceJob = trackingRepository.currentDistanceMeters
             .onEach { distance ->
                 updateNotification(distance)
             }
@@ -195,6 +197,7 @@ class LocationTrackingService : Service() {
     private fun stopTracking() {
         logger.i("LocationService", "Stopping tracking process...")
         fusedLocationClient.removeLocationUpdates(locationCallback)
+        distanceJob?.cancel()
         
         serviceScope.launch {
             logger.d("LocationService", "Calling repository stopTracking")
@@ -203,7 +206,10 @@ class LocationTrackingService : Service() {
             
             // Move cleanup inside the scope to ensure order
             stopForeground(STOP_FOREGROUND_REMOVE)
-            logger.d("LocationService", "Foreground removed, calling stopSelf")
+            val notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
+            notificationManager.cancel(NOTIFICATION_ID)
+            
+            logger.d("LocationService", "Foreground removed and notification cancelled, calling stopSelf")
             stopSelf()
         }
     }
