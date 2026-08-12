@@ -193,7 +193,6 @@ class OverviewViewModel @Inject constructor(
                 evaluatePromotion(
                     isPremium = hasPremiumAccess,
                     isTrialable = isTrialable,
-                    isEnabled = prefs.autoTrackingEnabled,
                     isDismissed = prefs.autoTrackingPromotionDismissed
                 )
             }
@@ -307,13 +306,15 @@ class OverviewViewModel @Inject constructor(
             }.launchIn(viewModelScope)
     }
 
-    private fun evaluatePromotion(isPremium: Boolean, isTrialable: Boolean, isEnabled: Boolean, isDismissed: Boolean) {
-        if (isDismissed || isEnabled) {
+    private fun evaluatePromotion(isPremium: Boolean, isTrialable: Boolean, isDismissed: Boolean) {
+        if (isDismissed) {
+            logger.i("OverviewViewModel", "Auto-tracking promotion evaluation: Skipping")
             updateState { copy(showAutoTrackingPromotion = false) }
             return
         }
 
         val shouldShow = isPremium || isTrialable
+        logger.i("OverviewViewModel", "Auto-tracking promotion evaluation: $shouldShow")
         updateState { copy(showAutoTrackingPromotion = shouldShow) }
     }
 
