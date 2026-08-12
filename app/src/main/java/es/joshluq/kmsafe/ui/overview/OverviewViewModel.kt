@@ -26,9 +26,24 @@ import es.joshluq.kmsafe.di.UpdatePreferences
 import es.joshluq.kmsafe.domain.model.Feature
 import es.joshluq.kmsafe.domain.model.RentingContract
 import es.joshluq.kmsafe.domain.model.SubscriptionLevel
-import es.joshluq.kmsafe.domain.usecase.*
+import es.joshluq.kmsafe.domain.usecase.AddOdometerRecordUseCase
+import es.joshluq.kmsafe.domain.usecase.ClearTrackingUseCase
+import es.joshluq.kmsafe.domain.usecase.GetAllContractsUseCase
+import es.joshluq.kmsafe.domain.usecase.GetEntitlementsUseCase
+import es.joshluq.kmsafe.domain.usecase.GetMonthlyUsageUseCase
+import es.joshluq.kmsafe.domain.usecase.GetOverviewDataUseCase
+import es.joshluq.kmsafe.domain.usecase.GetPreferencesUseCase
+import es.joshluq.kmsafe.domain.usecase.GetTripProjectionUseCase
+import es.joshluq.kmsafe.domain.usecase.ObserveTrackingStateUseCase
+import es.joshluq.kmsafe.domain.usecase.SelectContractUseCase
+import es.joshluq.kmsafe.domain.usecase.StartAutoTrackingUseCase
+import es.joshluq.kmsafe.domain.usecase.StopAutoTrackingUseCase
+import es.joshluq.kmsafe.domain.usecase.StopTrackingUseCase
+import es.joshluq.kmsafe.domain.usecase.UpdatePreferencesUseCase
 import es.joshluq.kmsafe.ui.overview.model.toUiModel
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import javax.inject.Inject
@@ -74,6 +89,8 @@ class OverviewViewModel @Inject constructor(
         private const val DAYS_IN_MONTH = 30.4375
         private const val MILLIS_IN_DAY = 1000L * 60 * 60 * 24
     }
+
+    private var bannerAlertJob: Job? = null
 
     init {
         syncInitialData()
@@ -141,17 +158,22 @@ class OverviewViewModel @Inject constructor(
 
     private fun syncInitialData() {
         val entitlementsFlow = getEntitlementsUseCase(GetEntitlementsUseCase.Input("", forceRefresh = false))
+            .distinctUntilChanged()
         val preferencesFlow = getPreferencesUseCase(GetPreferencesUseCase.Input)
+            .distinctUntilChanged()
 
         combine(entitlementsFlow, preferencesFlow) { entitlementsOutput, preferencesOutput ->
-            if (entitlementsOutput is GetEntitlementsUseCase.Output.Success && 
-                preferencesOutput is GetPreferencesUseCase.Output.Success) {
-                
+            if (entitlementsOutput is GetEntitlementsUseCase.Output.Success &&
+                preferencesOutput is GetPreferencesUseCase.Output.Success
+            ) {
                 val entitlements = entitlementsOutput.entitlements
                 val prefs = preferencesOutput.preferences
-                
-                logger.i("OverviewViewModel", "Initial data combined: SubLevel=${entitlements.subscriptionLevel}, AutoTracking=${prefs.autoTrackingEnabled}")
-                
+
+                logger.i(
+                    "OverviewViewModel",
+                    "Initial data combined: SubLevel=${entitlements.subscriptionLevel}, AutoTracking=${prefs.autoTrackingEnabled}"
+                )
+
                 val hasPremiumAccess = entitlements.subscriptionLevel == SubscriptionLevel.PREMIUM
                 val isTrialable = entitlements.isFeatureTrialable(Feature.AUTO_TRACKING)
 
@@ -183,7 +205,10 @@ class OverviewViewModel @Inject constructor(
             .onEach { output ->
                 when (output) {
                     is GetOverviewDataUseCase.Output.Success -> {
-                        logger.i("OverviewViewModel", "Active contract loaded: ${output.contract?.vehicleName ?: "No vehicle"}")
+                        logger.i(
+                            "OverviewViewModel",
+                            "Active contract loaded: ${output.contract?.vehicleName ?: "No vehicle"}"
+                        )
                         if (output.contract != null) {
                             calculateMetrics(output.contract, output.actualKmsDrivenSinceStart)
                             updateState { copy(isSyncPending = output.isSyncPending) }
@@ -193,11 +218,11 @@ class OverviewViewModel @Inject constructor(
                     }
                     is GetOverviewDataUseCase.Output.Failure -> {
                         logger.e("OverviewViewModel", "Critical: Failed to load overview data")
-                        updateState { 
+                        updateState {
                             copy(
                                 isLoading = false,
                                 error = TextProvider.Resource(R.string.history_load_error)
-                            ) 
+                            )
                         }
                     }
                     is GetOverviewDataUseCase.Output.Progress -> updateState { copy(isLoading = true) }
@@ -261,7 +286,8 @@ class OverviewViewModel @Inject constructor(
     }
 
     private fun checkBannerAlert(currentOverLimit: Boolean) {
-        getPreferencesUseCase(GetPreferencesUseCase.Input)
+        bannerAlertJob?.cancel()
+        bannerAlertJob = getPreferencesUseCase(GetPreferencesUseCase.Input)
             .onEach { output ->
                 if (output is GetPreferencesUseCase.Output.Success) {
                     val prefs = output.preferences
@@ -269,7 +295,9 @@ class OverviewViewModel @Inject constructor(
                         val lastState = prefs.lastKnownOverLimit
                         if (lastState == null || lastState != currentOverLimit) {
                             updateState { copy(showProjectionBanner = true) }
-                            updatePreferencesUseCase(UpdatePreferencesUseCase.Input(lastKnownOverLimit = currentOverLimit))
+                            updatePreferencesUseCase(
+                                UpdatePreferencesUseCase.Input(lastKnownOverLimit = currentOverLimit)
+                            )
                                 .launchIn(viewModelScope)
                         }
                     } else {
@@ -346,8 +374,11 @@ class OverviewViewModel @Inject constructor(
         val monthlyBudget = renting.totalKms.toDouble() / renting.durationMonths
         val theoreticalKms = daysPassed * baseDailyBudget
         val balance = theoreticalKms - actualKmsDrivenSinceStart
-        
-        logger.d("OverviewViewModel", "Metrics re-calculated for ${renting.vehicleName}: Balance=${balance.toInt()}, DaysPassed=${daysPassed.toInt()}")
+
+        logger.d(
+            "OverviewViewModel",
+            "Metrics re-calculated for ${renting.vehicleName}: Balance=${balance.toInt()}, DaysPassed=${daysPassed.toInt()}"
+        )
 
         val timeUsedPercentage = (daysPassed / totalDays).coerceIn(0.0, 1.0).toFloat()
         val kmsUsedPercentage = (actualKmsDrivenSinceStart / renting.totalKms).coerceIn(0.0, 1.0).toFloat()
@@ -389,14 +420,14 @@ class OverviewViewModel @Inject constructor(
         observeTrackingStateUseCase(ObserveTrackingStateUseCase.Input)
             .onEach { output ->
                 if (output is ObserveTrackingStateUseCase.Output.Success) {
-                    updateState { 
+                    updateState {
                         copy(
                             isTracking = output.isTracking,
                             trackedDistance = output.trackedDistance,
                             tripStartTime = output.startTime,
                             currentRoutePolyline = output.encodedPolyline,
                             currentPointCount = output.pointCount
-                        ) 
+                        )
                     }
                 }
             }
@@ -437,7 +468,7 @@ class OverviewViewModel @Inject constructor(
             .onEach { output ->
                 if (output is UpdatePreferencesUseCase.Output.Success) {
                     updateState { copy(autoTrackingEnabled = enabled) }
-                    
+
                     if (enabled) {
                         logger.d("OverviewViewModel", "Starting auto-tracking sensors")
                         startAutoTrackingUseCase(StartAutoTrackingUseCase.Input).launchIn(viewModelScope)
@@ -445,9 +476,14 @@ class OverviewViewModel @Inject constructor(
                         logger.d("OverviewViewModel", "Stopping auto-tracking sensors")
                         stopAutoTrackingUseCase(StopAutoTrackingUseCase.Input).launchIn(viewModelScope)
                     }
-                    
+
                     // Re-trigger evaluation of the banner after toggle
-                    state.value.renting?.let { calculateMetrics(it, (it.currentOdometer - it.startOdometer).toDouble()) }
+                    state.value.renting?.let {
+                        calculateMetrics(
+                            it,
+                            (it.currentOdometer - it.startOdometer).toDouble()
+                        )
+                    }
                 }
             }.launchIn(viewModelScope)
     }

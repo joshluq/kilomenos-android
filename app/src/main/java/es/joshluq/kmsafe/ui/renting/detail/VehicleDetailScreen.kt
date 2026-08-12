@@ -1,21 +1,47 @@
 package es.joshluq.kmsafe.ui.renting.detail
 
-import androidx.compose.foundation.layout.*
+import android.content.res.Configuration
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.filled.Bluetooth
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.DirectionsCar
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Euro
+import androidx.compose.material.icons.filled.Event
+import androidx.compose.material.icons.filled.Shield
+import androidx.compose.material.icons.filled.Speed
+import androidx.compose.material.icons.filled.Timelapse
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import android.content.res.Configuration
-import androidx.compose.ui.text.style.TextAlign
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import es.joshluq.canvaskit.components.buttons.CanvasKitButton
@@ -31,7 +57,8 @@ import es.joshluq.kmsafe.ui.renting.components.ContractMetricCard
 import es.joshluq.kmsafe.ui.renting.components.VehiclePhotoSelector
 import es.joshluq.kmsafe.ui.util.safeClick
 import java.text.SimpleDateFormat
-import java.util.*
+import java.util.Date
+import java.util.Locale
 
 @Composable
 fun VehicleDetailRoute(
@@ -101,7 +128,6 @@ fun VehicleDetailScreen(
                         .verticalScroll(rememberScrollState())
                         .padding(horizontal = 24.dp)
                 ) {
-
                     VehiclePhotoSelector(
                         imageUrl = contract.vehicleImageUrl,
                         isReadOnly = true,
@@ -180,7 +206,13 @@ fun VehicleDetailScreen(
                         ContractMetricCard(
                             icon = Icons.Default.Shield,
                             label = stringResource(R.string.setup_wizard_step_advanced_margin_label),
-                            value = if (contract.courtesyMarginKms > 0) "${contract.courtesyMarginKms} km" else stringResource(R.string.vehicle_detail_no_advanced_data),
+                            value = if (contract.courtesyMarginKms > 0) {
+                                "${contract.courtesyMarginKms} km"
+                            } else {
+                                stringResource(
+                                    R.string.vehicle_detail_no_advanced_data
+                                )
+                            },
                             modifier = Modifier.weight(1f)
                         )
                     }
@@ -203,9 +235,9 @@ fun VehicleDetailScreen(
 
             if (showDeleteDialog) {
                 DeleteConfirmationDialog(
-                    onConfirm = { 
+                    onConfirm = {
                         showDeleteDialog = false
-                        onEvent(Event.OnConfirmDelete) 
+                        onEvent(Event.OnConfirmDelete)
                     },
                     onDismiss = { showDeleteDialog = false }
                 )

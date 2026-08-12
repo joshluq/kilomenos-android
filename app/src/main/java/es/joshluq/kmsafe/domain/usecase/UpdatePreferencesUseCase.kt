@@ -6,7 +6,9 @@ import es.joshluq.foundationkit.usecase.UseCaseOutput
 import es.joshluq.kmsafe.domain.repository.AuthRepository
 import es.joshluq.kmsafe.domain.repository.PreferencesRepository
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flow
 import javax.inject.Inject
 
 class UpdatePreferencesUseCase @Inject constructor(
@@ -25,7 +27,12 @@ class UpdatePreferencesUseCase @Inject constructor(
                     input.showProjectionBanner?.let { repository.setShowProjectionBanner(user.id, it) }
                     input.lastKnownOverLimit?.let { repository.setLastKnownOverLimit(user.id, it) }
                     input.autoTrackingEnabled?.let { repository.setAutoTrackingEnabled(user.id, it) }
-                    input.autoTrackingPromotionDismissed?.let { repository.setAutoTrackingPromotionDismissed(user.id, it) }
+                    input.autoTrackingPromotionDismissed?.let {
+                        repository.setAutoTrackingPromotionDismissed(
+                            user.id,
+                            it
+                        )
+                    }
                 }
 
                 emit(Output.Success as Output)

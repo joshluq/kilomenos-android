@@ -33,7 +33,7 @@ class ConsentManager @Inject constructor(
             .setTagForUnderAgeOfConsent(false)
             .build()
 
-        consentInformation =getConsentInformation(activity)
+        consentInformation = getConsentInformation(activity)
         consentInformation.requestConsentInfoUpdate(
             activity,
             params,
@@ -62,7 +62,7 @@ class ConsentManager @Inject constructor(
      */
     fun isPrivacyOptionsRequired(): Boolean =
         ::consentInformation.isInitialized &&
-                consentInformation.privacyOptionsRequirementStatus == ConsentInformation.PrivacyOptionsRequirementStatus.REQUIRED
+            consentInformation.privacyOptionsRequirementStatus == ConsentInformation.PrivacyOptionsRequirementStatus.REQUIRED
 
     /**
      * Shows the privacy options form to allow the user to change their consent settings.

@@ -17,7 +17,7 @@ interface EntitlementsRepository {
      * Initiates the 7-day trial period for the current user and device.
      */
     fun startTrial(deviceFingerprint: String): Flow<Entitlements>
-    
+
     /**
      * Checks if a specific feature is enabled in the current entitlements.
      */

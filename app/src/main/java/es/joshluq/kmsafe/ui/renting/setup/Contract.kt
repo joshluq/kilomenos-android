@@ -11,29 +11,29 @@ data class State(
     val currentStep: SetupStep = SetupStep.VEHICLE_IDENTITY,
     val isLoading: Boolean = false,
     val subscriptionLevel: SubscriptionLevel = SubscriptionLevel.FREE,
-    
+
     // Step 1: Identity
     val vehicleName: String = "",
     val vehicleImageUrl: String? = null,
     val selectedImageUri: Uri? = null,
-    
+
     // Step 2: Timeframe
     val startDate: String = "",
     val durationMonths: String = "",
-    
+
     // Step 3: Mileage
     val totalKms: String = "",
     val startOdometer: String = "",
     val currentOdometer: String = "",
-    
+
     // Step 4: Bluetooth
     val bluetoothDeviceName: String? = null,
     val bluetoothDeviceAddress: String? = null,
-    
+
     // Step 5: Advanced
     val excessDistancePrice: String = "",
     val courtesyMarginKms: String = "",
-    
+
     // UI State
     val showDatePicker: Boolean = false,
     val showBluetoothPicker: Boolean = false,
@@ -55,7 +55,7 @@ enum class SetupStep(val index: Int) {
     MILEAGE_BUDGET(3),
     SMART_ACTIVATION(4),
     ADVANCED_PROTECTION(5);
-    
+
     companion object {
         val totalSteps = entries.size
     }
@@ -66,7 +66,7 @@ sealed interface Event : UiEvent {
     data object OnNextClicked : Event
     data object OnBackClicked : Event
     data object OnSkipStepClicked : Event
-    
+
     // Input Changes
     data class OnVehicleNameChanged(val value: String) : Event
     data class OnOriginalImageSelected(val uri: Uri?) : Event
@@ -79,7 +79,7 @@ sealed interface Event : UiEvent {
     data class OnBluetoothDeviceSelected(val name: String, val address: String) : Event
     data class OnExcessDistancePriceChanged(val value: String) : Event
     data class OnCourtesyMarginKmsChanged(val value: String) : Event
-    
+
     // Dialogs/Pickers
     data object OnToggleDatePicker : Event
     data object OnToggleBluetoothPicker : Event

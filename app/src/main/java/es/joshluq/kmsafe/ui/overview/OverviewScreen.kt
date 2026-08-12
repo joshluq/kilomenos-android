@@ -114,15 +114,15 @@ import es.joshluq.canvaskit.components.sheets.CanvasKitBottomSheet
 import es.joshluq.canvaskit.foundations.theme.CanvasKitTheme
 import es.joshluq.kmsafe.BuildConfig
 import es.joshluq.kmsafe.R
-import es.joshluq.kmsafe.domain.model.SubscriptionLevel
 import es.joshluq.kmsafe.data.location.LocationTrackingService
 import es.joshluq.kmsafe.domain.model.RentingContract
+import es.joshluq.kmsafe.domain.model.SubscriptionLevel
 import es.joshluq.kmsafe.domain.model.TripProjection
-import es.joshluq.kmsafe.ui.renting.components.RentingTextField
 import es.joshluq.kmsafe.ui.common.components.AdMobBanner
 import es.joshluq.kmsafe.ui.common.components.BrandingLogo
 import es.joshluq.kmsafe.ui.overview.components.TrackingCard
 import es.joshluq.kmsafe.ui.overview.model.MonthlyUsageUiModel
+import es.joshluq.kmsafe.ui.renting.components.RentingTextField
 import es.joshluq.kmsafe.ui.util.DateUtils
 import es.joshluq.kmsafe.ui.util.safeClick
 import es.joshluq.kmsafe.ui.util.safeClickable
@@ -269,9 +269,9 @@ fun OverviewScreen(
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
                     FloatingActionButton(
-                        onClick = safeClick { 
+                        onClick = safeClick {
                             keyboardController?.hide()
-                            onEvent(Event.OnUpdateOdometerClicked) 
+                            onEvent(Event.OnUpdateOdometerClicked)
                         },
                         containerColor = CanvasKitTheme.colors.brandAccent,
                         contentColor = CanvasKitTheme.colors.onBrandAccent,
@@ -286,9 +286,11 @@ fun OverviewScreen(
             }
         }
     ) { innerPadding ->
-        Box(modifier = Modifier
-            .fillMaxSize()
-            .padding(innerPadding)) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+        ) {
             Column {
                 val isActivityGranted = activityRecognitionState?.status?.isGranted ?: true
                 val isBackgroundGranted = backgroundLocationState?.status?.isGranted ?: true
@@ -319,7 +321,12 @@ fun OverviewScreen(
                 }
 
                 // BUSINESS RULE: If auto-tracking is enabled but Critical Permissions are missing -> Navigate to Permissions Screen
-                LaunchedEffect(state.autoTrackingEnabled, isActivityGranted, isBackgroundGranted, isNotificationsGranted) {
+                LaunchedEffect(
+                    state.autoTrackingEnabled,
+                    isActivityGranted,
+                    isBackgroundGranted,
+                    isNotificationsGranted
+                ) {
                     if (state.autoTrackingEnabled && (!isActivityGranted || !isBackgroundGranted || !isNotificationsGranted)) {
                         onEvent(Event.OnRequestPermissionsRationale)
                     }
@@ -369,8 +376,8 @@ fun OverviewScreen(
                 modifier = Modifier
                     .align(Alignment.TopCenter)
                     .padding(top = if (state.showProjectionBanner) 64.dp else 0.dp)
-                    .safeClickable { 
-                        state.renting?.let { onEvent(Event.OnEditContractClicked(it.id)) } 
+                    .safeClickable {
+                        state.renting?.let { onEvent(Event.OnEditContractClicked(it.id)) }
                     },
                 variant = CanvasKitAlertVariant.Info,
                 visible = state.showBluetoothSuggestionBanner,
@@ -386,10 +393,10 @@ fun OverviewScreen(
 
         if (state.showBottomSheet) {
             CanvasKitBottomSheet(
-                onDismissRequest = { 
+                onDismissRequest = {
                     keyboardController?.hide()
                     focusManager.clearFocus()
-                    onEvent(Event.OnBottomSheetDismissed) 
+                    onEvent(Event.OnBottomSheetDismissed)
                 },
                 sheetState = bottomSheetState,
             ) {
@@ -410,7 +417,7 @@ fun OverviewScreen(
 
 @Composable
 private fun RentingState(
-    state: State, 
+    state: State,
     onEvent: (Event) -> Unit,
     onStartTracking: () -> Unit,
     onNavigateToVehicleDetail: (String) -> Unit
@@ -430,22 +437,22 @@ private fun RentingState(
             )
         }
         Spacer(modifier = Modifier.height(2.dp))
-        
+
         TrackingCard(
             isTracking = state.isTracking,
             distanceMeters = state.trackedDistance,
             onStart = onStartTracking,
-            onStop = { 
+            onStop = {
                 keyboardController?.hide()
-                onEvent(Event.OnStopTrackingClicked) 
+                onEvent(Event.OnStopTrackingClicked)
             },
-            onConfirm = { 
+            onConfirm = {
                 keyboardController?.hide()
-                onEvent(Event.OnConfirmTrackedTripClicked) 
+                onEvent(Event.OnConfirmTrackedTripClicked)
             },
-            onCancel = { 
+            onCancel = {
                 keyboardController?.hide()
-                onEvent(Event.OnCancelTrackedTripClicked) 
+                onEvent(Event.OnCancelTrackedTripClicked)
             }
         )
 
@@ -454,9 +461,9 @@ private fun RentingState(
             balance = state.balance,
             totalKms = state.totalKmsDriven,
             imageUrl = state.renting?.vehicleImageUrl,
-            onEditClick = { 
+            onEditClick = {
                 keyboardController?.hide()
-                state.renting?.let { onEvent(Event.OnEditContractClicked(it.id)) } 
+                state.renting?.let { onEvent(Event.OnEditContractClicked(it.id)) }
             },
             onCardClick = {
                 state.renting?.let { onNavigateToVehicleDetail(it.id) }
@@ -527,7 +534,7 @@ private fun MainBalanceCard(
                         }
                     )
                 }
-                
+
                 IconButton(
                     onClick = onEditClick,
                     modifier = Modifier
@@ -723,7 +730,7 @@ private fun MetricCard(label: String, value: String, modifier: Modifier = Modifi
 @Composable
 fun MonthlyBarChart(monthlyUsage: List<MonthlyUsageUiModel>) {
     var showInfo by remember { mutableStateOf(false) }
-    
+
     CanvasKitCard(
         modifier = Modifier
             .fillMaxWidth()
@@ -932,7 +939,7 @@ private fun ComparisonChart(timeP: Float, kmsP: Float, diff: Float) {
                     )
                 }
             }
-            
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.Center,
@@ -1082,7 +1089,7 @@ private fun OverviewTopBar(state: State, onEvent: (Event) -> Unit) {
                 )
             ) {
                 BrandingLogo(logoSize = 34.dp)
-                
+
                 if (state.availableVehicles.size > 1) {
                     Icon(
                         imageVector = Icons.Default.ArrowDropDown,
@@ -1132,7 +1139,6 @@ private fun OverviewTopbarActions(
     state: State,
     onEvent: (Event) -> Unit
 ) {
-
     if (state.subscriptionLevel == SubscriptionLevel.TRIAL) {
         Surface(
             color = CanvasKitTheme.colors.brandAccent.copy(alpha = 0.1f),
@@ -1294,7 +1300,7 @@ private fun AutoTrackingPromotionDialog(
 
 @Composable
 private fun EmptyState(
-    state: State, 
+    state: State,
     onRegisterClick: () -> Unit,
     onHowItWorksClick: () -> Unit
 ) {
@@ -1338,7 +1344,6 @@ private fun EmptyState(
                         )
                     }
                 }
-
             }
         )
     }
@@ -1405,11 +1410,11 @@ internal class OverviewStateProvider : PreviewParameterProvider<State> {
 @Preview(uiMode = Configuration.UI_MODE_NIGHT_YES or Configuration.UI_MODE_TYPE_NORMAL)
 @Composable
 fun OverviewScreenPreview(@PreviewParameter(OverviewStateProvider::class) state: State) {
-    CanvasKitTheme { 
+    CanvasKitTheme {
         OverviewScreen(
-            state = state, 
+            state = state,
             onEvent = {},
             onNavigateToVehicleDetail = {}
-        ) 
+        )
     }
 }

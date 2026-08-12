@@ -21,8 +21,6 @@ import javax.inject.Singleton
 @InstallIn(SingletonComponent::class)
 abstract class DataModule {
 
-
-
     companion object {
 
         private const val DATABASE_NAME = "kmsafe_db_${BuildConfig.FLAVOR}"

@@ -129,10 +129,12 @@ fun SignupScreen(
                     )
                 },
                 navigationIcon = {
-                    IconButton(onClick = safeClick { 
-                        keyboardController?.hide()
-                        onNavigateBack() 
-                    }) {
+                    IconButton(
+                        onClick = safeClick {
+                            keyboardController?.hide()
+                            onNavigateBack()
+                        }
+                    ) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = stringResource(R.string.acc_back),
@@ -182,7 +184,9 @@ fun SignupScreen(
                                         )
                                     },
                                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
-                                    keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Next) }),
+                                    keyboardActions = KeyboardActions(
+                                        onNext = { focusManager.moveFocus(FocusDirection.Next) }
+                                    ),
                                     modifier = Modifier.fillMaxWidth()
                                 )
 
@@ -205,7 +209,9 @@ fun SignupScreen(
                                         keyboardType = KeyboardType.Email,
                                         imeAction = ImeAction.Next
                                     ),
-                                    keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Next) }),
+                                    keyboardActions = KeyboardActions(
+                                        onNext = { focusManager.moveFocus(FocusDirection.Next) }
+                                    ),
                                     modifier = Modifier.fillMaxWidth()
                                 )
 
@@ -247,10 +253,10 @@ fun SignupScreen(
                                 )
 
                                 CanvasKitButton(
-                                    onClick = { 
+                                    onClick = {
                                         keyboardController?.hide()
                                         focusManager.clearFocus()
-                                        onEvent(Event.OnSignupClicked) 
+                                        onEvent(Event.OnSignupClicked)
                                     },
                                     enabled = state.isSignupEnabled,
                                     loading = state.isLoading,
@@ -328,10 +334,10 @@ fun SignupScreen(
                             )
                         }
                         CanvasKitButton(
-                            onClick = { 
+                            onClick = {
                                 keyboardController?.hide()
                                 focusManager.clearFocus()
-                                onEvent(Event.OnConfirmUserConflict) 
+                                onEvent(Event.OnConfirmUserConflict)
                             },
                             variant = CanvasKitButtonVariant.Ghost
                         ) { _ ->
@@ -359,7 +365,7 @@ private fun PrivacyPolicyLink(
 
     // Splitting the string to maintain i18n while using the RichText DSL
     val parts = fullString.split(termsText, privacyText)
-    
+
     CanvasKitRichText(
         modifier = Modifier.fillMaxWidth(),
         style = CanvasKitTheme.typography.labelSmall.copy(textAlign = TextAlign.Center),

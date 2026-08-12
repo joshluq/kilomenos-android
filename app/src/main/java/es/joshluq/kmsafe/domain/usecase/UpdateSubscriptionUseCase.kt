@@ -7,7 +7,10 @@ import es.joshluq.foundationkit.usecase.UseCaseOutput
 import es.joshluq.kmsafe.domain.model.SubscriptionLevel
 import es.joshluq.kmsafe.domain.model.User
 import es.joshluq.kmsafe.domain.repository.AuthRepository
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onStart
 import javax.inject.Inject
 
 /**

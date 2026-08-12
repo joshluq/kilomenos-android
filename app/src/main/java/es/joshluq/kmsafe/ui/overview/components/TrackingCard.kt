@@ -2,9 +2,20 @@ package es.joshluq.kmsafe.ui.overview.components
 
 import android.content.res.Configuration
 import androidx.compose.animation.animateColor
-import androidx.compose.animation.core.*
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.GpsFixed
@@ -79,7 +90,7 @@ fun TrackingCard(
                         letterSpacing = 1.sp
                     )
                 }
-                
+
                 if (isTracking) {
                     Box(
                         modifier = Modifier
@@ -91,7 +102,7 @@ fun TrackingCard(
             }
         }
     ) {
-        Row (
+        Row(
             verticalAlignment = Alignment.CenterVertically
         ) {
             val kms = distanceMeters / 1000.0
@@ -115,7 +126,7 @@ fun TrackingCard(
                     color = CanvasKitTheme.colors.textSecondary
                 )
             }
-            Column (
+            Column(
                 modifier = Modifier.weight(0.4f),
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally
@@ -138,21 +149,19 @@ fun TrackingCard(
                     }
                     // State 3: Trip Completed (Waiting for confirmation or cancellation)
                     distanceMeters > 0 -> {
-
-                            CanvasKitButton(
-                                modifier = Modifier.fillMaxWidth(),
-                                onClick = safeClick { onConfirm() },
-                            ) { contentColor ->
-                                Text(stringResource(R.string.tracking_card_save_action), color = contentColor)
-                            }
-                            CanvasKitButton(
-                                modifier = Modifier.fillMaxWidth(),
-                                variant = CanvasKitButtonVariant.Ghost,
-                                onClick = safeClick { onCancel() },
-                            ) { contentColor ->
-                                Text(stringResource(R.string.tracking_card_cancel_action), color = contentColor)
-                            }
-
+                        CanvasKitButton(
+                            modifier = Modifier.fillMaxWidth(),
+                            onClick = safeClick { onConfirm() },
+                        ) { contentColor ->
+                            Text(stringResource(R.string.tracking_card_save_action), color = contentColor)
+                        }
+                        CanvasKitButton(
+                            modifier = Modifier.fillMaxWidth(),
+                            variant = CanvasKitButtonVariant.Ghost,
+                            onClick = safeClick { onCancel() },
+                        ) { contentColor ->
+                            Text(stringResource(R.string.tracking_card_cancel_action), color = contentColor)
+                        }
                     }
                     // State 1: Initial (Ready to start)
                     else -> {
@@ -165,7 +174,6 @@ fun TrackingCard(
                     }
                 }
             }
-
         }
     }
 }

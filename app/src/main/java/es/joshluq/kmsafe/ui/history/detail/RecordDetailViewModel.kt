@@ -71,14 +71,16 @@ class RecordDetailViewModel @Inject constructor(
             RecordDetailEvent.OnCancelDelete -> updateState { copy(showDeleteConfirmation = false) }
             RecordDetailEvent.OnDismissError -> updateState { copy(error = null) }
             RecordDetailEvent.OnConfirmDelete -> handleDelete()
-            
+
             RecordDetailEvent.OnDismissEdit -> updateState { copy(showEditDialog = false) }
             is RecordDetailEvent.OnEditingFuelChanged -> updateState { copy(editingFuel = event.value) }
             is RecordDetailEvent.OnEditingLabelChanged -> updateState { copy(editingLabel = event.value) }
             is RecordDetailEvent.OnEditingOdometerChanged -> updateState { copy(editingOdometerValue = event.value) }
             RecordDetailEvent.OnUpdateRecordClicked -> handleUpdateRecord()
             RecordDetailEvent.OnPremiumUpgradeClicked -> {
-                analytics.track(AnalyticsEvent.Custom("premium_upgrade_clicked", mapOf("source" to "record_detail_route_map")))
+                analytics.track(
+                    AnalyticsEvent.Custom("premium_upgrade_clicked", mapOf("source" to "record_detail_route_map"))
+                )
                 launchEffect(RecordDetailEffect.NavigateToPremiumPaywall)
             }
         }
@@ -109,18 +111,25 @@ class RecordDetailViewModel @Inject constructor(
                                 consumptionL100km = consumption
                             )
                         }
-                        
+
                         // Analytics for intention of use
                         if (output.record.hasRoute) {
                             if (state.value.isPremium) {
-                                logger.d("RecordDetailViewModel", "Premium user viewing record with route. Loading map...")
+                                logger.d(
+                                    "RecordDetailViewModel",
+                                    "Premium user viewing record with route. Loading map..."
+                                )
                                 loadRoute(output.record.id)
                             } else {
-                                analytics.track(AnalyticsEvent.Custom("route_teaser_viewed", mapOf("record_id" to output.record.id)))
+                                analytics.track(
+                                    AnalyticsEvent.Custom("route_teaser_viewed", mapOf("record_id" to output.record.id))
+                                )
                                 logger.d("RecordDetailViewModel", "Free user viewing record with route. Teaser shown.")
                             }
                         } else {
-                            analytics.track(AnalyticsEvent.Custom("record_no_route_viewed", mapOf("record_id" to output.record.id)))
+                            analytics.track(
+                                AnalyticsEvent.Custom("record_no_route_viewed", mapOf("record_id" to output.record.id))
+                            )
                             logger.d("RecordDetailViewModel", "Record has no route data.")
                         }
                     }
@@ -142,16 +151,21 @@ class RecordDetailViewModel @Inject constructor(
                 when (output) {
                     GetRouteUseCase.Output.Progress -> updateState { copy(isRouteLoading = true) }
                     is GetRouteUseCase.Output.Success -> {
-                        analytics.track(AnalyticsEvent.Custom("route_map_viewed", mapOf(
-                            "record_id" to id,
-                            "points" to output.route.pointCount
-                        )))
-                        updateState { 
-                            copy(isRouteLoading = false, route = output.route) 
+                        analytics.track(
+                            AnalyticsEvent.Custom(
+                                "route_map_viewed",
+                                mapOf(
+                                    "record_id" to id,
+                                    "points" to output.route.pointCount
+                                )
+                            )
+                        )
+                        updateState {
+                            copy(isRouteLoading = false, route = output.route)
                         }
                     }
-                    is GetRouteUseCase.Output.Failure -> updateState { 
-                        copy(isRouteLoading = false) 
+                    is GetRouteUseCase.Output.Failure -> updateState {
+                        copy(isRouteLoading = false)
                     }
                 }
             }.launchIn(viewModelScope)

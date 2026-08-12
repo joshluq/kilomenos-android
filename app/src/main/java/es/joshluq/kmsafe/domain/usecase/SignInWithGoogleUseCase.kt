@@ -21,7 +21,7 @@ class SignInWithGoogleUseCase @Inject constructor(
 ) : FlowUseCase<SignInWithGoogleUseCase.Input, SignInWithGoogleUseCase.Output> {
 
     data class Input(val idToken: String) : UseCaseInput
-    
+
     sealed interface Output : UseCaseOutput {
         data object Progress : Output
         data class Success(val user: User) : Output

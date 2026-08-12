@@ -65,7 +65,7 @@ class AuthRepositoryImpl @Inject constructor(
                     Token.Refresh(body.session.refreshToken ?: "")
                 )
                 val user = body.user.toDomain()
-                
+
                 // Seed initial entitlements from login response
                 val initialLevel = when (body.subscriptionLevel?.uppercase()) {
                     "PREMIUM" -> SubscriptionLevel.PREMIUM
@@ -77,7 +77,9 @@ class AuthRepositoryImpl @Inject constructor(
                 sessionDataSource.startSession(tokens)
                 sessionDataSource.saveSessionData(user.toSessionModel(initialEntitlements.toModel()))
 
-                analytics.track(AnalyticsEvent.Custom("login_success", mapOf("user_id" to user.id, "method" to "credentials")))
+                analytics.track(
+                    AnalyticsEvent.Custom("login_success", mapOf("user_id" to user.id, "method" to "credentials"))
+                )
 
                 emit(user)
             } else {
@@ -118,7 +120,9 @@ class AuthRepositoryImpl @Inject constructor(
                 sessionDataSource.startSession(tokens)
                 sessionDataSource.saveSessionData(user.toSessionModel(initialEntitlements.toModel()))
 
-                analytics.track(AnalyticsEvent.Custom("login_success", mapOf("user_id" to user.id, "method" to "google")))
+                analytics.track(
+                    AnalyticsEvent.Custom("login_success", mapOf("user_id" to user.id, "method" to "google"))
+                )
 
                 emit(user)
             } else {
@@ -148,7 +152,7 @@ class AuthRepositoryImpl @Inject constructor(
                         Token.Refresh(body.session.refreshToken ?: "")
                     )
                     val user = body.user.toDomain()
-                    
+
                     // Seed initial entitlements
                     val initialLevel = when (body.subscriptionLevel.uppercase()) {
                         "PREMIUM" -> SubscriptionLevel.PREMIUM
@@ -197,9 +201,11 @@ class AuthRepositoryImpl @Inject constructor(
 
                 // Trigger an entitlements update to sync the new status
                 val entitlements = getEntitlements().first()
-                updateEntitlements(entitlements.copy(
-                    subscriptionLevel = level
-                ))
+                updateEntitlements(
+                    entitlements.copy(
+                        subscriptionLevel = level
+                    )
+                )
 
                 val currentUser = sessionDataSource.getCurrentUserSession()?.toDomain()
                 if (currentUser != null) {
@@ -251,7 +257,7 @@ class AuthRepositoryImpl @Inject constructor(
         if (currentSession != null) {
             val updatedSession = currentSession.copy(entitlements = entitlements.toModel())
             sessionDataSource.saveSessionData(updatedSession)
-            
+
             // Sync analytics
             analytics.addGlobalProperty("subscription_level", entitlements.subscriptionLevel.name)
         }

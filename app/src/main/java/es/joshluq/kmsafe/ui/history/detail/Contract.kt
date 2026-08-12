@@ -36,7 +36,7 @@ sealed interface RecordDetailEvent : UiEvent {
     data object OnCancelDelete : RecordDetailEvent
     data object OnDismissError : RecordDetailEvent
     data object OnBackClicked : RecordDetailEvent
-    
+
     data object OnDismissEdit : RecordDetailEvent
     data class OnEditingOdometerChanged(val value: String) : RecordDetailEvent
     data class OnEditingLabelChanged(val value: String) : RecordDetailEvent

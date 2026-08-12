@@ -124,9 +124,11 @@ fun LoginScreen(
         containerColor = CanvasKitTheme.colors.backgroundSecondary,
         contentWindowInsets = WindowInsets()
     ) { innerPadding ->
-        Box(modifier = Modifier
-            .fillMaxSize()
-            .padding(innerPadding)) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+        ) {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -198,7 +200,9 @@ fun LoginScreen(
                                         IconButton(onClick = { onEvent(Event.OnTogglePasswordVisibility) }) {
                                             Icon(
                                                 imageVector = if (state.isPasswordVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
-                                                contentDescription = stringResource(if (state.isPasswordVisible) R.string.acc_close else R.string.acc_open_menu),
+                                                contentDescription = stringResource(
+                                                    if (state.isPasswordVisible) R.string.acc_close else R.string.acc_open_menu
+                                                ),
                                                 tint = CanvasKitTheme.colors.textSecondary
                                             )
                                         }
@@ -216,10 +220,10 @@ fun LoginScreen(
                                 )
 
                                 CanvasKitButton(
-                                    onClick = { 
+                                    onClick = {
                                         keyboardController?.hide()
                                         focusManager.clearFocus()
-                                        onEvent(Event.OnLoginClicked) 
+                                        onEvent(Event.OnLoginClicked)
                                     },
                                     enabled = state.isLoginEnabled,
                                     loading = state.isLoading,
@@ -237,21 +241,27 @@ fun LoginScreen(
                                     modifier = Modifier.fillMaxWidth(),
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    HorizontalDivider(modifier = Modifier.weight(1f), color = CanvasKitTheme.colors.borderSubtle)
+                                    HorizontalDivider(
+                                        modifier = Modifier.weight(1f),
+                                        color = CanvasKitTheme.colors.borderSubtle
+                                    )
                                     Text(
                                         text = stringResource(R.string.login_divider_or),
                                         modifier = Modifier.padding(horizontal = 16.dp),
                                         style = CanvasKitTheme.typography.labelSmall,
                                         color = CanvasKitTheme.colors.textSecondary
                                     )
-                                    HorizontalDivider(modifier = Modifier.weight(1f), color = CanvasKitTheme.colors.borderSubtle)
+                                    HorizontalDivider(
+                                        modifier = Modifier.weight(1f),
+                                        color = CanvasKitTheme.colors.borderSubtle
+                                    )
                                 }
 
                                 CanvasKitButton(
-                                    onClick = { 
+                                    onClick = {
                                         keyboardController?.hide()
                                         focusManager.clearFocus()
-                                        onEvent(Event.OnGoogleSignInClicked) 
+                                        onEvent(Event.OnGoogleSignInClicked)
                                     },
                                     variant = CanvasKitButtonVariant.Secondary,
                                     modifier = Modifier.fillMaxWidth(),
@@ -293,10 +303,10 @@ fun LoginScreen(
                     CanvasKitButton(
                         enabled = !state.isLoading,
                         variant = CanvasKitButtonVariant.Ghost,
-                        onClick = safeClick { 
+                        onClick = safeClick {
                             keyboardController?.hide()
                             focusManager.clearFocus()
-                            onNavigateToSignup() 
+                            onNavigateToSignup()
                         }
                     ) { contentColor ->
                         Text(
@@ -386,7 +396,7 @@ private fun LegalFooter(
 
     // Splitting the string to maintain i18n while using the RichText DSL
     val parts = fullString.split(termsText, privacyText)
-    
+
     CanvasKitRichText(
         modifier = Modifier.fillMaxWidth(),
         style = CanvasKitTheme.typography.labelSmall.copy(textAlign = TextAlign.Center),

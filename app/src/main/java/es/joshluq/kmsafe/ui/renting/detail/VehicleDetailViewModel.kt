@@ -69,11 +69,11 @@ class VehicleDetailViewModel @Inject constructor(
             .onEach { output ->
                 when (output) {
                     is GetVehicleByIdUseCase.Output.Progress -> updateState { copy(isLoading = true) }
-                    is GetVehicleByIdUseCase.Output.Success -> updateState { 
-                        copy(isLoading = false, renting = output.contract) 
+                    is GetVehicleByIdUseCase.Output.Success -> updateState {
+                        copy(isLoading = false, renting = output.contract)
                     }
-                    is GetVehicleByIdUseCase.Output.Failure -> updateState { 
-                        copy(isLoading = false, error = TextProvider.Resource(R.string.history_load_error)) 
+                    is GetVehicleByIdUseCase.Output.Failure -> updateState {
+                        copy(isLoading = false, error = TextProvider.Resource(R.string.history_load_error))
                     }
                 }
             }.launchIn(viewModelScope)
@@ -89,8 +89,8 @@ class VehicleDetailViewModel @Inject constructor(
                         launchEffect(Effect.NavigateBack)
                     }
                     is DeleteContractUseCase.Output.Failure -> {
-                        updateState { 
-                            copy(isLoading = false, error = TextProvider.Resource(R.string.onboarding_register_error)) 
+                        updateState {
+                            copy(isLoading = false, error = TextProvider.Resource(R.string.onboarding_register_error))
                         }
                     }
                 }

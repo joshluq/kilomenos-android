@@ -12,7 +12,7 @@ data class State(
     val isLoading: Boolean = true,
     val isSaving: Boolean = false,
     val isPremium: Boolean = false,
-    
+
     // Editable fields
     val vehicleName: String = "",
     val vehicleImageUrl: String? = null,
@@ -23,7 +23,7 @@ data class State(
     val bluetoothDeviceAddress: String? = null,
     val excessDistancePrice: String = "",
     val courtesyMarginKms: String = "",
-    
+
     // UI State
     val showBluetoothPicker: Boolean = false,
     val error: TextProvider? = null,
@@ -40,7 +40,7 @@ data class State(
 sealed interface Event : UiEvent {
     data object OnBackClicked : Event
     data object OnSaveClicked : Event
-    
+
     // Input Changes
     data class OnVehicleNameChanged(val value: String) : Event
     data class OnOriginalImageSelected(val uri: Uri?) : Event
@@ -50,7 +50,7 @@ sealed interface Event : UiEvent {
     data class OnBluetoothDeviceSelected(val name: String, val address: String) : Event
     data class OnExcessDistancePriceChanged(val value: String) : Event
     data class OnCourtesyMarginKmsChanged(val value: String) : Event
-    
+
     // Dialogs/Pickers
     data object OnToggleBluetoothPicker : Event
     data object OnDismissError : Event

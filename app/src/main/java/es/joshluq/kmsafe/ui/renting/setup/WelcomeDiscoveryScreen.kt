@@ -164,18 +164,18 @@ private fun DiscoverySlide(slide: DiscoverySlideData) {
         ) {
             slide.visual()
         }
-        
+
         Spacer(modifier = Modifier.height(48.dp))
-        
+
         Text(
             text = slide.title,
             style = CanvasKitTheme.typography.headingLarge,
             color = CanvasKitTheme.colors.textPrimary,
             textAlign = TextAlign.Center
         )
-        
+
         Spacer(modifier = Modifier.height(16.dp))
-        
+
         Text(
             text = slide.description,
             style = CanvasKitTheme.typography.bodyLarge,
@@ -237,7 +237,12 @@ private fun ContractMockup() {
                         .padding(horizontal = 12.dp),
                     contentAlignment = Alignment.CenterStart
                 ) {
-                    Box(modifier = Modifier.size(32.dp, 8.dp).background(CanvasKitTheme.colors.borderSubtle, CircleShape))
+                    Box(
+                        modifier = Modifier.size(
+                            32.dp,
+                            8.dp
+                        ).background(CanvasKitTheme.colors.borderSubtle, CircleShape)
+                    )
                 }
             }
             Spacer(modifier = Modifier.height(8.dp))
@@ -260,8 +265,8 @@ private fun OdometerMockup() {
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Icon(
-                Icons.Default.AddRoad, 
-                contentDescription = null, 
+                Icons.Default.AddRoad,
+                contentDescription = null,
                 modifier = Modifier.size(72.dp),
                 tint = CanvasKitTheme.colors.brandAccent
             )

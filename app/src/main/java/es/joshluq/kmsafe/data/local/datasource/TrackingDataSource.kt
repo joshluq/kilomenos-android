@@ -22,8 +22,8 @@ class TrackingDataSource @Inject constructor(
     private val storage: StorageProvider,
     private val logger: LoggerKit
 ) {
-    private val _updates = MutableSharedFlow<Unit>(replay = 1).apply { 
-        tryEmit(Unit) 
+    private val _updates = MutableSharedFlow<Unit>(replay = 1).apply {
+        tryEmit(Unit)
     }
 
     companion object {

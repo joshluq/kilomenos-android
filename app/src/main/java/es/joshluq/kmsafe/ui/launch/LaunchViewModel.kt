@@ -60,7 +60,7 @@ class LaunchViewModel @Inject constructor(
 
     private fun fetchInitialData() {
         val fingerprint = fingerprintProvider.getFingerprint()
-        
+
         // 1. Fetch Entitlements FIRST
         getEntitlementsUseCase(GetEntitlementsUseCase.Input(fingerprint, forceRefresh = true))
             .onEach { output ->

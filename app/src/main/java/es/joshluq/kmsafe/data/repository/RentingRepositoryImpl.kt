@@ -5,12 +5,13 @@ import es.joshluq.authkit.session.model.SessionState
 import es.joshluq.foundationkit.coroutines.DispatcherProvider
 import es.joshluq.foundationkit.log.LoggerKit
 import es.joshluq.kmsafe.BuildConfig
+import es.joshluq.kmsafe.data.local.AppDatabase
 import es.joshluq.kmsafe.data.local.dao.OdometerRecordDao
 import es.joshluq.kmsafe.data.local.dao.RentingContractDao
-import es.joshluq.kmsafe.data.local.entity.toDomain
+import es.joshluq.kmsafe.data.local.entity.toDomain as toDomainFromEntity
 import es.joshluq.kmsafe.data.local.entity.toEntity
 import es.joshluq.kmsafe.data.mapper.ErrorMapper
-import es.joshluq.kmsafe.data.mapper.toDomain
+import es.joshluq.kmsafe.data.mapper.toDomain as toDomainFromApi
 import es.joshluq.kmsafe.data.mapper.toIsoString
 import es.joshluq.kmsafe.data.remote.api.RentingApiService
 import es.joshluq.kmsafe.data.remote.api.StorageApiService
@@ -32,7 +33,6 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.RequestBody.Companion.toRequestBody
-import es.joshluq.kmsafe.data.local.AppDatabase
 import javax.inject.Inject
 
 /**
@@ -81,14 +81,14 @@ class RentingRepositoryImpl @Inject constructor(
                     val response = apiService.createContract(request)
                     if (response.isSuccessful) {
                         logger.i("RentingRepository", "Remote contract sync successful")
-                        val remoteContract = response.body()?.contract?.toDomain()
+                        val remoteContract = response.body()?.contract?.toDomainFromApi()
                         if (remoteContract != null) {
                             appDatabase.withTransaction {
                                 if (remoteContract.id != contract.id) {
                                     rentingDao.deleteContract(contract.id)
                                     odometerDao.updateContractId(oldId = contract.id, newId = remoteContract.id)
                                 }
-                                
+
                                 // Ensure the local preference (isSelected) is maintained
                                 val contractToPersist = remoteContract.copy(
                                     isSelected = contract.isSelected,
@@ -112,14 +112,15 @@ class RentingRepositoryImpl @Inject constructor(
 
     override fun updateContract(contract: RentingContract): Flow<Unit> = flow {
         logger.d("RentingRepository", "Updating contract ID: ${contract.id}")
-        
+
         // 1. Local update with PENDING status
         val contractToUpdate = contract.copy(syncStatus = SyncStatus.PENDING)
         rentingDao.insertContract(contractToUpdate.toEntity())
 
         // 2. Remote update
-        if (sessionDataSource.getSessionState().first() is SessionState.Active && 
-            sessionDataSource.hasFeature(Feature.CLOUD_SYNC.id)) {
+        if (sessionDataSource.getSessionState().first() is SessionState.Active &&
+            sessionDataSource.hasFeature(Feature.CLOUD_SYNC.id)
+        ) {
             runCatching {
                 val request = UpdateRentingContractRequest(
                     vehicleName = contract.vehicleName,
@@ -152,7 +153,7 @@ class RentingRepositoryImpl @Inject constructor(
 
     override fun getContract(): Flow<RentingContract?> {
         return rentingDao.getSelectedContract().map { entity ->
-            entity?.toDomain()
+            entity?.toDomainFromEntity()
         }.onEach {
             logger.d("RentingRepository", "Selected contract fetched: ${it?.vehicleName ?: "None"}")
         }
@@ -160,7 +161,7 @@ class RentingRepositoryImpl @Inject constructor(
 
     override fun getContractById(id: String): Flow<RentingContract?> {
         return rentingDao.getContractById(id).map { entity ->
-            entity?.toDomain()
+            entity?.toDomainFromEntity()
         }.onEach {
             logger.d("RentingRepository", "Contract by ID $id fetched: ${it?.vehicleName ?: "Not found"}")
         }
@@ -168,14 +169,14 @@ class RentingRepositoryImpl @Inject constructor(
 
     override fun getAllContracts(): Flow<List<RentingContract>> {
         return rentingDao.getAllContracts().map { entities ->
-            entities.map { it.toDomain() }
+            entities.map { it.toDomainFromEntity() }
         }.onEach {
             logger.d("RentingRepository", "All contracts fetched from DB: ${it.size} items")
         }
     }
 
     override suspend fun getPendingContracts(): List<RentingContract> {
-        return rentingDao.getPendingContracts().map { it.toDomain() }
+        return rentingDao.getPendingContracts().map { it.toDomainFromEntity() }
     }
 
     override fun selectContract(id: String): Flow<Unit> = flow {
@@ -189,8 +190,9 @@ class RentingRepositoryImpl @Inject constructor(
             }
         }
 
-        if (sessionDataSource.getSessionState().first() is SessionState.Active && 
-            sessionDataSource.hasFeature(Feature.CLOUD_SYNC.id)) {
+        if (sessionDataSource.getSessionState().first() is SessionState.Active &&
+            sessionDataSource.hasFeature(Feature.CLOUD_SYNC.id)
+        ) {
             logger.d("RentingRepository", "Session active and Cloud Sync enabled, attempting remote selection sync")
             runCatching {
                 val response = apiService.selectContract(id)
@@ -218,8 +220,9 @@ class RentingRepositoryImpl @Inject constructor(
         odometerDao.deleteRecordsByContractId(id)
         rentingDao.deleteContract(id)
 
-        if (sessionDataSource.getSessionState().first() is SessionState.Active && 
-            sessionDataSource.hasFeature(Feature.CLOUD_SYNC.id)) {
+        if (sessionDataSource.getSessionState().first() is SessionState.Active &&
+            sessionDataSource.hasFeature(Feature.CLOUD_SYNC.id)
+        ) {
             logger.d("RentingRepository", "Session active and Cloud Sync enabled, attempting remote deletion sync")
             runCatching {
                 val response = apiService.deleteContract(id)
@@ -246,7 +249,7 @@ class RentingRepositoryImpl @Inject constructor(
 
         val response = apiService.getContracts()
         if (response.isSuccessful) {
-            val contracts = response.body()?.contracts?.map { it.toDomain() } ?: emptyList()
+            val contracts = response.body()?.contracts?.map { it.toDomainFromApi() } ?: emptyList()
             logger.i("RentingRepository", "Sync successful: Found ${contracts.size} remote contracts")
 
             contracts.forEach { contract ->

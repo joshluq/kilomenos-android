@@ -50,7 +50,7 @@ class ReminderWorker @AssistedInject constructor(
 
             val history = historyRepository.getHistory(contract.id).first()
             val lastRecord = history.firstOrNull()
-            
+
             val lastTimestamp = lastRecord?.timestamp ?: contract.startDate
             val currentTime = System.currentTimeMillis()
             val diffMillis = currentTime - lastTimestamp
@@ -71,7 +71,9 @@ class ReminderWorker @AssistedInject constructor(
     }
 
     private fun sendNotification() {
-        val notificationManager = applicationContext.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        val notificationManager = applicationContext.getSystemService(
+            Context.NOTIFICATION_SERVICE
+        ) as NotificationManager
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(
@@ -87,9 +89,11 @@ class ReminderWorker @AssistedInject constructor(
         val intent = Intent(applicationContext, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         }
-        
+
         val pendingIntent = PendingIntent.getActivity(
-            applicationContext, 0, intent,
+            applicationContext,
+            0,
+            intent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 

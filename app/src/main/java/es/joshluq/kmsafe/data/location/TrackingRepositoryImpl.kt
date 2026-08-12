@@ -36,10 +36,10 @@ class TrackingRepositoryImpl @Inject constructor(
         if (latitude != null && longitude != null) {
             val currentPolyline = dataSource.getRoutePolyline().first() ?: ""
             val points = PolyUtil.decode(currentPolyline).toMutableList()
-            
+
             // Add new point
             points.add(LatLng(latitude, longitude))
-            
+
             val newPolyline = PolyUtil.encode(points)
             dataSource.updateTracking(distanceMeters, newPolyline, points.size)
         } else {

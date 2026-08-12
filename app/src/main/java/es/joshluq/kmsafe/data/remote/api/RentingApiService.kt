@@ -5,7 +5,12 @@ import es.joshluq.kmsafe.data.remote.request.CreateRentingContractRequest
 import es.joshluq.kmsafe.data.remote.request.UpdateOdometerRecordRequest
 import es.joshluq.kmsafe.data.remote.request.UpdateRentingContractRequest
 import es.joshluq.kmsafe.data.remote.request.UploadRouteRequest
-import es.joshluq.kmsafe.data.remote.response.*
+import es.joshluq.kmsafe.data.remote.response.AddOdometerRecordResponse
+import es.joshluq.kmsafe.data.remote.response.AddRentingResponse
+import es.joshluq.kmsafe.data.remote.response.OdometerRecordListResponse
+import es.joshluq.kmsafe.data.remote.response.RentingListResponse
+import es.joshluq.kmsafe.data.remote.response.RouteResponse
+import es.joshluq.kmsafe.data.remote.response.SelectContractResponse
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.DELETE

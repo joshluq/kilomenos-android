@@ -4,7 +4,13 @@ import android.annotation.SuppressLint
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothManager
 import android.content.Context
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Bluetooth
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -36,8 +42,8 @@ fun BluetoothDevicePicker(
     sheetState: SheetState
 ) {
     val context = LocalContext.current
-    val bluetoothAdapter: BluetoothAdapter? = remember { 
-        (context.getSystemService(Context.BLUETOOTH_SERVICE) as? BluetoothManager)?.adapter 
+    val bluetoothAdapter: BluetoothAdapter? = remember {
+        (context.getSystemService(Context.BLUETOOTH_SERVICE) as? BluetoothManager)?.adapter
     }
     val bondedDevices = remember {
         bluetoothAdapter?.bondedDevices?.map { it.name to it.address } ?: emptyList()
@@ -76,19 +82,19 @@ fun BluetoothDevicePicker(
                             horizontalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
                             Icon(
-                                imageVector = Icons.Default.Bluetooth, 
-                                contentDescription = null, 
+                                imageVector = Icons.Default.Bluetooth,
+                                contentDescription = null,
                                 tint = CanvasKitTheme.colors.brandAccent
                             )
                             Column {
                                 Text(
-                                    text = name, 
-                                    style = CanvasKitTheme.typography.bodyLarge, 
+                                    text = name,
+                                    style = CanvasKitTheme.typography.bodyLarge,
                                     fontWeight = FontWeight.Bold
                                 )
                                 Text(
-                                    text = address, 
-                                    style = CanvasKitTheme.typography.labelSmall, 
+                                    text = address,
+                                    style = CanvasKitTheme.typography.labelSmall,
                                     color = CanvasKitTheme.colors.textSecondary
                                 )
                             }

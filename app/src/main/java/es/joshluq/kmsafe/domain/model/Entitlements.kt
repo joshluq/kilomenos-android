@@ -11,7 +11,7 @@ data class Entitlements(
     val canStartTrial: Boolean,
     val trialFeatures: Set<Feature>
 ) {
-    /** 
+    /**
      * Returns whether a specific feature is currently active and usable.
      */
     fun isFeatureActive(feature: Feature): Boolean {

@@ -24,14 +24,17 @@ class EvaluateIdentityConflictUseCase @Inject constructor(
 
     override fun invoke(input: Input): Flow<Output> = flow {
         val currentEmail = input.email.trim().lowercase()
-        
+
         // One-shot check for conflict
         val dbOwnerId = rentingRepository.getDatabaseOwnerId()
         // We use global preferences here because we don't have the userId yet
         val prefs = preferencesRepository.getGlobalPreferences().first()
         val lastEmail = prefs.lastEmail.trim().lowercase()
 
-        logger.d("EvaluateIdentityConflict", "Checking conflict - Current: $currentEmail, Last: $lastEmail, DB Owner: $dbOwnerId")
+        logger.d(
+            "EvaluateIdentityConflict",
+            "Checking conflict - Current: $currentEmail, Last: $lastEmail, DB Owner: $dbOwnerId"
+        )
 
         val isNewUser = currentEmail != lastEmail && lastEmail.isNotEmpty()
         val hasDataToProtect = dbOwnerId != null
@@ -41,7 +44,7 @@ class EvaluateIdentityConflictUseCase @Inject constructor(
             hasDataToProtect -> Output.ShowWarning
             else -> Output.SilentCleanup
         }
-        
+
         emit(result)
     }.onStart { emit(Output.Progress) }
 

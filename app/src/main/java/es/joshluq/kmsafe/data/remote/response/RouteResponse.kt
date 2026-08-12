@@ -16,10 +16,10 @@ class RouteResponse : NetworkResponse() {
 class TripRouteResponse {
     @JsonProperty("record_id")
     val recordId: String? = null
-    
+
     @JsonProperty("encoded_polyline")
     val encodedPolyline: String? = null
-    
+
     @JsonProperty("point_count")
     val pointCount: Int? = null
 }

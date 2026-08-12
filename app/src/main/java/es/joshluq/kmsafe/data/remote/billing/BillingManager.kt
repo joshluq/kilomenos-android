@@ -2,7 +2,15 @@ package es.joshluq.kmsafe.data.remote.billing
 
 import android.app.Activity
 import android.content.Context
-import com.android.billingclient.api.*
+import com.android.billingclient.api.AcknowledgePurchaseParams
+import com.android.billingclient.api.BillingClient
+import com.android.billingclient.api.BillingClientStateListener
+import com.android.billingclient.api.BillingFlowParams
+import com.android.billingclient.api.BillingResult
+import com.android.billingclient.api.PendingPurchasesParams
+import com.android.billingclient.api.Purchase
+import com.android.billingclient.api.PurchasesUpdatedListener
+import com.android.billingclient.api.QueryProductDetailsParams
 import dagger.hilt.android.qualifiers.ApplicationContext
 import es.joshluq.foundationkit.log.LoggerKit
 import es.joshluq.kmsafe.BuildConfig
@@ -95,7 +103,7 @@ class BillingManager @Inject constructor(
             if (billingResult.responseCode == BillingClient.BillingResponseCode.OK && productDetailsList.isNotEmpty()) {
                 val productDetails = productDetailsList[0]
                 val offerToken = productDetails.subscriptionOfferDetails?.getOrNull(0)?.offerToken ?: ""
-                
+
                 val billingFlowParams = BillingFlowParams.newBuilder()
                     .setProductDetailsParamsList(
                         listOf(

@@ -4,9 +4,22 @@ import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
-import es.joshluq.kmsafe.domain.repository.*
-import es.joshluq.kmsafe.data.repository.*
 import es.joshluq.kmsafe.data.location.TrackingRepositoryImpl
+import es.joshluq.kmsafe.data.repository.AuthRepositoryImpl
+import es.joshluq.kmsafe.data.repository.DataManagementRepositoryImpl
+import es.joshluq.kmsafe.data.repository.EntitlementsRepositoryImpl
+import es.joshluq.kmsafe.data.repository.HistoryRepositoryImpl
+import es.joshluq.kmsafe.data.repository.MediaRepositoryImpl
+import es.joshluq.kmsafe.data.repository.PreferencesRepositoryImpl
+import es.joshluq.kmsafe.data.repository.RentingRepositoryImpl
+import es.joshluq.kmsafe.domain.repository.AuthRepository
+import es.joshluq.kmsafe.domain.repository.DataManagementRepository
+import es.joshluq.kmsafe.domain.repository.EntitlementsRepository
+import es.joshluq.kmsafe.domain.repository.HistoryRepository
+import es.joshluq.kmsafe.domain.repository.MediaRepository
+import es.joshluq.kmsafe.domain.repository.PreferencesRepository
+import es.joshluq.kmsafe.domain.repository.RentingRepository
+import es.joshluq.kmsafe.domain.repository.TrackingRepository
 import javax.inject.Singleton
 
 /**
@@ -17,15 +30,9 @@ import javax.inject.Singleton
 @InstallIn(SingletonComponent::class)
 abstract class RepositoryModule {
 
-    /**
-     * Binds the [RentingRepositoryImpl] to the [RentingRepository] interface.
-     *
-     * @param repository The implementation of the repository.
-     * @return The bound repository.
-     */
     @Singleton
     @Binds
-    abstract fun bindRepository(repository: RentingRepositoryImpl): RentingRepository
+    abstract fun bindRentingRepository(repository: RentingRepositoryImpl): RentingRepository
 
     /**
      * Binds the [HistoryRepositoryImpl] to the [HistoryRepository] interface.

@@ -9,11 +9,11 @@ import es.joshluq.foundationkit.text.TextProvider
 import es.joshluq.foundationkit.usecase.FlowUseCase
 import es.joshluq.foundationkit.viewmodel.ScreenViewModel
 import es.joshluq.kmsafe.R
+import es.joshluq.kmsafe.data.remote.billing.BillingManager
 import es.joshluq.kmsafe.di.MigrateLocalDataToRemote
 import es.joshluq.kmsafe.di.SyncContracts
 import es.joshluq.kmsafe.di.UpdateSubscription
 import es.joshluq.kmsafe.domain.model.SubscriptionLevel
-import es.joshluq.kmsafe.data.remote.billing.BillingManager
 import es.joshluq.kmsafe.domain.usecase.MigrateLocalDataToRemoteUseCase
 import es.joshluq.kmsafe.domain.usecase.SyncContractsUseCase
 import es.joshluq.kmsafe.domain.usecase.UpdateSubscriptionUseCase
@@ -78,7 +78,12 @@ class PremiumPaywallViewModel @Inject constructor(
                 when (output) {
                     UpdateSubscriptionUseCase.Output.Progress -> updateState { copy(isLoading = true) }
                     UpdateSubscriptionUseCase.Output.Failure -> {
-                        updateState { copy(isLoading = false, error = TextProvider.Resource(R.string.onboarding_register_error)) }
+                        updateState {
+                            copy(
+                                isLoading = false,
+                                error = TextProvider.Resource(R.string.onboarding_register_error)
+                            )
+                        }
                     }
                     is UpdateSubscriptionUseCase.Output.Success -> {
                         analytics.track(AnalyticsEvent.Custom("premium_upgrade_success"))
@@ -92,9 +97,14 @@ class PremiumPaywallViewModel @Inject constructor(
         migrateLocalDataUseCase(MigrateLocalDataToRemoteUseCase.Input)
             .onEach { output ->
                 when (output) {
-                    MigrateLocalDataToRemoteUseCase.Output.Progress -> updateState { copy(isLoading = true, isMigrating = true) }
+                    MigrateLocalDataToRemoteUseCase.Output.Progress -> updateState {
+                        copy(
+                            isLoading = true,
+                            isMigrating = true
+                        )
+                    }
                     MigrateLocalDataToRemoteUseCase.Output.Failure -> {
-                        // Migration failed, but user is already premium. 
+                        // Migration failed, but user is already premium.
                         // We skip to sync to at least get what's on server.
                         logger.e("PremiumPaywallViewModel", "Migration failed, skipping to final sync")
                         finalizeUpgrade()

@@ -20,14 +20,14 @@ import javax.inject.Singleton
 class PreferencesDataSource @Inject constructor(
     private val storage: StorageProvider
 ) {
-    private val _preferenceUpdates = MutableSharedFlow<Unit>(replay = 1).apply { 
-        tryEmit(Unit) 
+    private val _preferenceUpdates = MutableSharedFlow<Unit>(replay = 1).apply {
+        tryEmit(Unit)
     }
 
     companion object {
         private const val KEY_REMEMBER_EMAIL = "global_remember_email"
         private const val KEY_LAST_EMAIL = "global_last_email"
-        
+
         private fun bannerKey(userId: String) = "ui_${userId}_show_projection_banner"
         private fun limitKey(userId: String) = "ui_${userId}_last_known_over_limit"
         private fun autoTrackingKey(userId: String) = "settings_${userId}_auto_tracking_enabled"
@@ -42,22 +42,30 @@ class PreferencesDataSource @Inject constructor(
         flow {
             val rememberEmail = storage.read(KEY_REMEMBER_EMAIL) ?: true
             val lastEmail = storage.read(KEY_LAST_EMAIL) ?: ""
-            
+
             val showBanner = if (userId.isNotEmpty()) {
                 storage.read(bannerKey(userId)) ?: true
-            } else true
-            
+            } else {
+                true
+            }
+
             val lastLimit = if (userId.isNotEmpty()) {
                 storage.read<Boolean>(limitKey(userId))
-            } else null
+            } else {
+                null
+            }
 
             val autoTracking = if (userId.isNotEmpty()) {
                 storage.read<Boolean>(autoTrackingKey(userId)) ?: false
-            } else false
+            } else {
+                false
+            }
 
             val promotionDismissed = if (userId.isNotEmpty()) {
                 storage.read<Boolean>(promotionDismissedKey(userId)) ?: false
-            } else false
+            } else {
+                false
+            }
 
             emit(
                 UserPreferences(

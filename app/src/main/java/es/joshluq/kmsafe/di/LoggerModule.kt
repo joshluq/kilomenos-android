@@ -27,14 +27,16 @@ object LoggerModule {
         } else {
             LogLevel.NONE
         }
-        
+
         return LoggerKit.Builder()
-            .setProvider(CompositeLogProvider(
-                listOf(
-                    KmLogProvider(level),
-                    CrashlyticsLogProvider()
+            .setProvider(
+                CompositeLogProvider(
+                    listOf(
+                        KmLogProvider(level),
+                        CrashlyticsLogProvider()
+                    )
                 )
-            ))
+            )
             .build()
     }
 

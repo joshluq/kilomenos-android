@@ -45,7 +45,9 @@ class DataManagementViewModel @Inject constructor(
             Event.OnImportRequested -> handleImportRequested()
             is Event.OnImportClicked -> handleImport(event.content)
             Event.OnUpgradeClicked -> {
-                analytics.track(AnalyticsEvent.Custom("premium_upgrade_clicked", mapOf("source" to "data_management_limit")))
+                analytics.track(
+                    AnalyticsEvent.Custom("premium_upgrade_clicked", mapOf("source" to "data_management_limit"))
+                )
                 launchEffect(Effect.NavigateToPremiumPaywall)
             }
             Event.OnDismissError -> updateState { copy(error = null, successMessage = null) }
@@ -65,7 +67,7 @@ class DataManagementViewModel @Inject constructor(
 
     private fun handleExport(format: ExportDataUseCase.Format) {
         analytics.track(AnalyticsEvent.Custom("export_clicked", mapOf("format" to format.name)))
-        
+
         if ((format == ExportDataUseCase.Format.JSON) && !state.value.isPremium) {
             analytics.track(AnalyticsEvent.Custom("premium_limit_reached", mapOf("feature_id" to "json_export")))
             updateState { copy(showPremiumLimit = true) }

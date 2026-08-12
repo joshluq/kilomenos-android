@@ -58,7 +58,7 @@ class LocationTrackingService : Service() {
     companion object {
         private const val CHANNEL_ID = "location_tracking_channel_${BuildConfig.FLAVOR}"
         private const val NOTIFICATION_ID = 1001
-        
+
         const val ACTION_START = "ACTION_START"
         const val ACTION_STOP = "ACTION_STOP"
 
@@ -114,7 +114,10 @@ class LocationTrackingService : Service() {
             }
 
             if (isAlreadyTracking) {
-                logger.d("LocationService", "Service started but already tracking in repository. Skipping re-initialization.")
+                logger.d(
+                    "LocationService",
+                    "Service started but already tracking in repository. Skipping re-initialization."
+                )
             } else {
                 trackingRepository.startTracking()
             }
@@ -198,17 +201,17 @@ class LocationTrackingService : Service() {
         logger.i("LocationService", "Stopping tracking process...")
         fusedLocationClient.removeLocationUpdates(locationCallback)
         distanceJob?.cancel()
-        
+
         serviceScope.launch {
             logger.d("LocationService", "Calling repository stopTracking")
             trackingRepository.stopTracking()
             logger.d("LocationService", "Repository stopTracking call finished")
-            
+
             // Move cleanup inside the scope to ensure order
             stopForeground(STOP_FOREGROUND_REMOVE)
             val notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
             notificationManager.cancel(NOTIFICATION_ID)
-            
+
             logger.d("LocationService", "Foreground removed and notification cancelled, calling stopSelf")
             stopSelf()
         }
@@ -217,7 +220,9 @@ class LocationTrackingService : Service() {
     private fun createNotification(distanceMeters: Double): android.app.Notification {
         val intent = Intent(this, MainActivity::class.java)
         val pendingIntent = PendingIntent.getActivity(
-            this, 0, intent,
+            this,
+            0,
+            intent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
@@ -225,7 +230,9 @@ class LocationTrackingService : Service() {
             action = ACTION_STOP
         }
         val stopPendingIntent = PendingIntent.getService(
-            this, 0, stopIntent,
+            this,
+            0,
+            stopIntent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 

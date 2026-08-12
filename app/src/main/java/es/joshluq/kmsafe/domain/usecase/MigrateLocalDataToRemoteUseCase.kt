@@ -8,7 +8,11 @@ import es.joshluq.kmsafe.domain.model.SyncStatus
 import es.joshluq.kmsafe.domain.repository.AuthRepository
 import es.joshluq.kmsafe.domain.repository.HistoryRepository
 import es.joshluq.kmsafe.domain.repository.RentingRepository
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.onStart
 import javax.inject.Inject
 
 /**
@@ -24,12 +28,12 @@ class MigrateLocalDataToRemoteUseCase @Inject constructor(
 
     override fun invoke(input: Input): Flow<Output> = flow {
         logger.d("MigrateLocalData", "Starting migration of PENDING local data to remote")
-        
+
         // 0. Ensure user session is refreshed to pick up PREMIUM level
         authRepository.getCurrentUser().first()
-        
+
         // 1. Migrate ALL Contracts
-        // We migrate all because some might be SYNCED locally but missing remotely 
+        // We migrate all because some might be SYNCED locally but missing remotely
         // due to previous inconsistent states. saveContract handles the sync logic.
         val allContracts = rentingRepository.getAllContracts().first()
         logger.d("MigrateLocalData", "Found ${allContracts.size} total contracts to evaluate")
@@ -42,12 +46,12 @@ class MigrateLocalDataToRemoteUseCase @Inject constructor(
                     logger.d("MigrateLocalData", "Synchronizing contract: ${contract.vehicleName}")
                     rentingRepository.saveContract(contract).collect { remoteId ->
                         logger.i("MigrateLocalData", "Contract migrated/synced. ID: $remoteId")
-                        
+
                         // 2. Migrate records for THIS contract to ensure they use the correct remoteId
                         val records = historyRepository.getHistory(remoteId).first()
                         val pendingRecords = records.filter { it.syncStatus == SyncStatus.PENDING }
                         logger.d("MigrateLocalData", "Found ${pendingRecords.size} pending records for $remoteId")
-                        
+
                         for (record in pendingRecords) {
                             historyRepository.saveRecord(record)
                         }
@@ -61,10 +65,10 @@ class MigrateLocalDataToRemoteUseCase @Inject constructor(
         logger.i("MigrateLocalData", "Migration process completed")
         emit(Output.Success as Output)
     }.onStart { emit(Output.Progress as Output) }
-    .catch {
-        logger.e("MigrateLocalData", "Critical failure during migration", it)
-        emit(Output.Failure as Output)
-    }
+        .catch {
+            logger.e("MigrateLocalData", "Critical failure during migration", it)
+            emit(Output.Failure as Output)
+        }
 
     object Input : UseCaseInput
 

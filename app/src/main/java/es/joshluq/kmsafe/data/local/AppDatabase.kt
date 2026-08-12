@@ -268,6 +268,7 @@ abstract class AppDatabase : RoomDatabase() {
                 db.execSQL("ALTER TABLE renting_contract ADD COLUMN bluetoothDeviceAddress TEXT")
             }
         }
+
         /**
          * Migration from version 9 to 10:
          * - Add 'hasRoute' column to 'odometer_record' table.
@@ -303,6 +304,7 @@ abstract class AppDatabase : RoomDatabase() {
                 db.execSQL("ALTER TABLE renting_contract ADD COLUMN courtesyMarginKms INTEGER NOT NULL DEFAULT 0")
             }
         }
+
         /**
          * Migration from version 11 to 12:
          * - Add 'bluetoothDeviceName' column to 'renting_contract' table.

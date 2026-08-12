@@ -1,6 +1,5 @@
 package es.joshluq.kmsafe.ui.renting.setup
 
-import android.net.Uri
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import es.joshluq.analyticskit.domain.model.AnalyticsEvent
@@ -22,10 +21,16 @@ import es.joshluq.kmsafe.domain.usecase.GetImageBytesUseCase
 import es.joshluq.kmsafe.domain.usecase.SaveInitialContractUseCase
 import es.joshluq.kmsafe.domain.usecase.UploadVehicleImageUseCase
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
-import java.util.*
+import java.util.Locale
+import java.util.UUID
 import javax.inject.Inject
 
 @HiltViewModel
@@ -53,23 +58,37 @@ class SetupWizardViewModel @Inject constructor(
             Event.OnNextClicked -> handleNext()
             Event.OnBackClicked -> handleBack()
             Event.OnSkipStepClicked -> handleSkip()
-            
+
             is Event.OnVehicleNameChanged -> updateState { copy(vehicleName = event.value, vehicleNameError = null) }
             is Event.OnOriginalImageSelected -> {
                 event.uri?.let { launchEffect(Effect.NavigateToCropper(it.toString())) }
             }
             is Event.OnImageSelected -> updateState { copy(selectedImageUri = event.uri) }
             is Event.OnStartDateChanged -> updateState { copy(startDate = event.value, startDateError = null) }
-            is Event.OnDurationMonthsChanged -> updateState { copy(durationMonths = event.value, durationMonthsError = null) }
+            is Event.OnDurationMonthsChanged -> updateState {
+                copy(
+                    durationMonths = event.value,
+                    durationMonthsError = null
+                )
+            }
             is Event.OnTotalKmsChanged -> updateState { copy(totalKms = event.value, totalKmsError = null) }
-            is Event.OnStartOdometerChanged -> updateState { copy(startOdometer = event.value, startOdometerError = null) }
+            is Event.OnStartOdometerChanged -> updateState {
+                copy(
+                    startOdometer = event.value,
+                    startOdometerError = null
+                )
+            }
             is Event.OnCurrentOdometerChanged -> updateState { copy(currentOdometer = event.value) }
-            is Event.OnBluetoothDeviceSelected -> updateState { 
-                copy(bluetoothDeviceName = event.name, bluetoothDeviceAddress = event.address, showBluetoothPicker = false) 
+            is Event.OnBluetoothDeviceSelected -> updateState {
+                copy(
+                    bluetoothDeviceName = event.name,
+                    bluetoothDeviceAddress = event.address,
+                    showBluetoothPicker = false
+                )
             }
             is Event.OnExcessDistancePriceChanged -> updateState { copy(excessDistancePrice = event.value) }
             is Event.OnCourtesyMarginKmsChanged -> updateState { copy(courtesyMarginKms = event.value) }
-            
+
             Event.OnToggleDatePicker -> updateState { copy(showDatePicker = !showDatePicker) }
             Event.OnToggleBluetoothPicker -> updateState { copy(showBluetoothPicker = !showBluetoothPicker) }
             Event.OnDismissError -> updateState { copy(error = null) }
@@ -110,7 +129,7 @@ class SetupWizardViewModel @Inject constructor(
             SetupStep.SMART_ACTIVATION -> SetupStep.MILEAGE_BUDGET
             SetupStep.ADVANCED_PROTECTION -> SetupStep.SMART_ACTIVATION
         }
-        
+
         if (prevStep != null) {
             updateState { copy(currentStep = prevStep) }
         } else {
@@ -130,7 +149,9 @@ class SetupWizardViewModel @Inject constructor(
         return if (state.value.vehicleName.isBlank()) {
             updateState { copy(vehicleNameError = TextProvider.Resource(R.string.onboarding_vehicle_name_feedback)) }
             false
-        } else true
+        } else {
+            true
+        }
     }
 
     private fun validateTimeframe(): Boolean {
@@ -173,7 +194,7 @@ class SetupWizardViewModel @Inject constructor(
         val s = state.value
         val sdf = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
         val startTime = runCatching { sdf.parse(s.startDate)?.time ?: 0L }.getOrDefault(0L)
-        
+
         val initialContract = RentingContract(
             vehicleName = s.vehicleName,
             startDate = startTime,
@@ -189,21 +210,25 @@ class SetupWizardViewModel @Inject constructor(
         )
 
         val imageUri = s.selectedImageUri
-        
+
         viewModelScope.launch {
             updateState { copy(isLoading = true) }
-            
+
             val saveFlow = if (imageUri != null) {
                 val bytesResult = getImageBytesUseCase(GetImageBytesUseCase.Input(imageUri.toString()))
                 val bytes = (bytesResult.getOrNull() as? GetImageBytesUseCase.Output.Success)?.bytes
-                
+
                 if (bytes != null) {
                     val fileName = "vehicle_${UUID.randomUUID()}.jpg"
                     uploadVehicleImage(UploadVehicleImageUseCase.Input(bytes, fileName))
                         .flatMapLatest { output ->
                             when (output) {
                                 is UploadVehicleImageUseCase.Output.Success -> {
-                                    saveInitialContractUseCase(SaveInitialContractUseCase.Input(initialContract.copy(vehicleImageUrl = output.imageUrl)))
+                                    saveInitialContractUseCase(
+                                        SaveInitialContractUseCase.Input(
+                                            initialContract.copy(vehicleImageUrl = output.imageUrl)
+                                        )
+                                    )
                                 }
                                 is UploadVehicleImageUseCase.Output.Failure -> throw Exception("Upload failed")
                                 else -> emptyFlow()
@@ -219,19 +244,34 @@ class SetupWizardViewModel @Inject constructor(
             saveFlow
                 .catch {
                     logger.e("SetupWizardVM", "Error saving contract", it)
-                    updateState { copy(isLoading = false, error = TextProvider.Resource(R.string.onboarding_register_error)) }
+                    updateState {
+                        copy(
+                            isLoading = false,
+                            error = TextProvider.Resource(R.string.onboarding_register_error)
+                        )
+                    }
                 }
                 .onEach { output ->
                     when (output) {
                         is SaveInitialContractUseCase.Output.Success -> {
-                            analytics.track(AnalyticsEvent.Custom("renting_setup_completed", mapOf(
-                                "has_bluetooth" to (s.bluetoothDeviceAddress != null),
-                                "has_advanced" to (s.excessDistancePrice.isNotBlank())
-                            )))
+                            analytics.track(
+                                AnalyticsEvent.Custom(
+                                    "renting_setup_completed",
+                                    mapOf(
+                                        "has_bluetooth" to (s.bluetoothDeviceAddress != null),
+                                        "has_advanced" to (s.excessDistancePrice.isNotBlank())
+                                    )
+                                )
+                            )
                             launchEffect(Effect.NavigateToDashboard)
                         }
                         is SaveInitialContractUseCase.Output.Failure -> {
-                            updateState { copy(isLoading = false, error = TextProvider.Resource(R.string.onboarding_register_error)) }
+                            updateState {
+                                copy(
+                                    isLoading = false,
+                                    error = TextProvider.Resource(R.string.onboarding_register_error)
+                                )
+                            }
                         }
                         else -> {}
                     }

@@ -111,7 +111,6 @@ fun HistoryScreen(
         contentWindowInsets = WindowInsets()
     ) { innerPadding ->
         Box(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
-
             Column(modifier = Modifier.fillMaxSize()) {
                 if (!state.isPremium) {
                     AdMobBanner(
@@ -329,7 +328,7 @@ private fun GroupingChip(
 ) {
     CanvasKitChip(
         selected = selected,
-       variant = CanvasKitChipVariant.Outlined,
+        variant = CanvasKitChipVariant.Outlined,
         onClick = onClick,
         label = { Text(label) },
         leadingIcon = {

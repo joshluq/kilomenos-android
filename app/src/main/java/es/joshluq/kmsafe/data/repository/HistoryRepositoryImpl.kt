@@ -5,16 +5,22 @@ import es.joshluq.foundationkit.coroutines.DispatcherProvider
 import es.joshluq.foundationkit.log.LoggerKit
 import es.joshluq.kmsafe.data.local.dao.OdometerRecordDao
 import es.joshluq.kmsafe.data.local.dao.TripRouteDao
-import es.joshluq.kmsafe.data.local.entity.toDomain
+import es.joshluq.kmsafe.data.local.entity.toDomain as toDomainFromEntity
 import es.joshluq.kmsafe.data.local.entity.toEntity
-import es.joshluq.kmsafe.data.mapper.*
+import es.joshluq.kmsafe.data.mapper.ErrorMapper
+import es.joshluq.kmsafe.data.mapper.toDomain as toDomainFromApi
+import es.joshluq.kmsafe.data.mapper.toIsoString
 import es.joshluq.kmsafe.data.remote.api.RentingApiService
 import es.joshluq.kmsafe.data.remote.auth.UserSessionDataSource
 import es.joshluq.kmsafe.data.remote.request.AddOdometerRecordRequest
 import es.joshluq.kmsafe.data.remote.request.UpdateOdometerRecordRequest
 import es.joshluq.kmsafe.data.remote.request.UploadRouteRequest
 import es.joshluq.kmsafe.data.worker.SyncManager
-import es.joshluq.kmsafe.domain.model.*
+import es.joshluq.kmsafe.domain.model.Feature
+import es.joshluq.kmsafe.domain.model.KmException
+import es.joshluq.kmsafe.domain.model.OdometerRecord
+import es.joshluq.kmsafe.domain.model.SyncStatus
+import es.joshluq.kmsafe.domain.model.TripRoute
 import es.joshluq.kmsafe.domain.repository.HistoryRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
@@ -41,27 +47,27 @@ class HistoryRepositoryImpl @Inject constructor(
 
     override fun getHistory(contractId: String): Flow<List<OdometerRecord>> {
         return dao.getAllRecords(contractId).map { entities ->
-            entities.map { it.toDomain() }
+            entities.map { it.toDomainFromEntity() }
         }.onEach {
             logger.d("HistoryRepository", "History for contract $contractId fetched: ${it.size} records")
         }
     }
 
     override suspend fun getPendingRecords(): List<OdometerRecord> {
-        return dao.getAllPendingRecords().map { it.toDomain() }
+        return dao.getAllPendingRecords().map { it.toDomainFromEntity() }
     }
 
     override suspend fun saveRecord(record: OdometerRecord, route: TripRoute?) = withContext(dispatchers.io) {
         logger.d("HistoryRepository", "Saving record: ${record.odometerValue} km")
-        
+
         // Local-First: Always save as PENDING to allow future migration
         val recordToSave = record.copy(syncStatus = SyncStatus.PENDING)
         dao.insertRecord(recordToSave.toEntity())
 
         // Save Route if present
-        route?.let { 
+        route?.let {
             logger.d("HistoryRepository", "Saving associated trip route for record ${record.id}")
-            routeDao.insertRoute(it.copy(recordId = record.id).toEntity()) 
+            routeDao.insertRoute(it.copy(recordId = record.id).toEntity())
         }
 
         // Remote Sync (Only if session is active and user has Cloud Sync feature)
@@ -80,32 +86,35 @@ class HistoryRepositoryImpl @Inject constructor(
                     if (response.isSuccessful) {
                         val remoteRecordDto = response.body()?.record
                         if (remoteRecordDto != null) {
-                            val remoteRecord = remoteRecordDto.toDomain()
-                            
+                            val remoteRecord = remoteRecordDto.toDomainFromApi()
+
                             // Swap ID logic for records and associated routes
                             if (remoteRecord.id != record.id) {
-                                logger.d("HistoryRepository", "Swapping record ID from ${record.id} to ${remoteRecord.id}")
-                                
+                                logger.d(
+                                    "HistoryRepository",
+                                    "Swapping record ID from ${record.id} to ${remoteRecord.id}"
+                                )
+
                                 // 1. Check if there was an associated route (use passed route or fetch from DB)
-                                val routeToSync = route ?: routeDao.getRouteByRecordIdSync(record.id)?.toDomain()
-                                
+                                val routeToSync = route ?: routeDao.getRouteByRecordIdSync(record.id)?.toDomainFromEntity()
+
                                 routeToSync?.let { localRoute ->
                                     // 2. Delete old and insert with new ID
                                     routeDao.deleteRouteByRecordId(record.id)
                                     routeDao.insertRoute(localRoute.copy(recordId = remoteRecord.id).toEntity())
-                                    
+
                                     // 3. Sync the route with the new ID
                                     saveRoute(localRoute.copy(recordId = remoteRecord.id))
                                 }
-                                
+
                                 dao.deleteRecord(recordToSave.toEntity())
                             }
-                            
+
                             dao.insertRecord(remoteRecord.copy(syncStatus = SyncStatus.SYNCED).toEntity())
-                            
+
                             // If IDs didn't change but we have a route, ensure it's synced
                             if (remoteRecord.id == record.id && (route != null || record.hasRoute)) {
-                                val routeToSync = route ?: routeDao.getRouteByRecordIdSync(record.id)?.toDomain()
+                                val routeToSync = route ?: routeDao.getRouteByRecordIdSync(record.id)?.toDomainFromEntity()
                                 routeToSync?.let { saveRoute(it) }
                             }
                         }
@@ -126,8 +135,9 @@ class HistoryRepositoryImpl @Inject constructor(
         dao.insertRecord(recordToUpdate.toEntity())
 
         // Remote Sync (Cloud Sync feature)
-        if (sessionDataSource.getSessionState().first() is SessionState.Active && 
-            sessionDataSource.hasFeature(Feature.CLOUD_SYNC.id)) {
+        if (sessionDataSource.getSessionState().first() is SessionState.Active &&
+            sessionDataSource.hasFeature(Feature.CLOUD_SYNC.id)
+        ) {
             logger.d("HistoryRepository", "Session active and Cloud Sync enabled, attempting remote update sync")
             runCatching {
                 val response = apiService.updateOdometerRecord(
@@ -160,8 +170,9 @@ class HistoryRepositoryImpl @Inject constructor(
         dao.deleteRecord(record.toEntity())
 
         // Remote Sync (Cloud Sync feature)
-        if (sessionDataSource.getSessionState().first() is SessionState.Active && 
-            sessionDataSource.hasFeature(Feature.CLOUD_SYNC.id)) {
+        if (sessionDataSource.getSessionState().first() is SessionState.Active &&
+            sessionDataSource.hasFeature(Feature.CLOUD_SYNC.id)
+        ) {
             logger.d("HistoryRepository", "Session active and Cloud Sync enabled, attempting remote deletion sync")
             runCatching {
                 val response = apiService.deleteOdometerRecord(record.id)
@@ -186,7 +197,7 @@ class HistoryRepositoryImpl @Inject constructor(
 
         val response = apiService.getOdometerRecords(contractId)
         if (response.isSuccessful) {
-            val records = response.body()?.records?.map { it.toDomain() } ?: emptyList()
+            val records = response.body()?.records?.map { it.toDomainFromApi() } ?: emptyList()
             logger.i("HistoryRepository", "Sync successful: Found ${records.size} remote records")
 
             records.forEach { record ->
@@ -202,10 +213,11 @@ class HistoryRepositoryImpl @Inject constructor(
     override suspend fun saveRoute(route: TripRoute) = withContext(dispatchers.io) {
         logger.d("HistoryRepository", "Saving trip route locally for record: ${route.recordId}")
         routeDao.insertRoute(route.toEntity())
-        
+
         // Remote Sync
-        if (sessionDataSource.getSessionState().first() is SessionState.Active && 
-            sessionDataSource.hasFeature(Feature.CLOUD_SYNC.id)) {
+        if (sessionDataSource.getSessionState().first() is SessionState.Active &&
+            sessionDataSource.hasFeature(Feature.CLOUD_SYNC.id)
+        ) {
             runCatching {
                 val request = UploadRouteRequest(
                     encodedPolyline = route.encodedPolyline,
@@ -223,7 +235,7 @@ class HistoryRepositoryImpl @Inject constructor(
 
     override fun getRoute(recordId: String): Flow<TripRoute?> = flow {
         // 1. Try to get it from Local DB first
-        val localRoute = routeDao.getRouteByRecordIdSync(recordId)?.toDomain()
+        val localRoute = routeDao.getRouteByRecordIdSync(recordId)?.toDomainFromEntity()
         if (localRoute != null) {
             emit(localRoute)
             return@flow
@@ -232,14 +244,14 @@ class HistoryRepositoryImpl @Inject constructor(
         // 2. If not local, check if the record exists and has a route flag
         val recordEntity = dao.getRecordByIdSync(recordId)
         val hasRouteFlag = recordEntity?.hasRoute == true
-        
+
         if (hasRouteFlag && sessionDataSource.hasFeature(Feature.CLOUD_SYNC.id)) {
             logger.d("HistoryRepository", "Route not found locally but flag is true. Fetching from remote...")
-            
+
             runCatching {
                 val response = apiService.getRoute(recordId)
                 if (response.isSuccessful) {
-                    val remoteRoute = response.body()?.route?.toDomain()
+                    val remoteRoute = response.body()?.route?.toDomainFromApi()
                     if (remoteRoute != null) {
                         // 3. Persist locally for future offline use
                         routeDao.insertRoute(remoteRoute.toEntity())
@@ -255,9 +267,10 @@ class HistoryRepositoryImpl @Inject constructor(
     override suspend fun deleteRoute(recordId: String) = withContext(dispatchers.io) {
         logger.d("HistoryRepository", "Deleting trip route for record: $recordId")
         routeDao.deleteRouteByRecordId(recordId)
-        
-        if (sessionDataSource.getSessionState().first() is SessionState.Active && 
-            sessionDataSource.hasFeature(Feature.CLOUD_SYNC.id)) {
+
+        if (sessionDataSource.getSessionState().first() is SessionState.Active &&
+            sessionDataSource.hasFeature(Feature.CLOUD_SYNC.id)
+        ) {
             runCatching {
                 val response = apiService.deleteRoute(recordId)
                 if (!response.isSuccessful) {

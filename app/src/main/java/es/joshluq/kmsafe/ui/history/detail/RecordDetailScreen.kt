@@ -125,10 +125,12 @@ fun RecordDetailScreen(
                     )
                 },
                 navigationIcon = {
-                    IconButton(onClick = safeClick { 
-                        keyboardController?.hide()
-                        onEvent(RecordDetailEvent.OnBackClicked) 
-                    }) {
+                    IconButton(
+                        onClick = safeClick {
+                            keyboardController?.hide()
+                            onEvent(RecordDetailEvent.OnBackClicked)
+                        }
+                    ) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = stringResource(R.string.acc_back),
@@ -373,12 +375,12 @@ private fun HeroMileageCard(kms: Int) {
 @Composable
 private fun DetailSection(record: OdometerRecord) {
     val dateFormatter = remember { SimpleDateFormat("EEEE, dd MMMM yyyy", Locale.getDefault()) }
-    val timeFormatter = remember { 
+    val timeFormatter = remember {
         SimpleDateFormat("HH:mm", Locale.getDefault()).apply {
             timeZone = TimeZone.getDefault()
         }
     }
-    
+
     CanvasKitCard {
         Column(
             verticalArrangement = Arrangement.spacedBy(20.dp)
@@ -388,7 +390,7 @@ private fun DetailSection(record: OdometerRecord) {
                 label = stringResource(R.string.overview_record_date_label),
                 value = dateFormatter.format(Date(record.timestamp))
             )
-            
+
             DetailRow(
                 icon = Icons.Default.AccessTime,
                 label = stringResource(R.string.history_detail_time_label),
@@ -486,31 +488,39 @@ private fun ActionButtons(onEvent: (RecordDetailEvent) -> Unit) {
 
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         CanvasKitButton(
-            onClick = safeClick { 
+            onClick = safeClick {
                 keyboardController?.hide()
                 focusManager.clearFocus()
-                onEvent(RecordDetailEvent.OnEditClicked) 
+                onEvent(RecordDetailEvent.OnEditClicked)
             },
             modifier = Modifier.fillMaxWidth()
         ) { contentColor ->
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(Icons.Default.Edit, contentDescription = stringResource(R.string.history_edit_action), tint = contentColor)
+                Icon(
+                    Icons.Default.Edit,
+                    contentDescription = stringResource(R.string.history_edit_action),
+                    tint = contentColor
+                )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(stringResource(R.string.history_edit_action), color = contentColor)
             }
         }
-        
+
         CanvasKitButton(
-            onClick = safeClick { 
+            onClick = safeClick {
                 keyboardController?.hide()
                 focusManager.clearFocus()
-                onEvent(RecordDetailEvent.OnDeleteClicked) 
+                onEvent(RecordDetailEvent.OnDeleteClicked)
             },
             variant = CanvasKitButtonVariant.Ghost,
             modifier = Modifier.fillMaxWidth()
         ) { _ ->
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(Icons.Default.Delete, contentDescription = stringResource(R.string.history_delete_action), tint = CanvasKitTheme.colors.error)
+                Icon(
+                    Icons.Default.Delete,
+                    contentDescription = stringResource(R.string.history_delete_action),
+                    tint = CanvasKitTheme.colors.error
+                )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(stringResource(R.string.history_delete_action), color = CanvasKitTheme.colors.error)
             }
@@ -536,10 +546,10 @@ private fun DeleteConfirmationDialog(onEvent: (RecordDetailEvent) -> Unit) {
                     Text(stringResource(R.string.profile_logout_cancel), color = CanvasKitTheme.colors.textSecondary)
                 }
                 CanvasKitButton(
-                    onClick = safeClick { 
+                    onClick = safeClick {
                         keyboardController?.hide()
                         focusManager.clearFocus()
-                        onEvent(RecordDetailEvent.OnConfirmDelete) 
+                        onEvent(RecordDetailEvent.OnConfirmDelete)
                     },
                     variant = CanvasKitButtonVariant.Ghost
                 ) { _ ->
@@ -599,7 +609,7 @@ fun EditRecordDialog(
                         ),
                         keyboardActions = KeyboardActions(
                             onNext = { focusManager.moveFocus(FocusDirection.Next) },
-                            onDone = { 
+                            onDone = {
                                 keyboardController?.hide()
                                 focusManager.clearFocus()
                             }
@@ -616,7 +626,7 @@ fun EditRecordDialog(
                                 keyboardType = androidx.compose.ui.text.input.KeyboardType.Decimal,
                                 imeAction = ImeAction.Done
                             ),
-                            keyboardActions = KeyboardActions(onDone = { 
+                            keyboardActions = KeyboardActions(onDone = {
                                 keyboardController?.hide()
                                 focusManager.clearFocus()
                             })
@@ -631,10 +641,10 @@ fun EditRecordDialog(
                 ) {
                     CanvasKitButton(
                         variant = CanvasKitButtonVariant.Secondary,
-                        onClick = { 
+                        onClick = {
                             keyboardController?.hide()
                             focusManager.clearFocus()
-                            onEvent(RecordDetailEvent.OnDismissEdit) 
+                            onEvent(RecordDetailEvent.OnDismissEdit)
                         },
                         modifier = Modifier.weight(1f)
                     ) { contentColor ->
@@ -644,10 +654,10 @@ fun EditRecordDialog(
                         )
                     }
                     CanvasKitButton(
-                        onClick = { 
+                        onClick = {
                             keyboardController?.hide()
                             focusManager.clearFocus()
-                            onEvent(RecordDetailEvent.OnUpdateRecordClicked) 
+                            onEvent(RecordDetailEvent.OnUpdateRecordClicked)
                         },
                         enabled = !state.isEditing && state.editingOdometerValue.isNotBlank(),
                         loading = state.isEditing,

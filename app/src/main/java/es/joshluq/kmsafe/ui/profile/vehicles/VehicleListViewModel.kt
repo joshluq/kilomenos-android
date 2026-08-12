@@ -58,7 +58,9 @@ class VehicleListViewModel @Inject constructor(
             Event.OnDeleteCancelled -> updateState { copy(vehicleToDelete = null) }
             Event.OnAddVehicleClicked -> handleAddVehicle()
             Event.OnUpgradeClicked -> {
-                analytics.track(AnalyticsEvent.Custom("premium_upgrade_clicked", mapOf("source" to "vehicle_list_limit")))
+                analytics.track(
+                    AnalyticsEvent.Custom("premium_upgrade_clicked", mapOf("source" to "vehicle_list_limit"))
+                )
                 launchEffect(Effect.NavigateToPremiumPaywall)
             }
             Event.OnBackClicked -> {
@@ -95,11 +97,13 @@ class VehicleListViewModel @Inject constructor(
                     is GetAllContractsUseCase.Output.Success -> updateState {
                         copy(isLoading = false, vehicles = output.contracts)
                     }
-                    is GetAllContractsUseCase.Output.Failure -> updateState { 
+                    is GetAllContractsUseCase.Output.Failure -> updateState {
                         copy(
-                            isLoading = false, 
-                            error = es.joshluq.foundationkit.text.TextProvider.Resource(es.joshluq.kmsafe.R.string.history_load_error)
-                        ) 
+                            isLoading = false,
+                            error = es.joshluq.foundationkit.text.TextProvider.Resource(
+                                es.joshluq.kmsafe.R.string.history_load_error
+                            )
+                        )
                     }
                 }
             }
@@ -124,12 +128,14 @@ class VehicleListViewModel @Inject constructor(
                         updateState { copy(vehicleToDelete = null, isLoading = false) }
                     }
                     is DeleteContractUseCase.Output.Failure -> {
-                        updateState { 
+                        updateState {
                             copy(
-                                isLoading = false, 
+                                isLoading = false,
                                 vehicleToDelete = null,
-                                error = es.joshluq.foundationkit.text.TextProvider.Resource(es.joshluq.kmsafe.R.string.onboarding_register_error)
-                            ) 
+                                error = es.joshluq.foundationkit.text.TextProvider.Resource(
+                                    es.joshluq.kmsafe.R.string.onboarding_register_error
+                                )
+                            )
                         }
                     }
                     is DeleteContractUseCase.Output.Progress -> updateState { copy(isLoading = true) }

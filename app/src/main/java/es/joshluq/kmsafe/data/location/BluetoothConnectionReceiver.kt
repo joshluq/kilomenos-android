@@ -39,11 +39,13 @@ class BluetoothConnectionReceiver : BroadcastReceiver() {
 
     @Inject
     @CheckFeatureAccess
-    lateinit var checkFeatureAccessUseCase: @JvmSuppressWildcards FlowUseCase<CheckFeatureAccessUseCase.Input, CheckFeatureAccessUseCase.Output>
+    lateinit var checkFeatureAccessUseCase:
+        @JvmSuppressWildcards FlowUseCase<CheckFeatureAccessUseCase.Input, CheckFeatureAccessUseCase.Output>
 
     @Inject
     @GetRenting
-    lateinit var getRentingContractUseCase: @JvmSuppressWildcards FlowUseCase<GetRentingContractUseCase.Input, GetRentingContractUseCase.Output>
+    lateinit var getRentingContractUseCase:
+        @JvmSuppressWildcards FlowUseCase<GetRentingContractUseCase.Input, GetRentingContractUseCase.Output>
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
@@ -62,7 +64,9 @@ class BluetoothConnectionReceiver : BroadcastReceiver() {
         scope.launch {
             try {
                 // 1. Check if user has Premium Access
-                val accessOutput = checkFeatureAccessUseCase(CheckFeatureAccessUseCase.Input(Feature.AUTO_TRACKING)).first()
+                val accessOutput = checkFeatureAccessUseCase(
+                    CheckFeatureAccessUseCase.Input(Feature.AUTO_TRACKING)
+                ).first()
                 val isPremium = (accessOutput is CheckFeatureAccessUseCase.Output.Success) && accessOutput.isGranted
 
                 if (!isPremium) return@launch
@@ -70,7 +74,7 @@ class BluetoothConnectionReceiver : BroadcastReceiver() {
                 // 2. Check if current contract has NO bluetooth device registered
                 val contractOutput = getRentingContractUseCase(GetRentingContractUseCase.Input).first()
                 if (contractOutput !is GetRentingContractUseCase.Output.Success) return@launch
-                
+
                 val contract = contractOutput.contract
                 if (contract.bluetoothDeviceAddress == null) {
                     logger.i("BluetoothReceiver", "New connection detected: ${device.address}. Suggesting link.")
@@ -108,7 +112,9 @@ class BluetoothConnectionReceiver : BroadcastReceiver() {
         }
 
         val pendingIntent = PendingIntent.getActivity(
-            context, 0, intent,
+            context,
+            0,
+            intent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
@@ -120,8 +126,8 @@ class BluetoothConnectionReceiver : BroadcastReceiver() {
             .setAutoCancel(true)
             .setContentIntent(pendingIntent)
             .addAction(
-                0, 
-                context.getString(R.string.onboarding_bluetooth_suggestion_button), 
+                0,
+                context.getString(R.string.onboarding_bluetooth_suggestion_button),
                 pendingIntent
             )
             .build()

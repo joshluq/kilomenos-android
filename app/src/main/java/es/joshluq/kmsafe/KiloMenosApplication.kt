@@ -35,7 +35,8 @@ class KiloMenosApplication : Application(), Configuration.Provider {
 
     @Inject
     @GetPreferences
-    lateinit var getPreferencesUseCase: @JvmSuppressWildcards FlowUseCase<GetPreferencesUseCase.Input, GetPreferencesUseCase.Output>
+    lateinit var getPreferencesUseCase:
+        @JvmSuppressWildcards FlowUseCase<GetPreferencesUseCase.Input, GetPreferencesUseCase.Output>
 
     private val applicationScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
 

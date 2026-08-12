@@ -136,9 +136,11 @@ fun DataManagementScreen(
         containerColor = CanvasKitTheme.colors.backgroundSecondary,
         contentWindowInsets = WindowInsets()
     ) { innerPadding ->
-        Box(modifier = Modifier
-            .fillMaxSize()
-            .padding(innerPadding)) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+        ) {
             Column(
                 modifier = Modifier
                     .fillMaxSize()

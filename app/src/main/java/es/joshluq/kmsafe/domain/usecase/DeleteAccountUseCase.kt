@@ -5,7 +5,10 @@ import es.joshluq.foundationkit.usecase.FlowUseCase
 import es.joshluq.foundationkit.usecase.UseCaseInput
 import es.joshluq.foundationkit.usecase.UseCaseOutput
 import es.joshluq.kmsafe.domain.repository.AuthRepository
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.onStart
 import javax.inject.Inject
 
 /**
@@ -23,11 +26,11 @@ class DeleteAccountUseCase @Inject constructor(
             emit(Output.Success as Output)
         }
     }
-    .onStart { emit(Output.Progress as Output) }
-    .catch { error ->
-        logger.e("DeleteAccountUseCase", "Error during account deletion", error)
-        emit(Output.Failure as Output)
-    }
+        .onStart { emit(Output.Progress as Output) }
+        .catch { error ->
+            logger.e("DeleteAccountUseCase", "Error during account deletion", error)
+            emit(Output.Failure as Output)
+        }
 
     object Input : UseCaseInput
 

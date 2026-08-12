@@ -6,16 +6,34 @@ import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.filled.Bluetooth
+import androidx.compose.material.icons.filled.Security
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.Text
+import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusDirection
@@ -45,7 +63,10 @@ import es.joshluq.canvaskit.components.navigation.CanvasKitTopBar
 import es.joshluq.canvaskit.foundations.theme.CanvasKitTheme
 import es.joshluq.kmsafe.R
 import es.joshluq.kmsafe.domain.model.RentingContract
-import es.joshluq.kmsafe.ui.renting.components.*
+import es.joshluq.kmsafe.ui.renting.components.BluetoothDevicePicker
+import es.joshluq.kmsafe.ui.renting.components.RentingDisplayField
+import es.joshluq.kmsafe.ui.renting.components.RentingTextField
+import es.joshluq.kmsafe.ui.renting.components.VehiclePhotoSelector
 import es.joshluq.kmsafe.ui.util.safeClick
 
 @Composable
@@ -56,9 +77,12 @@ fun EditContractRoute(
 ) {
     val viewModel: EditContractViewModel = hiltViewModel()
     val state by viewModel.state.collectAsStateWithLifecycle()
-    
-    val croppedUri by backStackEntry.savedStateHandle.getStateFlow<String?>("cropped_uri", null).collectAsStateWithLifecycle()
-    
+
+    val croppedUri by backStackEntry.savedStateHandle.getStateFlow<String?>(
+        "cropped_uri",
+        null
+    ).collectAsStateWithLifecycle()
+
     LaunchedEffect(croppedUri) {
         croppedUri?.let { uri ->
             viewModel.sendEvent(Event.OnImageSelected(uri.toUri()))
@@ -92,7 +116,9 @@ fun EditContractScreen(
 
     val bluetoothPermissionState = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
         rememberPermissionState(Manifest.permission.BLUETOOTH_CONNECT)
-    } else null
+    } else {
+        null
+    }
 
     val photoPickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
@@ -109,10 +135,12 @@ fun EditContractScreen(
                     )
                 },
                 navigationIcon = {
-                    IconButton(onClick = safeClick {
-                        keyboardController?.hide()
-                        onEvent(Event.OnBackClicked) 
-                    }) {
+                    IconButton(
+                        onClick = safeClick {
+                            keyboardController?.hide()
+                            onEvent(Event.OnBackClicked)
+                        }
+                    ) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = stringResource(R.string.acc_back),
@@ -127,7 +155,7 @@ fun EditContractScreen(
     ) { innerPadding ->
         Box(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
             val focusManager = LocalFocusManager.current
-            
+
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -163,8 +191,16 @@ fun EditContractScreen(
                             value = state.durationMonths,
                             onValueChange = { onEvent(Event.OnDurationMonthsChanged(it)) },
                             errorMessage = state.durationMonthsError?.asString(),
-                            trailingIcon = { Text(stringResource(R.string.onboarding_months_suffix), color = CanvasKitTheme.colors.brandAccent) },
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Next),
+                            trailingIcon = {
+                                Text(
+                                    stringResource(R.string.onboarding_months_suffix),
+                                    color = CanvasKitTheme.colors.brandAccent
+                                )
+                            },
+                            keyboardOptions = KeyboardOptions(
+                                keyboardType = KeyboardType.Number,
+                                imeAction = ImeAction.Next
+                            ),
                             keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) })
                         )
 
@@ -173,8 +209,16 @@ fun EditContractScreen(
                             value = state.totalKms,
                             onValueChange = { onEvent(Event.OnTotalKmsChanged(it)) },
                             errorMessage = state.totalKmsError?.asString(),
-                            trailingIcon = { Text(stringResource(R.string.onboarding_km_suffix), color = CanvasKitTheme.colors.brandAccent) },
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Next),
+                            trailingIcon = {
+                                Text(
+                                    stringResource(R.string.onboarding_km_suffix),
+                                    color = CanvasKitTheme.colors.brandAccent
+                                )
+                            },
+                            keyboardOptions = KeyboardOptions(
+                                keyboardType = KeyboardType.Number,
+                                imeAction = ImeAction.Next
+                            ),
                             keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) })
                         )
                     }
@@ -198,7 +242,13 @@ fun EditContractScreen(
                                     bluetoothPermissionState.launchPermissionRequest()
                                 }
                             },
-                            trailingIcon = { Icon(Icons.Default.Bluetooth, contentDescription = null, tint = CanvasKitTheme.colors.brandAccent) }
+                            trailingIcon = {
+                                Icon(
+                                    Icons.Default.Bluetooth,
+                                    contentDescription = null,
+                                    tint = CanvasKitTheme.colors.brandAccent
+                                )
+                            }
                         )
 
                         RentingTextField(
@@ -207,7 +257,10 @@ fun EditContractScreen(
                             onValueChange = { onEvent(Event.OnExcessDistancePriceChanged(it)) },
                             placeholder = stringResource(R.string.setup_wizard_step_advanced_price_placeholder),
                             trailingIcon = { Text("€/km", color = CanvasKitTheme.colors.brandAccent) },
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal, imeAction = ImeAction.Next),
+                            keyboardOptions = KeyboardOptions(
+                                keyboardType = KeyboardType.Decimal,
+                                imeAction = ImeAction.Next
+                            ),
                             keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) })
                         )
 
@@ -217,7 +270,10 @@ fun EditContractScreen(
                             onValueChange = { onEvent(Event.OnCourtesyMarginKmsChanged(it)) },
                             placeholder = stringResource(R.string.setup_wizard_step_advanced_margin_placeholder),
                             trailingIcon = { Text("km", color = CanvasKitTheme.colors.brandAccent) },
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Done),
+                            keyboardOptions = KeyboardOptions(
+                                keyboardType = KeyboardType.Number,
+                                imeAction = ImeAction.Done
+                            ),
                             keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() })
                         )
                     }
@@ -228,7 +284,7 @@ fun EditContractScreen(
                 CanvasKitButton(
                     onClick = safeClick {
                         keyboardController?.hide()
-                        onEvent(Event.OnSaveClicked) 
+                        onEvent(Event.OnSaveClicked)
                     },
                     loading = state.isSaving,
                     enabled = !state.isSaving && state.isDirty,
@@ -259,7 +315,7 @@ fun EditContractScreen(
             if (state.showBluetoothPicker) {
                 BluetoothDevicePicker(
                     onDismiss = { onEvent(Event.OnToggleBluetoothPicker) },
-                    onDeviceSelected = { name, address -> 
+                    onDeviceSelected = { name, address ->
                         onEvent(Event.OnBluetoothDeviceSelected(name, address))
                     },
                     sheetState = bottomSheetState

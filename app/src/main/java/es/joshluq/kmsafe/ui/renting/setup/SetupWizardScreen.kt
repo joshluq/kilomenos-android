@@ -5,8 +5,22 @@ import android.content.res.Configuration
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.animation.*
-import androidx.compose.foundation.layout.*
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -14,8 +28,16 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Bluetooth
 import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberDatePickerState
+import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusDirection
@@ -45,10 +67,16 @@ import es.joshluq.canvaskit.components.navigation.CanvasKitTopBar
 import es.joshluq.canvaskit.foundations.theme.CanvasKitTheme
 import es.joshluq.kmsafe.R
 import es.joshluq.kmsafe.domain.model.SubscriptionLevel
-import es.joshluq.kmsafe.ui.renting.components.*
+import es.joshluq.kmsafe.ui.renting.components.BluetoothDevicePicker
+import es.joshluq.kmsafe.ui.renting.components.RentingDisplayField
+import es.joshluq.kmsafe.ui.renting.components.RentingStepLayout
+import es.joshluq.kmsafe.ui.renting.components.RentingStepProgressBar
+import es.joshluq.kmsafe.ui.renting.components.RentingTextField
+import es.joshluq.kmsafe.ui.renting.components.VehiclePhotoSelector
 import es.joshluq.kmsafe.ui.util.safeClick
 import java.text.SimpleDateFormat
-import java.util.*
+import java.util.Date
+import java.util.Locale
 
 @Composable
 fun SetupWizardRoute(
@@ -59,9 +87,12 @@ fun SetupWizardRoute(
 ) {
     val viewModel: SetupWizardViewModel = hiltViewModel()
     val state by viewModel.state.collectAsStateWithLifecycle()
-    
-    val croppedUri by backStackEntry.savedStateHandle.getStateFlow<String?>("cropped_uri", null).collectAsStateWithLifecycle()
-    
+
+    val croppedUri by backStackEntry.savedStateHandle.getStateFlow<String?>(
+        "cropped_uri",
+        null
+    ).collectAsStateWithLifecycle()
+
     LaunchedEffect(croppedUri) {
         croppedUri?.let { uri ->
             viewModel.sendEvent(Event.OnImageSelected(uri.toUri()))
@@ -107,10 +138,12 @@ fun SetupWizardScreen(
                     )
                 },
                 navigationIcon = {
-                    IconButton(onClick = safeClick {
-                        keyboardController?.hide()
-                        onEvent(Event.OnBackClicked)
-                    }) {
+                    IconButton(
+                        onClick = safeClick {
+                            keyboardController?.hide()
+                            onEvent(Event.OnBackClicked)
+                        }
+                    ) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = stringResource(R.string.acc_back),
@@ -123,17 +156,22 @@ fun SetupWizardScreen(
         },
         containerColor = CanvasKitTheme.colors.backgroundPrimary
     ) { innerPadding ->
-        Box(modifier = Modifier
-            .fillMaxSize()
-            .padding(innerPadding)) {
-            
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+        ) {
             AnimatedContent(
                 targetState = state.currentStep,
                 transitionSpec = {
                     if (targetState.index > initialState.index) {
-                        (slideInHorizontally { width -> width } + fadeIn()).togetherWith(slideOutHorizontally { width -> -width } + fadeOut())
+                        (slideInHorizontally { width -> width } + fadeIn()).togetherWith(
+                            slideOutHorizontally { width -> -width } + fadeOut()
+                        )
                     } else {
-                        (slideInHorizontally { width -> -width } + fadeIn()).togetherWith(slideOutHorizontally { width -> width } + fadeOut())
+                        (slideInHorizontally { width -> -width } + fadeIn()).togetherWith(
+                            slideOutHorizontally { width -> width } + fadeOut()
+                        )
                     }
                 },
                 label = "StepTransition"
@@ -163,15 +201,20 @@ fun SetupWizardScreen(
                 CanvasKitDatePickerDialog(
                     onDismissRequest = { onEvent(Event.OnToggleDatePicker) },
                     confirmButton = {
-                        TextButton(onClick = safeClick {
-                            datePickerState.selectedDateMillis?.let { millis ->
-                                val date = Date(millis)
-                                val formatter = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
-                                onEvent(Event.OnStartDateChanged(formatter.format(date)))
+                        TextButton(
+                            onClick = safeClick {
+                                datePickerState.selectedDateMillis?.let { millis ->
+                                    val date = Date(millis)
+                                    val formatter = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+                                    onEvent(Event.OnStartDateChanged(formatter.format(date)))
+                                }
+                                onEvent(Event.OnToggleDatePicker)
                             }
-                            onEvent(Event.OnToggleDatePicker)
-                        }) {
-                            Text(stringResource(R.string.onboarding_date_picker_confirm), color = CanvasKitTheme.colors.brandAccent)
+                        ) {
+                            Text(
+                                stringResource(R.string.onboarding_date_picker_confirm),
+                                color = CanvasKitTheme.colors.brandAccent
+                            )
                         }
                     }
                 ) {
@@ -182,7 +225,7 @@ fun SetupWizardScreen(
             if (state.showBluetoothPicker) {
                 BluetoothDevicePicker(
                     onDismiss = { onEvent(Event.OnToggleBluetoothPicker) },
-                    onDeviceSelected = { name, address -> 
+                    onDeviceSelected = { name, address ->
                         onEvent(Event.OnBluetoothDeviceSelected(name, address))
                     },
                     sheetState = bottomSheetState
@@ -238,7 +281,9 @@ private fun ContractTimeframeStep(state: State, onEvent: (Event) -> Unit) {
             placeholder = stringResource(R.string.onboarding_start_date_placeholder),
             errorMessage = state.startDateError?.asString(),
             onClick = safeClick { onEvent(Event.OnToggleDatePicker) },
-            trailingIcon = { Icon(Icons.Default.CalendarToday, contentDescription = null, tint = CanvasKitTheme.colors.brandAccent) },
+            trailingIcon = {
+                Icon(Icons.Default.CalendarToday, contentDescription = null, tint = CanvasKitTheme.colors.brandAccent)
+            },
             modifier = Modifier.padding(bottom = 16.dp)
         )
 
@@ -247,7 +292,12 @@ private fun ContractTimeframeStep(state: State, onEvent: (Event) -> Unit) {
             value = state.durationMonths,
             onValueChange = { onEvent(Event.OnDurationMonthsChanged(it)) },
             errorMessage = state.durationMonthsError?.asString(),
-            trailingIcon = { Text(stringResource(R.string.onboarding_months_suffix), color = CanvasKitTheme.colors.brandAccent) },
+            trailingIcon = {
+                Text(
+                    stringResource(R.string.onboarding_months_suffix),
+                    color = CanvasKitTheme.colors.brandAccent
+                )
+            },
             placeholder = stringResource(R.string.onboarding_duration_months_placeholder),
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Done),
             keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() })
@@ -270,7 +320,12 @@ private fun MileageBudgetStep(state: State, onEvent: (Event) -> Unit) {
             value = state.totalKms,
             onValueChange = { onEvent(Event.OnTotalKmsChanged(it)) },
             errorMessage = state.totalKmsError?.asString(),
-            trailingIcon = { Text(stringResource(R.string.onboarding_km_suffix), color = CanvasKitTheme.colors.brandAccent) },
+            trailingIcon = {
+                Text(
+                    stringResource(R.string.onboarding_km_suffix),
+                    color = CanvasKitTheme.colors.brandAccent
+                )
+            },
             placeholder = stringResource(R.string.onboarding_total_kms_placeholder),
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Next),
             keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) }),
@@ -282,7 +337,12 @@ private fun MileageBudgetStep(state: State, onEvent: (Event) -> Unit) {
             value = state.startOdometer,
             onValueChange = { onEvent(Event.OnStartOdometerChanged(it)) },
             errorMessage = state.startOdometerError?.asString(),
-            trailingIcon = { Text(stringResource(R.string.onboarding_km_suffix), color = CanvasKitTheme.colors.brandAccent) },
+            trailingIcon = {
+                Text(
+                    stringResource(R.string.onboarding_km_suffix),
+                    color = CanvasKitTheme.colors.brandAccent
+                )
+            },
             placeholder = stringResource(R.string.onboarding_start_odometer_placeholder),
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Done),
             keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() })
@@ -295,14 +355,19 @@ private fun MileageBudgetStep(state: State, onEvent: (Event) -> Unit) {
 private fun SmartActivationStep(state: State, onEvent: (Event) -> Unit) {
     val bluetoothPermissionState = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
         rememberPermissionState(Manifest.permission.BLUETOOTH_CONNECT)
-    } else null
+    } else {
+        null
+    }
 
     val isPremium = state.subscriptionLevel == SubscriptionLevel.PREMIUM
 
     RentingStepLayout(
         title = stringResource(R.string.setup_wizard_step_bluetooth_title),
-        description = if (isPremium) stringResource(R.string.setup_wizard_step_bluetooth_desc_premium) 
-                      else stringResource(R.string.setup_wizard_step_bluetooth_desc_free),
+        description = if (isPremium) {
+            stringResource(R.string.setup_wizard_step_bluetooth_desc_premium)
+        } else {
+            stringResource(R.string.setup_wizard_step_bluetooth_desc_free)
+        },
         primaryActionLabel = stringResource(R.string.setup_wizard_action_next),
         onPrimaryActionClick = safeClick { onEvent(Event.OnNextClicked) },
         secondaryAction = {
@@ -342,7 +407,10 @@ private fun SmartActivationStep(state: State, onEvent: (Event) -> Unit) {
                         }
                     }
                 ) {
-                    Text(stringResource(R.string.setup_wizard_step_bluetooth_action), color = CanvasKitTheme.colors.textPrimary)
+                    Text(
+                        stringResource(R.string.setup_wizard_step_bluetooth_action),
+                        color = CanvasKitTheme.colors.textPrimary
+                    )
                 }
             } else {
                 Icon(
@@ -364,7 +432,10 @@ private fun SmartActivationStep(state: State, onEvent: (Event) -> Unit) {
                 )
                 Spacer(modifier = Modifier.height(16.dp))
                 TextButton(onClick = safeClick { onEvent(Event.OnToggleBluetoothPicker) }) {
-                    Text(stringResource(R.string.onboarding_change_bluetooth), color = CanvasKitTheme.colors.brandAccent)
+                    Text(
+                        stringResource(R.string.onboarding_change_bluetooth),
+                        color = CanvasKitTheme.colors.brandAccent
+                    )
                 }
             }
         }
@@ -428,6 +499,7 @@ fun SetupWizardScreenPreview() {
         )
     }
 }
+
 @Preview(showBackground = true)
 @Preview(uiMode = Configuration.UI_MODE_NIGHT_YES, showBackground = true)
 @Composable
@@ -442,5 +514,3 @@ fun SetupWizardScreen3Preview() {
         )
     }
 }
-
-

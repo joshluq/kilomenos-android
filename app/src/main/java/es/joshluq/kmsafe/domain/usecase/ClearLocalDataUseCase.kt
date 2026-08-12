@@ -20,19 +20,19 @@ class ClearLocalDataUseCase @Inject constructor(
 
     override fun invoke(input: Input): Flow<Output> = flow {
         logger.d("ClearLocalDataUseCase", "Clearing all local data (DB and Preferences)")
-        
+
         // Clear DB
         rentingRepository.clearAllLocalData().collect { }
-        
+
         // Clear Preferences (Identity)
         preferencesRepository.clearPreferences()
-        
+
         emit(Output.Success as Output)
     }.onStart { emit(Output.Progress) }
-    .catch {
-        logger.e("ClearLocalDataUseCase", "Failed to clear data", it)
-        emit(Output.Failure)
-    }
+        .catch {
+            logger.e("ClearLocalDataUseCase", "Failed to clear data", it)
+            emit(Output.Failure)
+        }
 
     object Input : UseCaseInput
 

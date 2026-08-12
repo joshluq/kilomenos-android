@@ -22,7 +22,6 @@ fun LaunchRoute(
     onNavigateToDashboard: () -> Unit,
     viewModel: LaunchViewModel = hiltViewModel()
 ) {
-
     LaunchScreen(
         effects = viewModel.effects,
         onNavigateToLogin = onNavigateToLogin,

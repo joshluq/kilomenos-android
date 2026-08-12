@@ -1,6 +1,5 @@
 package es.joshluq.kmsafe.ui.renting.edit
 
-import android.net.Uri
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -12,14 +11,26 @@ import es.joshluq.foundationkit.usecase.FlowUseCase
 import es.joshluq.foundationkit.usecase.UseCase
 import es.joshluq.foundationkit.viewmodel.ScreenViewModel
 import es.joshluq.kmsafe.R
-import es.joshluq.kmsafe.di.*
+import es.joshluq.kmsafe.di.CheckFeatureAccess
+import es.joshluq.kmsafe.di.GetImageBytes
+import es.joshluq.kmsafe.di.GetVehicleById
+import es.joshluq.kmsafe.di.UpdateContract
+import es.joshluq.kmsafe.di.UploadVehicleImage
 import es.joshluq.kmsafe.domain.model.Feature
-import es.joshluq.kmsafe.domain.model.RentingContract
-import es.joshluq.kmsafe.domain.usecase.*
+import es.joshluq.kmsafe.domain.usecase.CheckFeatureAccessUseCase
+import es.joshluq.kmsafe.domain.usecase.GetImageBytesUseCase
+import es.joshluq.kmsafe.domain.usecase.GetVehicleByIdUseCase
+import es.joshluq.kmsafe.domain.usecase.UpdateContractUseCase
+import es.joshluq.kmsafe.domain.usecase.UploadVehicleImageUseCase
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
-import java.util.*
+import java.util.UUID
 import javax.inject.Inject
 
 @HiltViewModel
@@ -52,7 +63,7 @@ class EditContractViewModel @Inject constructor(
         when (event) {
             Event.OnBackClicked -> launchEffect(Effect.NavigateBack)
             Event.OnSaveClicked -> handleSave()
-            
+
             is Event.OnVehicleNameChanged -> {
                 updateState { copy(vehicleName = event.value, vehicleNameError = null) }
                 checkDirtyState()
@@ -73,8 +84,12 @@ class EditContractViewModel @Inject constructor(
                 checkDirtyState()
             }
             is Event.OnBluetoothDeviceSelected -> {
-                updateState { 
-                    copy(bluetoothDeviceName = event.name, bluetoothDeviceAddress = event.address, showBluetoothPicker = false) 
+                updateState {
+                    copy(
+                        bluetoothDeviceName = event.name,
+                        bluetoothDeviceAddress = event.address,
+                        showBluetoothPicker = false
+                    )
                 }
                 checkDirtyState()
             }
@@ -86,7 +101,7 @@ class EditContractViewModel @Inject constructor(
                 updateState { copy(courtesyMarginKms = event.value) }
                 checkDirtyState()
             }
-            
+
             Event.OnToggleBluetoothPicker -> updateState { copy(showBluetoothPicker = !showBluetoothPicker) }
             Event.OnDismissError -> updateState { copy(error = null) }
         }
@@ -95,7 +110,7 @@ class EditContractViewModel @Inject constructor(
     private fun checkDirtyState() {
         val s = state.value
         val r = s.renting ?: return
-        
+
         val isNameDirty = s.vehicleName != r.vehicleName
         val isImageDirty = s.selectedImageUri != null
         val isDurationDirty = s.durationMonths != r.durationMonths.toString()
@@ -103,7 +118,7 @@ class EditContractViewModel @Inject constructor(
         val isBluetoothDirty = s.bluetoothDeviceAddress != r.bluetoothDeviceAddress
         val isPriceDirty = s.excessDistancePrice != (r.excessDistancePrice?.toString() ?: "")
         val isMarginDirty = s.courtesyMarginKms != r.courtesyMarginKms.toString()
-        
+
         val dirty = isNameDirty || isImageDirty || isDurationDirty || isTotalKmsDirty || isBluetoothDirty || isPriceDirty || isMarginDirty
         updateState { copy(isDirty = dirty) }
     }
@@ -124,7 +139,7 @@ class EditContractViewModel @Inject constructor(
                     is GetVehicleByIdUseCase.Output.Progress -> updateState { copy(isLoading = true) }
                     is GetVehicleByIdUseCase.Output.Success -> {
                         val contract = output.contract
-                        updateState { 
+                        updateState {
                             copy(
                                 isLoading = false,
                                 renting = contract,
@@ -136,11 +151,11 @@ class EditContractViewModel @Inject constructor(
                                 bluetoothDeviceName = contract.bluetoothDeviceName,
                                 excessDistancePrice = contract.excessDistancePrice?.toString() ?: "",
                                 courtesyMarginKms = contract.courtesyMarginKms.toString()
-                            ) 
+                            )
                         }
                     }
-                    is GetVehicleByIdUseCase.Output.Failure -> updateState { 
-                        copy(isLoading = false, error = TextProvider.Resource(R.string.history_load_error)) 
+                    is GetVehicleByIdUseCase.Output.Failure -> updateState {
+                        copy(isLoading = false, error = TextProvider.Resource(R.string.history_load_error))
                     }
                 }
             }.launchIn(viewModelScope)
@@ -152,7 +167,7 @@ class EditContractViewModel @Inject constructor(
 
         val s = state.value
         val baseContract = s.renting ?: return
-        
+
         val updatedContract = baseContract.copy(
             vehicleName = s.vehicleName,
             durationMonths = s.durationMonths.toIntOrNull() ?: baseContract.durationMonths,
@@ -164,21 +179,25 @@ class EditContractViewModel @Inject constructor(
         )
 
         val imageUri = s.selectedImageUri
-        
+
         viewModelScope.launch {
             updateState { copy(isSaving = true) }
-            
+
             val flow = if (imageUri != null) {
                 val bytesResult = getImageBytesUseCase(GetImageBytesUseCase.Input(imageUri.toString()))
                 val bytes = (bytesResult.getOrNull() as? GetImageBytesUseCase.Output.Success)?.bytes
-                
+
                 if (bytes != null) {
                     val fileName = "vehicle_${UUID.randomUUID()}.jpg"
                     uploadVehicleImageUseCase(UploadVehicleImageUseCase.Input(bytes, fileName))
                         .flatMapLatest { output ->
                             when (output) {
                                 is UploadVehicleImageUseCase.Output.Success -> {
-                                    updateContractUseCase(UpdateContractUseCase.Input(updatedContract.copy(vehicleImageUrl = output.imageUrl)))
+                                    updateContractUseCase(
+                                        UpdateContractUseCase.Input(
+                                            updatedContract.copy(vehicleImageUrl = output.imageUrl)
+                                        )
+                                    )
                                 }
                                 is UploadVehicleImageUseCase.Output.Failure -> throw Exception("Image upload failed")
                                 else -> emptyFlow()
@@ -194,7 +213,12 @@ class EditContractViewModel @Inject constructor(
             flow
                 .catch {
                     logger.e("EditContractVM", "Error updating contract", it)
-                    updateState { copy(isSaving = false, error = TextProvider.Resource(R.string.onboarding_register_error)) }
+                    updateState {
+                        copy(
+                            isSaving = false,
+                            error = TextProvider.Resource(R.string.onboarding_register_error)
+                        )
+                    }
                 }
                 .onEach { output ->
                     when (output) {
@@ -203,7 +227,12 @@ class EditContractViewModel @Inject constructor(
                             launchEffect(Effect.NavigateBack)
                         }
                         is UpdateContractUseCase.Output.Failure -> {
-                            updateState { copy(isSaving = false, error = TextProvider.Resource(R.string.onboarding_register_error)) }
+                            updateState {
+                                copy(
+                                    isSaving = false,
+                                    error = TextProvider.Resource(R.string.onboarding_register_error)
+                                )
+                            }
                         }
                         else -> {}
                     }

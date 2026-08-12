@@ -2,14 +2,30 @@ package es.joshluq.kmsafe.ui.projection
 
 import android.content.res.Configuration
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Shield
 import androidx.compose.material.icons.filled.Warning
-import androidx.compose.material3.*
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Slider
+import androidx.compose.material3.SliderDefaults
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -113,7 +129,7 @@ fun ProjectionAnalysisScreen(
 @Composable
 private fun HeaderSection(state: State) {
     val projectedTotal = state.totalContractKms - state.simulatedFinalBalance
-    
+
     Box(
         modifier = Modifier.fillMaxWidth(),
         contentAlignment = Alignment.Center
@@ -232,7 +248,13 @@ private fun FinancialImpactCard(
     recommendedKm: Int?
 ) {
     val isPositive = finalBalance >= 0
-    val cardColor = if (isPositive) CanvasKitTheme.colors.success.copy(alpha = 0.05f) else CanvasKitTheme.colors.error.copy(alpha = 0.05f)
+    val cardColor = if (isPositive) {
+        CanvasKitTheme.colors.success.copy(
+            alpha = 0.05f
+        )
+    } else {
+        CanvasKitTheme.colors.error.copy(alpha = 0.05f)
+    }
     val accentColor = if (isPositive) CanvasKitTheme.colors.success else CanvasKitTheme.colors.error
 
     CanvasKitCard(

@@ -6,11 +6,12 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.os.Build
+import com.google.android.gms.location.ActivityTransition
 import com.google.android.gms.location.ActivityTransitionResult
 import com.google.android.gms.location.DetectedActivity
-import com.google.android.gms.location.ActivityTransition
 import dagger.hilt.android.AndroidEntryPoint
 import es.joshluq.foundationkit.log.LoggerKit
+import es.joshluq.foundationkit.usecase.FlowUseCase
 import es.joshluq.kmsafe.di.CheckFeatureAccess
 import es.joshluq.kmsafe.di.GetRenting
 import es.joshluq.kmsafe.di.ObserveTrackingState
@@ -18,7 +19,6 @@ import es.joshluq.kmsafe.domain.model.Feature
 import es.joshluq.kmsafe.domain.usecase.CheckFeatureAccessUseCase
 import es.joshluq.kmsafe.domain.usecase.GetRentingContractUseCase
 import es.joshluq.kmsafe.domain.usecase.ObserveTrackingStateUseCase
-import es.joshluq.foundationkit.usecase.FlowUseCase
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -26,8 +26,8 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
-import kotlin.coroutines.resume
 import javax.inject.Inject
+import kotlin.coroutines.resume
 import kotlin.time.Duration.Companion.milliseconds
 
 /**
@@ -41,15 +41,18 @@ class ActivityTransitionReceiver : BroadcastReceiver() {
 
     @Inject
     @CheckFeatureAccess
-    lateinit var checkFeatureAccessUseCase: @JvmSuppressWildcards FlowUseCase<CheckFeatureAccessUseCase.Input, CheckFeatureAccessUseCase.Output>
+    lateinit var checkFeatureAccessUseCase:
+        @JvmSuppressWildcards FlowUseCase<CheckFeatureAccessUseCase.Input, CheckFeatureAccessUseCase.Output>
 
     @Inject
     @GetRenting
-    lateinit var getRentingContractUseCase: @JvmSuppressWildcards FlowUseCase<GetRentingContractUseCase.Input, GetRentingContractUseCase.Output>
+    lateinit var getRentingContractUseCase:
+        @JvmSuppressWildcards FlowUseCase<GetRentingContractUseCase.Input, GetRentingContractUseCase.Output>
 
     @Inject
     @ObserveTrackingState
-    lateinit var observeTrackingStateUseCase: @JvmSuppressWildcards FlowUseCase<ObserveTrackingStateUseCase.Input, ObserveTrackingStateUseCase.Output>
+    lateinit var observeTrackingStateUseCase:
+        @JvmSuppressWildcards FlowUseCase<ObserveTrackingStateUseCase.Input, ObserveTrackingStateUseCase.Output>
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
@@ -66,7 +69,7 @@ class ActivityTransitionReceiver : BroadcastReceiver() {
             pendingResult.finish()
             return
         }
-        
+
         scope.launch {
             try {
                 // Check Access for Auto-Tracking feature
@@ -90,10 +93,13 @@ class ActivityTransitionReceiver : BroadcastReceiver() {
                 // Bluetooth Validation: If a device is paired, check if it's connected
                 val contractOutput = getRentingContractUseCase(GetRentingContractUseCase.Input).first()
                 val contract = if (contractOutput is GetRentingContractUseCase.Output.Success) contractOutput.contract else null
-                
+
                 val bluetoothMac = contract?.bluetoothDeviceAddress
                 if (bluetoothMac != null && !isBluetoothDeviceConnected(context, bluetoothMac)) {
-                    logger.i("ActivityReceiver", "In-Vehicle detected but car Bluetooth ($bluetoothMac) not connected. Ignoring.")
+                    logger.i(
+                        "ActivityReceiver",
+                        "In-Vehicle detected but car Bluetooth ($bluetoothMac) not connected. Ignoring."
+                    )
                     return@launch
                 }
 
@@ -112,7 +118,7 @@ class ActivityTransitionReceiver : BroadcastReceiver() {
 
     private fun handleVehicleTransition(context: Context, transitionType: Int) {
         val serviceIntent = Intent(context, LocationTrackingService::class.java)
-        
+
         when (transitionType) {
             ActivityTransition.ACTIVITY_TRANSITION_ENTER -> {
                 serviceIntent.action = LocationTrackingService.ACTION_START
@@ -136,10 +142,10 @@ class ActivityTransitionReceiver : BroadcastReceiver() {
     private suspend fun isBluetoothDeviceConnected(context: Context, macAddress: String): Boolean {
         val startTime = System.currentTimeMillis()
         logger.d("ActivityReceiver", "Checking car Bluetooth ($macAddress)")
-        
+
         val bluetoothManager = context.getSystemService(Context.BLUETOOTH_SERVICE) as? BluetoothManager
         val adapter = bluetoothManager?.adapter ?: return false
-        
+
         if (!adapter.isEnabled) {
             logger.w("ActivityReceiver", "Bluetooth is disabled")
             return false
@@ -148,16 +154,16 @@ class ActivityTransitionReceiver : BroadcastReceiver() {
         return suspendCancellableCoroutine { continuation ->
             val profileListener = object : BluetoothProfile.ServiceListener {
                 override fun onServiceConnected(profile: Int, proxy: BluetoothProfile) {
-                    val isMacConnected = proxy.connectedDevices.any { 
-                        it.address.equals(macAddress, ignoreCase = true) 
+                    val isMacConnected = proxy.connectedDevices.any {
+                        it.address.equals(macAddress, ignoreCase = true)
                     }
-                    
+
                     if (isMacConnected && !continuation.isCompleted) {
                         val duration = System.currentTimeMillis() - startTime
                         logger.i("ActivityReceiver", "Bluetooth CONFIRMED ($macAddress) in ${duration}ms")
                         continuation.resume(true)
                     }
-                    
+
                     adapter.closeProfileProxy(profile, proxy)
                 }
 
@@ -166,11 +172,14 @@ class ActivityTransitionReceiver : BroadcastReceiver() {
 
             adapter.getProfileProxy(context, profileListener, BluetoothProfile.HEADSET)
             adapter.getProfileProxy(context, profileListener, BluetoothProfile.A2DP)
-            
+
             scope.launch {
                 delay(2000.milliseconds)
                 if (!continuation.isCompleted) {
-                    logger.w("ActivityReceiver", "Bluetooth check TIMEOUT after 2000ms. Device ($macAddress) not found.")
+                    logger.w(
+                        "ActivityReceiver",
+                        "Bluetooth check TIMEOUT after 2000ms. Device ($macAddress) not found."
+                    )
                     continuation.resume(false)
                 }
             }

@@ -2,7 +2,15 @@ package es.joshluq.kmsafe.ui.common.permissions
 
 import android.Manifest
 import android.os.Build
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -156,7 +164,7 @@ fun AutoTrackingPermissionsScreen(
             }
 
             CanvasKitButton(
-                onClick = safeClick  { onDismiss() },
+                onClick = safeClick { onDismiss() },
                 modifier = Modifier.fillMaxWidth(),
                 variant = CanvasKitButtonVariant.Ghost
             ) {
@@ -165,7 +173,7 @@ fun AutoTrackingPermissionsScreen(
                     color = CanvasKitTheme.colors.textSecondary
                 )
             }
-            
+
             Spacer(modifier = Modifier.height(16.dp))
         }
     }

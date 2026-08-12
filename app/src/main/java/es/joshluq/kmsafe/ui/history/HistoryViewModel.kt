@@ -136,8 +136,8 @@ class HistoryViewModel @Inject constructor(
             val filteredList = if (currentState.searchQuery.isBlank()) {
                 currentState.allRecords
             } else {
-                currentState.allRecords.filter { 
-                    it.record.label?.contains(currentState.searchQuery, ignoreCase = true) == true 
+                currentState.allRecords.filter {
+                    it.record.label?.contains(currentState.searchQuery, ignoreCase = true) == true
                 }
             }
 
@@ -148,7 +148,10 @@ class HistoryViewModel @Inject constructor(
                         SimpleDateFormat("dd MMMM yyyy", Locale.getDefault()).format(date)
                     }
                     HistoryGroupingMode.MONTH -> {
-                        SimpleDateFormat("MMMM yyyy", Locale.getDefault()).format(date).replaceFirstChar { it.uppercase() }
+                        SimpleDateFormat(
+                            "MMMM yyyy",
+                            Locale.getDefault()
+                        ).format(date).replaceFirstChar { it.uppercase() }
                     }
                     HistoryGroupingMode.YEAR -> {
                         SimpleDateFormat("yyyy", Locale.getDefault()).format(date)

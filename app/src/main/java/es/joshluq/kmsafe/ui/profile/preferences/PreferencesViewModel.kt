@@ -9,9 +9,19 @@ import es.joshluq.foundationkit.text.TextProvider
 import es.joshluq.foundationkit.usecase.FlowUseCase
 import es.joshluq.foundationkit.viewmodel.ScreenViewModel
 import es.joshluq.kmsafe.data.util.DeviceFingerprintProvider
-import es.joshluq.kmsafe.di.*
+import es.joshluq.kmsafe.di.GetEntitlements
+import es.joshluq.kmsafe.di.GetPreferences
+import es.joshluq.kmsafe.di.StartAutoTracking
+import es.joshluq.kmsafe.di.StartTrial
+import es.joshluq.kmsafe.di.StopAutoTracking
+import es.joshluq.kmsafe.di.UpdatePreferences
 import es.joshluq.kmsafe.domain.model.Feature
-import es.joshluq.kmsafe.domain.usecase.*
+import es.joshluq.kmsafe.domain.usecase.GetEntitlementsUseCase
+import es.joshluq.kmsafe.domain.usecase.GetPreferencesUseCase
+import es.joshluq.kmsafe.domain.usecase.StartAutoTrackingUseCase
+import es.joshluq.kmsafe.domain.usecase.StartTrialUseCase
+import es.joshluq.kmsafe.domain.usecase.StopAutoTrackingUseCase
+import es.joshluq.kmsafe.domain.usecase.UpdatePreferencesUseCase
 import es.joshluq.kmsafe.ui.util.ConsentManager
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
@@ -94,12 +104,12 @@ class PreferencesViewModel @Inject constructor(
         getPreferencesUseCase(GetPreferencesUseCase.Input)
             .onEach { output ->
                 if (output is GetPreferencesUseCase.Output.Success) {
-                    updateState { 
+                    updateState {
                         copy(
                             rememberEmail = output.preferences.rememberEmail,
                             showProjectionBanner = output.preferences.showProjectionBanner,
                             autoTrackingEnabled = output.preferences.autoTrackingEnabled
-                        ) 
+                        )
                     }
                 }
             }.launchIn(viewModelScope)

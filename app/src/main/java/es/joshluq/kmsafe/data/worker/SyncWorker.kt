@@ -26,10 +26,10 @@ class SyncWorker @AssistedInject constructor(
 
     override suspend fun doWork(): Result {
         logger.d("SyncWorker", "Starting background data synchronization")
-        
+
         return try {
             val output = migrateLocalDataToRemoteUseCase(MigrateLocalDataToRemoteUseCase.Input).last()
-            
+
             if (output is MigrateLocalDataToRemoteUseCase.Output.Success) {
                 logger.i("SyncWorker", "Synchronization completed successfully")
                 Result.success()

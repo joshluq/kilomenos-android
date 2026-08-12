@@ -36,11 +36,14 @@ class GetOverviewDataUseCase @Inject constructor(
                 val totalKmsDriven = records.filter { !it.isInitialRecord }
                     .sumOf { it.odometerValue }
                     .toDouble()
-                
+
                 val hasPendingRecords = records.any { it.syncStatus == SyncStatus.PENDING }
                 val isSyncPending = hasPendingRecords || contract.syncStatus == SyncStatus.PENDING
 
-                logger.i("GetOverviewDataUseCase", "Overview data ready for ${contract.vehicleName}. isSyncPending: $isSyncPending")
+                logger.i(
+                    "GetOverviewDataUseCase",
+                    "Overview data ready for ${contract.vehicleName}. isSyncPending: $isSyncPending"
+                )
                 Output.Success(contract, totalKmsDriven.coerceAtLeast(0.0), isSyncPending) as Output
             }
         }

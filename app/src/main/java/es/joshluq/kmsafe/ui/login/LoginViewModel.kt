@@ -11,12 +11,28 @@ import es.joshluq.foundationkit.usecase.FlowUseCase
 import es.joshluq.foundationkit.usecase.UseCase
 import es.joshluq.foundationkit.viewmodel.ScreenViewModel
 import es.joshluq.kmsafe.R
+import es.joshluq.kmsafe.data.remote.auth.GoogleAuthManager
 import es.joshluq.kmsafe.data.util.DeviceFingerprintProvider
-import es.joshluq.kmsafe.di.*
+import es.joshluq.kmsafe.di.ClearLocalData
+import es.joshluq.kmsafe.di.EvaluateIdentityConflict
+import es.joshluq.kmsafe.di.GetEntitlements
+import es.joshluq.kmsafe.di.GetPreferences
+import es.joshluq.kmsafe.di.SignIn
+import es.joshluq.kmsafe.di.SignInWithGoogle
+import es.joshluq.kmsafe.di.SyncContracts
+import es.joshluq.kmsafe.di.UpdatePreferences
+import es.joshluq.kmsafe.di.ValidateCredentials
 import es.joshluq.kmsafe.domain.model.SubscriptionLevel
 import es.joshluq.kmsafe.domain.model.User
-import es.joshluq.kmsafe.domain.usecase.*
-import es.joshluq.kmsafe.data.remote.auth.GoogleAuthManager
+import es.joshluq.kmsafe.domain.usecase.ClearLocalDataUseCase
+import es.joshluq.kmsafe.domain.usecase.EvaluateIdentityConflictUseCase
+import es.joshluq.kmsafe.domain.usecase.GetEntitlementsUseCase
+import es.joshluq.kmsafe.domain.usecase.GetPreferencesUseCase
+import es.joshluq.kmsafe.domain.usecase.SignInUseCase
+import es.joshluq.kmsafe.domain.usecase.SignInWithGoogleUseCase
+import es.joshluq.kmsafe.domain.usecase.SyncContractsUseCase
+import es.joshluq.kmsafe.domain.usecase.UpdatePreferencesUseCase
+import es.joshluq.kmsafe.domain.usecase.ValidateCredentialsUseCase
 import es.joshluq.kmsafe.ui.util.toText
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
@@ -183,7 +199,9 @@ class LoginViewModel @Inject constructor(
             when (output) {
                 SignInWithGoogleUseCase.Output.Progress -> updateState { copy(isLoading = true) }
                 is SignInWithGoogleUseCase.Output.Failure -> {
-                    analytics.track(AnalyticsEvent.Custom("login_google_failure", mapOf("error" to output.error.toString())))
+                    analytics.track(
+                        AnalyticsEvent.Custom("login_google_failure", mapOf("error" to output.error.toString()))
+                    )
                     updateState { copy(isLoading = false, error = output.error.toText()) }
                 }
                 is SignInWithGoogleUseCase.Output.Success -> {
@@ -194,7 +212,10 @@ class LoginViewModel @Inject constructor(
     }
 
     private fun handleAuthSuccess(user: User) {
-        logger.d("LoginViewModel", "Auth success for: ${user.email}. shouldClearDataOnSuccess: $shouldClearDataOnSuccess")
+        logger.d(
+            "LoginViewModel",
+            "Auth success for: ${user.email}. shouldClearDataOnSuccess: $shouldClearDataOnSuccess"
+        )
         saveEmailPreference(user.email)
 
         if (shouldClearDataOnSuccess) {

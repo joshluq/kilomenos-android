@@ -100,7 +100,7 @@ class ProfileViewModel @Inject constructor(
 
     private fun handleLogout() {
         val entitlements = state.value.entitlements
-        val clearData = entitlements?.subscriptionLevel == SubscriptionLevel.PREMIUM || 
+        val clearData = entitlements?.subscriptionLevel == SubscriptionLevel.PREMIUM ||
             entitlements?.subscriptionLevel == SubscriptionLevel.TRIAL
 
         signOutUseCase(SignOutUseCase.Input(clearLocalData = clearData)).onEach { output ->

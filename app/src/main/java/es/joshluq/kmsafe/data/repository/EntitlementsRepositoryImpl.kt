@@ -27,7 +27,7 @@ class EntitlementsRepositoryImpl @Inject constructor(
     companion object {
         private const val CACHE_TTL_MILLIS = 15 * 60 * 1000L // 15 minutes
     }
-    
+
     private var lastFetchTime = 0L
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
