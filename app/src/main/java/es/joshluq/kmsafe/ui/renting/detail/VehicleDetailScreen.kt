@@ -75,7 +75,7 @@ fun VehicleDetailScreen(
                     )
                 },
                 navigationIcon = {
-                    IconButton(onClick = { onEvent(Event.OnBackClicked) }) {
+                    IconButton(onClick = safeClick { onEvent(Event.OnBackClicked) }) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = stringResource(R.string.acc_back),
@@ -84,7 +84,7 @@ fun VehicleDetailScreen(
                     }
                 },
                 actions = {
-                    IconButton(onClick = { onEvent(Event.OnEditClicked) }) {
+                    IconButton(onClick = safeClick { onEvent(Event.OnEditClicked) }) {
                         Icon(Icons.Default.Edit, contentDescription = stringResource(R.string.history_edit_action))
                     }
                 },
@@ -189,7 +189,7 @@ fun VehicleDetailScreen(
 
                     // Delete Action
                     TextButton(
-                        onClick = { showDeleteDialog = true },
+                        onClick = safeClick { showDeleteDialog = true },
                         modifier = Modifier.align(Alignment.CenterHorizontally)
                     ) {
                         Icon(Icons.Default.Delete, contentDescription = null, tint = CanvasKitTheme.colors.error)
@@ -235,7 +235,7 @@ private fun DeleteConfirmationDialog(
             title = { Text(stringResource(R.string.vehicles_delete_confirmation_title), fontWeight = FontWeight.Bold) },
             content = { Text(stringResource(R.string.vehicle_detail_delete_msg)) },
             buttons = {
-                TextButton(onClick = onDismiss) {
+                TextButton(onClick = safeClick(onClick = onDismiss)) {
                     Text(stringResource(R.string.profile_logout_cancel), color = CanvasKitTheme.colors.textSecondary)
                 }
                 CanvasKitButton(
