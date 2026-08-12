@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import es.joshluq.analyticskit.domain.model.AnalyticsEvent
 import es.joshluq.analyticskit.sdk.AnalyticskitManager
+import es.joshluq.foundationkit.log.LoggerKit
 import es.joshluq.foundationkit.text.TextProvider
 import es.joshluq.foundationkit.usecase.FlowUseCase
 import es.joshluq.foundationkit.viewmodel.ScreenViewModel
@@ -16,7 +17,11 @@ import es.joshluq.kmsafe.di.GetRoute
 import es.joshluq.kmsafe.di.UpdateOdometerRecord
 import es.joshluq.kmsafe.domain.model.Feature
 import es.joshluq.kmsafe.domain.model.OdometerRecord
-import es.joshluq.kmsafe.domain.usecase.*
+import es.joshluq.kmsafe.domain.usecase.CheckFeatureAccessUseCase
+import es.joshluq.kmsafe.domain.usecase.DeleteOdometerRecordUseCase
+import es.joshluq.kmsafe.domain.usecase.GetOdometerRecordUseCase
+import es.joshluq.kmsafe.domain.usecase.GetRouteUseCase
+import es.joshluq.kmsafe.domain.usecase.UpdateOdometerRecordUseCase
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import javax.inject.Inject
@@ -34,7 +39,8 @@ class RecordDetailViewModel @Inject constructor(
     @JvmSuppressWildcards FlowUseCase<CheckFeatureAccessUseCase.Input, CheckFeatureAccessUseCase.Output>,
     @param:GetRoute private val getRouteUseCase:
     @JvmSuppressWildcards FlowUseCase<GetRouteUseCase.Input, GetRouteUseCase.Output>,
-    private val analytics: AnalyticskitManager
+    private val analytics: AnalyticskitManager,
+    private val logger: LoggerKit
 ) : ScreenViewModel<RecordDetailState, RecordDetailEvent, RecordDetailEffect>() {
 
     private val recordId: String = checkNotNull(savedStateHandle["recordId"])
@@ -71,6 +77,10 @@ class RecordDetailViewModel @Inject constructor(
             is RecordDetailEvent.OnEditingLabelChanged -> updateState { copy(editingLabel = event.value) }
             is RecordDetailEvent.OnEditingOdometerChanged -> updateState { copy(editingOdometerValue = event.value) }
             RecordDetailEvent.OnUpdateRecordClicked -> handleUpdateRecord()
+            RecordDetailEvent.OnPremiumUpgradeClicked -> {
+                analytics.track(AnalyticsEvent.Custom("premium_upgrade_clicked", mapOf("source" to "record_detail_route_map")))
+                launchEffect(RecordDetailEffect.NavigateToPremiumPaywall)
+            }
         }
     }
 
@@ -100,9 +110,18 @@ class RecordDetailViewModel @Inject constructor(
                             )
                         }
                         
-                        // Load route if user is premium and record has route
-                        if (state.value.isPremium && output.record.hasRoute) {
-                            loadRoute(output.record.id)
+                        // Analytics for intention of use
+                        if (output.record.hasRoute) {
+                            if (state.value.isPremium) {
+                                logger.d("RecordDetailViewModel", "Premium user viewing record with route. Loading map...")
+                                loadRoute(output.record.id)
+                            } else {
+                                analytics.track(AnalyticsEvent.Custom("route_teaser_viewed", mapOf("record_id" to output.record.id)))
+                                logger.d("RecordDetailViewModel", "Free user viewing record with route. Teaser shown.")
+                            }
+                        } else {
+                            analytics.track(AnalyticsEvent.Custom("record_no_route_viewed", mapOf("record_id" to output.record.id)))
+                            logger.d("RecordDetailViewModel", "Record has no route data.")
                         }
                     }
                     is GetOdometerRecordUseCase.Output.Failure -> {
@@ -122,8 +141,14 @@ class RecordDetailViewModel @Inject constructor(
             .onEach { output ->
                 when (output) {
                     GetRouteUseCase.Output.Progress -> updateState { copy(isRouteLoading = true) }
-                    is GetRouteUseCase.Output.Success -> updateState { 
-                        copy(isRouteLoading = false, route = output.route) 
+                    is GetRouteUseCase.Output.Success -> {
+                        analytics.track(AnalyticsEvent.Custom("route_map_viewed", mapOf(
+                            "record_id" to id,
+                            "points" to output.route.pointCount
+                        )))
+                        updateState { 
+                            copy(isRouteLoading = false, route = output.route) 
+                        }
                     }
                     is GetRouteUseCase.Output.Failure -> updateState { 
                         copy(isRouteLoading = false) 

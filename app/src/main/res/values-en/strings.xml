@@ -40,6 +40,8 @@
     <string name="premium_benefit_roadmap_desc">Priority access to OCR reading and smart GPS tracking.</string>
     <string name="premium_benefit_autotracking_title">Smart Auto-Tracking</string>
     <string name="premium_benefit_autotracking_desc">Forget the button. The app detects when you drive and starts GPS for you.</string>
+    <string name="premium_benefit_routes_title">Trip Route Maps</string>
+    <string name="premium_benefit_routes_desc">Visualize the path of every trip on an interactive map for total activity control.</string>
     <string name="premium_paywall_save_money_highlight">Save on penalties with total and automatic control.</string>
     <string name="premium_upgrade_button">Upgrade to Premium now</string>
     <string name="premium_trial_offer_title">Try Premium for Free</string>

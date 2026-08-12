@@ -231,6 +231,9 @@ fun AppNavigation(
             RecordDetailRoute(
                 onNavigateBack = {
                     navController.popBackStack()
+                },
+                onNavigateToPremiumPaywall = {
+                    navController.navigate(Destination.PremiumPaywall)
                 }
             )
         }

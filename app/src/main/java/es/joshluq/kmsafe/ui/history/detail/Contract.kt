@@ -42,8 +42,10 @@ sealed interface RecordDetailEvent : UiEvent {
     data class OnEditingLabelChanged(val value: String) : RecordDetailEvent
     data class OnEditingFuelChanged(val value: String) : RecordDetailEvent
     data object OnUpdateRecordClicked : RecordDetailEvent
+    data object OnPremiumUpgradeClicked : RecordDetailEvent
 }
 
 sealed interface RecordDetailEffect : UiEffect {
     data object NavigateBack : RecordDetailEffect
+    data object NavigateToPremiumPaywall : RecordDetailEffect
 }

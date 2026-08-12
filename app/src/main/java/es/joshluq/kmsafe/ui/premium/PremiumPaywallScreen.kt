@@ -148,6 +148,11 @@ fun PremiumPaywallScreen(
                         description = stringResource(R.string.premium_benefit_autotracking_desc),
                     )
                     BenefitCard(
+                        icon = Icons.Default.Map,
+                        title = stringResource(R.string.premium_benefit_routes_title),
+                        description = stringResource(R.string.premium_benefit_routes_desc),
+                    )
+                    BenefitCard(
                         icon = Icons.Default.CloudDone,
                         title = stringResource(R.string.premium_benefit_sync_title),
                         description = stringResource(R.string.premium_benefit_sync_desc)

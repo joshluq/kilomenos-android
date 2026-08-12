@@ -77,6 +77,7 @@ import es.joshluq.kmsafe.R
 import es.joshluq.kmsafe.domain.model.OdometerRecord
 import es.joshluq.kmsafe.ui.onboarding.OnboardingTextField
 import es.joshluq.kmsafe.ui.util.safeClick
+import es.joshluq.kmsafe.ui.util.safeClickable
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -84,7 +85,8 @@ import java.util.TimeZone
 
 @Composable
 fun RecordDetailRoute(
-    onNavigateBack: () -> Unit
+    onNavigateBack: () -> Unit,
+    onNavigateToPremiumPaywall: () -> Unit
 ) {
     val viewModel: RecordDetailViewModel = hiltViewModel()
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -93,6 +95,7 @@ fun RecordDetailRoute(
         viewModel.effects.collect { effect ->
             when (effect) {
                 RecordDetailEffect.NavigateBack -> onNavigateBack()
+                RecordDetailEffect.NavigateToPremiumPaywall -> onNavigateToPremiumPaywall()
             }
         }
     }
@@ -169,7 +172,8 @@ fun RecordDetailScreen(
                         isPremium = state.isPremium,
                         hasRoute = record.hasRoute,
                         encodedPolyline = state.route?.encodedPolyline,
-                        isLoading = state.isRouteLoading
+                        isLoading = state.isRouteLoading,
+                        onUpgradeClicked = { onEvent(RecordDetailEvent.OnPremiumUpgradeClicked) }
                     )
 
                     Spacer(modifier = Modifier.height(24.dp))
@@ -211,7 +215,8 @@ private fun RouteMapCard(
     isPremium: Boolean,
     hasRoute: Boolean,
     encodedPolyline: String?,
-    isLoading: Boolean
+    isLoading: Boolean,
+    onUpgradeClicked: () -> Unit
 ) {
     CanvasKitCard {
         Column {
@@ -239,7 +244,10 @@ private fun RouteMapCard(
                         )
                     }
                     !isPremium -> {
-                        TeaserOverlay(stringResource(R.string.history_detail_route_premium_teaser))
+                        TeaserOverlay(
+                            text = stringResource(R.string.history_detail_route_premium_teaser),
+                            onClick = onUpgradeClicked
+                        )
                     }
                     !hasRoute || encodedPolyline.isNullOrBlank() -> {
                         Text(
@@ -300,10 +308,14 @@ private fun RouteMap(encodedPolyline: String) {
 }
 
 @Composable
-private fun TeaserOverlay(text: String) {
+private fun TeaserOverlay(
+    text: String,
+    onClick: () -> Unit
+) {
     Box(
         modifier = Modifier
             .fillMaxSize()
+            .safeClickable(onClick = onClick)
             .background(CanvasKitTheme.colors.textPrimary.copy(alpha = 0.05f)),
         contentAlignment = Alignment.Center
     ) {
@@ -322,6 +334,13 @@ private fun TeaserOverlay(text: String) {
                 modifier = Modifier.padding(horizontal = 32.dp),
                 textAlign = androidx.compose.ui.text.style.TextAlign.Center
             )
+            Spacer(modifier = Modifier.height(12.dp))
+            Text(
+                text = stringResource(R.string.premium_upgrade_confirm),
+                style = CanvasKitTheme.typography.labelLarge,
+                color = CanvasKitTheme.colors.brandAccent,
+                fontWeight = FontWeight.Bold
+            )
         }
     }
 }
@@ -332,9 +351,7 @@ private fun HeroMileageCard(kms: Int) {
         modifier = Modifier.fillMaxWidth()
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(32.dp),
+            modifier = Modifier.fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
@@ -364,7 +381,6 @@ private fun DetailSection(record: OdometerRecord) {
     
     CanvasKitCard {
         Column(
-            modifier = Modifier.padding(24.dp),
             verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
             DetailRow(
@@ -656,7 +672,7 @@ fun RecordDetailScreenPreview() {
         RecordDetailScreen(
             state = RecordDetailState(
                 isLoading = false,
-                isPremium = true,
+                isPremium = false,
                 consumptionL100km = 5.4,
                 record = OdometerRecord(
                     id = "1",
