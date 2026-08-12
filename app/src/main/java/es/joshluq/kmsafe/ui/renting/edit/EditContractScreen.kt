@@ -47,8 +47,6 @@ import es.joshluq.kmsafe.R
 import es.joshluq.kmsafe.domain.model.RentingContract
 import es.joshluq.kmsafe.ui.renting.components.*
 import es.joshluq.kmsafe.ui.util.safeClick
-import java.text.SimpleDateFormat
-import java.util.*
 
 @Composable
 fun EditContractRoute(
@@ -111,7 +109,7 @@ fun EditContractScreen(
                     )
                 },
                 navigationIcon = {
-                    IconButton(onClick = { 
+                    IconButton(onClick = safeClick {
                         keyboardController?.hide()
                         onEvent(Event.OnBackClicked) 
                     }) {
@@ -140,7 +138,7 @@ fun EditContractScreen(
                 VehiclePhotoSelector(
                     imageUrl = state.vehicleImageUrl,
                     selectedUri = state.selectedImageUri,
-                    onClick = { photoPickerLauncher.launch("image/*") },
+                    onClick = safeClick { photoPickerLauncher.launch("image/*") },
                     modifier = Modifier.padding(top = 24.dp)
                 )
 
@@ -192,7 +190,7 @@ fun EditContractScreen(
                             label = stringResource(R.string.onboarding_bluetooth_label),
                             value = state.bluetoothDeviceName ?: state.bluetoothDeviceAddress ?: "",
                             placeholder = stringResource(R.string.onboarding_bluetooth_placeholder),
-                            onClick = {
+                            onClick = safeClick {
                                 keyboardController?.hide()
                                 if (bluetoothPermissionState?.status?.isGranted != false) {
                                     onEvent(Event.OnToggleBluetoothPicker)
@@ -228,7 +226,7 @@ fun EditContractScreen(
                 Spacer(modifier = Modifier.height(8.dp))
 
                 CanvasKitButton(
-                    onClick = { 
+                    onClick = safeClick {
                         keyboardController?.hide()
                         onEvent(Event.OnSaveClicked) 
                     },
@@ -307,11 +305,6 @@ private fun EditSectionCard(
             content()
         }
     }
-}
-
-private fun formatDate(timestamp: Long): String {
-    val sdf = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
-    return sdf.format(Date(timestamp))
 }
 
 @Preview(showBackground = true)
