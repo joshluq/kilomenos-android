@@ -12,7 +12,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import android.content.res.Configuration
+import androidx.compose.ui.text.style.TextAlign
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import es.joshluq.canvaskit.components.buttons.CanvasKitButton
@@ -23,8 +26,9 @@ import es.joshluq.canvaskit.components.layout.CanvasKitLoadingScaffold
 import es.joshluq.canvaskit.components.navigation.CanvasKitTopBar
 import es.joshluq.canvaskit.foundations.theme.CanvasKitTheme
 import es.joshluq.kmsafe.R
+import es.joshluq.kmsafe.domain.model.RentingContract
 import es.joshluq.kmsafe.ui.renting.components.ContractMetricCard
-import es.joshluq.kmsafe.ui.renting.components.RentingHeroHeader
+import es.joshluq.kmsafe.ui.renting.components.VehiclePhotoSelector
 import es.joshluq.kmsafe.ui.util.safeClick
 import java.text.SimpleDateFormat
 import java.util.*
@@ -97,15 +101,24 @@ fun VehicleDetailScreen(
                         .verticalScroll(rememberScrollState())
                         .padding(horizontal = 24.dp)
                 ) {
-                    Spacer(modifier = Modifier.height(24.dp))
 
-                    RentingHeroHeader(
-                        vehicleName = contract.vehicleName,
-                        imageUrl = contract.vehicleImageUrl
+                    VehiclePhotoSelector(
+                        imageUrl = contract.vehicleImageUrl,
+                        isReadOnly = true,
+                        selectedUri = null,
+                        onClick = { },
+                        modifier = Modifier.padding(top = 24.dp)
                     )
-
-                    Spacer(modifier = Modifier.height(40.dp))
-
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Text(
+                        modifier = Modifier.fillMaxWidth(),
+                        text = contract.vehicleName,
+                        style = CanvasKitTheme.typography.headingLarge,
+                        color = CanvasKitTheme.colors.textPrimary,
+                        fontWeight = FontWeight.Black,
+                        textAlign = TextAlign.Center,
+                    )
+                    Spacer(modifier = Modifier.height(24.dp))
                     // Section: Contract
                     SectionHeader(stringResource(R.string.vehicle_detail_contract_section))
                     Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -239,4 +252,31 @@ private fun DeleteConfirmationDialog(
 private fun formatDate(timestamp: Long): String {
     val sdf = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
     return sdf.format(Date(timestamp))
+}
+
+@Preview(showBackground = true)
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES, showBackground = true)
+@Composable
+fun VehicleDetailScreenPreview() {
+    CanvasKitTheme {
+        VehicleDetailScreen(
+            state = State(
+                isLoading = false,
+                renting = RentingContract(
+                    id = "1",
+                    vehicleName = "Tesla Model 3",
+                    startDate = System.currentTimeMillis() - 3888000000L,
+                    durationMonths = 48,
+                    totalKms = 60000,
+                    startOdometer = 0,
+                    currentOdometer = 1200,
+                    isSelected = true,
+                    bluetoothDeviceName = "My Tesla",
+                    excessDistancePrice = 0.05,
+                    courtesyMarginKms = 500
+                )
+            ),
+            onEvent = {}
+        )
+    }
 }

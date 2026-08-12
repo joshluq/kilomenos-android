@@ -26,7 +26,6 @@ fun ContractMetricCard(
         modifier = modifier
     ) {
         Row(
-            modifier = Modifier.padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(
@@ -35,7 +34,7 @@ fun ContractMetricCard(
                 tint = CanvasKitTheme.colors.brandAccent,
                 modifier = Modifier.size(24.dp)
             )
-            Spacer(modifier = Modifier.width(12.dp))
+            Spacer(modifier = Modifier.width(4.dp))
             Column {
                 Text(
                     text = label,
@@ -44,7 +43,7 @@ fun ContractMetricCard(
                 )
                 Text(
                     text = value,
-                    style = CanvasKitTheme.typography.bodyLarge,
+                    style = CanvasKitTheme.typography.bodyMedium,
                     color = CanvasKitTheme.colors.textPrimary,
                     fontWeight = FontWeight.Bold
                 )

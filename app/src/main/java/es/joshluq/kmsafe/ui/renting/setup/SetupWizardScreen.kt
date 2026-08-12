@@ -1,6 +1,7 @@
 package es.joshluq.kmsafe.ui.renting.setup
 
 import android.Manifest
+import android.content.res.Configuration
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -24,6 +25,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -44,6 +46,7 @@ import es.joshluq.canvaskit.foundations.theme.CanvasKitTheme
 import es.joshluq.kmsafe.R
 import es.joshluq.kmsafe.domain.model.SubscriptionLevel
 import es.joshluq.kmsafe.ui.renting.components.*
+import es.joshluq.kmsafe.ui.util.safeClick
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -348,7 +351,7 @@ private fun SmartActivationStep(state: State, onEvent: (Event) -> Unit) {
                 )
                 Spacer(modifier = Modifier.height(16.dp))
                 Text(
-                    text = state.bluetoothDeviceName ?: state.bluetoothDeviceAddress,
+                    text = state.bluetoothDeviceName ?: state.bluetoothDeviceAddress ?: "",
                     style = CanvasKitTheme.typography.headingMedium,
                     fontWeight = FontWeight.Bold
                 )
@@ -405,6 +408,21 @@ private fun AdvancedProtectionStep(state: State, onEvent: (Event) -> Unit) {
             trailingIcon = { Text("km", color = CanvasKitTheme.colors.brandAccent) },
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Done),
             keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() })
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES, showBackground = true)
+@Composable
+fun SetupWizardScreenPreview() {
+    CanvasKitTheme {
+        SetupWizardScreen(
+            state = State(
+                currentStep = SetupStep.VEHICLE_IDENTITY,
+                vehicleName = "Tesla Model 3"
+            ),
+            onEvent = {}
         )
     }
 }

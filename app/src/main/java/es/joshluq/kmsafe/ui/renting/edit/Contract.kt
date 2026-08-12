@@ -29,7 +29,8 @@ data class State(
     val error: TextProvider? = null,
     val vehicleNameError: TextProvider? = null,
     val durationMonthsError: TextProvider? = null,
-    val totalKmsError: TextProvider? = null
+    val totalKmsError: TextProvider? = null,
+    val isDirty: Boolean = false
 ) : UiState {
     companion object {
         val Empty = State()

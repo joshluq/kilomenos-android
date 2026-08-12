@@ -57,22 +57,59 @@ class EditContractViewModel @Inject constructor(
             Event.OnBackClicked -> launchEffect(Effect.NavigateBack)
             Event.OnSaveClicked -> handleSave()
             
-            is Event.OnVehicleNameChanged -> updateState { copy(vehicleName = event.value, vehicleNameError = null) }
+            is Event.OnVehicleNameChanged -> {
+                updateState { copy(vehicleName = event.value, vehicleNameError = null) }
+                checkDirtyState()
+            }
             is Event.OnOriginalImageSelected -> {
                 event.uri?.let { launchEffect(Effect.NavigateToCropper(it.toString())) }
             }
-            is Event.OnImageSelected -> updateState { copy(selectedImageUri = event.uri) }
-            is Event.OnDurationMonthsChanged -> updateState { copy(durationMonths = event.value, durationMonthsError = null) }
-            is Event.OnTotalKmsChanged -> updateState { copy(totalKms = event.value, totalKmsError = null) }
-            is Event.OnBluetoothDeviceSelected -> updateState { 
-                copy(bluetoothDeviceName = event.name, bluetoothDeviceAddress = event.address, showBluetoothPicker = false) 
+            is Event.OnImageSelected -> {
+                updateState { copy(selectedImageUri = event.uri) }
+                checkDirtyState()
             }
-            is Event.OnExcessDistancePriceChanged -> updateState { copy(excessDistancePrice = event.value) }
-            is Event.OnCourtesyMarginKmsChanged -> updateState { copy(courtesyMarginKms = event.value) }
+            is Event.OnDurationMonthsChanged -> {
+                updateState { copy(durationMonths = event.value, durationMonthsError = null) }
+                checkDirtyState()
+            }
+            is Event.OnTotalKmsChanged -> {
+                updateState { copy(totalKms = event.value, totalKmsError = null) }
+                checkDirtyState()
+            }
+            is Event.OnBluetoothDeviceSelected -> {
+                updateState { 
+                    copy(bluetoothDeviceName = event.name, bluetoothDeviceAddress = event.address, showBluetoothPicker = false) 
+                }
+                checkDirtyState()
+            }
+            is Event.OnExcessDistancePriceChanged -> {
+                updateState { copy(excessDistancePrice = event.value) }
+                checkDirtyState()
+            }
+            is Event.OnCourtesyMarginKmsChanged -> {
+                updateState { copy(courtesyMarginKms = event.value) }
+                checkDirtyState()
+            }
             
             Event.OnToggleBluetoothPicker -> updateState { copy(showBluetoothPicker = !showBluetoothPicker) }
             Event.OnDismissError -> updateState { copy(error = null) }
         }
+    }
+
+    private fun checkDirtyState() {
+        val s = state.value
+        val r = s.renting ?: return
+        
+        val isNameDirty = s.vehicleName != r.vehicleName
+        val isImageDirty = s.selectedImageUri != null
+        val isDurationDirty = s.durationMonths != r.durationMonths.toString()
+        val isTotalKmsDirty = s.totalKms != r.totalKms.toString()
+        val isBluetoothDirty = s.bluetoothDeviceAddress != r.bluetoothDeviceAddress
+        val isPriceDirty = s.excessDistancePrice != (r.excessDistancePrice?.toString() ?: "")
+        val isMarginDirty = s.courtesyMarginKms != r.courtesyMarginKms.toString()
+        
+        val dirty = isNameDirty || isImageDirty || isDurationDirty || isTotalKmsDirty || isBluetoothDirty || isPriceDirty || isMarginDirty
+        updateState { copy(isDirty = dirty) }
     }
 
     private fun checkPremium() {
