@@ -47,6 +47,8 @@ class SetupWizardViewModel @Inject constructor(
     private val logger: LoggerKit
 ) : ScreenViewModel<State, Event, Effect>() {
 
+    private val temporaryContractId = UUID.randomUUID().toString()
+
     init {
         loadEntitlements()
     }
@@ -196,6 +198,7 @@ class SetupWizardViewModel @Inject constructor(
         val startTime = runCatching { sdf.parse(s.startDate)?.time ?: 0L }.getOrDefault(0L)
 
         val initialContract = RentingContract(
+            id = temporaryContractId,
             vehicleName = s.vehicleName,
             startDate = startTime,
             durationMonths = s.durationMonths.toIntOrNull() ?: 0,
@@ -219,7 +222,7 @@ class SetupWizardViewModel @Inject constructor(
                 val bytes = (bytesResult.getOrNull() as? GetImageBytesUseCase.Output.Success)?.bytes
 
                 if (bytes != null) {
-                    val fileName = "vehicle_${UUID.randomUUID()}.jpg"
+                    val fileName = "vehicle_$temporaryContractId.jpg"
                     uploadVehicleImage(UploadVehicleImageUseCase.Input(bytes, fileName))
                         .flatMapLatest { output ->
                             when (output) {

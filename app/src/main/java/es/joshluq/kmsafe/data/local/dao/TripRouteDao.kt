@@ -24,4 +24,10 @@ interface TripRouteDao {
 
     @Query("DELETE FROM trip_route WHERE recordId = :recordId")
     suspend fun deleteRouteByRecordId(recordId: String)
+
+    /**
+     * Deletes all trip routes from the database.
+     */
+    @Query("DELETE FROM trip_route")
+    suspend fun clearAllRoutes()
 }

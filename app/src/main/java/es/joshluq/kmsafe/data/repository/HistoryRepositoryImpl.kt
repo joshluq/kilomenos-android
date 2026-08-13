@@ -1,10 +1,8 @@
 package es.joshluq.kmsafe.data.repository
 
-import androidx.room.withTransaction
 import es.joshluq.authkit.session.model.SessionState
 import es.joshluq.foundationkit.coroutines.DispatcherProvider
 import es.joshluq.foundationkit.log.LoggerKit
-import es.joshluq.kmsafe.data.local.AppDatabase
 import es.joshluq.kmsafe.data.local.dao.OdometerRecordDao
 import es.joshluq.kmsafe.data.local.dao.TripRouteDao
 import es.joshluq.kmsafe.data.local.entity.toDomain as toDomainFromEntity
@@ -17,6 +15,7 @@ import es.joshluq.kmsafe.data.remote.auth.UserSessionDataSource
 import es.joshluq.kmsafe.data.remote.request.AddOdometerRecordRequest
 import es.joshluq.kmsafe.data.remote.request.UpdateOdometerRecordRequest
 import es.joshluq.kmsafe.data.remote.request.UploadRouteRequest
+import es.joshluq.kmsafe.data.repository.util.SyncIdHandler
 import es.joshluq.kmsafe.data.worker.SyncManager
 import es.joshluq.kmsafe.domain.model.Feature
 import es.joshluq.kmsafe.domain.model.KmException
@@ -39,9 +38,9 @@ import javax.inject.Inject
 class HistoryRepositoryImpl @Inject constructor(
     private val dao: OdometerRecordDao,
     private val routeDao: TripRouteDao,
-    private val appDatabase: AppDatabase,
     private val apiService: RentingApiService,
     private val sessionDataSource: UserSessionDataSource,
+    private val syncIdHandler: SyncIdHandler,
     private val syncManager: SyncManager,
     private val errorMapper: ErrorMapper,
     private val logger: LoggerKit,
@@ -80,6 +79,7 @@ class HistoryRepositoryImpl @Inject constructor(
                     val response = apiService.addOdometerRecord(
                         contractId = record.contractId,
                         request = AddOdometerRecordRequest(
+                            id = record.id,
                             timestamp = record.timestamp.toIsoString(),
                             odometerValue = record.odometerValue,
                             label = record.label,
@@ -90,33 +90,7 @@ class HistoryRepositoryImpl @Inject constructor(
                         val remoteRecordDto = response.body()?.record
                         if (remoteRecordDto != null) {
                             val remoteRecord = remoteRecordDto.toDomainFromApi()
-
-                            // Swap ID logic for records and associated routes
-                            if (remoteRecord.id != record.id) {
-                                logger.d(
-                                    "HistoryRepository",
-                                    "Swapping record ID from ${record.id} to ${remoteRecord.id}"
-                                )
-
-                                appDatabase.withTransaction {
-                                    // 1. Check if there was an associated route (use passed route or fetch from DB)
-                                    val routeToSync = route ?: routeDao.getRouteByRecordIdSync(record.id)?.toDomainFromEntity()
-
-                                    routeToSync?.let { localRoute ->
-                                        // 2. Delete old and insert with new ID
-                                        routeDao.deleteRouteByRecordId(record.id)
-                                        routeDao.insertRoute(localRoute.copy(recordId = remoteRecord.id).toEntity())
-
-                                        // 3. Sync the route with the new ID
-                                        saveRoute(localRoute.copy(recordId = remoteRecord.id))
-                                    }
-
-                                    dao.deleteRecord(recordToSave.toEntity())
-                                    dao.insertRecord(remoteRecord.copy(syncStatus = SyncStatus.SYNCED).toEntity())
-                                }
-                            } else {
-                                dao.insertRecord(remoteRecord.copy(syncStatus = SyncStatus.SYNCED).toEntity())
-                            }
+                            syncIdHandler.resolveOdometerId(record, remoteRecord)
 
                             // If IDs didn't change but we have a route, ensure it's synced
                             if (remoteRecord.id == record.id && (route != null || record.hasRoute)) {

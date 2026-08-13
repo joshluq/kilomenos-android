@@ -18,6 +18,7 @@ import es.joshluq.kmsafe.data.remote.api.StorageApiService
 import es.joshluq.kmsafe.data.remote.auth.UserSessionDataSource
 import es.joshluq.kmsafe.data.remote.request.CreateRentingContractRequest
 import es.joshluq.kmsafe.data.remote.request.UpdateRentingContractRequest
+import es.joshluq.kmsafe.data.repository.util.SyncIdHandler
 import es.joshluq.kmsafe.data.worker.SyncManager
 import es.joshluq.kmsafe.domain.model.Feature
 import es.joshluq.kmsafe.domain.model.KmError
@@ -45,6 +46,7 @@ class RentingRepositoryImpl @Inject constructor(
     private val apiService: RentingApiService,
     private val storageApiService: StorageApiService,
     private val sessionDataSource: UserSessionDataSource,
+    private val syncIdHandler: SyncIdHandler,
     private val syncManager: SyncManager,
     private val errorMapper: ErrorMapper,
     private val logger: LoggerKit,
@@ -65,6 +67,7 @@ class RentingRepositoryImpl @Inject constructor(
             runCatching {
                 if (sessionDataSource.hasFeature(Feature.CLOUD_SYNC.id)) {
                     val request = CreateRentingContractRequest(
+                        id = contract.id,
                         vehicleName = contract.vehicleName,
                         startDate = contract.startDate.toIsoString(),
                         durationMonths = contract.durationMonths,
@@ -83,19 +86,7 @@ class RentingRepositoryImpl @Inject constructor(
                         logger.i("RentingRepository", "Remote contract sync successful")
                         val remoteContract = response.body()?.contract?.toDomainFromApi()
                         if (remoteContract != null) {
-                            appDatabase.withTransaction {
-                                if (remoteContract.id != contract.id) {
-                                    rentingDao.deleteContract(contract.id)
-                                    odometerDao.updateContractId(oldId = contract.id, newId = remoteContract.id)
-                                }
-
-                                // Ensure the local preference (isSelected) is maintained
-                                val contractToPersist = remoteContract.copy(
-                                    isSelected = contract.isSelected,
-                                    syncStatus = SyncStatus.SYNCED
-                                )
-                                rentingDao.insertContract(contractToPersist.toEntity())
-                            }
+                            syncIdHandler.resolveRentingId(contract, remoteContract)
                             finalId = remoteContract.id
                         }
                     } else {
@@ -287,6 +278,8 @@ class RentingRepositoryImpl @Inject constructor(
         logger.i("RentingRepository", "Clearing all local data")
         odometerDao.clearAllRecords()
         rentingDao.clearAllContracts()
+        // trip_route has CASCADE but we clear explicitly for safety
+        appDatabase.tripRouteDao().clearAllRoutes()
         emit(Unit)
     }.flowOn(dispatchers.io)
 }

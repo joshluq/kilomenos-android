@@ -6,6 +6,8 @@ import com.fasterxml.jackson.annotation.JsonProperty
  * Request body for adding an odometer record.
  */
 data class AddOdometerRecordRequest(
+    @JsonProperty("id")
+    val id: String,
     @JsonProperty("timestamp")
     val timestamp: String,
     @JsonProperty("odometer_value")

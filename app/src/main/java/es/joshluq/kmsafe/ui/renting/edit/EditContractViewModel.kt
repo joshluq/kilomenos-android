@@ -30,7 +30,6 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
-import java.util.UUID
 import javax.inject.Inject
 
 @HiltViewModel
@@ -188,7 +187,7 @@ class EditContractViewModel @Inject constructor(
                 val bytes = (bytesResult.getOrNull() as? GetImageBytesUseCase.Output.Success)?.bytes
 
                 if (bytes != null) {
-                    val fileName = "vehicle_${UUID.randomUUID()}.jpg"
+                    val fileName = "vehicle_${baseContract.id}.jpg"
                     uploadVehicleImageUseCase(UploadVehicleImageUseCase.Input(bytes, fileName))
                         .flatMapLatest { output ->
                             when (output) {

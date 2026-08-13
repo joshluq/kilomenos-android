@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonProperty
  * Request body for creating a new renting contract.
  */
 data class CreateRentingContractRequest(
+    @JsonProperty("id") val id: String,
     @JsonProperty("vehicle_name") val vehicleName: String,
     @JsonProperty("start_date") val startDate: String,
     @JsonProperty("duration_months") val durationMonths: Int,
