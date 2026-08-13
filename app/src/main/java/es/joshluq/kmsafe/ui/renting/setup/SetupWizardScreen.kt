@@ -52,6 +52,7 @@ import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation.NavBackStackEntry
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
@@ -81,10 +82,23 @@ import java.util.Locale
 fun SetupWizardRoute(
     onNavigateBack: () -> Unit,
     onNavigateToDashboard: () -> Unit,
-    onNavigateToCropper: (String) -> Unit
+    onNavigateToCropper: (String) -> Unit,
+    backStackEntry: NavBackStackEntry
 ) {
     val viewModel: SetupWizardViewModel = hiltViewModel()
     val state by viewModel.state.collectAsStateWithLifecycle()
+
+    val croppedUri by backStackEntry.savedStateHandle.getStateFlow<String?>(
+        "cropped_uri",
+        null
+    ).collectAsStateWithLifecycle()
+
+    LaunchedEffect(croppedUri) {
+        croppedUri?.let { uri ->
+            viewModel.sendEvent(Event.OnImageSelected(uri.toUri()))
+            backStackEntry.savedStateHandle.remove<String>("cropped_uri")
+        }
+    }
 
     LaunchedEffect(viewModel.effects) {
         viewModel.effects.collect { effect ->

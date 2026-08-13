@@ -1,6 +1,5 @@
 package es.joshluq.kmsafe.ui.renting.edit
 
-import androidx.core.net.toUri
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -35,7 +34,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class EditContractViewModel @Inject constructor(
-    private val savedStateHandle: SavedStateHandle,
+    savedStateHandle: SavedStateHandle,
     @param:GetVehicleById private val getVehicleByIdUseCase:
     @JvmSuppressWildcards FlowUseCase<GetVehicleByIdUseCase.Input, GetVehicleByIdUseCase.Output>,
     @param:UpdateContract private val updateContractUseCase:
@@ -55,18 +54,6 @@ class EditContractViewModel @Inject constructor(
     init {
         checkPremium()
         loadVehicle()
-        observeCroppedImage()
-    }
-
-    private fun observeCroppedImage() {
-        savedStateHandle.getStateFlow<String?>("cropped_uri", null)
-            .onEach { uri ->
-                uri?.let {
-                    sendEvent(Event.OnImageSelected(it.toUri()))
-                    savedStateHandle.remove<String>("cropped_uri")
-                }
-            }
-            .launchIn(viewModelScope)
     }
 
     override fun createInitialState(): State = State.Empty

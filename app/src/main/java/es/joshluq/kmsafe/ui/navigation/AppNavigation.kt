@@ -222,18 +222,19 @@ fun AppNavigation(
             )
         }
 
-        composable<Destination.EditContract> {
+        composable<Destination.EditContract> { backStackEntry ->
             EditContractRoute(
                 onNavigateBack = {
                     navController.popBackStack()
                 },
                 onNavigateToCropper = { uri ->
                     navController.navigate(Destination.ImageCropper(uri))
-                }
+                },
+                backStackEntry = backStackEntry
             )
         }
 
-        composable<Destination.SetupWizard> {
+        composable<Destination.SetupWizard> { backStackEntry ->
             SetupWizardRoute(
                 onNavigateBack = {
                     navController.popBackStack()
@@ -245,7 +246,8 @@ fun AppNavigation(
                 },
                 onNavigateToCropper = { uri ->
                     navController.navigate(Destination.ImageCropper(uri))
-                }
+                },
+                backStackEntry = backStackEntry
             )
         }
 

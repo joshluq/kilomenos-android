@@ -54,7 +54,11 @@ class VehicleListViewModel @Inject constructor(
                 launchEffect(Effect.NavigateToVehicleDetails(event.id))
             }
             is Event.OnDeleteVehicleClicked -> updateState { copy(vehicleToDelete = event.vehicle) }
-            Event.OnDeleteConfirmed -> deleteVehicle()
+            Event.OnDeleteConfirmed -> {
+                val idToDelete = state.value.vehicleToDelete?.id
+                updateState { copy(vehicleToDelete = null) }
+                idToDelete?.let { deleteVehicle(it) }
+            }
             Event.OnDeleteCancelled -> updateState { copy(vehicleToDelete = null) }
             Event.OnAddVehicleClicked -> handleAddVehicle()
             Event.OnUpgradeClicked -> {
@@ -118,20 +122,18 @@ class VehicleListViewModel @Inject constructor(
         selectContractUseCase(SelectContractUseCase.Input(id)).launchIn(viewModelScope)
     }
 
-    private fun deleteVehicle() {
-        val vehicleId = state.value.vehicleToDelete?.id ?: return
+    private fun deleteVehicle(vehicleId: String) {
         deleteContractUseCase(DeleteContractUseCase.Input(vehicleId))
             .onEach { output ->
                 when (output) {
                     is DeleteContractUseCase.Output.Success -> {
                         analytics.track(AnalyticsEvent.Custom("vehicle_deleted"))
-                        updateState { copy(vehicleToDelete = null, isLoading = false) }
+                        updateState { copy(isLoading = false) }
                     }
                     is DeleteContractUseCase.Output.Failure -> {
                         updateState {
                             copy(
                                 isLoading = false,
-                                vehicleToDelete = null,
                                 error = es.joshluq.foundationkit.text.TextProvider.Resource(
                                     es.joshluq.kmsafe.R.string.onboarding_register_error
                                 )

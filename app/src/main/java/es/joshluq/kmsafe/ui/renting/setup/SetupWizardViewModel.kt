@@ -1,6 +1,5 @@
 package es.joshluq.kmsafe.ui.renting.setup
 
-import androidx.core.net.toUri
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -54,18 +53,6 @@ class SetupWizardViewModel @Inject constructor(
 
     init {
         loadEntitlements()
-        observeCroppedImage()
-    }
-
-    private fun observeCroppedImage() {
-        savedStateHandle.getStateFlow<String?>("cropped_uri", null)
-            .onEach { uri ->
-                uri?.let {
-                    sendEvent(Event.OnImageSelected(it.toUri()))
-                    savedStateHandle.remove<String>("cropped_uri")
-                }
-            }
-            .launchIn(viewModelScope)
     }
 
     override fun createInitialState(): State = State.Empty
