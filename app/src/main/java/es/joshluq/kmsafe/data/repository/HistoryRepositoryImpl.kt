@@ -1,8 +1,10 @@
 package es.joshluq.kmsafe.data.repository
 
+import androidx.room.withTransaction
 import es.joshluq.authkit.session.model.SessionState
 import es.joshluq.foundationkit.coroutines.DispatcherProvider
 import es.joshluq.foundationkit.log.LoggerKit
+import es.joshluq.kmsafe.data.local.AppDatabase
 import es.joshluq.kmsafe.data.local.dao.OdometerRecordDao
 import es.joshluq.kmsafe.data.local.dao.TripRouteDao
 import es.joshluq.kmsafe.data.local.entity.toDomain as toDomainFromEntity
@@ -37,6 +39,7 @@ import javax.inject.Inject
 class HistoryRepositoryImpl @Inject constructor(
     private val dao: OdometerRecordDao,
     private val routeDao: TripRouteDao,
+    private val appDatabase: AppDatabase,
     private val apiService: RentingApiService,
     private val sessionDataSource: UserSessionDataSource,
     private val syncManager: SyncManager,
@@ -95,22 +98,25 @@ class HistoryRepositoryImpl @Inject constructor(
                                     "Swapping record ID from ${record.id} to ${remoteRecord.id}"
                                 )
 
-                                // 1. Check if there was an associated route (use passed route or fetch from DB)
-                                val routeToSync = route ?: routeDao.getRouteByRecordIdSync(record.id)?.toDomainFromEntity()
+                                appDatabase.withTransaction {
+                                    // 1. Check if there was an associated route (use passed route or fetch from DB)
+                                    val routeToSync = route ?: routeDao.getRouteByRecordIdSync(record.id)?.toDomainFromEntity()
 
-                                routeToSync?.let { localRoute ->
-                                    // 2. Delete old and insert with new ID
-                                    routeDao.deleteRouteByRecordId(record.id)
-                                    routeDao.insertRoute(localRoute.copy(recordId = remoteRecord.id).toEntity())
+                                    routeToSync?.let { localRoute ->
+                                        // 2. Delete old and insert with new ID
+                                        routeDao.deleteRouteByRecordId(record.id)
+                                        routeDao.insertRoute(localRoute.copy(recordId = remoteRecord.id).toEntity())
 
-                                    // 3. Sync the route with the new ID
-                                    saveRoute(localRoute.copy(recordId = remoteRecord.id))
+                                        // 3. Sync the route with the new ID
+                                        saveRoute(localRoute.copy(recordId = remoteRecord.id))
+                                    }
+
+                                    dao.deleteRecord(recordToSave.toEntity())
+                                    dao.insertRecord(remoteRecord.copy(syncStatus = SyncStatus.SYNCED).toEntity())
                                 }
-
-                                dao.deleteRecord(recordToSave.toEntity())
+                            } else {
+                                dao.insertRecord(remoteRecord.copy(syncStatus = SyncStatus.SYNCED).toEntity())
                             }
-
-                            dao.insertRecord(remoteRecord.copy(syncStatus = SyncStatus.SYNCED).toEntity())
 
                             // If IDs didn't change but we have a route, ensure it's synced
                             if (remoteRecord.id == record.id && (route != null || record.hasRoute)) {

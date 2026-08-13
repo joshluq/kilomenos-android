@@ -11,6 +11,7 @@ import es.joshluq.kmsafe.domain.repository.RentingRepository
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
@@ -26,27 +27,35 @@ class GetOverviewDataUseCase @Inject constructor(
     @OptIn(ExperimentalCoroutinesApi::class)
     override fun invoke(input: Input): Flow<Output> {
         logger.d("GetOverviewDataUseCase", "Executing")
-        return rentingRepository.getContract().flatMapLatest { contract ->
+        return rentingRepository.getContract().distinctUntilChanged().flatMapLatest { contract ->
             if (contract == null) {
                 logger.w("GetOverviewDataUseCase", "No active contract found")
                 return@flatMapLatest flowOf(Output.Success(null, 0.0) as Output)
             }
 
-            historyRepository.getHistory(contract.id).map { records ->
+            historyRepository.getHistory(contract.id).distinctUntilChanged().map { records ->
                 val totalKmsDriven = records.filter { !it.isInitialRecord }
                     .sumOf { it.odometerValue }
                     .toDouble()
 
-                val hasPendingRecords = records.any { it.syncStatus == SyncStatus.PENDING }
+                val pendingRecords = records.filter { it.syncStatus == SyncStatus.PENDING }
+                val hasPendingRecords = pendingRecords.isNotEmpty()
                 val isSyncPending = hasPendingRecords || contract.syncStatus == SyncStatus.PENDING
 
-                logger.i(
-                    "GetOverviewDataUseCase",
-                    "Overview data ready for ${contract.vehicleName}. isSyncPending: $isSyncPending"
-                )
+                if (isSyncPending) {
+                    logger.i(
+                        "GetOverviewDataUseCase",
+                        "Sync Pending for ${contract.vehicleName}. " +
+                            "Pending Records: ${pendingRecords.size}, Contract Pending: ${contract.syncStatus == SyncStatus.PENDING}"
+                    )
+                } else {
+                    logger.d("GetOverviewDataUseCase", "Overview data synced for ${contract.vehicleName}")
+                }
+                
                 Output.Success(contract, totalKmsDriven.coerceAtLeast(0.0), isSyncPending) as Output
             }
         }
+            .distinctUntilChanged()
             .onStart { emit(Output.Progress) }
             .catch {
                 logger.e("GetOverviewDataUseCase", "Error fetching overview data", it)

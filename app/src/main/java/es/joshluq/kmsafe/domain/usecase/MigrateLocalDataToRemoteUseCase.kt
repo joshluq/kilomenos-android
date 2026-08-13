@@ -40,21 +40,25 @@ class MigrateLocalDataToRemoteUseCase @Inject constructor(
 
         for (contract in allContracts) {
             try {
-                // If it's a local numeric ID, it needs to be created on server
-                // If it's already a UUID, saveContract logic will handle it or we can skip if SYNCED
+                var currentRemoteId = contract.id
+                // 1. If it's a local numeric ID or PENDING, it needs to be created/updated on server
                 if (contract.id.length < 5 || contract.syncStatus == SyncStatus.PENDING) {
                     logger.d("MigrateLocalData", "Synchronizing contract: ${contract.vehicleName}")
-                    rentingRepository.saveContract(contract).collect { remoteId ->
-                        logger.i("MigrateLocalData", "Contract migrated/synced. ID: $remoteId")
+                    currentRemoteId = rentingRepository.saveContract(contract).first()
+                    logger.i("MigrateLocalData", "Contract migrated/synced. ID: $currentRemoteId")
+                }
 
-                        // 2. Migrate records for THIS contract to ensure they use the correct remoteId
-                        val records = historyRepository.getHistory(remoteId).first()
-                        val pendingRecords = records.filter { it.syncStatus == SyncStatus.PENDING }
-                        logger.d("MigrateLocalData", "Found ${pendingRecords.size} pending records for $remoteId")
+                // 2. Always check for PENDING records for EVERY contract
+                val records = historyRepository.getHistory(currentRemoteId).first()
+                val pendingRecords = records.filter { it.syncStatus == SyncStatus.PENDING }
 
-                        for (record in pendingRecords) {
-                            historyRepository.saveRecord(record)
-                        }
+                if (pendingRecords.isNotEmpty()) {
+                    logger.d(
+                        "MigrateLocalData",
+                        "Found ${pendingRecords.size} pending records for $currentRemoteId. Syncing..."
+                    )
+                    for (record in pendingRecords) {
+                        historyRepository.saveRecord(record)
                     }
                 }
             } catch (e: Exception) {
