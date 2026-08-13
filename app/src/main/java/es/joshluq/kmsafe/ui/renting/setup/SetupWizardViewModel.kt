@@ -1,5 +1,7 @@
 package es.joshluq.kmsafe.ui.renting.setup
 
+import androidx.core.net.toUri
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import es.joshluq.analyticskit.domain.model.AnalyticsEvent
@@ -35,6 +37,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class SetupWizardViewModel @Inject constructor(
+    private val savedStateHandle: SavedStateHandle,
     @param:SaveInitialContract private val saveInitialContractUseCase:
     @JvmSuppressWildcards FlowUseCase<SaveInitialContractUseCase.Input, SaveInitialContractUseCase.Output>,
     @param:GetEntitlements private val getEntitlementsUseCase:
@@ -51,6 +54,18 @@ class SetupWizardViewModel @Inject constructor(
 
     init {
         loadEntitlements()
+        observeCroppedImage()
+    }
+
+    private fun observeCroppedImage() {
+        savedStateHandle.getStateFlow<String?>("cropped_uri", null)
+            .onEach { uri ->
+                uri?.let {
+                    sendEvent(Event.OnImageSelected(it.toUri()))
+                    savedStateHandle.remove<String>("cropped_uri")
+                }
+            }
+            .launchIn(viewModelScope)
     }
 
     override fun createInitialState(): State = State.Empty

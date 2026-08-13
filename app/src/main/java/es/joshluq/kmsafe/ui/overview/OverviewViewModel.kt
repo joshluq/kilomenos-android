@@ -1,5 +1,6 @@
 package es.joshluq.kmsafe.ui.overview
 
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import es.joshluq.analyticskit.domain.model.AnalyticsEvent
@@ -53,6 +54,7 @@ import javax.inject.Inject
  */
 @HiltViewModel
 class OverviewViewModel @Inject constructor(
+    private val savedStateHandle: SavedStateHandle,
     @param:GetOverviewData private val getOverviewDataUseCase:
     @JvmSuppressWildcards FlowUseCase<GetOverviewDataUseCase.Input, GetOverviewDataUseCase.Output>,
     @param:GetMonthlyUsage private val getMonthlyUsageUseCase:
@@ -98,6 +100,24 @@ class OverviewViewModel @Inject constructor(
         loadProjection()
         loadAllVehicles()
         observeTracking()
+        observePermissionsResult()
+    }
+
+    private fun observePermissionsResult() {
+        savedStateHandle.getStateFlow<Boolean?>("permissions_granted", null)
+            .onEach { granted ->
+                when (granted) {
+                    true -> {
+                        sendEvent(Event.OnPermissionsRationaleSuccess)
+                        savedStateHandle.remove<Boolean>("permissions_granted")
+                    }
+                    false -> {
+                        sendEvent(Event.OnAutoTrackingToggled(false))
+                        savedStateHandle.remove<Boolean>("permissions_granted")
+                    }
+                    else -> {}
+                }
+            }.launchIn(viewModelScope)
     }
 
     override fun createInitialState(): State = State.Empty

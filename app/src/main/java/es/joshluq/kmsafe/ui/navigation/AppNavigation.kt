@@ -130,7 +130,6 @@ fun AppNavigation(
 
         composable<Destination.Dashboard> {
             DashboardRoute(
-                navController = navController,
                 onNavigateToOnboarding = { vehicleId, isEdit ->
                     if (isEdit && vehicleId != null) {
                         navController.navigate(Destination.EditContract(vehicleId))
@@ -200,7 +199,6 @@ fun AppNavigation(
 
         composable<Destination.Preferences> {
             PreferencesRoute(
-                navController = navController,
                 onNavigateBack = {
                     navController.popBackStack()
                 },
@@ -224,19 +222,18 @@ fun AppNavigation(
             )
         }
 
-        composable<Destination.EditContract> { backStackEntry ->
+        composable<Destination.EditContract> {
             EditContractRoute(
                 onNavigateBack = {
                     navController.popBackStack()
                 },
                 onNavigateToCropper = { uri ->
                     navController.navigate(Destination.ImageCropper(uri))
-                },
-                backStackEntry = backStackEntry
+                }
             )
         }
 
-        composable<Destination.SetupWizard> { backStackEntry ->
+        composable<Destination.SetupWizard> {
             SetupWizardRoute(
                 onNavigateBack = {
                     navController.popBackStack()
@@ -248,8 +245,7 @@ fun AppNavigation(
                 },
                 onNavigateToCropper = { uri ->
                     navController.navigate(Destination.ImageCropper(uri))
-                },
-                backStackEntry = backStackEntry
+                }
             )
         }
 

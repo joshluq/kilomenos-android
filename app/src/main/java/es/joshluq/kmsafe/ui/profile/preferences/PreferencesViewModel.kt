@@ -1,5 +1,6 @@
 package es.joshluq.kmsafe.ui.profile.preferences
 
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import es.joshluq.analyticskit.domain.model.AnalyticsEvent
@@ -29,6 +30,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class PreferencesViewModel @Inject constructor(
+    private val savedStateHandle: SavedStateHandle,
     @param:GetPreferences private val getPreferencesUseCase:
     @JvmSuppressWildcards FlowUseCase<GetPreferencesUseCase.Input, GetPreferencesUseCase.Output>,
     @param:UpdatePreferences private val updatePreferencesUseCase:
@@ -50,6 +52,7 @@ class PreferencesViewModel @Inject constructor(
     init {
         observeEntitlements()
         loadPreferences()
+        observePermissionsResult()
         updateState { copy(isPrivacyOptionsRequired = consentManager.isPrivacyOptionsRequired()) }
     }
 
@@ -83,6 +86,23 @@ class PreferencesViewModel @Inject constructor(
                 updateState { copy(showTrialOffer = false) }
             }
         }
+    }
+
+    private fun observePermissionsResult() {
+        savedStateHandle.getStateFlow<Boolean?>("permissions_granted", null)
+            .onEach { granted ->
+                when (granted) {
+                    true -> {
+                        sendEvent(Event.OnPermissionsRationaleSuccess)
+                        savedStateHandle.remove<Boolean>("permissions_granted")
+                    }
+                    false -> {
+                        sendEvent(Event.OnAutoTrackingToggled(false))
+                        savedStateHandle.remove<Boolean>("permissions_granted")
+                    }
+                    else -> {}
+                }
+            }.launchIn(viewModelScope)
     }
 
     private fun observeEntitlements() {

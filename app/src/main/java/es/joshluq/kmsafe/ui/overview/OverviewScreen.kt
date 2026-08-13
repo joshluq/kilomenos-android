@@ -91,7 +91,6 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
-import androidx.navigation.compose.currentBackStackEntryAsState
 import coil.compose.SubcomposeAsyncImage
 import coil.request.ImageRequest
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
@@ -133,7 +132,6 @@ import kotlin.math.absoluteValue
  */
 @Composable
 fun OverviewRoute(
-    appNavController: NavHostController,
     onNavigateToOnboarding: (String?, Boolean) -> Unit,
     onNavigateToProjection: () -> Unit,
     onNavigateToPermissions: () -> Unit,
@@ -144,25 +142,6 @@ fun OverviewRoute(
 ) {
     val viewModel: OverviewViewModel = hiltViewModel()
     val state = viewModel.state.collectAsStateWithLifecycle()
-
-    val permissionsResult by appNavController.currentBackStackEntryAsState().value
-        ?.savedStateHandle
-        ?.getStateFlow<Boolean?>("permissions_granted", null)
-        ?.collectAsStateWithLifecycle() ?: remember { mutableStateOf(null) }
-
-    LaunchedEffect(permissionsResult) {
-        when (permissionsResult) {
-            true -> {
-                viewModel.sendEvent(Event.OnPermissionsRationaleSuccess)
-                appNavController.currentBackStackEntry?.savedStateHandle?.set("permissions_granted", null)
-            }
-            false -> {
-                viewModel.sendEvent(Event.OnAutoTrackingToggled(false))
-                appNavController.currentBackStackEntry?.savedStateHandle?.set("permissions_granted", null)
-            }
-            else -> { /* No-op */ }
-        }
-    }
 
     OverviewScreen(
         state = state.value,

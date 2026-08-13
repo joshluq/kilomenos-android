@@ -44,7 +44,6 @@ import kotlinx.coroutines.flow.Flow
  */
 @Composable
 fun DashboardRoute(
-    navController: NavHostController,
     onNavigateToOnboarding: (String?, Boolean) -> Unit,
     onNavigateToVehicles: () -> Unit,
     onNavigateToDataManagement: () -> Unit,
@@ -62,7 +61,6 @@ fun DashboardRoute(
         state = state.value,
         effects = viewModel.effects,
         onEvent = viewModel::sendEvent,
-        appNavController = navController,
         onNavigateToOnboarding = onNavigateToOnboarding,
         onNavigateToVehicles = onNavigateToVehicles,
         onNavigateToDataManagement = onNavigateToDataManagement,
@@ -85,7 +83,6 @@ fun DashboardScreen(
     state: State,
     effects: Flow<Effect>? = null,
     onEvent: (Event) -> Unit,
-    appNavController: NavHostController,
     onNavigateToOnboarding: (String?, Boolean) -> Unit,
     onNavigateToVehicles: () -> Unit,
     onNavigateToDataManagement: () -> Unit,
@@ -131,7 +128,6 @@ fun DashboardScreen(
         Column(modifier = Modifier.padding(bottom = 104.dp)) {
             DashboardNavigation(
                 navController = navController,
-                appNavController = appNavController,
                 onNavigateToOnboarding = onNavigateToOnboarding,
                 onNavigateToVehicles = onNavigateToVehicles,
                 onNavigateToDataManagement = onNavigateToDataManagement,
