@@ -394,6 +394,8 @@ private fun SoftwareCreditsDialog(onDismiss: () -> Unit) {
 
                     val libraries = listOf(
                         "Jetpack Compose" to "Android's modern toolkit for building native UI.",
+                        "Google Maps SDK" to "Maps infrastructure for trip visualization.",
+                        "Maps Compose" to "Jetpack Compose components for Google Maps.",
                         "Dagger Hilt" to "Dependency injection library for Android.",
                         "Retrofit & OkHttp" to "Type-safe HTTP client and networking stack.",
                         "Room Persistence" to "Abstraction layer over SQLite for robust data access.",
@@ -401,7 +403,8 @@ private fun SoftwareCreditsDialog(onDismiss: () -> Unit) {
                         "Coil" to "Image loading library for Android backed by Coroutines.",
                         "Firebase SDKs" to "Analytics, Crashlytics, and Remote Config services.",
                         "Compose Cropper" to "Image manipulation tool for vehicle photos.",
-                        "Jackson" to "High-performance JSON processor."
+                        "Jackson" to "High-performance JSON processor.",
+                        "Secrets Plugin" to "Secure API key management."
                     )
 
                     libraries.forEach { (name, desc) ->

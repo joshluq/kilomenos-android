@@ -10,7 +10,7 @@ The project follows **Clean Architecture** and **Domain-Driven Design (DDD)** pr
 - **`buildSrc/`**: Kotlin DSL for centralized dependency and environment-based configuration (API URLs, Legal T&C, AdMob IDs, Billing SKUs).
 - **`data/`**: Repository implementations, data sources (Room DAOs and Entities), and mappers.
 - **`domain/`**: Pure business logic. **Strict rule: Zero Android dependencies.**
-- **`ui/`**: User interface with Jetpack Compose using the **MVI (Model-View-Intent)** pattern.
+- **`ui/`**: User interface with Jetpack Compose using the **MVI (Model-View-Intent)** pattern and the **Coordinator (Route)** pattern to decouple navigation from business logic.
 - **`di/`**: Hilt modules for dependency injection.
 - **`designsystem/`**: Reusable components via **CanvasKit**.
 
@@ -82,3 +82,16 @@ All repositories MUST be **stateless**.
 ## 10. Critical Sequential Flows
 To avoid race conditions during app initialization (Cold Start):
 - **Login/Launch**: MUST synchronize `Entitlements` first. Only after a response (Success/Failure) is the contract/vehicle synchronization allowed to start. This ensures the sync engine knows the user's rights before evaluating data promotion.
+
+## 11. Idempotency & Client-Side Identity
+To ensure data integrity and prevent duplicates in unstable network conditions:
+- **Client-Side IDs**: The App is the owner of identity. Every `RentingContract` and `OdometerRecord` is born with a UUID v4 generated on the device.
+- **Idempotent Requests**: POST requests include the `id` in the body. The backend uses this as the Primary Key or Idempotency Key to avoid creating duplicate rows on retries.
+- **Identity Resolution**: The `SyncIdHandler` centralizes the logic for verifying if a remote response matches the local ID, handling atomic "ID Swaps" for legacy fallback scenarios.
+
+## 12. Navigation & Result Handling (Coordinator Pattern)
+To maintain pure ViewModels and testable Screens:
+- **Routes**: Composable functions at the navigation level acting as coordinators. They are the only ones allowed to observe the `NavBackStackEntry` for navigation results (e.g., `cropped_uri`).
+- **ViewModels**: Agnostic to navigation infrastructure. They receive navigation results via UI Events triggered by the Route coordinators.
+- **SavedStateHandle**: Used in ViewModels only for **input arguments** (e.g., `vehicleId`), not for transient navigation results.
+

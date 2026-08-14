@@ -75,6 +75,7 @@ KiloMenos is built with the highest European standards:
 
 ## 🛠️ Tech Stack
 *   **UI:** Jetpack Compose (Material 3).
+*   **Maps:** Google Maps SDK for Android & Maps Compose.
 *   **DI:** Dagger Hilt.
 *   **Network:** Retrofit + OkHttp with JWT auth and segregated public/private channels.
 *   **Async:** Kotlin Coroutines & Flow.
