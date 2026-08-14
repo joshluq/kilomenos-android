@@ -46,6 +46,12 @@ interface OdometerRecordDao {
     suspend fun getRecordByIdSync(recordId: String): OdometerRecordEntity?
 
     /**
+     * Updates the hasRoute flag for a specific record.
+     */
+    @Query("UPDATE odometer_record SET hasRoute = :hasRoute WHERE id = :recordId")
+    suspend fun updateHasRoute(recordId: String, hasRoute: Boolean)
+
+    /**
      * Deletes all odometer records from the database.
      */
     @Query("DELETE FROM odometer_record")

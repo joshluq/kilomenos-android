@@ -278,8 +278,8 @@ private fun RouteMap(encodedPolyline: String) {
             val boundsBuilder = LatLngBounds.builder()
             points.forEach { boundsBuilder.include(it) }
             val bounds = boundsBuilder.build()
-            // Padding increased to 200 to show more references around the route
-            cameraPositionState.move(CameraUpdateFactory.newLatLngBounds(bounds, 200))
+            // Padding increased to 150 to show more references around the route
+            cameraPositionState.move(CameraUpdateFactory.newLatLngBounds(bounds, 150))
         }
 
     }

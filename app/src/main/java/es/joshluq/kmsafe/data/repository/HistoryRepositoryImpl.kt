@@ -1,8 +1,10 @@
 package es.joshluq.kmsafe.data.repository
 
+import androidx.room.withTransaction
 import es.joshluq.authkit.session.model.SessionState
 import es.joshluq.foundationkit.coroutines.DispatcherProvider
 import es.joshluq.foundationkit.log.LoggerKit
+import es.joshluq.kmsafe.data.local.AppDatabase
 import es.joshluq.kmsafe.data.local.dao.OdometerRecordDao
 import es.joshluq.kmsafe.data.local.dao.TripRouteDao
 import es.joshluq.kmsafe.data.local.entity.toDomain as toDomainFromEntity
@@ -38,6 +40,7 @@ import javax.inject.Inject
 class HistoryRepositoryImpl @Inject constructor(
     private val dao: OdometerRecordDao,
     private val routeDao: TripRouteDao,
+    private val appDatabase: AppDatabase,
     private val apiService: RentingApiService,
     private val sessionDataSource: UserSessionDataSource,
     private val syncIdHandler: SyncIdHandler,
@@ -192,7 +195,11 @@ class HistoryRepositoryImpl @Inject constructor(
 
     override suspend fun saveRoute(route: TripRoute) = withContext(dispatchers.io) {
         logger.d("HistoryRepository", "Saving trip route locally for record: ${route.recordId}")
-        routeDao.insertRoute(route.toEntity())
+        
+        appDatabase.withTransaction {
+            routeDao.insertRoute(route.toEntity())
+            dao.updateHasRoute(route.recordId, true)
+        }
 
         // Remote Sync
         if (sessionDataSource.getSessionState().first() is SessionState.Active &&

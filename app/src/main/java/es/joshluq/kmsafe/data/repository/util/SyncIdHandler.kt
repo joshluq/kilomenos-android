@@ -55,6 +55,13 @@ class SyncIdHandler @Inject constructor(
      * Handles associated trip routes if an ID swap is required.
      */
     suspend fun resolveOdometerId(localRecord: OdometerRecord, remoteRecord: OdometerRecord) {
+        // We preserve the hasRoute flag from local if it's true, because the remote creation 
+        // response might not have it yet (route is uploaded in a separate step).
+        val syncedRecord = remoteRecord.copy(
+            syncStatus = SyncStatus.SYNCED,
+            hasRoute = remoteRecord.hasRoute || localRecord.hasRoute
+        )
+
         if (localRecord.id != remoteRecord.id) {
             logger.w("SyncIdHandler", "ID Mismatch for Record: ${localRecord.id} -> ${remoteRecord.id}")
             appDatabase.withTransaction {
@@ -66,11 +73,11 @@ class SyncIdHandler @Inject constructor(
                 }
 
                 odometerDao.deleteRecord(localRecord.toEntity())
-                odometerDao.insertRecord(remoteRecord.copy(syncStatus = SyncStatus.SYNCED).toEntity())
+                odometerDao.insertRecord(syncedRecord.toEntity())
             }
         } else {
             logger.d("SyncIdHandler", "ID Match for Record: ${remoteRecord.id}. Marking as SYNCED.")
-            odometerDao.insertRecord(remoteRecord.copy(syncStatus = SyncStatus.SYNCED).toEntity())
+            odometerDao.insertRecord(syncedRecord.toEntity())
         }
     }
 }
