@@ -74,6 +74,7 @@ configure<ApplicationExtension> {
                 val adMobId = secrets.getProperty("${envPrefix}_ADMOB_APP_ID") ?: ""
                 val adMobBanner = secrets.getProperty("${envPrefix}_ADMOB_BANNER_ID") ?: ""
                 val googleClientId = secrets.getProperty("${envPrefix}_GOOGLE_WEB_CLIENT_ID") ?: ""
+                val mapsKey = secrets.getProperty("${envPrefix}_MAPS_API_KEY") ?: ""
 
                 buildConfigField("String", "SERVER_URL", "\"${env.serverUrl}\"")
                 buildConfigField("String", "API_KEY", "\"$apiKey\"")
@@ -85,6 +86,7 @@ configure<ApplicationExtension> {
                 buildConfigField("String", "PREMIUM_SKU", "\"${env.premiumSku}\"")
                 
                 manifestPlaceholders["adMobAppId"] = adMobId
+                manifestPlaceholders["mapsKey"] = mapsKey
             }
         }
     }

@@ -50,6 +50,10 @@
             android:name="com.google.android.gms.ads.APPLICATION_ID"
             android:value="${adMobAppId}"/>
 
+        <meta-data
+            android:name="com.google.android.geo.API_KEY"
+            android:value="${mapsKey}"/>
+
         <provider
             tools:replace="android:authorities"
             android:name="androidx.startup.InitializationProvider"

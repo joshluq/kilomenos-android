@@ -278,8 +278,10 @@ private fun RouteMap(encodedPolyline: String) {
             val boundsBuilder = LatLngBounds.builder()
             points.forEach { boundsBuilder.include(it) }
             val bounds = boundsBuilder.build()
-            cameraPositionState.animate(CameraUpdateFactory.newLatLngBounds(bounds, 50))
+            // Padding increased to 200 to show more references around the route
+            cameraPositionState.move(CameraUpdateFactory.newLatLngBounds(bounds, 200))
         }
+
     }
 
     GoogleMap(
@@ -287,13 +289,12 @@ private fun RouteMap(encodedPolyline: String) {
         cameraPositionState = cameraPositionState,
         properties = MapProperties(
             isMyLocationEnabled = false,
-            // To prevent flickering or heavy load, we can simplify styling
         ),
         uiSettings = MapUiSettings(
             zoomControlsEnabled = false,
             myLocationButtonEnabled = false,
-            scrollGesturesEnabled = true,
-            zoomGesturesEnabled = true,
+            scrollGesturesEnabled = false,
+            zoomGesturesEnabled = false,
             tiltGesturesEnabled = false,
             rotationGesturesEnabled = false
         )
