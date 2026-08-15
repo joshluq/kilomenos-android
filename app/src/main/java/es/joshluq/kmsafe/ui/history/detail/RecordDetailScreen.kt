@@ -375,7 +375,11 @@ private fun HeroMileageCard(kms: Int) {
 
 @Composable
 private fun DetailSection(record: OdometerRecord) {
-    val dateFormatter = remember { SimpleDateFormat("EEEE, dd MMMM yyyy", Locale.getDefault()) }
+    val dateFormatter = remember {
+        SimpleDateFormat("EEEE, dd MMMM yyyy", Locale.getDefault()).apply {
+            timeZone = TimeZone.getDefault()
+        }
+    }
     val timeFormatter = remember {
         SimpleDateFormat("HH:mm", Locale.getDefault()).apply {
             timeZone = TimeZone.getDefault()

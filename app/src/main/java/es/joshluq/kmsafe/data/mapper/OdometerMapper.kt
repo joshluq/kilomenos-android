@@ -13,18 +13,22 @@ import java.util.TimeZone
  */
 fun OdometerRecordResponse.toDomain(): OdometerRecord {
     val formats = listOf(
-        "yyyy-MM-dd'T'HH:mm:ss'Z'",
+        "yyyy-MM-dd'T'HH:mm:ss.SSSXXX",
+        "yyyy-MM-dd'T'HH:mm:ssXXX",
         "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'",
+        "yyyy-MM-dd'T'HH:mm:ss'Z'",
         "yyyy-MM-dd'T'HH:mm:ss",
         "yyyy-MM-dd HH:mm:ss"
     )
 
     val parsedDate = timestamp?.let { ts ->
         formats.firstNotNullOfOrNull { format ->
-            val sdf = SimpleDateFormat(format, Locale.getDefault()).apply {
-                timeZone = TimeZone.getTimeZone("UTC")
+            val sdf = SimpleDateFormat(format, Locale.getDefault())
+            // If the format doesn't have an offset specifier (X or Z), we assume UTC
+            if (!format.contains("X") && !format.contains("'Z'")) {
+                sdf.timeZone = TimeZone.getTimeZone("UTC")
             }
-
+            
             val pos = ParsePosition(0)
             val date = sdf.parse(ts, pos)
 

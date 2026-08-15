@@ -66,6 +66,7 @@ import es.joshluq.kmsafe.ui.renting.components.RentingTextField
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import java.util.TimeZone
 
 @Composable
 fun HistoryRoute(
@@ -363,7 +364,11 @@ private fun HistoryItem(
     item: RecordWithIndicator,
     onClick: () -> Unit
 ) {
-    val formatter = remember { SimpleDateFormat("dd MMM, HH:mm", Locale.getDefault()) }
+    val formatter = remember {
+        SimpleDateFormat("dd MMM, HH:mm", Locale.getDefault()).apply {
+            timeZone = TimeZone.getDefault()
+        }
+    }
     val dateStr = formatter.format(Date(item.record.timestamp))
     val indicatorColor = if (item.isOverLimit) CanvasKitTheme.colors.error else CanvasKitTheme.colors.success
 

@@ -16,22 +16,19 @@ object DateUtils {
      * @return A timestamp in milliseconds with the chosen date and current time.
      */
     fun mergeDateWithCurrentTime(selectedDateMillis: Long): Long {
-        val currentCalendar = Calendar.getInstance()
-        val hour = currentCalendar.get(Calendar.HOUR_OF_DAY)
-        val minute = currentCalendar.get(Calendar.MINUTE)
-        val second = currentCalendar.get(Calendar.SECOND)
-        val millisecond = currentCalendar.get(Calendar.MILLISECOND)
-
-        val resultCalendar = Calendar.getInstance(TimeZone.getTimeZone("UTC")).apply {
+        val utcCalendar = Calendar.getInstance(TimeZone.getTimeZone("UTC")).apply {
             timeInMillis = selectedDateMillis
-            set(Calendar.HOUR_OF_DAY, hour)
-            set(Calendar.MINUTE, minute)
-            set(Calendar.SECOND, second)
-            set(Calendar.MILLISECOND, millisecond)
         }
+        val year = utcCalendar.get(Calendar.YEAR)
+        val month = utcCalendar.get(Calendar.MONTH)
+        val day = utcCalendar.get(Calendar.DAY_OF_MONTH)
 
-        // Convert back to system default timezone for consistency in storage if needed,
-        // but since our system uses Long timestamps, we just return the millis.
+        val resultCalendar = Calendar.getInstance()
+
+        resultCalendar.set(Calendar.YEAR, year)
+        resultCalendar.set(Calendar.MONTH, month)
+        resultCalendar.set(Calendar.DAY_OF_MONTH, day)
+
         return resultCalendar.timeInMillis
     }
 }

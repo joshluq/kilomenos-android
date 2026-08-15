@@ -22,6 +22,7 @@ import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import java.util.TimeZone
 import javax.inject.Inject
 
 @HiltViewModel
@@ -143,18 +144,22 @@ class HistoryViewModel @Inject constructor(
 
             val grouped = filteredList.groupBy { item ->
                 val date = Date(item.record.timestamp)
+                val timeZone = TimeZone.getDefault()
                 when (currentState.groupingMode) {
                     HistoryGroupingMode.DAY -> {
-                        SimpleDateFormat("dd MMMM yyyy", Locale.getDefault()).format(date)
+                        SimpleDateFormat("dd MMMM yyyy", Locale.getDefault()).apply {
+                            this.timeZone = timeZone
+                        }.format(date)
                     }
                     HistoryGroupingMode.MONTH -> {
-                        SimpleDateFormat(
-                            "MMMM yyyy",
-                            Locale.getDefault()
-                        ).format(date).replaceFirstChar { it.uppercase() }
+                        SimpleDateFormat("MMMM yyyy", Locale.getDefault()).apply {
+                            this.timeZone = timeZone
+                        }.format(date).replaceFirstChar { it.uppercase() }
                     }
                     HistoryGroupingMode.YEAR -> {
-                        SimpleDateFormat("yyyy", Locale.getDefault()).format(date)
+                        SimpleDateFormat("yyyy", Locale.getDefault()).apply {
+                            this.timeZone = timeZone
+                        }.format(date)
                     }
                 }
             }

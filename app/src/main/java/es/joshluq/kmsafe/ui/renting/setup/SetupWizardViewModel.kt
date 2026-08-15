@@ -1,6 +1,5 @@
 package es.joshluq.kmsafe.ui.renting.setup
 
-import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import es.joshluq.analyticskit.domain.model.AnalyticsEvent
@@ -36,7 +35,6 @@ import javax.inject.Inject
 
 @HiltViewModel
 class SetupWizardViewModel @Inject constructor(
-    private val savedStateHandle: SavedStateHandle,
     @param:SaveInitialContract private val saveInitialContractUseCase:
     @JvmSuppressWildcards FlowUseCase<SaveInitialContractUseCase.Input, SaveInitialContractUseCase.Output>,
     @param:GetEntitlements private val getEntitlementsUseCase:
