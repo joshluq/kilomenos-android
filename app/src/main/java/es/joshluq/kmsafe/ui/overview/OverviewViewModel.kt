@@ -1,6 +1,5 @@
 package es.joshluq.kmsafe.ui.overview
 
-import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import es.joshluq.analyticskit.domain.model.AnalyticsEvent
@@ -54,7 +53,6 @@ import javax.inject.Inject
  */
 @HiltViewModel
 class OverviewViewModel @Inject constructor(
-    private val savedStateHandle: SavedStateHandle,
     @param:GetOverviewData private val getOverviewDataUseCase:
     @JvmSuppressWildcards FlowUseCase<GetOverviewDataUseCase.Input, GetOverviewDataUseCase.Output>,
     @param:GetMonthlyUsage private val getMonthlyUsageUseCase:
@@ -100,24 +98,6 @@ class OverviewViewModel @Inject constructor(
         loadProjection()
         loadAllVehicles()
         observeTracking()
-        observePermissionsResult()
-    }
-
-    private fun observePermissionsResult() {
-        savedStateHandle.getStateFlow<Boolean?>("permissions_granted", null)
-            .onEach { granted ->
-                when (granted) {
-                    true -> {
-                        sendEvent(Event.OnPermissionsRationaleSuccess)
-                        savedStateHandle.remove<Boolean>("permissions_granted")
-                    }
-                    false -> {
-                        sendEvent(Event.OnAutoTrackingToggled(false))
-                        savedStateHandle.remove<Boolean>("permissions_granted")
-                    }
-                    else -> {}
-                }
-            }.launchIn(viewModelScope)
     }
 
     override fun createInitialState(): State = State.Empty
@@ -157,7 +137,7 @@ class OverviewViewModel @Inject constructor(
             Event.OnConfirmTrackedTripClicked -> handleConfirmTrackedTrip()
             Event.OnCancelTrackedTripClicked -> handleCancelTrackedTrip()
             Event.OnRequestPermissionsRationale -> launchEffect(Effect.NavigateToPermissions)
-            Event.OnPermissionsRationaleSuccess -> handleAutoTrackingToggled(true)
+            is Event.OnPermissionsResult -> handlePermissionsResult(event.granted)
             Event.OnPremiumUpgradeClicked -> {
                 analytics.track(AnalyticsEvent.Custom("premium_upgrade_clicked", mapOf("source" to "top_bar")))
                 launchEffect(Effect.NavigateToPremiumPaywall)
@@ -174,6 +154,14 @@ class OverviewViewModel @Inject constructor(
             is Event.OnAutoTrackingToggled -> handleAutoTrackingToggled(event.enabled)
             Event.OnDismissBluetoothSuggestionBanner -> updateState { copy(showBluetoothSuggestionBanner = false) }
             Event.OnWelcomeGuideClicked -> launchEffect(Effect.NavigateToWelcomeDiscovery)
+        }
+    }
+
+    private fun handlePermissionsResult(granted: Boolean) {
+        if (granted) {
+            handleAutoTrackingToggled(true)
+        } else {
+            handleAutoTrackingToggled(false)
         }
     }
 

@@ -91,7 +91,13 @@ To ensure data integrity and prevent duplicates in unstable network conditions:
 
 ## 12. Navigation & Result Handling (Coordinator Pattern)
 To maintain pure ViewModels and testable Screens:
-- **Routes**: Composable functions at the navigation level acting as coordinators. They are the only ones allowed to observe the `NavBackStackEntry` for navigation results (e.g., `cropped_uri`).
+- **Routes**: Composable functions at the navigation level acting as coordinators. They are the only ones allowed to observe the `NavBackStackEntry.savedStateHandle` for **navigation results** (e.g., `cropped_uri`, `permissions_granted`).
 - **ViewModels**: Agnostic to navigation infrastructure. They receive navigation results via UI Events triggered by the Route coordinators.
-- **SavedStateHandle**: Used in ViewModels only for **input arguments** (e.g., `vehicleId`), not for transient navigation results.
+- **Input Arguments**: Parameters required to initialize a screen (e.g., `vehicleId`) MUST be read in the ViewModel via its own `SavedStateHandle`. This is the ONLY legitimate use of `SavedStateHandle` inside a ViewModel.
+- **Data Flow for Results**:
+    1. `Screen A` navigates to `Screen B`.
+    2. `Screen B` sets a result in `navController.previousBackStackEntry.savedStateHandle`.
+    3. `Route A` observes that key in its `NavBackStackEntry.savedStateHandle`.
+    4. `Route A` sends an **Event** to `ViewModel A` with the result.
+    5. `ViewModel A` updates its state and clears the key from the handle.
 

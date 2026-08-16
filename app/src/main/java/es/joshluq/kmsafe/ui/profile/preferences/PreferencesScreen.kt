@@ -46,6 +46,7 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation.NavBackStackEntry
 import es.joshluq.canvaskit.components.buttons.CanvasKitButton
 import es.joshluq.canvaskit.components.buttons.CanvasKitButtonVariant
 import es.joshluq.canvaskit.components.cards.CanvasKitCard
@@ -63,10 +64,23 @@ import es.joshluq.kmsafe.ui.util.safeClick
 fun PreferencesRoute(
     onNavigateBack: () -> Unit,
     onShowPrivacyOptions: () -> Unit,
-    onNavigateToPermissions: () -> Unit
+    onNavigateToPermissions: () -> Unit,
+    backStackEntry: NavBackStackEntry
 ) {
     val viewModel: PreferencesViewModel = hiltViewModel()
     val state by viewModel.state.collectAsStateWithLifecycle()
+
+    // Observe navigation results from SavedStateHandle (Coordinator Pattern)
+    val permissionResult by backStackEntry.savedStateHandle
+        .getStateFlow<Boolean?>("permissions_granted", null)
+        .collectAsStateWithLifecycle()
+
+    LaunchedEffect(permissionResult) {
+        permissionResult?.let { granted ->
+            viewModel.sendEvent(Event.OnPermissionsResult(granted))
+            backStackEntry.savedStateHandle["permissions_granted"] = null
+        }
+    }
 
     LaunchedEffect(viewModel.effects) {
         viewModel.effects.collect { effect ->

@@ -128,7 +128,7 @@ fun AppNavigation(
             )
         }
 
-        composable<Destination.Dashboard> {
+        composable<Destination.Dashboard> { backStackEntry ->
             DashboardRoute(
                 onNavigateToOnboarding = { vehicleId, isEdit ->
                     if (isEdit && vehicleId != null) {
@@ -165,7 +165,8 @@ fun AppNavigation(
                 },
                 onNavigateToVehicleDetail = { vehicleId ->
                     navController.navigate(Destination.VehicleDetail(vehicleId))
-                }
+                },
+                backStackEntry = backStackEntry
             )
         }
 
@@ -197,7 +198,7 @@ fun AppNavigation(
             )
         }
 
-        composable<Destination.Preferences> {
+        composable<Destination.Preferences> { backStackEntry ->
             PreferencesRoute(
                 onNavigateBack = {
                     navController.popBackStack()
@@ -205,7 +206,8 @@ fun AppNavigation(
                 onShowPrivacyOptions = onShowPrivacyOptions,
                 onNavigateToPermissions = {
                     navController.navigate(Destination.AutoTrackingPermissions)
-                }
+                },
+                backStackEntry = backStackEntry
             )
         }
 

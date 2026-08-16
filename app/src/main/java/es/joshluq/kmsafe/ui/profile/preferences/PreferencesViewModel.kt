@@ -1,6 +1,5 @@
 package es.joshluq.kmsafe.ui.profile.preferences
 
-import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import es.joshluq.analyticskit.domain.model.AnalyticsEvent
@@ -30,7 +29,6 @@ import javax.inject.Inject
 
 @HiltViewModel
 class PreferencesViewModel @Inject constructor(
-    private val savedStateHandle: SavedStateHandle,
     @param:GetPreferences private val getPreferencesUseCase:
     @JvmSuppressWildcards FlowUseCase<GetPreferencesUseCase.Input, GetPreferencesUseCase.Output>,
     @param:UpdatePreferences private val updatePreferencesUseCase:
@@ -52,7 +50,6 @@ class PreferencesViewModel @Inject constructor(
     init {
         observeEntitlements()
         loadPreferences()
-        observePermissionsResult()
         updateState { copy(isPrivacyOptionsRequired = consentManager.isPrivacyOptionsRequired()) }
     }
 
@@ -70,16 +67,17 @@ class PreferencesViewModel @Inject constructor(
                 handleProjectionBannerToggled(event.enabled)
             }
             is Event.OnAutoTrackingToggled -> {
+                logger.i("PreferencesViewModel", "Auto-tracking toggle requested: ${event.enabled}")
                 analytics.track(AnalyticsEvent.Custom("autotracking_toggled_intent", mapOf("enabled" to event.enabled)))
                 handleAutoTrackingToggled(event.enabled)
             }
+            is Event.OnPermissionsResult -> handlePermissionsResult(event.granted)
             Event.OnManagePrivacyClicked -> {
                 analytics.track(AnalyticsEvent.Custom("manage_privacy_clicked"))
                 launchEffect(Effect.ShowPrivacyOptions)
             }
             Event.OnBackClicked -> launchEffect(Effect.NavigateBack)
             Event.OnDismissError -> updateState { copy(error = null) }
-            Event.OnPermissionsRationaleSuccess -> executeAutoTrackingToggle(true)
             Event.OnStartTrialClicked -> handleStartTrial()
             Event.OnDismissTrialOffer -> {
                 analytics.track(AnalyticsEvent.Custom("premium_trial_offer_dismissed"))
@@ -88,21 +86,14 @@ class PreferencesViewModel @Inject constructor(
         }
     }
 
-    private fun observePermissionsResult() {
-        savedStateHandle.getStateFlow<Boolean?>("permissions_granted", null)
-            .onEach { granted ->
-                when (granted) {
-                    true -> {
-                        sendEvent(Event.OnPermissionsRationaleSuccess)
-                        savedStateHandle.remove<Boolean>("permissions_granted")
-                    }
-                    false -> {
-                        sendEvent(Event.OnAutoTrackingToggled(false))
-                        savedStateHandle.remove<Boolean>("permissions_granted")
-                    }
-                    else -> {}
-                }
-            }.launchIn(viewModelScope)
+    private fun handlePermissionsResult(granted: Boolean) {
+        logger.i("PreferencesViewModel", "Permissions result received: $granted")
+        if (granted) {
+            executeAutoTrackingToggle(true)
+        } else {
+            logger.w("PreferencesViewModel", "Permissions denied. Ensuring toggle OFF.")
+            updateState { copy(autoTrackingEnabled = false) }
+        }
     }
 
     private fun observeEntitlements() {
@@ -110,6 +101,7 @@ class PreferencesViewModel @Inject constructor(
             .onEach { output ->
                 if (output is GetEntitlementsUseCase.Output.Success) {
                     val entitlements = output.entitlements
+                    logger.d("PreferencesViewModel", "Entitlements updated: $entitlements")
                     updateState {
                         copy(
                             isUserPremium = entitlements.isFeatureActive(Feature.AUTO_TRACKING),
@@ -124,6 +116,7 @@ class PreferencesViewModel @Inject constructor(
         getPreferencesUseCase(GetPreferencesUseCase.Input)
             .onEach { output ->
                 if (output is GetPreferencesUseCase.Output.Success) {
+                    logger.d("PreferencesViewModel", "Preferences loaded from source: autoTracking=${output.preferences.autoTrackingEnabled}")
                     updateState {
                         copy(
                             rememberEmail = output.preferences.rememberEmail,
@@ -155,14 +148,19 @@ class PreferencesViewModel @Inject constructor(
 
     private fun handleAutoTrackingToggled(enabled: Boolean) {
         if (enabled && !state.value.isUserPremium && state.value.canStartTrial) {
+            logger.i("PreferencesViewModel", "User is FREE but feature is trialable. Showing offer.")
             updateState { copy(showTrialOffer = true) }
             return
         }
 
         // If enabling, navigate to permissions rationale screen
         if (enabled) {
+            logger.i("PreferencesViewModel", "Navigating to permissions screen")
+            // Optimistic update so the switch stays ON while navigating
+            updateState { copy(autoTrackingEnabled = true) }
             launchEffect(Effect.NavigateToPermissions)
         } else {
+            logger.i("PreferencesViewModel", "Disabling auto-tracking directly")
             executeAutoTrackingToggle(false)
         }
     }
@@ -193,10 +191,14 @@ class PreferencesViewModel @Inject constructor(
     }
 
     private fun executeAutoTrackingToggle(enabled: Boolean) {
+        logger.d("PreferencesViewModel", "Executing preference update: autoTracking=$enabled")
+        // Optimistic update to UI state
+        updateState { copy(autoTrackingEnabled = enabled) }
+
         updatePreferencesUseCase(UpdatePreferencesUseCase.Input(autoTrackingEnabled = enabled))
             .onEach { output ->
                 if (output is UpdatePreferencesUseCase.Output.Success) {
-                    updateState { copy(autoTrackingEnabled = enabled) }
+                    logger.i("PreferencesViewModel", "Preference update SUCCESS: autoTracking=$enabled")
                     if (enabled) {
                         startAutoTrackingUseCase(StartAutoTrackingUseCase.Input).launchIn(viewModelScope)
                     } else {

@@ -90,6 +90,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation.NavBackStackEntry
 import coil.compose.SubcomposeAsyncImage
 import coil.request.ImageRequest
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
@@ -137,10 +138,23 @@ fun OverviewRoute(
     onNavigateToPremiumPaywall: () -> Unit,
     onNavigateToPreferences: () -> Unit,
     onNavigateToWelcomeDiscovery: () -> Unit,
-    onNavigateToVehicleDetail: (String) -> Unit
+    onNavigateToVehicleDetail: (String) -> Unit,
+    backStackEntry: NavBackStackEntry
 ) {
     val viewModel: OverviewViewModel = hiltViewModel()
     val state = viewModel.state.collectAsStateWithLifecycle()
+
+    // Observe navigation results from SavedStateHandle (Coordinator Pattern)
+    val permissionResult by backStackEntry.savedStateHandle
+        .getStateFlow<Boolean?>("permissions_granted", null)
+        .collectAsStateWithLifecycle()
+
+    LaunchedEffect(permissionResult) {
+        permissionResult?.let { granted ->
+            viewModel.sendEvent(Event.OnPermissionsResult(granted))
+            backStackEntry.savedStateHandle["permissions_granted"] = null
+        }
+    }
 
     OverviewScreen(
         state = state.value,

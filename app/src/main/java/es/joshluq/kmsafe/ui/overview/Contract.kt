@@ -79,12 +79,12 @@ sealed interface Event : UiEvent {
     data object OnConfirmTrackedTripClicked : Event
     data object OnCancelTrackedTripClicked : Event
     data object OnRequestPermissionsRationale : Event
-    data object OnPermissionsRationaleSuccess : Event
     data object OnPremiumUpgradeClicked : Event
     data object OnDismissAutoTrackingPromotion : Event
     data object OnAutoTrackingPromotionAccepted : Event
     data object OnDismissBluetoothSuggestionBanner : Event
     data class OnAutoTrackingToggled(val enabled: Boolean) : Event
+    data class OnPermissionsResult(val granted: Boolean) : Event
     data object OnWelcomeGuideClicked : Event
 }
 

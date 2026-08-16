@@ -25,10 +25,10 @@ sealed interface Event : UiEvent {
     data class OnRememberEmailToggled(val enabled: Boolean) : Event
     data class OnProjectionBannerToggled(val enabled: Boolean) : Event
     data class OnAutoTrackingToggled(val enabled: Boolean) : Event
+    data class OnPermissionsResult(val granted: Boolean) : Event
     data object OnManagePrivacyClicked : Event
     data object OnBackClicked : Event
     data object OnDismissError : Event
-    data object OnPermissionsRationaleSuccess : Event
     data object OnStartTrialClicked : Event
     data object OnDismissTrialOffer : Event
 }

@@ -24,6 +24,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
@@ -53,7 +54,8 @@ fun DashboardRoute(
     onNavigateToPremiumPaywall: () -> Unit,
     onNavigateToPermissions: () -> Unit,
     onNavigateToWelcomeDiscovery: () -> Unit,
-    onNavigateToVehicleDetail: (String) -> Unit
+    onNavigateToVehicleDetail: (String) -> Unit,
+    backStackEntry: NavBackStackEntry
 ) {
     val viewModel: DashboardViewModel = hiltViewModel()
     val state = viewModel.state.collectAsStateWithLifecycle()
@@ -70,7 +72,8 @@ fun DashboardRoute(
         onNavigateToPremiumPaywall = onNavigateToPremiumPaywall,
         onNavigateToPermissions = onNavigateToPermissions,
         onNavigateToWelcomeDiscovery = onNavigateToWelcomeDiscovery,
-        onNavigateToVehicleDetail = onNavigateToVehicleDetail
+        onNavigateToVehicleDetail = onNavigateToVehicleDetail,
+        backStackEntry = backStackEntry
     )
 }
 
@@ -92,7 +95,8 @@ fun DashboardScreen(
     onNavigateToPremiumPaywall: () -> Unit,
     onNavigateToPermissions: () -> Unit,
     onNavigateToWelcomeDiscovery: () -> Unit,
-    onNavigateToVehicleDetail: (String) -> Unit
+    onNavigateToVehicleDetail: (String) -> Unit,
+    backStackEntry: NavBackStackEntry
 ) {
     val navController = rememberNavController()
     val navBackStackEntry = navController.currentBackStackEntryAsState()
@@ -137,7 +141,8 @@ fun DashboardScreen(
                 onNavigateToPremiumPaywall = onNavigateToPremiumPaywall,
                 onNavigateToPermissions = onNavigateToPermissions,
                 onNavigateToWelcomeDiscovery = onNavigateToWelcomeDiscovery,
-                onNavigateToVehicleDetail = onNavigateToVehicleDetail
+                onNavigateToVehicleDetail = onNavigateToVehicleDetail,
+                backStackEntry = backStackEntry
             )
         }
 

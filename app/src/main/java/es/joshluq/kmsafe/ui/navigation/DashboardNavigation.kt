@@ -1,6 +1,7 @@
 package es.joshluq.kmsafe.ui.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -21,7 +22,8 @@ fun DashboardNavigation(
     onNavigateToPremiumPaywall: () -> Unit,
     onNavigateToPermissions: () -> Unit,
     onNavigateToWelcomeDiscovery: () -> Unit,
-    onNavigateToVehicleDetail: (String) -> Unit
+    onNavigateToVehicleDetail: (String) -> Unit,
+    backStackEntry: NavBackStackEntry
 ) {
     NavHost(
         navController = navController,
@@ -39,7 +41,8 @@ fun DashboardNavigation(
                 onNavigateToPremiumPaywall = onNavigateToPremiumPaywall,
                 onNavigateToPreferences = onNavigateToPreferences,
                 onNavigateToWelcomeDiscovery = onNavigateToWelcomeDiscovery,
-                onNavigateToVehicleDetail = onNavigateToVehicleDetail
+                onNavigateToVehicleDetail = onNavigateToVehicleDetail,
+                backStackEntry = backStackEntry
             )
         }
 

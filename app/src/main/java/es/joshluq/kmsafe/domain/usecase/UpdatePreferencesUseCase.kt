@@ -1,5 +1,6 @@
 package es.joshluq.kmsafe.domain.usecase
 
+import es.joshluq.foundationkit.log.LoggerKit
 import es.joshluq.foundationkit.usecase.FlowUseCase
 import es.joshluq.foundationkit.usecase.UseCaseInput
 import es.joshluq.foundationkit.usecase.UseCaseOutput
@@ -13,26 +14,33 @@ import javax.inject.Inject
 
 class UpdatePreferencesUseCase @Inject constructor(
     private val repository: PreferencesRepository,
-    private val authRepository: AuthRepository
+    private val authRepository: AuthRepository,
+    private val logger: LoggerKit
 ) : FlowUseCase<UpdatePreferencesUseCase.Input, UpdatePreferencesUseCase.Output> {
 
     @OptIn(ExperimentalCoroutinesApi::class)
     override fun invoke(input: Input): Flow<Output> {
         return authRepository.getCurrentUser().flatMapLatest { user ->
             flow {
+                logger.d("UpdatePreferencesUseCase", "Updating preferences for user: ${user?.id ?: "GLOBAL"}")
                 input.rememberEmail?.let { repository.setRememberEmail(it) }
                 input.lastEmail?.let { repository.saveLastEmail(it) }
 
                 if (user != null) {
                     input.showProjectionBanner?.let { repository.setShowProjectionBanner(user.id, it) }
                     input.lastKnownOverLimit?.let { repository.setLastKnownOverLimit(user.id, it) }
-                    input.autoTrackingEnabled?.let { repository.setAutoTrackingEnabled(user.id, it) }
+                    input.autoTrackingEnabled?.let {
+                        logger.i("UpdatePreferencesUseCase", "Persisting autoTrackingEnabled=$it for ${user.id}")
+                        repository.setAutoTrackingEnabled(user.id, it)
+                    }
                     input.autoTrackingPromotionDismissed?.let {
                         repository.setAutoTrackingPromotionDismissed(
                             user.id,
                             it
                         )
                     }
+                } else if (input.autoTrackingEnabled != null) {
+                    logger.w("UpdatePreferencesUseCase", "CRITICAL: Attempted to save per-user preference but USER IS NULL")
                 }
 
                 emit(Output.Success as Output)
