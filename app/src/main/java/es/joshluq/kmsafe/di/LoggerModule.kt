@@ -29,25 +29,9 @@ object LoggerModule {
         }
 
         return LoggerKit.Builder()
-            .setProvider(
-                CompositeLogProvider(
-                    listOf(
-                        KmLogProvider(level),
-                        CrashlyticsLogProvider()
-                    )
-                )
-            )
+            .addProvider(KmLogProvider(level))
+            .addProvider(CrashlyticsLogProvider())
             .build()
-    }
-
-    private class CompositeLogProvider(
-        private val providers: List<LogProvider>
-    ) : LogProvider {
-        override val minLogLevel: LogLevel = LogLevel.VERBOSE // Managed by children
-
-        override fun log(priority: LogLevel, tag: String, message: String, throwable: Throwable?) {
-            providers.forEach { it.log(priority, tag, message, throwable) }
-        }
     }
 
     private class KmLogProvider(

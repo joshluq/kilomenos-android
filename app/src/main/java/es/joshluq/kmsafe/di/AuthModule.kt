@@ -1,7 +1,6 @@
 package es.joshluq.kmsafe.di
 
 import android.content.Context
-import android.util.Log
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.core.Preferences
@@ -26,7 +25,6 @@ import es.joshluq.kmsafe.data.remote.auth.AuthTokenRefresher
 import es.joshluq.kmsafe.data.remote.auth.UserSessionDataSource
 import es.joshluq.kmsafe.data.remote.auth.UserSessionDataSourceImpl
 import es.joshluq.kmsafe.data.util.JacksonSerializerProvider
-import java.security.KeyStore
 import javax.inject.Provider
 import javax.inject.Singleton
 
@@ -39,7 +37,6 @@ object AuthModule {
 
     private const val STORE_NAME = "kmsafe_auth_store_${BuildConfig.FLAVOR}"
     private const val ENCRYPTION_ALIAS = "kmsafe_secure_key_${BuildConfig.FLAVOR}"
-
     private const val PREFS_NAME = "kmsafe_secure_prefs_${BuildConfig.FLAVOR}"
 
     @Provides
@@ -47,13 +44,13 @@ object AuthModule {
     fun provideAuthKit(
         @ApplicationContext context: Context,
         logger: LoggerKit,
-        tokenRefresherProvider: Provider<AuthTokenRefresher>
+        tokenRefresherProvider: Provider<AuthTokenRefresher>,
+        encryptionKit: EncryptionKit
     ): AuthKit {
-        cleanInvalidKey()
         return AuthKit.init(context) {
             storeName = STORE_NAME
             this.logger = logger
-            encryptionAlias = ENCRYPTION_ALIAS
+            this.encryptionKit = encryptionKit
             addFeature(
                 SessionKit,
                 SessionKitConfig.build {
@@ -81,7 +78,6 @@ object AuthModule {
         @ApplicationContext context: Context,
         logger: LoggerKit
     ): EncryptionKit {
-        cleanInvalidKey()
         return EncryptionKit.build(context) {
             alias = ENCRYPTION_ALIAS
             this.logger = logger
@@ -112,32 +108,4 @@ object AuthModule {
         return encryptionKit.createSecureStorage(dataStore, serializerProvider)
     }
 
-    /**
-     * Cleans up the Keystore by deleting the key associated with the provided alias if it's invalid.
-     * This prevents crashes like java.security.InvalidKeyException: Keystore cannot load the key.
-     */
-    private fun cleanInvalidKey() {
-        try {
-            val keyStore = KeyStore.getInstance("AndroidKeyStore")
-            keyStore.load(null)
-            if (keyStore.containsAlias(ENCRYPTION_ALIAS)) {
-                val key = try {
-                    // Try to access the key to see if it's valid
-                    keyStore.getKey(ENCRYPTION_ALIAS, null)
-                } catch (e: Exception) {
-                    // If an exception occurs (like InvalidKeyException), it's corrupted
-                    Log.w("AuthModule", "Exception while loading key: $ENCRYPTION_ALIAS", e)
-                    null
-                }
-
-                if (key == null) {
-                    // If the key is null or an exception occurred, delete it so it can be recreated
-                    Log.w("AuthModule", "Deleting corrupted or inaccessible key: $ENCRYPTION_ALIAS")
-                    keyStore.deleteEntry(ENCRYPTION_ALIAS)
-                }
-            }
-        } catch (e: Exception) {
-            Log.e("AuthModule", "Error checking/cleaning Keystore", e)
-        }
-    }
 }
