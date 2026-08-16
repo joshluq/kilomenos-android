@@ -28,8 +28,8 @@ import es.joshluq.kmsafe.domain.model.User
 import es.joshluq.kmsafe.domain.repository.AuthRepository
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.flowOn
@@ -67,7 +67,10 @@ class AuthRepositoryImpl @Inject constructor(
                 val user = body.user.toDomain()
 
                 // Seed initial entitlements from login response
-                val initialLevel = when (body.subscriptionLevel?.uppercase()) {
+                val initialLevelStr = body.subscriptionLevel?.uppercase()
+                logger.i("AuthRepository", "Sign in success. User: ${user.email}, Level: $initialLevelStr")
+                
+                val initialLevel = when (initialLevelStr) {
                     "PREMIUM" -> SubscriptionLevel.PREMIUM
                     "TRIAL" -> SubscriptionLevel.TRIAL
                     else -> SubscriptionLevel.FREE
@@ -75,8 +78,14 @@ class AuthRepositoryImpl @Inject constructor(
                 val initialEntitlements = Entitlements.Default.copy(subscriptionLevel = initialLevel)
 
                 sessionDataSource.startSession(tokens)
-                sessionDataSource.saveSessionData(user.toSessionModel(initialEntitlements.toModel()))
+                val sessionData = user.toSessionModel(initialEntitlements.toModel())
+                logger.d("AuthRepository", "Saving session data post-login: $sessionData")
+                sessionDataSource.saveSessionData(sessionData)
 
+                // Double check session persistence immediately
+                val verifiedSession = sessionDataSource.getCurrentUserSession()
+                logger.d("AuthRepository", "Verified session data immediately: $verifiedSession")
+                
                 analytics.track(
                     AnalyticsEvent.Custom("login_success", mapOf("user_id" to user.id, "method" to "credentials"))
                 )
@@ -110,7 +119,10 @@ class AuthRepositoryImpl @Inject constructor(
                 val user = body.user.toDomain()
 
                 // Seed initial entitlements from login response
-                val initialLevel = when (body.subscriptionLevel?.uppercase()) {
+                val initialLevelStr = body.subscriptionLevel?.uppercase()
+                logger.i("AuthRepository", "Google sign in success. Level: $initialLevelStr")
+
+                val initialLevel = when (initialLevelStr) {
                     "PREMIUM" -> SubscriptionLevel.PREMIUM
                     "TRIAL" -> SubscriptionLevel.TRIAL
                     else -> SubscriptionLevel.FREE
@@ -118,7 +130,13 @@ class AuthRepositoryImpl @Inject constructor(
                 val initialEntitlements = Entitlements.Default.copy(subscriptionLevel = initialLevel)
 
                 sessionDataSource.startSession(tokens)
-                sessionDataSource.saveSessionData(user.toSessionModel(initialEntitlements.toModel()))
+                val sessionData = user.toSessionModel(initialEntitlements.toModel())
+                logger.d("AuthRepository", "Saving Google session data: $sessionData")
+                sessionDataSource.saveSessionData(sessionData)
+
+                // Double check
+                val verifiedSession = sessionDataSource.getCurrentUserSession()
+                logger.d("AuthRepository", "Verified Google session: $verifiedSession")
 
                 analytics.track(
                     AnalyticsEvent.Custom("login_success", mapOf("user_id" to user.id, "method" to "google"))
@@ -227,27 +245,28 @@ class AuthRepositoryImpl @Inject constructor(
 
     @OptIn(ExperimentalCoroutinesApi::class)
     override fun getCurrentUser(): Flow<User?> {
-        return sessionDataSource.getSessionState().flatMapLatest { state ->
+        return combine(
+            sessionDataSource.getSessionState(),
+            sessionDataSource.observeUserSession()
+        ) { state, session ->
             if (state is SessionState.Active) {
-                flow {
-                    emit(sessionDataSource.getCurrentUserSession()?.toDomain())
-                }
+                session?.toDomain()
             } else {
-                flowOf(null)
+                null
             }
         }
     }
 
     @OptIn(ExperimentalCoroutinesApi::class)
     override fun getEntitlements(): Flow<Entitlements> {
-        return sessionDataSource.getSessionState().flatMapLatest { state ->
+        return combine(
+            sessionDataSource.getSessionState(),
+            sessionDataSource.observeUserSession()
+        ) { state, session ->
             if (state is SessionState.Active) {
-                flow {
-                    val session = sessionDataSource.getCurrentUserSession()
-                    emit(session?.entitlements?.toDomain() ?: Entitlements.Default)
-                }
+                session?.entitlements?.toDomain() ?: Entitlements.Default
             } else {
-                flowOf(Entitlements.Default)
+                Entitlements.Default
             }
         }
     }

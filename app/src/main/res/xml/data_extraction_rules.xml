@@ -5,15 +5,15 @@
 -->
 <data-extraction-rules>
     <cloud-backup>
-        <!-- TODO: Use <include> and <exclude> to control what is backed up.
-        <include .../>
-        <exclude .../>
-        -->
+        <!-- Exclude encrypted stores that lose their keys on uninstall -->
+        <exclude domain="sharedpref" path="kmsafe_auth_store_Dev.xml"/>
+        <exclude domain="sharedpref" path="kmsafe_secure_prefs_Dev.xml"/>
+        <exclude domain="sharedpref" path="kmsafe_auth_store_Prod.xml"/>
+        <exclude domain="sharedpref" path="kmsafe_secure_prefs_Prod.xml"/>
     </cloud-backup>
-    <!--
     <device-transfer>
-        <include .../>
-        <exclude .../>
+        <!-- Allow transfer but keys might still be an issue depending on device -->
+        <exclude domain="sharedpref" path="kmsafe_auth_store_Dev.xml"/>
+        <exclude domain="sharedpref" path="kmsafe_secure_prefs_Dev.xml"/>
     </device-transfer>
-    -->
 </data-extraction-rules>

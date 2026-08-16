@@ -6,8 +6,9 @@
    See https://developer.android.com/about/versions/12/backup-restore
 -->
 <full-backup-content>
-    <!--
-   <include domain="sharedpref" path="."/>
-   <exclude domain="sharedpref" path="device.xml"/>
--->
+    <!-- Exclude encrypted stores that lose their keys on uninstall -->
+    <exclude domain="sharedpref" path="kmsafe_auth_store_Dev.xml"/>
+    <exclude domain="sharedpref" path="kmsafe_secure_prefs_Dev.xml"/>
+    <exclude domain="sharedpref" path="kmsafe_auth_store_Prod.xml"/>
+    <exclude domain="sharedpref" path="kmsafe_secure_prefs_Prod.xml"/>
 </full-backup-content>

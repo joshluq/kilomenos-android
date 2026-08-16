@@ -5,6 +5,8 @@ import es.joshluq.authkit.session.model.SessionState
 import es.joshluq.authkit.session.model.TokenHolder
 import es.joshluq.kmsafe.data.remote.model.UserSessionModel
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.onStart
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -14,6 +16,9 @@ import javax.inject.Singleton
 interface UserSessionDataSource {
     /** Returns the current session data or null if not available. */
     suspend fun getCurrentUserSession(): UserSessionModel?
+
+    /** Returns a flow of the current session data. */
+    fun observeUserSession(): Flow<UserSessionModel?>
 
     /** Returns a flow of the current session state. */
     fun getSessionState(): Flow<SessionState>
@@ -39,8 +44,16 @@ class UserSessionDataSourceImpl @Inject constructor(
     private val authKit: AuthKit
 ) : UserSessionDataSource {
 
+    private val _sessionDataUpdates = MutableSharedFlow<UserSessionModel?>(replay = 1)
+
     override suspend fun getCurrentUserSession(): UserSessionModel? {
         return authKit.session.getSessionData<UserSessionModel>()
+    }
+
+    override fun observeUserSession(): Flow<UserSessionModel?> {
+        return _sessionDataUpdates.onStart {
+            emit(getCurrentUserSession())
+        }
     }
 
     override fun getSessionState(): Flow<SessionState> {
@@ -59,9 +72,11 @@ class UserSessionDataSourceImpl @Inject constructor(
 
     override suspend fun saveSessionData(data: UserSessionModel) {
         authKit.session.saveSessionData(data)
+        _sessionDataUpdates.emit(data)
     }
 
     override suspend fun endSession() {
         authKit.session.endSession()
+        _sessionDataUpdates.emit(null)
     }
 }

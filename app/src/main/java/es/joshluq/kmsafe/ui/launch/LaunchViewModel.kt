@@ -8,13 +8,17 @@ import es.joshluq.foundationkit.viewmodel.ScreenViewModel
 import es.joshluq.kmsafe.data.util.DeviceFingerprintProvider
 import es.joshluq.kmsafe.di.CheckSession
 import es.joshluq.kmsafe.di.GetEntitlements
+import es.joshluq.kmsafe.di.SignOut
 import es.joshluq.kmsafe.di.SyncContracts
 import es.joshluq.kmsafe.domain.usecase.CheckSessionUseCase
 import es.joshluq.kmsafe.domain.usecase.GetEntitlementsUseCase
+import es.joshluq.kmsafe.domain.usecase.SignOutUseCase
 import es.joshluq.kmsafe.domain.usecase.SyncContractsUseCase
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 import kotlin.time.Duration.Companion.milliseconds
 
@@ -26,6 +30,8 @@ class LaunchViewModel @Inject constructor(
     @JvmSuppressWildcards FlowUseCase<SyncContractsUseCase.Input, SyncContractsUseCase.Output>,
     @param:GetEntitlements private val getEntitlementsUseCase:
     @JvmSuppressWildcards FlowUseCase<GetEntitlementsUseCase.Input, GetEntitlementsUseCase.Output>,
+    @param:SignOut private val signOutUseCase:
+    @JvmSuppressWildcards FlowUseCase<SignOutUseCase.Input, SignOutUseCase.Output>,
     private val fingerprintProvider: DeviceFingerprintProvider,
     private val logger: LoggerKit
 ) : ScreenViewModel<LaunchState, LaunchEvent, LaunchEffect>() {
@@ -43,8 +49,12 @@ class LaunchViewModel @Inject constructor(
             .onEach { output ->
                 when (output) {
                     CheckSessionUseCase.Output.ActiveSession -> {
-                        logger.d("LaunchViewModel", "Session active, starting mandatory sync")
+                        logger.d("LaunchViewModel", "Session active and consistent, starting mandatory sync")
                         fetchInitialData()
+                    }
+                    CheckSessionUseCase.Output.InconsistentSession -> {
+                        logger.w("LaunchViewModel", "Inconsistent session detected. Forcing logout.")
+                        handleInconsistentSession()
                     }
                     CheckSessionUseCase.Output.IdleSession -> {
                         logger.d("LaunchViewModel", "No active session, navigating to Login")
@@ -56,6 +66,15 @@ class LaunchViewModel @Inject constructor(
                     }
                 }
             }.launchIn(viewModelScope)
+    }
+
+    private fun handleInconsistentSession() {
+        viewModelScope.launch {
+            // Force sign out to clear tokens and any orphan data
+            signOutUseCase(SignOutUseCase.Input(clearLocalData = true)).collect()
+            delay(500.milliseconds)
+            launchEffect(LaunchEffect.NavigateToLogin)
+        }
     }
 
     private fun fetchInitialData() {

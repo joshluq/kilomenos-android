@@ -11,7 +11,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
@@ -57,7 +57,7 @@ class EntitlementsRepositoryImpl @Inject constructor(
                 }
             }
         }
-        emit(authRepository.getEntitlements().first())
+        emitAll(authRepository.getEntitlements())
     }
 
     override fun startTrial(deviceFingerprint: String): Flow<Entitlements> = flow {
@@ -69,7 +69,7 @@ class EntitlementsRepositoryImpl @Inject constructor(
                 lastFetchTime = System.currentTimeMillis()
             }
         }
-        emit(authRepository.getEntitlements().first())
+        emitAll(authRepository.getEntitlements())
     }
 
     override fun observeEntitlements(): Flow<Entitlements> = authRepository.getEntitlements()

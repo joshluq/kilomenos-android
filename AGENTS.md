@@ -101,3 +101,9 @@ To maintain pure ViewModels and testable Screens:
     4. `Route A` sends an **Event** to `ViewModel A` with the result.
     5. `ViewModel A` updates its state and clears the key from the handle.
 
+## 13. Session Integrity & Auto Backup
+To prevent the "Premium-as-Free" bug after reinstallation:
+- **Encrypted Data Persistence**: Encrypted stores (AuthKit tokens, UserSessionModel) MUST be excluded from Android Auto Backup. Since keys in the Android Keystore are deleted on uninstall, restored encrypted files become undecryptable, leading to corrupted session states.
+- **Integrity Validation**: The `CheckSessionUseCase` must verify that an `Active` session in AuthKit also has readable and consistent `UserSessionModel` data.
+- **Self-Healing Startup**: If `CheckSessionUseCase` detects an `InconsistentSession` (tokens exist but user data is null), the `LaunchViewModel` MUST force a clean `SignOut` and redirect to Login to ensure the user never enters the app with incorrect permissions.
+

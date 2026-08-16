@@ -7,7 +7,7 @@ import es.joshluq.foundationkit.usecase.UseCaseInput
 import es.joshluq.foundationkit.usecase.UseCaseOutput
 import es.joshluq.kmsafe.domain.repository.AuthRepository
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.onEach
 import javax.inject.Inject
 
@@ -20,16 +20,25 @@ class CheckSessionUseCase @Inject constructor(
 ) : FlowUseCase<CheckSessionUseCase.Input, CheckSessionUseCase.Output> {
 
     override fun invoke(input: Input): Flow<Output> {
-        logger.d("CheckSessionUseCase", "Checking session state")
-        return repository.getSessionState()
-            .map { state ->
-                when (state) {
-                    SessionState.Active, SessionState.ExpiringSoon -> Output.ActiveSession
-                    SessionState.Idle -> Output.IdleSession
-                    SessionState.Initializing -> Output.Progress
+        logger.d("CheckSessionUseCase", "Checking session state and integrity")
+        return combine(
+            repository.getSessionState(),
+            repository.getCurrentUser()
+        ) { state, user ->
+            when (state) {
+                SessionState.Active, SessionState.ExpiringSoon -> {
+                    if (user != null) {
+                        Output.ActiveSession
+                    } else {
+                        // Integrity failure: Session is active in AuthKit but user data is nullo/unreadable
+                        logger.e("CheckSessionUseCase", "Integrity Failure: Session active but User is NULL")
+                        Output.InconsistentSession
+                    }
                 }
+                SessionState.Idle -> Output.IdleSession
+                SessionState.Initializing -> Output.Progress
             }
-            .onEach { logger.i("CheckSessionUseCase", "Session result: $it") }
+        }.onEach { logger.i("CheckSessionUseCase", "Session check result: $it") }
     }
 
     object Input : UseCaseInput
@@ -37,6 +46,7 @@ class CheckSessionUseCase @Inject constructor(
     sealed interface Output : UseCaseOutput {
         data object Progress : Output
         data object ActiveSession : Output
+        data object InconsistentSession : Output
         data object IdleSession : Output
     }
 }
