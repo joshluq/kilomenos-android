@@ -134,11 +134,15 @@ class RecordDetailViewModel @Inject constructor(
                         }
                     }
                     is GetOdometerRecordUseCase.Output.Failure -> {
-                        updateState {
-                            copy(
-                                isLoading = false,
-                                error = TextProvider.Resource(R.string.history_load_error)
-                            )
+                        // If we are currently deleting, ignore this error as it's likely 
+                        // caused by the record being removed from DB before navigation finishes.
+                        if (!state.value.isDeleting) {
+                            updateState {
+                                copy(
+                                    isLoading = false,
+                                    error = TextProvider.Resource(R.string.history_load_error)
+                                )
+                            }
                         }
                     }
                 }
@@ -215,6 +219,9 @@ class RecordDetailViewModel @Inject constructor(
     }
 
     private fun handleDelete() {
+        // Hide dialog immediately to improve UX
+        updateState { copy(showDeleteConfirmation = false) }
+        
         state.value.record?.let { record ->
             deleteOdometerRecordUseCase(DeleteOdometerRecordUseCase.Input(record))
                 .onEach { output ->
@@ -227,7 +234,6 @@ class RecordDetailViewModel @Inject constructor(
                             updateState {
                                 copy(
                                     isDeleting = false,
-                                    showDeleteConfirmation = false,
                                     error = TextProvider.Resource(R.string.history_register_error)
                                 )
                             }

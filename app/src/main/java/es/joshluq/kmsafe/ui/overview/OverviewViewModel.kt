@@ -227,7 +227,9 @@ class OverviewViewModel @Inject constructor(
                     newOdometerValue = "",
                     newRecordLabel = "",
                     newRecordFuel = "",
-                    newRecordDate = System.currentTimeMillis()
+                    newRecordDate = System.currentTimeMillis(),
+                    currentRoutePolyline = null,
+                    currentPointCount = 0
                 )
             }
             Event.OnBottomSheetDismissed -> updateState { copy(showBottomSheet = false) }

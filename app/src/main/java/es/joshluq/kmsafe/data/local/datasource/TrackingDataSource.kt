@@ -78,10 +78,12 @@ class TrackingDataSource @Inject constructor(
     }
 
     suspend fun clear() {
-        logger.d("TrackingDataSource", "clear: deleting tracking keys")
+        logger.d("TrackingDataSource", "clear: deleting all tracking keys")
         storage.delete(KEY_IS_TRACKING)
         storage.delete(KEY_START_TIME)
         storage.delete(KEY_DISTANCE)
+        storage.delete(KEY_ROUTE_POLYLINE)
+        storage.delete(KEY_POINT_COUNT)
         _updates.emit(Unit)
     }
 }
