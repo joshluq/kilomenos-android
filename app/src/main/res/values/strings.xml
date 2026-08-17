@@ -288,7 +288,7 @@
     <string name="login_password_placeholder">••••••••</string>
     <string name="login_divider_or"> O </string>
     <string name="login_google_button">Continuar con Google</string>
-    <string name="login_button">Acceder a mi Flota</string>
+    <string name="login_button">Acceder</string>
     <string name="login_create_account">¿Eres nuevo conductor? Crea una cuenta</string>
     <string name="login_conflict_title">Otro conductor detectado</string>
     <string name="login_conflict_message">Este dispositivo contiene datos de otro conductor. Para iniciar tu sesión, es necesario eliminar la información anterior.</string>

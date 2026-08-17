@@ -39,7 +39,7 @@ class LaunchViewModel @Inject constructor(
 
     override fun createInitialState(): LaunchState = LaunchState()
 
-    private var sessionCheckJob: Job? = null
+    private var isNavigating = false
 
     init {
         validateSession()
@@ -48,22 +48,23 @@ class LaunchViewModel @Inject constructor(
     override fun handleEvent(event: LaunchEvent) {}
 
     private fun validateSession() {
-        sessionCheckJob?.cancel()
-        sessionCheckJob = checkSessionUseCase(CheckSessionUseCase.Input)
+        checkSessionUseCase(CheckSessionUseCase.Input)
             .onEach { output ->
+                if (isNavigating && output != CheckSessionUseCase.Output.Progress) return@onEach
+
                 when (output) {
                     CheckSessionUseCase.Output.ActiveSession -> {
-                        sessionCheckJob?.cancel()
+                        isNavigating = true
                         logger.d("LaunchViewModel", "Session active and consistent, starting mandatory sync")
                         fetchInitialData()
                     }
                     CheckSessionUseCase.Output.InconsistentSession -> {
-                        sessionCheckJob?.cancel()
+                        isNavigating = true
                         logger.w("LaunchViewModel", "Inconsistent session detected. Forcing logout.")
                         handleInconsistentSession()
                     }
                     CheckSessionUseCase.Output.IdleSession -> {
-                        sessionCheckJob?.cancel()
+                        isNavigating = true
                         logger.d("LaunchViewModel", "No active session, navigating to Login")
                         delay(800.milliseconds)
                         launchEffect(LaunchEffect.NavigateToLogin)

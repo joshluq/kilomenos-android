@@ -27,7 +27,7 @@ data class State(
     val newOdometerValue: String = "",
     val newRecordDate: Long = System.currentTimeMillis(),
     val isSaving: Boolean = false,
-    val isLoading: Boolean = false,
+    val isLoading: Boolean = true,
     val projection: TripProjection? = null,
     val showProjectionBanner: Boolean = false,
     val availableVehicles: List<RentingContract> = emptyList(),

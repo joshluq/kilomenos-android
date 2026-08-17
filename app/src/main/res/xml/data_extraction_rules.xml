@@ -10,10 +10,21 @@
         <exclude domain="sharedpref" path="kmsafe_secure_prefs_Dev.xml"/>
         <exclude domain="sharedpref" path="kmsafe_auth_store_Prod.xml"/>
         <exclude domain="sharedpref" path="kmsafe_secure_prefs_Prod.xml"/>
+
+        <!-- Exclude databases to ensure clean install integrity -->
+        <exclude domain="database" path="kmsafe_db_Dev"/>
+        <exclude domain="database" path="kmsafe_db_Dev-shm"/>
+        <exclude domain="database" path="kmsafe_db_Dev-wal"/>
+        <exclude domain="database" path="kmsafe_db_Prod"/>
+        <exclude domain="database" path="kmsafe_db_Prod-shm"/>
+        <exclude domain="database" path="kmsafe_db_Prod-wal"/>
     </cloud-backup>
     <device-transfer>
         <!-- Allow transfer but keys might still be an issue depending on device -->
         <exclude domain="sharedpref" path="kmsafe_auth_store_Dev.xml"/>
         <exclude domain="sharedpref" path="kmsafe_secure_prefs_Dev.xml"/>
+        <exclude domain="database" path="kmsafe_db_Dev"/>
+        <exclude domain="database" path="kmsafe_db_Dev-shm"/>
+        <exclude domain="database" path="kmsafe_db_Dev-wal"/>
     </device-transfer>
 </data-extraction-rules>

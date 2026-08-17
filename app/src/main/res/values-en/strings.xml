@@ -288,7 +288,7 @@
     <string name="login_password_placeholder">••••••••</string>
     <string name="login_divider_or"> OR </string>
     <string name="login_google_button">Continue with Google</string>
-    <string name="login_button">Access my Fleet</string>
+    <string name="login_button">Access</string>
     <string name="login_create_account">New driver? Create an account</string>
     <string name="login_conflict_title">Another driver detected</string>
     <string name="login_conflict_message">This device contains data from another driver. To start your session, the previous information must be deleted.</string>

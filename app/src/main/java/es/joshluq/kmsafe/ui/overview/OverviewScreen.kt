@@ -308,7 +308,7 @@ fun OverviewScreen(
                         },
                         onNavigateToVehicleDetail = onNavigateToVehicleDetail
                     )
-                } else {
+                } else if (!state.isLoading) {
                     EmptyState(
                         state = state,
                         onRegisterClick = { onEvent(Event.OnRegisterRentingClicked) },

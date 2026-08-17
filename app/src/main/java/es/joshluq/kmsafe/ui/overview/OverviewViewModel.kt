@@ -121,17 +121,21 @@ class OverviewViewModel @Inject constructor(
             ) {
                 val entitlements = entitlementsOutput.entitlements
                 val prefs = preferencesOutput.preferences
-                val hasPremiumAccess = entitlements.subscriptionLevel == SubscriptionLevel.PREMIUM
+                val isPremiumUser = entitlements.subscriptionLevel == SubscriptionLevel.PREMIUM
                 val isTrialable = entitlements.isFeatureTrialable(Feature.AUTO_TRACKING)
+                val isAutoTrackEnabled = prefs.autoTrackingEnabled
+                val isPromoDismissed = prefs.autoTrackingPromotionDismissed
+
+                val shouldShowPromo = (isPremiumUser || isTrialable) && !isAutoTrackEnabled && !isPromoDismissed
 
                 newState = newState.copy(
-                    isPremium = hasPremiumAccess,
+                    isPremium = isPremiumUser,
                     isAutoTrackingTrialable = isTrialable,
                     subscriptionLevel = entitlements.subscriptionLevel,
-                    autoTrackingEnabled = prefs.autoTrackingEnabled,
-                    autoTrackingPromotionDismissed = prefs.autoTrackingPromotionDismissed
+                    autoTrackingEnabled = isAutoTrackEnabled,
+                    autoTrackingPromotionDismissed = isPromoDismissed,
+                    showAutoTrackingPromotion = shouldShowPromo
                 )
-                evaluatePromotion(hasPremiumAccess, isTrialable, prefs.autoTrackingPromotionDismissed)
             }
 
             // 2. Process Contract Data
@@ -331,18 +335,6 @@ class OverviewViewModel @Inject constructor(
                     }
                 }
             }.launchIn(viewModelScope)
-    }
-
-    private fun evaluatePromotion(isPremium: Boolean, isTrialable: Boolean, isDismissed: Boolean) {
-        if (isDismissed) {
-            logger.i("OverviewViewModel", "Auto-tracking promotion evaluation: Skipping")
-            updateState { copy(showAutoTrackingPromotion = false) }
-            return
-        }
-
-        val shouldShow = isPremium || isTrialable
-        logger.i("OverviewViewModel", "Auto-tracking promotion evaluation: $shouldShow")
-        updateState { copy(showAutoTrackingPromotion = shouldShow) }
     }
 
     private fun handleDismissPromotion() {
