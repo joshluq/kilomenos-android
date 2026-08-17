@@ -14,6 +14,7 @@ import es.joshluq.kmsafe.domain.usecase.CheckSessionUseCase
 import es.joshluq.kmsafe.domain.usecase.GetEntitlementsUseCase
 import es.joshluq.kmsafe.domain.usecase.SignOutUseCase
 import es.joshluq.kmsafe.domain.usecase.SyncContractsUseCase
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.launchIn
@@ -38,6 +39,8 @@ class LaunchViewModel @Inject constructor(
 
     override fun createInitialState(): LaunchState = LaunchState()
 
+    private var sessionCheckJob: Job? = null
+
     init {
         validateSession()
     }
@@ -45,18 +48,22 @@ class LaunchViewModel @Inject constructor(
     override fun handleEvent(event: LaunchEvent) {}
 
     private fun validateSession() {
-        checkSessionUseCase(CheckSessionUseCase.Input)
+        sessionCheckJob?.cancel()
+        sessionCheckJob = checkSessionUseCase(CheckSessionUseCase.Input)
             .onEach { output ->
                 when (output) {
                     CheckSessionUseCase.Output.ActiveSession -> {
+                        sessionCheckJob?.cancel()
                         logger.d("LaunchViewModel", "Session active and consistent, starting mandatory sync")
                         fetchInitialData()
                     }
                     CheckSessionUseCase.Output.InconsistentSession -> {
+                        sessionCheckJob?.cancel()
                         logger.w("LaunchViewModel", "Inconsistent session detected. Forcing logout.")
                         handleInconsistentSession()
                     }
                     CheckSessionUseCase.Output.IdleSession -> {
+                        sessionCheckJob?.cancel()
                         logger.d("LaunchViewModel", "No active session, navigating to Login")
                         delay(800.milliseconds)
                         launchEffect(LaunchEffect.NavigateToLogin)

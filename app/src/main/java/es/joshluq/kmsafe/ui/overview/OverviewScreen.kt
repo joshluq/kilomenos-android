@@ -92,6 +92,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavBackStackEntry
 import coil.compose.SubcomposeAsyncImage
+import coil.request.CachePolicy
 import coil.request.ImageRequest
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
@@ -249,8 +250,11 @@ fun OverviewScreen(
         }
     }
 
+    val isDataAvailable = state.renting != null
+    val shouldShowFullScreenLoading = state.isLoading && !isDataAvailable
+
     CanvasKitLoadingScaffold(
-        isLoading = state.isLoading,
+        isLoading = shouldShowFullScreenLoading,
         topBar = { OverviewTopBar(state, onEvent) },
         containerColor = CanvasKitTheme.colors.backgroundSecondary,
         contentWindowInsets = WindowInsets(),
@@ -498,6 +502,9 @@ private fun MainBalanceCard(
                         model = ImageRequest.Builder(LocalContext.current)
                             .data(imageUrl)
                             .crossfade(true)
+                            .diskCachePolicy(CachePolicy.ENABLED)
+                            .memoryCachePolicy(CachePolicy.ENABLED)
+                            .diskCacheKey(imageUrl)
                             .build(),
                         contentDescription = stringResource(R.string.acc_vehicle_info),
                         modifier = Modifier

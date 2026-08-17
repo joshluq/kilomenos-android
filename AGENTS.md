@@ -107,3 +107,9 @@ To prevent the "Premium-as-Free" bug after reinstallation:
 - **Integrity Validation**: The `CheckSessionUseCase` must verify that an `Active` session in AuthKit also has readable and consistent `UserSessionModel` data.
 - **Self-Healing Startup**: If `CheckSessionUseCase` detects an `InconsistentSession` (tokens exist but user data is null), the `LaunchViewModel` MUST force a clean `SignOut` and redirect to Login to ensure the user never enters the app with incorrect permissions.
 
+## 14. SSOT: Single Source of Truth for Metrics
+To avoid calculation discrepancies (e.g., total kilometers) between different screens:
+- **Prioritize Detail over Summary**: Never use "summary" or "cache" fields from the Backend (like `rentingContract.currentOdometer`) for business logic or primary UI display if the underlying detail records (`OdometerRecord`) are available.
+- **Aggregation as Truth**: The sum of individual records is the only source of truth for distances. Summary fields in the Backend are considered "informative caches" and may suffer from data drift.
+- **UseCase Centralization**: Always use the specialized UseCase (e.g., `GetOverviewDataUseCase`) to retrieve aggregate metrics. ViewModels must NOT perform manual arithmetic on summary objects to "shortcut" the data flow.
+
