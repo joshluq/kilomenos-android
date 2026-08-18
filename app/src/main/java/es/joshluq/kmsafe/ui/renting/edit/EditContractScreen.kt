@@ -58,16 +58,16 @@ import es.joshluq.canvaskit.components.buttons.CanvasKitButton
 import es.joshluq.canvaskit.components.cards.CanvasKitCard
 import es.joshluq.canvaskit.components.feedback.CanvasKitAlertVariant
 import es.joshluq.canvaskit.components.feedback.CanvasKitBanner
+import es.joshluq.canvaskit.components.inputs.CanvasKitTextField
 import es.joshluq.canvaskit.components.layout.CanvasKitLoadingScaffold
 import es.joshluq.canvaskit.components.navigation.CanvasKitTopBar
 import es.joshluq.canvaskit.foundations.theme.CanvasKitTheme
 import es.joshluq.kmsafe.R
 import es.joshluq.kmsafe.domain.model.RentingContract
 import es.joshluq.kmsafe.ui.renting.components.BluetoothDevicePicker
-import es.joshluq.kmsafe.ui.renting.components.RentingDisplayField
-import es.joshluq.kmsafe.ui.renting.components.RentingTextField
 import es.joshluq.kmsafe.ui.renting.components.VehiclePhotoSelector
 import es.joshluq.kmsafe.ui.util.safeClick
+import es.joshluq.kmsafe.ui.util.safeClickable
 
 @Composable
 fun EditContractRoute(
@@ -160,8 +160,8 @@ fun EditContractScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .verticalScroll(rememberScrollState())
-                    .padding(horizontal = 20.dp),
-                verticalArrangement = Arrangement.spacedBy(24.dp)
+                    .padding(horizontal = CanvasKitTheme.spacing.screenHorizontal),
+                verticalArrangement = Arrangement.spacedBy(CanvasKitTheme.spacing.lg)
             ) {
                 VehiclePhotoSelector(
                     imageUrl = state.vehicleImageUrl,
@@ -172,11 +172,12 @@ fun EditContractScreen(
 
                 // Group 1: General Details
                 EditSectionCard(title = stringResource(R.string.onboarding_vehicle_name_label)) {
-                    RentingTextField(
-                        label = "",
+                    CanvasKitTextField(
+                        label = stringResource(R.string.onboarding_vehicle_name_label),
                         value = state.vehicleName,
                         onValueChange = { onEvent(Event.OnVehicleNameChanged(it)) },
-                        errorMessage = state.vehicleNameError?.asString(),
+                        errorText = state.vehicleNameError?.asString(),
+                        isError = state.vehicleNameError != null,
                         placeholder = stringResource(R.string.onboarding_vehicle_name_placeholder),
                         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
                         keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) })
@@ -185,18 +186,14 @@ fun EditContractScreen(
 
                 // Group 2: Contract Adjustments
                 EditSectionCard(title = stringResource(R.string.vehicle_detail_contract_section)) {
-                    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                        RentingTextField(
+                    Column(verticalArrangement = Arrangement.spacedBy(CanvasKitTheme.spacing.md)) {
+                        CanvasKitTextField(
                             label = stringResource(R.string.onboarding_duration_months_label),
                             value = state.durationMonths,
                             onValueChange = { onEvent(Event.OnDurationMonthsChanged(it)) },
-                            errorMessage = state.durationMonthsError?.asString(),
-                            trailingIcon = {
-                                Text(
-                                    stringResource(R.string.onboarding_months_suffix),
-                                    color = CanvasKitTheme.colors.brandAccent
-                                )
-                            },
+                            errorText = state.durationMonthsError?.asString(),
+                            isError = state.durationMonthsError != null,
+                            suffix = stringResource(R.string.onboarding_months_suffix),
                             keyboardOptions = KeyboardOptions(
                                 keyboardType = KeyboardType.Number,
                                 imeAction = ImeAction.Next
@@ -204,17 +201,13 @@ fun EditContractScreen(
                             keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) })
                         )
 
-                        RentingTextField(
+                        CanvasKitTextField(
                             label = stringResource(R.string.onboarding_total_kms_label),
                             value = state.totalKms,
                             onValueChange = { onEvent(Event.OnTotalKmsChanged(it)) },
-                            errorMessage = state.totalKmsError?.asString(),
-                            trailingIcon = {
-                                Text(
-                                    stringResource(R.string.onboarding_km_suffix),
-                                    color = CanvasKitTheme.colors.brandAccent
-                                )
-                            },
+                            errorText = state.totalKmsError?.asString(),
+                            isError = state.totalKmsError != null,
+                            suffix = stringResource(R.string.onboarding_km_suffix),
                             keyboardOptions = KeyboardOptions(
                                 keyboardType = KeyboardType.Number,
                                 imeAction = ImeAction.Next
@@ -229,12 +222,14 @@ fun EditContractScreen(
                     title = stringResource(R.string.vehicle_detail_smart_section),
                     icon = Icons.Default.Security
                 ) {
-                    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                        RentingDisplayField(
+                    Column(verticalArrangement = Arrangement.spacedBy(CanvasKitTheme.spacing.md)) {
+                        CanvasKitTextField(
                             label = stringResource(R.string.onboarding_bluetooth_label),
                             value = state.bluetoothDeviceName ?: state.bluetoothDeviceAddress ?: "",
+                            onValueChange = {},
+                            readOnly = true,
                             placeholder = stringResource(R.string.onboarding_bluetooth_placeholder),
-                            onClick = safeClick {
+                            modifier = Modifier.safeClickable {
                                 keyboardController?.hide()
                                 if (bluetoothPermissionState?.status?.isGranted != false) {
                                     onEvent(Event.OnToggleBluetoothPicker)
@@ -251,12 +246,12 @@ fun EditContractScreen(
                             }
                         )
 
-                        RentingTextField(
+                        CanvasKitTextField(
                             label = stringResource(R.string.setup_wizard_step_advanced_price_label),
                             value = state.excessDistancePrice,
                             onValueChange = { onEvent(Event.OnExcessDistancePriceChanged(it)) },
                             placeholder = stringResource(R.string.setup_wizard_step_advanced_price_placeholder),
-                            trailingIcon = { Text("€/km", color = CanvasKitTheme.colors.brandAccent) },
+                            suffix = "€/km",
                             keyboardOptions = KeyboardOptions(
                                 keyboardType = KeyboardType.Decimal,
                                 imeAction = ImeAction.Next
@@ -264,12 +259,12 @@ fun EditContractScreen(
                             keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) })
                         )
 
-                        RentingTextField(
+                        CanvasKitTextField(
                             label = stringResource(R.string.setup_wizard_step_advanced_margin_label),
                             value = state.courtesyMarginKms,
                             onValueChange = { onEvent(Event.OnCourtesyMarginKmsChanged(it)) },
                             placeholder = stringResource(R.string.setup_wizard_step_advanced_margin_placeholder),
-                            trailingIcon = { Text("km", color = CanvasKitTheme.colors.brandAccent) },
+                            suffix = "km",
                             keyboardOptions = KeyboardOptions(
                                 keyboardType = KeyboardType.Number,
                                 imeAction = ImeAction.Done
@@ -279,9 +274,10 @@ fun EditContractScreen(
                     }
                 }
 
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(CanvasKitTheme.spacing.xs))
 
                 CanvasKitButton(
+                    text = stringResource(R.string.history_edit_save),
                     onClick = safeClick {
                         keyboardController?.hide()
                         onEvent(Event.OnSaveClicked)
@@ -289,14 +285,7 @@ fun EditContractScreen(
                     loading = state.isSaving,
                     enabled = !state.isSaving && state.isDirty,
                     modifier = Modifier.fillMaxWidth()
-                ) { contentColor ->
-                    Text(
-                        text = stringResource(R.string.history_edit_save),
-                        color = contentColor,
-                        style = CanvasKitTheme.typography.bodyLarge,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
+                )
 
                 Spacer(modifier = Modifier.height(48.dp))
             }

@@ -47,8 +47,7 @@ import es.joshluq.canvaskit.components.cards.CanvasKitCard
 import es.joshluq.canvaskit.components.cards.CanvasKitCardVariant
 import es.joshluq.canvaskit.components.feedback.CanvasKitAlertVariant
 import es.joshluq.canvaskit.components.feedback.CanvasKitBanner
-import es.joshluq.canvaskit.components.feedback.CanvasKitDialog
-import es.joshluq.canvaskit.components.feedback.CanvasKitDialogContent
+import es.joshluq.canvaskit.components.feedback.CanvasKitConfirmDialog
 import es.joshluq.canvaskit.components.layout.CanvasKitLoadingScaffold
 import es.joshluq.canvaskit.components.navigation.CanvasKitTopBar
 import es.joshluq.canvaskit.foundations.theme.CanvasKitTheme
@@ -188,16 +187,11 @@ fun ProfileScreen(
                 Spacer(modifier = Modifier.weight(1f))
 
                 CanvasKitButton(
+                    text = stringResource(R.string.profile_logout_button),
                     onClick = safeClick { onEvent(Event.OnLogoutClicked) },
                     variant = CanvasKitButtonVariant.Secondary,
                     modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text(
-                        text = stringResource(R.string.profile_logout_button),
-                        color = CanvasKitTheme.colors.error,
-                        style = CanvasKitTheme.typography.bodyLarge
-                    )
-                }
+                )
 
                 Spacer(modifier = Modifier.height(CanvasKitTheme.spacing.xl))
             }
@@ -221,89 +215,28 @@ fun ProfileScreen(
             } else {
                 R.string.profile_logout_confirmation_message_free
             }
-            CanvasKitDialog(
-                onDismissRequest = { onEvent(Event.OnLogoutCancelled) }
-            ) {
-                CanvasKitDialogContent(
-                    title = {
-                        Text(
-                            text = stringResource(R.string.profile_logout_confirmation_title),
-                            style = CanvasKitTheme.typography.bodyLarge,
-                            fontWeight = FontWeight.Bold,
-                            color = CanvasKitTheme.colors.textPrimary
-                        )
-                    },
-                    content = {
-                        Text(
-                            text = stringResource(messageRes),
-                            style = CanvasKitTheme.typography.bodyMedium,
-                            color = CanvasKitTheme.colors.textSecondary
-                        )
-                    },
-                    buttons = {
-                        TextButton(onClick = { onEvent(Event.OnLogoutCancelled) }) {
-                            Text(
-                                text = stringResource(R.string.profile_logout_cancel),
-                                style = CanvasKitTheme.typography.labelLarge,
-                                color = CanvasKitTheme.colors.textSecondary
-                            )
-                        }
-                        CanvasKitButton(
-                            onClick = safeClick { onEvent(Event.OnLogoutConfirmed) },
-                            variant = CanvasKitButtonVariant.Ghost
-                        ) { _ ->
-                            Text(
-                                text = stringResource(R.string.profile_logout_confirm),
-                                style = CanvasKitTheme.typography.labelLarge,
-                                color = CanvasKitTheme.colors.error
-                            )
-                        }
-                    }
-                )
-            }
+            CanvasKitConfirmDialog(
+                title = stringResource(R.string.profile_logout_confirmation_title),
+                message = stringResource(messageRes),
+                confirmText = stringResource(R.string.profile_logout_confirm),
+                cancelText = stringResource(R.string.profile_logout_cancel),
+                onConfirm = { onEvent(Event.OnLogoutConfirmed) },
+                onDismissRequest = { onEvent(Event.OnLogoutCancelled) },
+                isDestructive = true
+            )
         }
 
         if (state.showDeleteConfirmation) {
-            CanvasKitDialog(
-                onDismissRequest = { onEvent(Event.OnDeleteAccountCancelled) }
-            ) {
-                CanvasKitDialogContent(
-                    title = {
-                        Text(
-                            text = stringResource(R.string.profile_delete_account_confirmation_title),
-                            style = CanvasKitTheme.typography.bodyLarge,
-                            fontWeight = FontWeight.Bold,
-                            color = CanvasKitTheme.colors.textPrimary
-                        )
-                    },
-                    content = {
-                        Text(
-                            text = stringResource(R.string.profile_delete_account_confirmation_message),
-                            style = CanvasKitTheme.typography.bodyMedium,
-                            color = CanvasKitTheme.colors.textSecondary
-                        )
-                    },
-                    buttons = {
-                        TextButton(onClick = { onEvent(Event.OnDeleteAccountCancelled) }) {
-                            Text(
-                                text = stringResource(R.string.profile_logout_cancel),
-                                style = CanvasKitTheme.typography.labelLarge,
-                                color = CanvasKitTheme.colors.textSecondary
-                            )
-                        }
-                        CanvasKitButton(
-                            onClick = safeClick { onEvent(Event.OnDeleteAccountConfirmed) },
-                            variant = CanvasKitButtonVariant.Ghost
-                        ) { _ ->
-                            Text(
-                                text = stringResource(R.string.profile_delete_account_confirm),
-                                style = CanvasKitTheme.typography.labelLarge,
-                                color = CanvasKitTheme.colors.error
-                            )
-                        }
-                    }
-                )
-            }
+            CanvasKitConfirmDialog(
+                title = stringResource(R.string.profile_delete_account_confirmation_title),
+                message = stringResource(R.string.profile_delete_account_confirmation_message),
+                confirmText = stringResource(R.string.profile_delete_account_confirm),
+                cancelText = stringResource(R.string.profile_logout_cancel),
+                onConfirm = { onEvent(Event.OnDeleteAccountConfirmed) },
+                onDismissRequest = { onEvent(Event.OnDeleteAccountCancelled) },
+                isDestructive = true,
+                icon = Icons.Default.DeleteForever
+            )
         }
     }
 }
@@ -380,15 +313,10 @@ private fun SubscriptionCard(
 
             if (!isPremium) {
                 CanvasKitButton(
+                    text = stringResource(R.string.profile_upgrade_button),
                     onClick = safeClick { onEvent(Event.OnUpgradeClicked) },
                     variant = CanvasKitButtonVariant.Ghost
-                ) { _ ->
-                    Text(
-                        text = stringResource(R.string.profile_upgrade_button),
-                        style = CanvasKitTheme.typography.labelLarge,
-                        color = CanvasKitTheme.colors.brandAccent
-                    )
-                }
+                )
             }
         }
     }

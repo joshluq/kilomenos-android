@@ -35,7 +35,7 @@ fun RentingStepLayout(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .padding(horizontal = 24.dp)
+            .padding(horizontal = CanvasKitTheme.spacing.screenHorizontal)
     ) {
         Spacer(modifier = Modifier.height(32.dp))
 
@@ -66,13 +66,12 @@ fun RentingStepLayout(
         Spacer(modifier = Modifier.height(24.dp))
 
         CanvasKitButton(
+            text = primaryActionLabel,
             onClick = onPrimaryActionClick,
             enabled = primaryActionEnabled,
             loading = primaryActionLoading,
             modifier = Modifier.fillMaxWidth()
-        ) { contentColor ->
-            Text(text = primaryActionLabel, color = contentColor)
-        }
+        )
 
         if (secondaryAction != null) {
             Spacer(modifier = Modifier.height(12.dp))

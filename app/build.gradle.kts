@@ -94,7 +94,7 @@ configure<ApplicationExtension> {
 
 dependencies {
     implementation("es.joshluq.kit:foundationkit:1.4.0")
-    implementation("es.joshluq.kit:canvaskit:1.0.0")
+    implementation("es.joshluq.kit:canvaskit:1.1.0-SNAPSHOT")
     implementation("es.joshluq.kit:encryptionkit:1.4.1")
     implementation("es.joshluq.kit:authkit:1.3.0")
     implementation("es.joshluq.kit:analyticskit:1.2.0")

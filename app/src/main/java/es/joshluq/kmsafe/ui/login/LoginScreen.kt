@@ -57,8 +57,7 @@ import es.joshluq.canvaskit.components.buttons.CanvasKitButtonVariant
 import es.joshluq.canvaskit.components.cards.CanvasKitCard
 import es.joshluq.canvaskit.components.feedback.CanvasKitAlertVariant
 import es.joshluq.canvaskit.components.feedback.CanvasKitBanner
-import es.joshluq.canvaskit.components.feedback.CanvasKitDialog
-import es.joshluq.canvaskit.components.feedback.CanvasKitDialogContent
+import es.joshluq.canvaskit.components.feedback.CanvasKitConfirmDialog
 import es.joshluq.canvaskit.components.inputs.CanvasKitTextField
 import es.joshluq.canvaskit.components.layout.CanvasKitLoadingScaffold
 import es.joshluq.canvaskit.components.layout.CanvasKitLoadingStrategy
@@ -144,7 +143,7 @@ fun LoginScreen(
                 Column(
                     modifier = Modifier
                         .offset(y = (-40).dp)
-                        .padding(horizontal = 24.dp),
+                        .padding(horizontal = CanvasKitTheme.spacing.screenHorizontal),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     CanvasKitCard(
@@ -152,8 +151,8 @@ fun LoginScreen(
                     ) {
                         Box {
                             Column(
-                                modifier = Modifier.padding(24.dp),
-                                verticalArrangement = Arrangement.spacedBy(24.dp)
+                                modifier = Modifier.padding(CanvasKitTheme.spacing.md),
+                                verticalArrangement = Arrangement.spacedBy(CanvasKitTheme.spacing.md)
                             ) {
                                 CanvasKitTextField(
                                     value = state.email,
@@ -220,6 +219,7 @@ fun LoginScreen(
                                 )
 
                                 CanvasKitButton(
+                                    text = stringResource(R.string.login_button),
                                     onClick = {
                                         keyboardController?.hide()
                                         focusManager.clearFocus()
@@ -228,14 +228,7 @@ fun LoginScreen(
                                     enabled = state.isLoginEnabled,
                                     loading = state.isLoading,
                                     modifier = Modifier.fillMaxWidth()
-                                ) { contentColor ->
-                                    Text(
-                                        text = stringResource(R.string.login_button),
-                                        color = contentColor,
-                                        style = CanvasKitTheme.typography.bodyLarge,
-                                        fontWeight = FontWeight.Bold
-                                    )
-                                }
+                                )
 
                                 Row(
                                     modifier = Modifier.fillMaxWidth(),
@@ -258,6 +251,8 @@ fun LoginScreen(
                                 }
 
                                 CanvasKitButton(
+                                    text = stringResource(R.string.login_google_button),
+                                    icon = Icons.Default.Email, // Icon should be Google but keeping it simple for now
                                     onClick = {
                                         keyboardController?.hide()
                                         focusManager.clearFocus()
@@ -266,23 +261,7 @@ fun LoginScreen(
                                     variant = CanvasKitButtonVariant.Secondary,
                                     modifier = Modifier.fillMaxWidth(),
                                     enabled = !state.isLoading
-                                ) { contentColor ->
-                                    Row(verticalAlignment = Alignment.CenterVertically) {
-                                        Icon(
-                                            imageVector = Icons.Default.Email, // Icon should be Google but keeping it simple for now
-                                            contentDescription = null,
-                                            modifier = Modifier.size(18.dp),
-                                            tint = contentColor
-                                        )
-                                        Text(
-                                            modifier = Modifier.padding(start = 12.dp),
-                                            text = stringResource(R.string.login_google_button),
-                                            color = contentColor,
-                                            style = CanvasKitTheme.typography.bodyMedium,
-                                            fontWeight = FontWeight.Bold
-                                        )
-                                    }
-                                }
+                                )
                             }
 
                             // Silent Interaction Block Overlay
@@ -301,6 +280,7 @@ fun LoginScreen(
                     Spacer(modifier = Modifier.height(32.dp))
 
                     CanvasKitButton(
+                        text = stringResource(R.string.login_create_account),
                         enabled = !state.isLoading,
                         variant = CanvasKitButtonVariant.Ghost,
                         onClick = safeClick {
@@ -308,13 +288,7 @@ fun LoginScreen(
                             focusManager.clearFocus()
                             onNavigateToSignup()
                         }
-                    ) { contentColor ->
-                        Text(
-                            text = stringResource(R.string.login_create_account),
-                            color = contentColor,
-                            style = CanvasKitTheme.typography.bodyMedium
-                        )
-                    }
+                    )
 
                     Spacer(modifier = Modifier.height(24.dp))
 
@@ -342,45 +316,15 @@ fun LoginScreen(
         }
 
         if (state.showUserConflictWarning) {
-            CanvasKitDialog(
-                onDismissRequest = { onEvent(Event.OnDismissUserConflict) }
-            ) {
-                CanvasKitDialogContent(
-                    title = {
-                        Text(
-                            text = stringResource(R.string.login_conflict_title),
-                            style = CanvasKitTheme.typography.bodyLarge,
-                            fontWeight = FontWeight.Bold,
-                            color = CanvasKitTheme.colors.textPrimary
-                        )
-                    },
-                    content = {
-                        Text(
-                            text = stringResource(R.string.login_conflict_message),
-                            style = CanvasKitTheme.typography.bodyMedium,
-                            color = CanvasKitTheme.colors.textSecondary
-                        )
-                    },
-                    buttons = {
-                        TextButton(onClick = { onEvent(Event.OnDismissUserConflict) }) {
-                            Text(
-                                text = stringResource(R.string.profile_logout_cancel),
-                                color = CanvasKitTheme.colors.textSecondary
-                            )
-                        }
-                        CanvasKitButton(
-                            onClick = { onEvent(Event.OnConfirmUserConflict) },
-                            variant = CanvasKitButtonVariant.Ghost
-                        ) { _ ->
-                            Text(
-                                text = stringResource(R.string.login_conflict_confirm),
-                                style = CanvasKitTheme.typography.labelLarge,
-                                color = CanvasKitTheme.colors.error
-                            )
-                        }
-                    }
-                )
-            }
+            CanvasKitConfirmDialog(
+                title = stringResource(R.string.login_conflict_title),
+                message = stringResource(R.string.login_conflict_message),
+                confirmText = stringResource(R.string.login_conflict_confirm),
+                cancelText = stringResource(R.string.profile_logout_cancel),
+                onConfirm = { onEvent(Event.OnConfirmUserConflict) },
+                onDismissRequest = { onEvent(Event.OnDismissUserConflict) },
+                isDestructive = true
+            )
         }
     }
 }

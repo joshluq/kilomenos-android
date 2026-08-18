@@ -49,8 +49,7 @@ import es.joshluq.canvaskit.components.buttons.CanvasKitButtonVariant
 import es.joshluq.canvaskit.components.cards.CanvasKitCard
 import es.joshluq.canvaskit.components.feedback.CanvasKitAlertVariant
 import es.joshluq.canvaskit.components.feedback.CanvasKitBanner
-import es.joshluq.canvaskit.components.feedback.CanvasKitDialog
-import es.joshluq.canvaskit.components.feedback.CanvasKitDialogContent
+import es.joshluq.canvaskit.components.feedback.CanvasKitConfirmDialog
 import es.joshluq.canvaskit.components.feedback.CanvasKitSkeleton
 import es.joshluq.canvaskit.components.feedback.CanvasKitStateView
 import es.joshluq.canvaskit.components.layout.CanvasKitLoadingScaffold
@@ -154,20 +153,16 @@ fun VehicleListScreen(
                         },
                         action = {
                             CanvasKitButton(
+                                text = stringResource(R.string.vehicles_add_button),
                                 onClick = safeClick { onNavigateToAddVehicle() },
                                 modifier = Modifier.fillMaxWidth()
-                            ) { contentColor ->
-                                Text(
-                                    stringResource(R.string.vehicles_add_button),
-                                    color = contentColor
-                                )
-                            }
+                            )
                         }
                     )
                 } else {
                     LazyColumn(
                         modifier = Modifier.fillMaxSize(),
-                        contentPadding = PaddingValues(CanvasKitTheme.spacing.md),
+                        contentPadding = PaddingValues(CanvasKitTheme.spacing.screenHorizontal),
                         verticalArrangement = Arrangement.spacedBy(CanvasKitTheme.spacing.md)
                     ) {
                         items(state.vehicles, key = { it.id }) { vehicle ->
@@ -196,52 +191,27 @@ fun VehicleListScreen(
         }
 
         if (state.vehicleToDelete != null) {
-            CanvasKitDialog(
-                onDismissRequest = { onEvent(Event.OnDeleteCancelled) }
-            ) {
-                CanvasKitDialogContent(
-                    title = {
-                        Text(
-                            text = stringResource(R.string.vehicles_delete_confirmation_title),
-                            style = CanvasKitTheme.typography.bodyLarge,
-                            fontWeight = FontWeight.Bold,
-                            color = CanvasKitTheme.colors.textPrimary
-                        )
-                    },
-                    content = {
-                        Text(
-                            text = stringResource(R.string.vehicles_delete_confirmation_message),
-                            style = CanvasKitTheme.typography.bodyMedium,
-                            color = CanvasKitTheme.colors.textSecondary
-                        )
-                    },
-                    buttons = {
-                        TextButton(onClick = { onEvent(Event.OnDeleteCancelled) }) {
-                            Text(
-                                text = stringResource(R.string.vehicles_delete_cancel),
-                                style = CanvasKitTheme.typography.labelLarge,
-                                color = CanvasKitTheme.colors.textSecondary
-                            )
-                        }
-                        CanvasKitButton(
-                            onClick = safeClick { onEvent(Event.OnDeleteConfirmed) },
-                            variant = CanvasKitButtonVariant.Ghost
-                        ) { _ ->
-                            Text(
-                                text = stringResource(R.string.vehicles_delete_confirm),
-                                style = CanvasKitTheme.typography.labelLarge,
-                                color = CanvasKitTheme.colors.error
-                            )
-                        }
-                    }
-                )
-            }
+            CanvasKitConfirmDialog(
+                title = stringResource(R.string.vehicles_delete_confirmation_title),
+                message = stringResource(R.string.vehicles_delete_confirmation_message),
+                confirmText = stringResource(R.string.vehicles_delete_confirm),
+                cancelText = stringResource(R.string.vehicles_delete_cancel),
+                onConfirm = { onEvent(Event.OnDeleteConfirmed) },
+                onDismissRequest = { onEvent(Event.OnDeleteCancelled) },
+                isDestructive = true,
+                icon = Icons.Default.Delete
+            )
         }
 
         if (state.showPremiumLimit) {
-            PremiumLimitDialog(
-                onUpgrade = { onEvent(Event.OnUpgradeClicked) },
-                onDismiss = { onEvent(Event.OnDismissPremiumLimit) }
+            CanvasKitConfirmDialog(
+                title = stringResource(R.string.premium_limit_vehicle_title),
+                message = stringResource(R.string.premium_limit_vehicle_message),
+                confirmText = stringResource(R.string.premium_upgrade_confirm),
+                cancelText = stringResource(R.string.premium_upgrade_cancel),
+                onConfirm = { onEvent(Event.OnUpgradeClicked) },
+                onDismissRequest = { onEvent(Event.OnDismissPremiumLimit) },
+                icon = Icons.Default.Info
             )
         }
     }
@@ -334,51 +304,6 @@ private fun VehicleItem(
                 }
             }
         }
-    }
-}
-
-@Composable
-private fun PremiumLimitDialog(
-    onUpgrade: () -> Unit,
-    onDismiss: () -> Unit
-) {
-    CanvasKitDialog(onDismissRequest = onDismiss) {
-        CanvasKitDialogContent(
-            title = {
-                Text(
-                    text = stringResource(R.string.premium_limit_vehicle_title),
-                    style = CanvasKitTheme.typography.bodyLarge,
-                    fontWeight = FontWeight.Bold,
-                    color = CanvasKitTheme.colors.textPrimary
-                )
-            },
-            content = {
-                Text(
-                    text = stringResource(R.string.premium_limit_vehicle_message),
-                    style = CanvasKitTheme.typography.bodyMedium,
-                    color = CanvasKitTheme.colors.textSecondary
-                )
-            },
-            buttons = {
-                TextButton(onClick = onDismiss) {
-                    Text(
-                        text = stringResource(R.string.premium_upgrade_cancel),
-                        style = CanvasKitTheme.typography.labelLarge,
-                        color = CanvasKitTheme.colors.textSecondary
-                    )
-                }
-                CanvasKitButton(
-                    onClick = onUpgrade,
-                    variant = CanvasKitButtonVariant.Ghost
-                ) { _ ->
-                    Text(
-                        text = stringResource(R.string.premium_upgrade_confirm),
-                        style = CanvasKitTheme.typography.labelLarge,
-                        color = CanvasKitTheme.colors.brandAccent
-                    )
-                }
-            }
-        )
     }
 }
 

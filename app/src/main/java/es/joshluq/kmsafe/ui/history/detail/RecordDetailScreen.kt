@@ -68,14 +68,15 @@ import es.joshluq.canvaskit.components.buttons.CanvasKitButtonVariant
 import es.joshluq.canvaskit.components.cards.CanvasKitCard
 import es.joshluq.canvaskit.components.feedback.CanvasKitAlertVariant
 import es.joshluq.canvaskit.components.feedback.CanvasKitBanner
+import es.joshluq.canvaskit.components.feedback.CanvasKitConfirmDialog
 import es.joshluq.canvaskit.components.feedback.CanvasKitDialog
 import es.joshluq.canvaskit.components.feedback.CanvasKitDialogContent
+import es.joshluq.canvaskit.components.inputs.CanvasKitTextField
 import es.joshluq.canvaskit.components.layout.CanvasKitLoadingScaffold
 import es.joshluq.canvaskit.components.navigation.CanvasKitTopBar
 import es.joshluq.canvaskit.foundations.theme.CanvasKitTheme
 import es.joshluq.kmsafe.R
 import es.joshluq.kmsafe.domain.model.OdometerRecord
-import es.joshluq.kmsafe.ui.renting.components.RentingTextField
 import es.joshluq.kmsafe.ui.util.safeClick
 import es.joshluq.kmsafe.ui.util.safeClickable
 import java.text.SimpleDateFormat
@@ -148,7 +149,7 @@ fun RecordDetailScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .verticalScroll(rememberScrollState())
-                    .padding(horizontal = 24.dp)
+                    .padding(horizontal = CanvasKitTheme.spacing.screenHorizontal)
             ) {
                 state.record?.let { record ->
                     Spacer(modifier = Modifier.height(24.dp))
@@ -491,27 +492,21 @@ private fun ActionButtons(onEvent: (RecordDetailEvent) -> Unit) {
     val focusManager = LocalFocusManager.current
     val keyboardController = LocalSoftwareKeyboardController.current
 
-    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+    Column(verticalArrangement = Arrangement.spacedBy(CanvasKitTheme.spacing.md)) {
         CanvasKitButton(
+            text = stringResource(R.string.history_edit_action),
+            icon = Icons.Default.Edit,
             onClick = safeClick {
                 keyboardController?.hide()
                 focusManager.clearFocus()
                 onEvent(RecordDetailEvent.OnEditClicked)
             },
             modifier = Modifier.fillMaxWidth()
-        ) { contentColor ->
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(
-                    Icons.Default.Edit,
-                    contentDescription = stringResource(R.string.history_edit_action),
-                    tint = contentColor
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(stringResource(R.string.history_edit_action), color = contentColor)
-            }
-        }
+        )
 
         CanvasKitButton(
+            text = stringResource(R.string.history_delete_action),
+            icon = Icons.Default.Delete,
             onClick = safeClick {
                 keyboardController?.hide()
                 focusManager.clearFocus()
@@ -519,50 +514,22 @@ private fun ActionButtons(onEvent: (RecordDetailEvent) -> Unit) {
             },
             variant = CanvasKitButtonVariant.Ghost,
             modifier = Modifier.fillMaxWidth()
-        ) { _ ->
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(
-                    Icons.Default.Delete,
-                    contentDescription = stringResource(R.string.history_delete_action),
-                    tint = CanvasKitTheme.colors.error
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(stringResource(R.string.history_delete_action), color = CanvasKitTheme.colors.error)
-            }
-        }
+        )
     }
 }
 
 @Composable
 private fun DeleteConfirmationDialog(onEvent: (RecordDetailEvent) -> Unit) {
-    val focusManager = LocalFocusManager.current
-    val keyboardController = LocalSoftwareKeyboardController.current
-
-    CanvasKitDialog(onDismissRequest = { onEvent(RecordDetailEvent.OnCancelDelete) }) {
-        CanvasKitDialogContent(
-            title = {
-                Text(stringResource(R.string.vehicles_delete_confirmation_title), fontWeight = FontWeight.Bold)
-            },
-            content = {
-                Text(stringResource(R.string.vehicles_delete_confirmation_message))
-            },
-            buttons = {
-                TextButton(onClick = { onEvent(RecordDetailEvent.OnCancelDelete) }) {
-                    Text(stringResource(R.string.profile_logout_cancel), color = CanvasKitTheme.colors.textSecondary)
-                }
-                CanvasKitButton(
-                    onClick = safeClick {
-                        keyboardController?.hide()
-                        focusManager.clearFocus()
-                        onEvent(RecordDetailEvent.OnConfirmDelete)
-                    },
-                    variant = CanvasKitButtonVariant.Ghost
-                ) { _ ->
-                    Text(stringResource(R.string.vehicles_delete_confirm), color = CanvasKitTheme.colors.error)
-                }
-            }
-        )
-    }
+    CanvasKitConfirmDialog(
+        title = stringResource(R.string.vehicles_delete_confirmation_title),
+        message = stringResource(R.string.vehicles_delete_confirmation_message),
+        confirmText = stringResource(R.string.vehicles_delete_confirm),
+        cancelText = stringResource(R.string.profile_logout_cancel),
+        onConfirm = { onEvent(RecordDetailEvent.OnConfirmDelete) },
+        onDismissRequest = { onEvent(RecordDetailEvent.OnCancelDelete) },
+        isDestructive = true,
+        icon = Icons.Default.Delete
+    )
 }
 
 @Composable
@@ -586,17 +553,12 @@ fun EditRecordDialog(
             },
             content = {
                 Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                    RentingTextField(
+                    CanvasKitTextField(
                         label = stringResource(R.string.overview_current_odometer_label),
                         value = state.editingOdometerValue,
                         onValueChange = { onEvent(RecordDetailEvent.OnEditingOdometerChanged(it)) },
                         placeholder = stringResource(R.string.overview_current_odometer_placeholder),
-                        trailingIcon = {
-                            Text(
-                                text = stringResource(R.string.onboarding_km_suffix),
-                                color = CanvasKitTheme.colors.brandAccent,
-                            )
-                        },
+                        suffix = stringResource(R.string.onboarding_km_suffix),
                         keyboardOptions = KeyboardOptions(
                             keyboardType = androidx.compose.ui.text.input.KeyboardType.Number,
                             imeAction = ImeAction.Next
@@ -604,7 +566,7 @@ fun EditRecordDialog(
                         keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Next) })
                     )
 
-                    RentingTextField(
+                    CanvasKitTextField(
                         label = stringResource(R.string.overview_record_label_label),
                         value = state.editingLabel,
                         onValueChange = { onEvent(RecordDetailEvent.OnEditingLabelChanged(it)) },
@@ -622,11 +584,12 @@ fun EditRecordDialog(
                     )
 
                     if (state.isPremium) {
-                        RentingTextField(
+                        CanvasKitTextField(
                             label = stringResource(R.string.overview_record_fuel_label),
                             value = state.editingFuel,
                             onValueChange = { onEvent(RecordDetailEvent.OnEditingFuelChanged(it)) },
                             placeholder = stringResource(R.string.overview_record_fuel_placeholder),
+                            suffix = "L",
                             keyboardOptions = KeyboardOptions(
                                 keyboardType = androidx.compose.ui.text.input.KeyboardType.Decimal,
                                 imeAction = ImeAction.Done
@@ -645,6 +608,7 @@ fun EditRecordDialog(
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     CanvasKitButton(
+                        text = stringResource(R.string.history_close_button),
                         variant = CanvasKitButtonVariant.Secondary,
                         onClick = {
                             keyboardController?.hide()
@@ -652,13 +616,9 @@ fun EditRecordDialog(
                             onEvent(RecordDetailEvent.OnDismissEdit)
                         },
                         modifier = Modifier.weight(1f)
-                    ) { contentColor ->
-                        Text(
-                            text = stringResource(R.string.history_close_button),
-                            color = contentColor
-                        )
-                    }
+                    )
                     CanvasKitButton(
+                        text = stringResource(R.string.history_edit_save),
                         onClick = {
                             keyboardController?.hide()
                             focusManager.clearFocus()
@@ -667,12 +627,7 @@ fun EditRecordDialog(
                         enabled = !state.isEditing && state.editingOdometerValue.isNotBlank(),
                         loading = state.isEditing,
                         modifier = Modifier.weight(1f)
-                    ) { contentColor ->
-                        Text(
-                            text = stringResource(R.string.history_edit_save),
-                            color = contentColor
-                        )
-                    }
+                    )
                 }
             }
         )

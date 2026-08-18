@@ -53,6 +53,7 @@ import es.joshluq.canvaskit.components.chips.CanvasKitChipVariant
 import es.joshluq.canvaskit.components.feedback.CanvasKitAlertVariant
 import es.joshluq.canvaskit.components.feedback.CanvasKitBanner
 import es.joshluq.canvaskit.components.feedback.CanvasKitStateView
+import es.joshluq.canvaskit.components.inputs.CanvasKitTextField
 import es.joshluq.canvaskit.components.layout.CanvasKitAccordion
 import es.joshluq.canvaskit.components.layout.CanvasKitLoadingScaffold
 import es.joshluq.canvaskit.components.navigation.CanvasKitTopBar
@@ -62,7 +63,6 @@ import es.joshluq.kmsafe.R
 import es.joshluq.kmsafe.domain.model.OdometerRecord
 import es.joshluq.kmsafe.domain.model.RecordWithIndicator
 import es.joshluq.kmsafe.ui.common.components.AdMobBanner
-import es.joshluq.kmsafe.ui.renting.components.RentingTextField
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -124,7 +124,7 @@ fun HistoryScreen(
                     val content = @Composable {
                         LazyColumn(
                             modifier = Modifier.fillMaxSize(),
-                            contentPadding = PaddingValues(horizontal = 24.dp, vertical = 8.dp)
+                            contentPadding = PaddingValues(horizontal = CanvasKitTheme.spacing.screenHorizontal, vertical = 8.dp)
                         ) {
                             item {
                                 SummaryHeader(
@@ -279,15 +279,14 @@ private fun HistoryFilters(
     onModeChange: (HistoryGroupingMode) -> Unit
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-        RentingTextField(
-            label = "",
+        CanvasKitTextField(
             value = query,
             onValueChange = onQueryChange,
             placeholder = stringResource(R.string.history_search_label),
             leadingIcon = {
                 Icon(
                     imageVector = Icons.Default.Search,
-                    contentDescription = stringResource(R.string.overview_record_label_placeholder),
+                    contentDescription = null,
                     tint = CanvasKitTheme.colors.brandAccent
                 )
             }

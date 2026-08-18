@@ -28,7 +28,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -40,7 +39,6 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -51,12 +49,10 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import es.joshluq.canvaskit.components.buttons.CanvasKitButton
-import es.joshluq.canvaskit.components.buttons.CanvasKitButtonVariant
 import es.joshluq.canvaskit.components.cards.CanvasKitCard
 import es.joshluq.canvaskit.components.feedback.CanvasKitAlertVariant
 import es.joshluq.canvaskit.components.feedback.CanvasKitBanner
-import es.joshluq.canvaskit.components.feedback.CanvasKitDialog
-import es.joshluq.canvaskit.components.feedback.CanvasKitDialogContent
+import es.joshluq.canvaskit.components.feedback.CanvasKitConfirmDialog
 import es.joshluq.canvaskit.components.inputs.CanvasKitTextField
 import es.joshluq.canvaskit.components.layout.CanvasKitLoadingScaffold
 import es.joshluq.canvaskit.components.layout.CanvasKitLoadingStrategy
@@ -159,7 +155,7 @@ fun SignupScreen(
                 Column(
                     modifier = Modifier
                         .offset(y = (-40).dp)
-                        .padding(horizontal = 24.dp),
+                        .padding(horizontal = CanvasKitTheme.spacing.screenHorizontal),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     CanvasKitCard(
@@ -167,8 +163,8 @@ fun SignupScreen(
                     ) {
                         Box {
                             Column(
-                                modifier = Modifier.padding(24.dp),
-                                verticalArrangement = Arrangement.spacedBy(24.dp)
+                                modifier = Modifier.padding(CanvasKitTheme.spacing.md),
+                                verticalArrangement = Arrangement.spacedBy(CanvasKitTheme.spacing.md)
                             ) {
                                 CanvasKitTextField(
                                     value = state.name,
@@ -253,6 +249,7 @@ fun SignupScreen(
                                 )
 
                                 CanvasKitButton(
+                                    text = stringResource(R.string.signup_button),
                                     onClick = {
                                         keyboardController?.hide()
                                         focusManager.clearFocus()
@@ -261,14 +258,7 @@ fun SignupScreen(
                                     enabled = state.isSignupEnabled,
                                     loading = state.isLoading,
                                     modifier = Modifier.fillMaxWidth()
-                                ) { contentColor ->
-                                    Text(
-                                        text = stringResource(R.string.signup_button),
-                                        color = contentColor,
-                                        style = CanvasKitTheme.typography.bodyLarge,
-                                        fontWeight = FontWeight.Bold
-                                    )
-                                }
+                                )
 
                                 PrivacyPolicyLink(
                                     onTermsClick = { uriHandler.openUri(BuildConfig.TERMS_URL) },
@@ -307,49 +297,19 @@ fun SignupScreen(
         }
 
         if (state.showUserConflictWarning) {
-            CanvasKitDialog(
-                onDismissRequest = { onEvent(Event.OnDismissUserConflict) }
-            ) {
-                CanvasKitDialogContent(
-                    title = {
-                        Text(
-                            text = stringResource(R.string.login_conflict_title),
-                            style = CanvasKitTheme.typography.bodyLarge,
-                            fontWeight = FontWeight.Bold,
-                            color = CanvasKitTheme.colors.textPrimary
-                        )
-                    },
-                    content = {
-                        Text(
-                            text = stringResource(R.string.login_conflict_message),
-                            style = CanvasKitTheme.typography.bodyMedium,
-                            color = CanvasKitTheme.colors.textSecondary
-                        )
-                    },
-                    buttons = {
-                        TextButton(onClick = { onEvent(Event.OnDismissUserConflict) }) {
-                            Text(
-                                text = stringResource(R.string.profile_logout_cancel),
-                                color = CanvasKitTheme.colors.textSecondary
-                            )
-                        }
-                        CanvasKitButton(
-                            onClick = {
-                                keyboardController?.hide()
-                                focusManager.clearFocus()
-                                onEvent(Event.OnConfirmUserConflict)
-                            },
-                            variant = CanvasKitButtonVariant.Ghost
-                        ) { _ ->
-                            Text(
-                                text = stringResource(R.string.login_conflict_confirm),
-                                style = CanvasKitTheme.typography.labelLarge,
-                                color = CanvasKitTheme.colors.error
-                            )
-                        }
-                    }
-                )
-            }
+            CanvasKitConfirmDialog(
+                title = stringResource(R.string.login_conflict_title),
+                message = stringResource(R.string.login_conflict_message),
+                confirmText = stringResource(R.string.login_conflict_confirm),
+                cancelText = stringResource(R.string.profile_logout_cancel),
+                onConfirm = {
+                    keyboardController?.hide()
+                    focusManager.clearFocus()
+                    onEvent(Event.OnConfirmUserConflict)
+                },
+                onDismissRequest = { onEvent(Event.OnDismissUserConflict) },
+                isDestructive = true
+            )
         }
     }
 }

@@ -132,7 +132,7 @@ class LoginViewModel @Inject constructor(
         updateState {
             copy(
                 password = value,
-                isLoginEnabled = emailError == null && value.isNotEmpty()
+                isLoginEnabled = emailError == null && email.isNotEmpty() && value.isNotEmpty()
             )
         }
     }

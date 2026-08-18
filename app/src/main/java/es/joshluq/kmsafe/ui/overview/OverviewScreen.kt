@@ -108,7 +108,9 @@ import es.joshluq.canvaskit.components.feedback.CanvasKitDialogContent
 import es.joshluq.canvaskit.components.feedback.CanvasKitSkeleton
 import es.joshluq.canvaskit.components.feedback.CanvasKitStateView
 import es.joshluq.canvaskit.components.inputs.CanvasKitDatePicker
+import es.joshluq.canvaskit.components.inputs.CanvasKitTextField
 import es.joshluq.canvaskit.components.layout.CanvasKitLoadingScaffold
+import es.joshluq.canvaskit.components.layout.CanvasKitLoadingStrategy
 import es.joshluq.canvaskit.components.navigation.CanvasKitTopBar
 import es.joshluq.canvaskit.components.sheets.CanvasKitBottomSheet
 import es.joshluq.canvaskit.foundations.theme.CanvasKitTheme
@@ -122,7 +124,6 @@ import es.joshluq.kmsafe.ui.common.components.AdMobBanner
 import es.joshluq.kmsafe.ui.common.components.BrandingLogo
 import es.joshluq.kmsafe.ui.overview.components.TrackingCard
 import es.joshluq.kmsafe.ui.overview.model.MonthlyUsageUiModel
-import es.joshluq.kmsafe.ui.renting.components.RentingTextField
 import es.joshluq.kmsafe.ui.util.DateUtils
 import es.joshluq.kmsafe.ui.util.safeClick
 import es.joshluq.kmsafe.ui.util.safeClickable
@@ -251,10 +252,15 @@ fun OverviewScreen(
     }
 
     val isDataAvailable = state.renting != null
-    val shouldShowFullScreenLoading = state.isLoading && !isDataAvailable
+    val loadingStrategy = if (isDataAvailable) {
+        CanvasKitLoadingStrategy.ProgressLine
+    } else {
+        CanvasKitLoadingStrategy.ReplaceContent
+    }
 
     CanvasKitLoadingScaffold(
-        isLoading = shouldShowFullScreenLoading,
+        isLoading = state.isLoading,
+        loadingStrategy = loadingStrategy,
         topBar = { OverviewTopBar(state, onEvent) },
         containerColor = CanvasKitTheme.colors.backgroundSecondary,
         contentWindowInsets = WindowInsets(),
@@ -1009,19 +1015,14 @@ private fun UpdateOdometerContent(
             color = CanvasKitTheme.colors.textSecondary
         )
 
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        Row(horizontalArrangement = Arrangement.spacedBy(CanvasKitTheme.spacing.md)) {
             Column(modifier = Modifier.weight(1f)) {
-                RentingTextField(
+                CanvasKitTextField(
                     label = stringResource(R.string.overview_current_odometer_label),
                     value = state.newOdometerValue,
                     onValueChange = { onEvent(Event.OnNewOdometerChanged(it)) },
                     placeholder = stringResource(R.string.overview_current_odometer_placeholder),
-                    trailingIcon = {
-                        Text(
-                            text = stringResource(R.string.onboarding_km_suffix),
-                            color = CanvasKitTheme.colors.brandAccent,
-                        )
-                    },
+                    suffix = stringResource(R.string.onboarding_km_suffix),
                     keyboardOptions = KeyboardOptions(
                         keyboardType = KeyboardType.Number,
                         imeAction = ImeAction.Next
@@ -1030,7 +1031,7 @@ private fun UpdateOdometerContent(
                 )
             }
             Column(modifier = Modifier.weight(1f)) {
-                RentingTextField(
+                CanvasKitTextField(
                     label = stringResource(R.string.overview_record_label_label),
                     value = state.newRecordLabel,
                     onValueChange = { onEvent(Event.OnNewLabelChanged(it)) },

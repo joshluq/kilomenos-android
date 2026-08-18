@@ -26,7 +26,6 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Bluetooth
-import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -38,6 +37,7 @@ import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusDirection
@@ -60,18 +60,17 @@ import es.joshluq.canvaskit.components.buttons.CanvasKitButton
 import es.joshluq.canvaskit.components.buttons.CanvasKitButtonVariant
 import es.joshluq.canvaskit.components.feedback.CanvasKitAlertVariant
 import es.joshluq.canvaskit.components.feedback.CanvasKitBanner
-import es.joshluq.canvaskit.components.inputs.CanvasKitDatePicker
-import es.joshluq.canvaskit.components.inputs.CanvasKitDatePickerDialog
+import es.joshluq.canvaskit.components.inputs.CanvasKitDatePickerField
+import es.joshluq.canvaskit.components.inputs.CanvasKitTextField
+import es.joshluq.canvaskit.components.inputs.CanvasKitTextFieldVariant
 import es.joshluq.canvaskit.components.layout.CanvasKitLoadingScaffold
 import es.joshluq.canvaskit.components.navigation.CanvasKitTopBar
 import es.joshluq.canvaskit.foundations.theme.CanvasKitTheme
 import es.joshluq.kmsafe.R
 import es.joshluq.kmsafe.domain.model.SubscriptionLevel
 import es.joshluq.kmsafe.ui.renting.components.BluetoothDevicePicker
-import es.joshluq.kmsafe.ui.renting.components.RentingDisplayField
 import es.joshluq.kmsafe.ui.renting.components.RentingStepLayout
 import es.joshluq.kmsafe.ui.renting.components.RentingStepProgressBar
-import es.joshluq.kmsafe.ui.renting.components.RentingTextField
 import es.joshluq.kmsafe.ui.renting.components.VehiclePhotoSelector
 import es.joshluq.kmsafe.ui.util.safeClick
 import java.text.SimpleDateFormat
@@ -122,7 +121,6 @@ fun SetupWizardScreen(
     state: State,
     onEvent: (Event) -> Unit
 ) {
-    val datePickerState = rememberDatePickerState()
     val bottomSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val keyboardController = LocalSoftwareKeyboardController.current
 
@@ -189,38 +187,12 @@ fun SetupWizardScreen(
             CanvasKitBanner(
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
-                    .padding(16.dp),
+                    .padding(CanvasKitTheme.spacing.md),
                 variant = CanvasKitAlertVariant.Error,
                 message = { Text(state.error?.asString() ?: "") },
                 visible = state.error != null,
                 onDismiss = { onEvent(Event.OnDismissError) }
             )
-
-            // Date Picker Dialog
-            if (state.showDatePicker) {
-                CanvasKitDatePickerDialog(
-                    onDismissRequest = { onEvent(Event.OnToggleDatePicker) },
-                    confirmButton = {
-                        TextButton(
-                            onClick = safeClick {
-                                datePickerState.selectedDateMillis?.let { millis ->
-                                    val date = Date(millis)
-                                    val formatter = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
-                                    onEvent(Event.OnStartDateChanged(formatter.format(date)))
-                                }
-                                onEvent(Event.OnToggleDatePicker)
-                            }
-                        ) {
-                            Text(
-                                stringResource(R.string.onboarding_date_picker_confirm),
-                                color = CanvasKitTheme.colors.brandAccent
-                            )
-                        }
-                    }
-                ) {
-                    CanvasKitDatePicker(state = datePickerState)
-                }
-            }
 
             if (state.showBluetoothPicker) {
                 BluetoothDevicePicker(
@@ -251,14 +223,15 @@ private fun VehicleIdentityStep(state: State, onEvent: (Event) -> Unit) {
             imageUrl = state.vehicleImageUrl,
             selectedUri = state.selectedImageUri,
             onClick = safeClick { photoPickerLauncher.launch("image/*") },
-            modifier = Modifier.padding(bottom = 24.dp)
+            modifier = Modifier.padding(bottom = CanvasKitTheme.spacing.lg)
         )
 
-        RentingTextField(
+        CanvasKitTextField(
             label = stringResource(R.string.onboarding_vehicle_name_label),
             value = state.vehicleName,
             onValueChange = { onEvent(Event.OnVehicleNameChanged(it)) },
-            errorMessage = state.vehicleNameError?.asString(),
+            errorText = state.vehicleNameError?.asString(),
+            isError = state.vehicleNameError != null,
             placeholder = stringResource(R.string.onboarding_vehicle_name_placeholder),
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done)
         )
@@ -275,29 +248,36 @@ private fun ContractTimeframeStep(state: State, onEvent: (Event) -> Unit) {
         primaryActionLabel = stringResource(R.string.setup_wizard_action_next),
         onPrimaryActionClick = safeClick { onEvent(Event.OnNextClicked) }
     ) {
-        RentingDisplayField(
+        val selectedDateMillis = remember(state.startDate) {
+            runCatching {
+                val sdf = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+                sdf.parse(state.startDate)?.time
+            }.getOrNull()
+        }
+
+        CanvasKitDatePickerField(
             label = stringResource(R.string.onboarding_start_date_label),
-            value = state.startDate,
-            placeholder = stringResource(R.string.onboarding_start_date_placeholder),
-            errorMessage = state.startDateError?.asString(),
-            onClick = safeClick { onEvent(Event.OnToggleDatePicker) },
-            trailingIcon = {
-                Icon(Icons.Default.CalendarToday, contentDescription = null, tint = CanvasKitTheme.colors.brandAccent)
+            selectedDateMillis = selectedDateMillis,
+            onDateSelected = { millis ->
+                millis?.let {
+                    val date = Date(it)
+                    val formatter = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+                    onEvent(Event.OnStartDateChanged(formatter.format(date)))
+                }
             },
-            modifier = Modifier.padding(bottom = 16.dp)
+            placeholder = stringResource(R.string.onboarding_start_date_placeholder),
+            errorText = state.startDateError?.asString(),
+            isError = state.startDateError != null,
+            modifier = Modifier.padding(bottom = CanvasKitTheme.spacing.md)
         )
 
-        RentingTextField(
+        CanvasKitTextField(
             label = stringResource(R.string.onboarding_duration_months_label),
             value = state.durationMonths,
             onValueChange = { onEvent(Event.OnDurationMonthsChanged(it)) },
-            errorMessage = state.durationMonthsError?.asString(),
-            trailingIcon = {
-                Text(
-                    stringResource(R.string.onboarding_months_suffix),
-                    color = CanvasKitTheme.colors.brandAccent
-                )
-            },
+            errorText = state.durationMonthsError?.asString(),
+            isError = state.durationMonthsError != null,
+            suffix = stringResource(R.string.onboarding_months_suffix),
             placeholder = stringResource(R.string.onboarding_duration_months_placeholder),
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Done),
             keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() })
@@ -315,34 +295,26 @@ private fun MileageBudgetStep(state: State, onEvent: (Event) -> Unit) {
         primaryActionLabel = stringResource(R.string.setup_wizard_action_next),
         onPrimaryActionClick = safeClick { onEvent(Event.OnNextClicked) }
     ) {
-        RentingTextField(
+        CanvasKitTextField(
             label = stringResource(R.string.onboarding_total_kms_label),
             value = state.totalKms,
             onValueChange = { onEvent(Event.OnTotalKmsChanged(it)) },
-            errorMessage = state.totalKmsError?.asString(),
-            trailingIcon = {
-                Text(
-                    stringResource(R.string.onboarding_km_suffix),
-                    color = CanvasKitTheme.colors.brandAccent
-                )
-            },
+            errorText = state.totalKmsError?.asString(),
+            isError = state.totalKmsError != null,
+            suffix = stringResource(R.string.onboarding_km_suffix),
             placeholder = stringResource(R.string.onboarding_total_kms_placeholder),
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Next),
             keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) }),
-            modifier = Modifier.padding(bottom = 16.dp)
+            modifier = Modifier.padding(bottom = CanvasKitTheme.spacing.md)
         )
 
-        RentingTextField(
+        CanvasKitTextField(
             label = stringResource(R.string.onboarding_start_odometer_label),
             value = state.startOdometer,
             onValueChange = { onEvent(Event.OnStartOdometerChanged(it)) },
-            errorMessage = state.startOdometerError?.asString(),
-            trailingIcon = {
-                Text(
-                    stringResource(R.string.onboarding_km_suffix),
-                    color = CanvasKitTheme.colors.brandAccent
-                )
-            },
+            errorText = state.startOdometerError?.asString(),
+            isError = state.startOdometerError != null,
+            suffix = stringResource(R.string.onboarding_km_suffix),
             placeholder = stringResource(R.string.onboarding_start_odometer_placeholder),
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Done),
             keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() })
@@ -462,23 +434,23 @@ private fun AdvancedProtectionStep(state: State, onEvent: (Event) -> Unit) {
             }
         }
     ) {
-        RentingTextField(
+        CanvasKitTextField(
             label = stringResource(R.string.setup_wizard_step_advanced_price_label),
             value = state.excessDistancePrice,
             onValueChange = { onEvent(Event.OnExcessDistancePriceChanged(it)) },
             placeholder = stringResource(R.string.setup_wizard_step_advanced_price_placeholder),
-            trailingIcon = { Text("€/km", color = CanvasKitTheme.colors.brandAccent) },
+            suffix = "€/km",
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal, imeAction = ImeAction.Next),
             keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) }),
-            modifier = Modifier.padding(bottom = 16.dp)
+            modifier = Modifier.padding(bottom = CanvasKitTheme.spacing.md)
         )
 
-        RentingTextField(
+        CanvasKitTextField(
             label = stringResource(R.string.setup_wizard_step_advanced_margin_label),
             value = state.courtesyMarginKms,
             onValueChange = { onEvent(Event.OnCourtesyMarginKmsChanged(it)) },
             placeholder = stringResource(R.string.setup_wizard_step_advanced_margin_placeholder),
-            trailingIcon = { Text("km", color = CanvasKitTheme.colors.brandAccent) },
+            suffix = "km",
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Done),
             keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() })
         )
@@ -493,21 +465,6 @@ fun SetupWizardScreenPreview() {
         SetupWizardScreen(
             state = State(
                 currentStep = SetupStep.VEHICLE_IDENTITY,
-                vehicleName = "Tesla Model 3"
-            ),
-            onEvent = {}
-        )
-    }
-}
-
-@Preview(showBackground = true)
-@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES, showBackground = true)
-@Composable
-fun SetupWizardScreen3Preview() {
-    CanvasKitTheme {
-        SetupWizardScreen(
-            state = State(
-                currentStep = SetupStep.SMART_ACTIVATION,
                 vehicleName = "Tesla Model 3"
             ),
             onEvent = {}
