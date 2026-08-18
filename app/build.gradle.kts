@@ -11,8 +11,8 @@ plugins {
     alias(libs.plugins.pluginkit.android.work)
     alias(libs.plugins.pluginkit.quality)
     alias(libs.plugins.pluginkit.android.testing)
-    id("com.google.gms.google-services")
-    id("com.google.firebase.crashlytics")
+    alias(deps.plugins.google.services)
+    alias(deps.plugins.crashlytics)
 }
 
 // Load secrets from local file
@@ -93,37 +93,30 @@ configure<ApplicationExtension> {
 }
 
 dependencies {
-    implementation("es.joshluq.kit:foundationkit:1.4.0")
-    implementation("es.joshluq.kit:canvaskit:1.1.0")
-    implementation("es.joshluq.kit:encryptionkit:1.4.1")
-    implementation("es.joshluq.kit:authkit:1.3.0")
-    implementation("es.joshluq.kit:analyticskit:1.2.0")
-    implementation("androidx.core:core-splashscreen:1.0.1")
-    implementation("androidx.datastore:datastore-preferences:1.2.1")
-    implementation("io.coil-kt:coil-compose:2.7.0")
-    implementation("com.google.android.gms:play-services-ads:25.4.0")
-    // Activity Recognition
-    implementation("com.google.android.gms:play-services-location:21.4.0") 
-    implementation("com.google.android.ump:user-messaging-platform:4.0.0")
-    
-    // Image Processing & Cropping
-    implementation("com.github.SmartToolFactory:Compose-Cropper:0.5.0")
-    
-    // Google Identity & Credentials
-    implementation("androidx.credentials:credentials:1.6.0")
-    implementation("androidx.credentials:credentials-play-services-auth:1.6.0")
-    implementation("com.google.android.libraries.identity.googleid:googleid:1.2.0")
-    implementation("com.google.accompanist:accompanist-permissions:0.37.3")
+    implementation(deps.foundationkit)
+    implementation(deps.canvaskit)
+    implementation(deps.encryptionkit)
+    implementation(deps.authkit)
+    implementation(deps.analyticskit)
 
-    implementation("com.android.billingclient:billing-ktx:9.1.0")
+    implementation(deps.androidx.splashscreen)
+    implementation(deps.androidx.datastore.preferences)
+    implementation(deps.coil.compose)
+    implementation(deps.play.services.ads)
+    implementation(deps.play.services.location)
+    implementation(deps.user.messaging.platform)
+    implementation(deps.compose.cropper)
+    implementation(deps.androidx.credentials)
+    implementation(deps.androidx.credentials.play.services.auth)
+    implementation(deps.googleid)
+    implementation(deps.accompanist.permissions)
+    implementation(deps.billing.ktx)
+    implementation(deps.android.maps.utils)
+    implementation(deps.maps.compose)
+    implementation(deps.play.services.maps)
 
-    // Maps Utils for Polyline Encoding
-    implementation("com.google.maps.android:android-maps-utils:5.1.1")
-    implementation("com.google.maps.android:maps-compose:8.4.0")
-    implementation("com.google.android.gms:play-services-maps:20.0.0")
-
-    implementation(platform("com.google.firebase:firebase-bom:34.17.0"))
-    implementation("com.google.firebase:firebase-analytics")
-    implementation("com.google.firebase:firebase-crashlytics")
-    implementation("com.google.firebase:firebase-config")
+    implementation(platform(deps.firebase.bom))
+    implementation(deps.firebase.analytics)
+    implementation(deps.firebase.crashlytics)
+    implementation(deps.firebase.config)
 }

@@ -47,6 +47,9 @@ dependencyResolutionManagement {
         create("libs") {
             from(catalogVersion)
         }
+        create("deps") {
+            from(files("gradle/deps.versions.toml"))
+        }
     }
 }
 
