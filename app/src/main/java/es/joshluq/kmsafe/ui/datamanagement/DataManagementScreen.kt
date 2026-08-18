@@ -28,7 +28,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
@@ -40,13 +39,10 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import es.joshluq.canvaskit.components.buttons.CanvasKitButton
-import es.joshluq.canvaskit.components.buttons.CanvasKitButtonVariant
 import es.joshluq.canvaskit.components.cards.CanvasKitCard
 import es.joshluq.canvaskit.components.feedback.CanvasKitAlertVariant
 import es.joshluq.canvaskit.components.feedback.CanvasKitBanner
-import es.joshluq.canvaskit.components.feedback.CanvasKitDialog
-import es.joshluq.canvaskit.components.feedback.CanvasKitDialogContent
+import es.joshluq.canvaskit.components.feedback.CanvasKitConfirmDialog
 import es.joshluq.canvaskit.components.layout.CanvasKitLoadingScaffold
 import es.joshluq.canvaskit.components.navigation.CanvasKitTopBar
 import es.joshluq.canvaskit.foundations.theme.CanvasKitTheme
@@ -144,9 +140,9 @@ fun DataManagementScreen(
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(horizontal = 24.dp)
+                    .padding(horizontal = CanvasKitTheme.spacing.screenHorizontal)
                     .verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                verticalArrangement = Arrangement.spacedBy(CanvasKitTheme.spacing.md)
             ) {
                 Spacer(modifier = Modifier.height(8.dp))
 
@@ -217,56 +213,16 @@ fun DataManagementScreen(
         }
 
         if (state.showPremiumLimit) {
-            PremiumDataDialog(
-                onUpgrade = { onEvent(Event.OnUpgradeClicked) },
-                onDismiss = { onEvent(Event.OnDismissPremiumLimit) }
+            CanvasKitConfirmDialog(
+                title = stringResource(R.string.premium_limit_data_title),
+                message = stringResource(R.string.premium_limit_data_message),
+                confirmText = stringResource(R.string.premium_upgrade_confirm),
+                cancelText = stringResource(R.string.premium_upgrade_cancel),
+                onConfirm = { onEvent(Event.OnUpgradeClicked) },
+                onDismissRequest = { onEvent(Event.OnDismissPremiumLimit) },
+                icon = Icons.Default.Lock
             )
         }
-    }
-}
-
-@Composable
-private fun PremiumDataDialog(
-    onUpgrade: () -> Unit,
-    onDismiss: () -> Unit
-) {
-    CanvasKitDialog(onDismissRequest = onDismiss) {
-        CanvasKitDialogContent(
-            title = {
-                Text(
-                    text = stringResource(R.string.premium_limit_data_title),
-                    style = CanvasKitTheme.typography.bodyLarge,
-                    fontWeight = FontWeight.Bold,
-                    color = CanvasKitTheme.colors.textPrimary
-                )
-            },
-            content = {
-                Text(
-                    text = stringResource(R.string.premium_limit_data_message),
-                    style = CanvasKitTheme.typography.bodyMedium,
-                    color = CanvasKitTheme.colors.textSecondary
-                )
-            },
-            buttons = {
-                TextButton(onClick = onDismiss) {
-                    Text(
-                        text = stringResource(R.string.premium_upgrade_cancel),
-                        style = CanvasKitTheme.typography.labelLarge,
-                        color = CanvasKitTheme.colors.textSecondary
-                    )
-                }
-                CanvasKitButton(
-                    onClick = onUpgrade,
-                    variant = CanvasKitButtonVariant.Ghost
-                ) { _ ->
-                    Text(
-                        text = stringResource(R.string.premium_upgrade_confirm),
-                        style = CanvasKitTheme.typography.labelLarge,
-                        color = CanvasKitTheme.colors.brandAccent
-                    )
-                }
-            }
-        )
     }
 }
 

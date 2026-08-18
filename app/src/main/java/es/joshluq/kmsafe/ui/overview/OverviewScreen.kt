@@ -57,7 +57,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -103,11 +102,10 @@ import es.joshluq.canvaskit.components.cards.CanvasKitCard
 import es.joshluq.canvaskit.components.cards.CanvasKitCardVariant
 import es.joshluq.canvaskit.components.feedback.CanvasKitAlertVariant
 import es.joshluq.canvaskit.components.feedback.CanvasKitBanner
-import es.joshluq.canvaskit.components.feedback.CanvasKitDialog
-import es.joshluq.canvaskit.components.feedback.CanvasKitDialogContent
+import es.joshluq.canvaskit.components.feedback.CanvasKitConfirmDialog
 import es.joshluq.canvaskit.components.feedback.CanvasKitSkeleton
 import es.joshluq.canvaskit.components.feedback.CanvasKitStateView
-import es.joshluq.canvaskit.components.inputs.CanvasKitDatePicker
+import es.joshluq.canvaskit.components.inputs.CanvasKitDatePickerField
 import es.joshluq.canvaskit.components.inputs.CanvasKitTextField
 import es.joshluq.canvaskit.components.layout.CanvasKitLoadingScaffold
 import es.joshluq.canvaskit.components.layout.CanvasKitLoadingStrategy
@@ -429,9 +427,9 @@ private fun RentingState(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(horizontal = 24.dp)
+            .padding(horizontal = CanvasKitTheme.spacing.screenHorizontal)
             .verticalScroll(rememberScrollState()),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+        verticalArrangement = Arrangement.spacedBy(CanvasKitTheme.spacing.md)
     ) {
         if (state.isPremium == false) {
             AdMobBanner(
@@ -998,14 +996,14 @@ private fun UpdateOdometerContent(
     state: State,
     onEvent: (Event) -> Unit
 ) {
-    val datePickerState = rememberDatePickerState(initialSelectedDateMillis = state.newRecordDate)
+    var selectedDate by remember { mutableStateOf<Long?>(state.newRecordDate) }
     val focusManager = LocalFocusManager.current
     val keyboardController = LocalSoftwareKeyboardController.current
 
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(24.dp),
+            .padding(CanvasKitTheme.spacing.lg),
         verticalArrangement = Arrangement.spacedBy(20.dp)
     ) {
         Text(
@@ -1045,33 +1043,29 @@ private fun UpdateOdometerContent(
                 )
             }
         }
-        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Text(
-                stringResource(R.string.overview_record_date_label),
-                style = CanvasKitTheme.typography.labelLarge,
-                color = CanvasKitTheme.colors.textSecondary
-            )
-            CanvasKitDatePicker(state = datePickerState, showModeToggle = false)
-        }
+
+        CanvasKitDatePickerField(
+            label = stringResource(R.string.overview_record_date_label),
+            selectedDateMillis = selectedDate,
+            onDateSelected = { selectedDate = it },
+            placeholder = stringResource(R.string.onboarding_start_date_placeholder)
+        )
+
         CanvasKitButton(
+            text = stringResource(R.string.overview_save_record_button),
             modifier = Modifier.fillMaxWidth(),
             onClick = safeClick {
                 keyboardController?.hide()
                 focusManager.clearFocus()
-                datePickerState.selectedDateMillis?.let {
+                selectedDate?.let {
                     val preciseTimestamp = DateUtils.mergeDateWithCurrentTime(it)
                     onEvent(Event.OnSaveRecordClicked(preciseTimestamp))
                 }
             },
-            enabled = !state.isSaving && state.newOdometerValue.isNotBlank(),
+            enabled = !state.isSaving && state.newOdometerValue.isNotBlank() && selectedDate != null,
             loading = state.isSaving
 
-        ) { contentColor ->
-            Text(
-                stringResource(R.string.overview_save_record_button),
-                color = contentColor
-            )
-        }
+        )
         Spacer(modifier = Modifier.height(24.dp))
     }
 }
@@ -1218,36 +1212,13 @@ private fun ChartInfoDialog(
     content: String,
     onDismiss: () -> Unit
 ) {
-    CanvasKitDialog(onDismissRequest = onDismiss) {
-        CanvasKitDialogContent(
-            title = {
-                Text(
-                    text = stringResource(R.string.overview_chart_info_title),
-                    style = CanvasKitTheme.typography.bodyLarge,
-                    fontWeight = FontWeight.Bold
-                )
-            },
-            content = {
-                Text(
-                    text = content,
-                    style = CanvasKitTheme.typography.bodyMedium,
-                    color = CanvasKitTheme.colors.textSecondary
-                )
-            },
-            buttons = {
-                CanvasKitButton(
-                    variant = CanvasKitButtonVariant.Secondary,
-                    onClick = onDismiss,
-                    modifier = Modifier.fillMaxWidth()
-                ) { contentColor ->
-                    Text(
-                        text = stringResource(R.string.history_close_button),
-                        color = contentColor
-                    )
-                }
-            }
-        )
-    }
+    CanvasKitConfirmDialog(
+        title = stringResource(R.string.overview_chart_info_title),
+        message = content,
+        confirmText = stringResource(R.string.history_close_button),
+        onConfirm = onDismiss,
+        onDismissRequest = onDismiss
+    )
 }
 
 @Composable
@@ -1255,47 +1226,15 @@ private fun AutoTrackingPromotionDialog(
     onConfigClicked: () -> Unit,
     onDismiss: () -> Unit
 ) {
-    CanvasKitDialog(onDismissRequest = onDismiss) {
-        CanvasKitDialogContent(
-            title = {
-                Text(
-                    text = stringResource(R.string.overview_promotion_autotracking_title),
-                    style = CanvasKitTheme.typography.bodyLarge,
-                    fontWeight = FontWeight.Bold
-                )
-            },
-            content = {
-                Text(
-                    text = stringResource(R.string.overview_promotion_autotracking_desc),
-                    style = CanvasKitTheme.typography.bodyMedium,
-                    color = CanvasKitTheme.colors.textSecondary
-                )
-            },
-            buttons = {
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    CanvasKitButton(
-                        onClick = onConfigClicked,
-                        modifier = Modifier.fillMaxWidth()
-                    ) { contentColor ->
-                        Text(
-                            text = stringResource(R.string.overview_promotion_autotracking_confirm),
-                            color = contentColor
-                        )
-                    }
-                    CanvasKitButton(
-                        variant = CanvasKitButtonVariant.Ghost,
-                        onClick = onDismiss,
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text(
-                            text = stringResource(R.string.overview_promotion_autotracking_dismiss),
-                            color = CanvasKitTheme.colors.textSecondary
-                        )
-                    }
-                }
-            }
-        )
-    }
+    CanvasKitConfirmDialog(
+        title = stringResource(R.string.overview_promotion_autotracking_title),
+        message = stringResource(R.string.overview_promotion_autotracking_desc),
+        confirmText = stringResource(R.string.overview_promotion_autotracking_confirm),
+        cancelText = stringResource(R.string.overview_promotion_autotracking_dismiss),
+        onConfirm = onConfigClicked,
+        onDismissRequest = onDismiss,
+        icon = Icons.Default.AutoAwesome
+    )
 }
 
 @Composable

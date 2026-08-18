@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -28,7 +27,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -46,8 +44,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import es.joshluq.canvaskit.components.buttons.CanvasKitButton
 import es.joshluq.canvaskit.components.buttons.CanvasKitButtonVariant
-import es.joshluq.canvaskit.components.feedback.CanvasKitDialog
-import es.joshluq.canvaskit.components.feedback.CanvasKitDialogContent
+import es.joshluq.canvaskit.components.feedback.CanvasKitConfirmDialog
 import es.joshluq.canvaskit.components.layout.CanvasKitLoadingScaffold
 import es.joshluq.canvaskit.components.navigation.CanvasKitTopBar
 import es.joshluq.canvaskit.foundations.theme.CanvasKitTheme
@@ -126,7 +123,7 @@ fun VehicleDetailScreen(
                     modifier = Modifier
                         .fillMaxSize()
                         .verticalScroll(rememberScrollState())
-                        .padding(horizontal = 24.dp)
+                        .padding(horizontal = CanvasKitTheme.spacing.screenHorizontal)
                 ) {
                     VehiclePhotoSelector(
                         imageUrl = contract.vehicleImageUrl,
@@ -220,14 +217,13 @@ fun VehicleDetailScreen(
                     Spacer(modifier = Modifier.height(48.dp))
 
                     // Delete Action
-                    TextButton(
+                    CanvasKitButton(
+                        text = stringResource(R.string.history_delete_action),
+                        icon = Icons.Default.Delete,
                         onClick = safeClick { showDeleteDialog = true },
+                        variant = CanvasKitButtonVariant.Ghost,
                         modifier = Modifier.align(Alignment.CenterHorizontally)
-                    ) {
-                        Icon(Icons.Default.Delete, contentDescription = null, tint = CanvasKitTheme.colors.error)
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(stringResource(R.string.history_delete_action), color = CanvasKitTheme.colors.error)
-                    }
+                    )
 
                     Spacer(modifier = Modifier.height(32.dp))
                 }
@@ -262,23 +258,16 @@ private fun DeleteConfirmationDialog(
     onConfirm: () -> Unit,
     onDismiss: () -> Unit
 ) {
-    CanvasKitDialog(onDismissRequest = onDismiss) {
-        CanvasKitDialogContent(
-            title = { Text(stringResource(R.string.vehicles_delete_confirmation_title), fontWeight = FontWeight.Bold) },
-            content = { Text(stringResource(R.string.vehicle_detail_delete_msg)) },
-            buttons = {
-                TextButton(onClick = safeClick(onClick = onDismiss)) {
-                    Text(stringResource(R.string.profile_logout_cancel), color = CanvasKitTheme.colors.textSecondary)
-                }
-                CanvasKitButton(
-                    onClick = safeClick { onConfirm() },
-                    variant = CanvasKitButtonVariant.Ghost
-                ) {
-                    Text(stringResource(R.string.vehicles_delete_confirm), color = CanvasKitTheme.colors.error)
-                }
-            }
-        )
-    }
+    CanvasKitConfirmDialog(
+        title = stringResource(R.string.vehicles_delete_confirmation_title),
+        message = stringResource(R.string.vehicle_detail_delete_msg),
+        confirmText = stringResource(R.string.vehicles_delete_confirm),
+        cancelText = stringResource(R.string.profile_logout_cancel),
+        onConfirm = onConfirm,
+        onDismissRequest = onDismiss,
+        isDestructive = true,
+        icon = Icons.Default.Delete
+    )
 }
 
 private fun formatDate(timestamp: Long): String {

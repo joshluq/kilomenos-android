@@ -47,13 +47,10 @@ import androidx.compose.ui.window.DialogProperties
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavBackStackEntry
-import es.joshluq.canvaskit.components.buttons.CanvasKitButton
-import es.joshluq.canvaskit.components.buttons.CanvasKitButtonVariant
 import es.joshluq.canvaskit.components.cards.CanvasKitCard
 import es.joshluq.canvaskit.components.feedback.CanvasKitAlertVariant
 import es.joshluq.canvaskit.components.feedback.CanvasKitBanner
-import es.joshluq.canvaskit.components.feedback.CanvasKitDialog
-import es.joshluq.canvaskit.components.feedback.CanvasKitDialogContent
+import es.joshluq.canvaskit.components.feedback.CanvasKitConfirmDialog
 import es.joshluq.canvaskit.components.layout.CanvasKitLoadingScaffold
 import es.joshluq.canvaskit.components.navigation.CanvasKitTopBar
 import es.joshluq.canvaskit.foundations.theme.CanvasKitTheme
@@ -325,47 +322,15 @@ private fun TrialOfferDialog(
     onConfirm: () -> Unit,
     onDismiss: () -> Unit
 ) {
-    CanvasKitDialog(onDismissRequest = onDismiss) {
-        CanvasKitDialogContent(
-            title = {
-                Text(
-                    text = stringResource(R.string.premium_trial_offer_title),
-                    style = CanvasKitTheme.typography.bodyLarge,
-                    fontWeight = FontWeight.Bold
-                )
-            },
-            content = {
-                Text(
-                    text = stringResource(R.string.premium_trial_offer_message),
-                    style = CanvasKitTheme.typography.bodyMedium,
-                    color = CanvasKitTheme.colors.textSecondary
-                )
-            },
-            buttons = {
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    CanvasKitButton(
-                        onClick = onConfirm,
-                        modifier = Modifier.fillMaxWidth()
-                    ) { contentColor ->
-                        Text(
-                            text = stringResource(R.string.premium_trial_offer_confirm),
-                            color = contentColor
-                        )
-                    }
-                    CanvasKitButton(
-                        variant = CanvasKitButtonVariant.Ghost,
-                        onClick = onDismiss,
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text(
-                            text = stringResource(R.string.premium_trial_offer_cancel),
-                            color = CanvasKitTheme.colors.textSecondary
-                        )
-                    }
-                }
-            }
-        )
-    }
+    CanvasKitConfirmDialog(
+        title = stringResource(R.string.premium_trial_offer_title),
+        message = stringResource(R.string.premium_trial_offer_message),
+        confirmText = stringResource(R.string.premium_trial_offer_confirm),
+        cancelText = stringResource(R.string.premium_trial_offer_cancel),
+        onConfirm = onConfirm,
+        onDismissRequest = onDismiss,
+        icon = Icons.Default.AutoAwesome
+    )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -397,8 +362,8 @@ private fun SoftwareCreditsDialog(onDismiss: () -> Unit) {
                     modifier = Modifier
                         .fillMaxSize()
                         .verticalScroll(rememberScrollState())
-                        .padding(24.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                        .padding(horizontal = CanvasKitTheme.spacing.screenHorizontal, vertical = CanvasKitTheme.spacing.lg),
+                    verticalArrangement = Arrangement.spacedBy(CanvasKitTheme.spacing.md)
                 ) {
                     Text(
                         text = stringResource(R.string.preferences_oss_description),

@@ -85,10 +85,10 @@ fun ProjectionAnalysisScreen(
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(horizontal = 24.dp)
+                    .padding(horizontal = CanvasKitTheme.spacing.screenHorizontal)
                     .verticalScroll(rememberScrollState()),
             ) {
-                Spacer(modifier = Modifier.height(24.dp))
+                Spacer(modifier = Modifier.height(CanvasKitTheme.spacing.md))
 
                 HeaderSection(state)
 
@@ -163,11 +163,11 @@ private fun SimulationSection(
         }
     ) {
         Column(
-            modifier = Modifier.padding(24.dp),
-            verticalArrangement = Arrangement.spacedBy(20.dp)
+            modifier = Modifier.padding(CanvasKitTheme.spacing.md),
+            verticalArrangement = Arrangement.spacedBy(CanvasKitTheme.spacing.md)
         ) {
             // Daily KM Simulator
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(CanvasKitTheme.spacing.xs)) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -207,7 +207,7 @@ private fun SimulationSection(
             }
 
             // Planned Trip Simulator
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(CanvasKitTheme.spacing.xs)) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -263,7 +263,7 @@ private fun FinancialImpactCard(
         header = {
             Row(
                 modifier = Modifier
-                    .padding(horizontal = 24.dp, vertical = 16.dp)
+                    .padding(horizontal = CanvasKitTheme.spacing.md, vertical = CanvasKitTheme.spacing.sm)
                     .fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -285,8 +285,8 @@ private fun FinancialImpactCard(
     ) {
         Box(modifier = Modifier.background(cardColor)) {
             Column(
-                modifier = Modifier.padding(24.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                modifier = Modifier.padding(CanvasKitTheme.spacing.md),
+                verticalArrangement = Arrangement.spacedBy(CanvasKitTheme.spacing.md)
             ) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
