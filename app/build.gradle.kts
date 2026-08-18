@@ -93,6 +93,9 @@ configure<ApplicationExtension> {
 }
 
 dependencies {
+    implementation(project(":core:infrastructure"))
+    implementation(project(":core:domain"))
+
     implementation(deps.foundationkit)
     implementation(deps.canvaskit)
     implementation(deps.encryptionkit)
@@ -106,8 +109,6 @@ dependencies {
     implementation(deps.play.services.location)
     implementation(deps.user.messaging.platform)
     implementation(deps.compose.cropper)
-    implementation(deps.androidx.credentials)
-    implementation(deps.androidx.credentials.play.services.auth)
     implementation(deps.googleid)
     implementation(deps.accompanist.permissions)
     implementation(deps.billing.ktx)

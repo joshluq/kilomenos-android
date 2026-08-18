@@ -7,10 +7,10 @@ import es.joshluq.foundationkit.text.TextProvider
 import es.joshluq.foundationkit.usecase.FlowUseCase
 import es.joshluq.foundationkit.viewmodel.ScreenViewModel
 import es.joshluq.kmsafe.R
-import es.joshluq.kmsafe.di.DeleteAccount
-import es.joshluq.kmsafe.di.GetCurrentUser
-import es.joshluq.kmsafe.di.GetEntitlements
-import es.joshluq.kmsafe.di.SignOut
+import es.joshluq.kmsafe.domain.di.DeleteAccount
+import es.joshluq.kmsafe.domain.di.GetCurrentUser
+import es.joshluq.kmsafe.domain.di.GetEntitlements
+import es.joshluq.kmsafe.domain.di.SignOut
 import es.joshluq.kmsafe.domain.model.SubscriptionLevel
 import es.joshluq.kmsafe.domain.usecase.DeleteAccountUseCase
 import es.joshluq.kmsafe.domain.usecase.GetCurrentUserUseCase

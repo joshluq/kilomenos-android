@@ -8,9 +8,9 @@ import es.joshluq.foundationkit.text.TextProvider
 import es.joshluq.foundationkit.usecase.FlowUseCase
 import es.joshluq.foundationkit.viewmodel.ScreenViewModel
 import es.joshluq.kmsafe.R
-import es.joshluq.kmsafe.di.CheckFeatureAccess
-import es.joshluq.kmsafe.di.DeleteOdometerRecord
-import es.joshluq.kmsafe.di.GetHistory
+import es.joshluq.kmsafe.domain.di.CheckFeatureAccess
+import es.joshluq.kmsafe.domain.di.DeleteOdometerRecord
+import es.joshluq.kmsafe.domain.di.GetHistory
 import es.joshluq.kmsafe.domain.model.Feature
 import es.joshluq.kmsafe.domain.model.OdometerRecord
 import es.joshluq.kmsafe.domain.usecase.CheckFeatureAccessUseCase

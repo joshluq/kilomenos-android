@@ -19,16 +19,16 @@
 
 # --- Jackson Serialization (DTOs) ---
 # We MUST keep our data models and their members to avoid JSON parsing issues.
--keep class es.joshluq.kmsafe.data.remote.request.** { *; }
--keep class es.joshluq.kmsafe.data.remote.response.** { *; }
--keep class es.joshluq.kmsafe.data.remote.model.** { *; }
+-keep class es.joshluq.kmsafe.infrastructure.remote.request.** { *; }
+-keep class es.joshluq.kmsafe.infrastructure.remote.response.** { *; }
+-keep class es.joshluq.kmsafe.infrastructure.remote.model.** { *; }
 -keep class es.joshluq.kmsafe.domain.model.** { *; }
 -keepclassmembers class * {
     @com.fasterxml.jackson.annotation.JsonProperty *;
 }
 
 # --- Room Persistence ---
--keep class es.joshluq.kmsafe.data.local.entity.** { *; }
+-keep class es.joshluq.kmsafe.infrastructure.local.entity.** { *; }
 -keep class * extends androidx.room.RoomDatabase
 -dontwarn androidx.room.**
 

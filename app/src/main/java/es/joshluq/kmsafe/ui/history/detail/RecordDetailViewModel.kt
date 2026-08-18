@@ -10,11 +10,11 @@ import es.joshluq.foundationkit.text.TextProvider
 import es.joshluq.foundationkit.usecase.FlowUseCase
 import es.joshluq.foundationkit.viewmodel.ScreenViewModel
 import es.joshluq.kmsafe.R
-import es.joshluq.kmsafe.di.CheckFeatureAccess
-import es.joshluq.kmsafe.di.DeleteOdometerRecord
-import es.joshluq.kmsafe.di.GetOdometerRecord
-import es.joshluq.kmsafe.di.GetRoute
-import es.joshluq.kmsafe.di.UpdateOdometerRecord
+import es.joshluq.kmsafe.domain.di.CheckFeatureAccess
+import es.joshluq.kmsafe.domain.di.DeleteOdometerRecord
+import es.joshluq.kmsafe.domain.di.GetOdometerRecord
+import es.joshluq.kmsafe.domain.di.GetRoute
+import es.joshluq.kmsafe.domain.di.UpdateOdometerRecord
 import es.joshluq.kmsafe.domain.model.Feature
 import es.joshluq.kmsafe.domain.model.OdometerRecord
 import es.joshluq.kmsafe.domain.usecase.CheckFeatureAccessUseCase
@@ -179,7 +179,7 @@ class RecordDetailViewModel @Inject constructor(
         if (previous == null || record.fuelAmount == null) return null
         val distance = record.odometerValue - previous.odometerValue
         if (distance <= 0) return null
-        return (record.fuelAmount / distance.toDouble()) * 100.0
+        return (record.fuelAmount!! / distance.toDouble()) * 100.0
     }
 
     private fun handleUpdateRecord() {

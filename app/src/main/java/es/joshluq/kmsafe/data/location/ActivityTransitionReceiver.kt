@@ -12,9 +12,9 @@ import com.google.android.gms.location.DetectedActivity
 import dagger.hilt.android.AndroidEntryPoint
 import es.joshluq.foundationkit.log.LoggerKit
 import es.joshluq.foundationkit.usecase.FlowUseCase
-import es.joshluq.kmsafe.di.CheckFeatureAccess
-import es.joshluq.kmsafe.di.GetRenting
-import es.joshluq.kmsafe.di.ObserveTrackingState
+import es.joshluq.kmsafe.domain.di.CheckFeatureAccess
+import es.joshluq.kmsafe.domain.di.GetRenting
+import es.joshluq.kmsafe.domain.di.ObserveTrackingState
 import es.joshluq.kmsafe.domain.model.Feature
 import es.joshluq.kmsafe.domain.usecase.CheckFeatureAccessUseCase
 import es.joshluq.kmsafe.domain.usecase.GetRentingContractUseCase

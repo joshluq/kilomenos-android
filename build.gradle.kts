@@ -1,6 +1,7 @@
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 plugins {
     alias(libs.plugins.pluginkit.android.application) apply false
+    alias(libs.plugins.pluginkit.android.library) apply false
     alias(libs.plugins.pluginkit.android.compose) apply false
     alias(libs.plugins.pluginkit.android.network) apply false
     alias(libs.plugins.pluginkit.android.hilt) apply false

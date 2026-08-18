@@ -7,9 +7,9 @@ import es.joshluq.analyticskit.sdk.AnalyticskitManager
 import es.joshluq.foundationkit.log.LoggerKit
 import es.joshluq.foundationkit.usecase.FlowUseCase
 import es.joshluq.foundationkit.viewmodel.ScreenViewModel
-import es.joshluq.kmsafe.di.GetOverviewData
-import es.joshluq.kmsafe.di.GetRenting
-import es.joshluq.kmsafe.di.GetTripProjection
+import es.joshluq.kmsafe.domain.di.GetOverviewData
+import es.joshluq.kmsafe.domain.di.GetRenting
+import es.joshluq.kmsafe.domain.di.GetTripProjection
 import es.joshluq.kmsafe.domain.model.RentingContract
 import es.joshluq.kmsafe.domain.usecase.GetOverviewDataUseCase
 import es.joshluq.kmsafe.domain.usecase.GetRentingContractUseCase

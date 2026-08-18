@@ -5,7 +5,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import es.joshluq.foundationkit.log.LoggerKit
 import es.joshluq.foundationkit.usecase.FlowUseCase
 import es.joshluq.foundationkit.viewmodel.ScreenViewModel
-import es.joshluq.kmsafe.di.GetRenting
+import es.joshluq.kmsafe.domain.di.GetRenting
 import es.joshluq.kmsafe.domain.usecase.GetRentingContractUseCase
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach

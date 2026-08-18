@@ -406,7 +406,7 @@ private fun DetailSection(record: OdometerRecord) {
                 DetailRow(
                     icon = Icons.AutoMirrored.Default.Label,
                     label = stringResource(R.string.overview_record_label_label),
-                    value = record.label
+                    value = record.label!!
                 )
             }
         }

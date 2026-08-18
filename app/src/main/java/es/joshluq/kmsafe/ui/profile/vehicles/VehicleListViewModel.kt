@@ -7,11 +7,11 @@ import es.joshluq.analyticskit.sdk.AnalyticskitManager
 import es.joshluq.foundationkit.log.LoggerKit
 import es.joshluq.foundationkit.usecase.FlowUseCase
 import es.joshluq.foundationkit.viewmodel.ScreenViewModel
-import es.joshluq.kmsafe.di.CheckFeatureAccess
-import es.joshluq.kmsafe.di.DeleteContract
-import es.joshluq.kmsafe.di.GetAllContracts
-import es.joshluq.kmsafe.di.SelectContract
-import es.joshluq.kmsafe.di.SyncContracts
+import es.joshluq.kmsafe.domain.di.CheckFeatureAccess
+import es.joshluq.kmsafe.domain.di.DeleteContract
+import es.joshluq.kmsafe.domain.di.GetAllContracts
+import es.joshluq.kmsafe.domain.di.SelectContract
+import es.joshluq.kmsafe.domain.di.SyncContracts
 import es.joshluq.kmsafe.domain.model.Feature
 import es.joshluq.kmsafe.domain.usecase.CheckFeatureAccessUseCase
 import es.joshluq.kmsafe.domain.usecase.DeleteContractUseCase

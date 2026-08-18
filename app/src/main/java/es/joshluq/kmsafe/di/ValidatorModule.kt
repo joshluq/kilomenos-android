@@ -4,8 +4,10 @@ import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
-import es.joshluq.kmsafe.domain.validator.EmailValidator
-import es.joshluq.kmsafe.domain.validator.PasswordValidator
+import es.joshluq.kmsafe.domain.di.EmailValidator
+import es.joshluq.kmsafe.domain.di.PasswordValidator
+import es.joshluq.kmsafe.domain.validator.EmailValidator as EmailValidatorImpl
+import es.joshluq.kmsafe.domain.validator.PasswordValidator as PasswordValidatorImpl
 import es.joshluq.kmsafe.domain.validator.Validator
 
 /**
@@ -16,14 +18,14 @@ import es.joshluq.kmsafe.domain.validator.Validator
 abstract class ValidatorModule {
 
     @Binds
-    @es.joshluq.kmsafe.di.EmailValidator
+    @EmailValidator
     abstract fun bindEmailValidator(
-        validator: EmailValidator
+        validator: EmailValidatorImpl
     ): Validator<String>
 
     @Binds
-    @es.joshluq.kmsafe.di.PasswordValidator
+    @PasswordValidator
     abstract fun bindPasswordValidator(
-        validator: PasswordValidator
+        validator: PasswordValidatorImpl
     ): Validator<String>
 }

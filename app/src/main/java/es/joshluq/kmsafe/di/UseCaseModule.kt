@@ -6,6 +6,7 @@ import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import es.joshluq.foundationkit.usecase.FlowUseCase
 import es.joshluq.foundationkit.usecase.UseCase
+import es.joshluq.kmsafe.domain.di.*
 import es.joshluq.kmsafe.domain.usecase.AddOdometerRecordUseCase
 import es.joshluq.kmsafe.domain.usecase.CheckDatabaseOwnerUseCase
 import es.joshluq.kmsafe.domain.usecase.CheckFeatureAccessUseCase

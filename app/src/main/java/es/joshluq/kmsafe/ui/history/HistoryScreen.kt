@@ -401,7 +401,7 @@ private fun HistoryItem(
                     )
                     if (item.record.label != null) {
                         Text(
-                            text = item.record.label,
+                            text = item.record.label!!,
                             style = CanvasKitTheme.typography.labelSmall,
                             color = CanvasKitTheme.colors.brandAccent
                         )

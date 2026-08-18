@@ -13,23 +13,19 @@ Este documento detalla la hoja de ruta técnica para transformar el monolito act
 
 ---
 
-## Fase 2: Extracción de Infraestructura (Core)
-*   **Objetivo**: Aislar las dependencias de bajo nivel del resto de la lógica.
-*   **Módulos a crear**:
-    *   `:core:foundation`: Logger, Dispatchers, Extensiones de Kotlin.
-    *   `:core:design-system`: Temas de CanvasKit, tipografía y componentes atómicos compartidos.
-    *   `:core:database`: Definición de Room, DAOs y entidades de base de datos.
-    *   `:core:network`: Cliente Retrofit, interceptores y configuración de API.
+## Fase 2: Módulo de Infraestructura Centralizada (Core)
+*   **Objetivo**: Extraer toda la "fontanería" de la aplicación del módulo `:app` para dejarlo como un cascarón vacío de orquestación.
+*   **Módulo a crear**:
+    *   `:core:infrastructure`: Un único módulo que contendrá:
+        *   **Local Data**: `AppDatabase`, DAOs y Entidades de Room.
+        *   **Remote Data**: Cliente Retrofit, `ApiService` e Interceptores.
+        *   **Common Utils**: Mappers globales, extensiones de contexto y lógica de seguridad (Tink).
+*   **Ventaja**: Acelera la migración inicial y simplifica la gestión de dependencias en esta etapa crítica.
 
 ---
 
 ## Fase 3: Vertical Slicing (Domain & Data)
-*   **Objetivo**: Aplicar Clean Architecture separando reglas de negocio de implementaciones de datos por contexto.
-*   **Módulos a crear**:
-    *   `:domain:auth` & `:data:auth`: Gestión de tokens, login y sesión.
-    *   `:domain:renting` & `:data:renting`: Gestión de vehículos y contratos.
-    *   `:domain:tracking`: Lógica de GPS y cálculos de trayecto.
-    *   `:domain:expenses`: Lógica de combustible y estaciones de servicio.
+*   **Objetivo**: Una vez estabilizada la infraestructura, separaremos la lógica por contextos. Aquí es donde evaluaremos si `:core:infrastructure` debe dividirse en `:core:database` y `:core:network` si el tamaño lo justifica.
 
 ---
 

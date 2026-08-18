@@ -9,10 +9,10 @@ import es.joshluq.foundationkit.text.TextProvider
 import es.joshluq.foundationkit.usecase.FlowUseCase
 import es.joshluq.foundationkit.viewmodel.ScreenViewModel
 import es.joshluq.kmsafe.R
-import es.joshluq.kmsafe.data.remote.billing.BillingManager
-import es.joshluq.kmsafe.di.MigrateLocalDataToRemote
-import es.joshluq.kmsafe.di.SyncContracts
-import es.joshluq.kmsafe.di.UpdateSubscription
+import es.joshluq.kmsafe.infrastructure.remote.billing.BillingManager
+import es.joshluq.kmsafe.domain.di.MigrateLocalDataToRemote
+import es.joshluq.kmsafe.domain.di.SyncContracts
+import es.joshluq.kmsafe.domain.di.UpdateSubscription
 import es.joshluq.kmsafe.domain.model.SubscriptionLevel
 import es.joshluq.kmsafe.domain.usecase.MigrateLocalDataToRemoteUseCase
 import es.joshluq.kmsafe.domain.usecase.SyncContractsUseCase

@@ -9,9 +9,9 @@ import es.joshluq.foundationkit.text.TextProvider
 import es.joshluq.foundationkit.usecase.FlowUseCase
 import es.joshluq.foundationkit.viewmodel.ScreenViewModel
 import es.joshluq.kmsafe.R
-import es.joshluq.kmsafe.di.CheckFeatureAccess
-import es.joshluq.kmsafe.di.ExportData
-import es.joshluq.kmsafe.di.ImportData
+import es.joshluq.kmsafe.domain.di.CheckFeatureAccess
+import es.joshluq.kmsafe.domain.di.ExportData
+import es.joshluq.kmsafe.domain.di.ImportData
 import es.joshluq.kmsafe.domain.model.Feature
 import es.joshluq.kmsafe.domain.usecase.CheckFeatureAccessUseCase
 import es.joshluq.kmsafe.domain.usecase.ExportDataUseCase

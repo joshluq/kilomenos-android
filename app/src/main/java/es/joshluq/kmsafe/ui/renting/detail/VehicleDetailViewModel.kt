@@ -10,9 +10,9 @@ import es.joshluq.foundationkit.text.TextProvider
 import es.joshluq.foundationkit.usecase.FlowUseCase
 import es.joshluq.foundationkit.viewmodel.ScreenViewModel
 import es.joshluq.kmsafe.R
-import es.joshluq.kmsafe.di.CheckFeatureAccess
-import es.joshluq.kmsafe.di.DeleteContract
-import es.joshluq.kmsafe.di.GetVehicleById
+import es.joshluq.kmsafe.domain.di.CheckFeatureAccess
+import es.joshluq.kmsafe.domain.di.DeleteContract
+import es.joshluq.kmsafe.domain.di.GetVehicleById
 import es.joshluq.kmsafe.domain.model.Feature
 import es.joshluq.kmsafe.domain.usecase.CheckFeatureAccessUseCase
 import es.joshluq.kmsafe.domain.usecase.DeleteContractUseCase

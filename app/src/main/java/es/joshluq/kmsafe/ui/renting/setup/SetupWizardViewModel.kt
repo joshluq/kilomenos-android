@@ -10,10 +10,10 @@ import es.joshluq.foundationkit.usecase.FlowUseCase
 import es.joshluq.foundationkit.usecase.UseCase
 import es.joshluq.foundationkit.viewmodel.ScreenViewModel
 import es.joshluq.kmsafe.R
-import es.joshluq.kmsafe.di.GetEntitlements
-import es.joshluq.kmsafe.di.GetImageBytes
-import es.joshluq.kmsafe.di.SaveInitialContract
-import es.joshluq.kmsafe.di.UploadVehicleImage
+import es.joshluq.kmsafe.domain.di.GetEntitlements
+import es.joshluq.kmsafe.domain.di.GetImageBytes
+import es.joshluq.kmsafe.domain.di.SaveInitialContract
+import es.joshluq.kmsafe.domain.di.UploadVehicleImage
 import es.joshluq.kmsafe.domain.model.RentingContract
 import es.joshluq.kmsafe.domain.model.SyncStatus
 import es.joshluq.kmsafe.domain.usecase.GetEntitlementsUseCase

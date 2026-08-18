@@ -10,8 +10,8 @@ import com.google.android.gms.ads.MobileAds
 import dagger.hilt.android.AndroidEntryPoint
 import es.joshluq.canvaskit.foundations.theme.CanvasKitTheme
 import es.joshluq.foundationkit.log.LoggerKit
-import es.joshluq.kmsafe.data.remote.billing.BillingManager
-import es.joshluq.kmsafe.data.worker.SyncManager
+import es.joshluq.kmsafe.infrastructure.remote.billing.BillingManager
+import es.joshluq.kmsafe.infrastructure.worker.SyncManager
 import es.joshluq.kmsafe.ui.navigation.AppNavigation
 import es.joshluq.kmsafe.ui.util.ConsentManager
 import es.joshluq.kmsafe.ui.util.NetworkConnectivityObserver

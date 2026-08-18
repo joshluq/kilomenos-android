@@ -15,8 +15,8 @@ import es.joshluq.foundationkit.log.LoggerKit
 import es.joshluq.foundationkit.usecase.FlowUseCase
 import es.joshluq.kmsafe.MainActivity
 import es.joshluq.kmsafe.R
-import es.joshluq.kmsafe.di.CheckFeatureAccess
-import es.joshluq.kmsafe.di.GetRenting
+import es.joshluq.kmsafe.domain.di.CheckFeatureAccess
+import es.joshluq.kmsafe.domain.di.GetRenting
 import es.joshluq.kmsafe.domain.model.Feature
 import es.joshluq.kmsafe.domain.usecase.CheckFeatureAccessUseCase
 import es.joshluq.kmsafe.domain.usecase.GetRentingContractUseCase

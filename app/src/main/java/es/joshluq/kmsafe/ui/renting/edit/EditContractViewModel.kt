@@ -11,11 +11,11 @@ import es.joshluq.foundationkit.usecase.FlowUseCase
 import es.joshluq.foundationkit.usecase.UseCase
 import es.joshluq.foundationkit.viewmodel.ScreenViewModel
 import es.joshluq.kmsafe.R
-import es.joshluq.kmsafe.di.CheckFeatureAccess
-import es.joshluq.kmsafe.di.GetImageBytes
-import es.joshluq.kmsafe.di.GetVehicleById
-import es.joshluq.kmsafe.di.UpdateContract
-import es.joshluq.kmsafe.di.UploadVehicleImage
+import es.joshluq.kmsafe.domain.di.CheckFeatureAccess
+import es.joshluq.kmsafe.domain.di.GetImageBytes
+import es.joshluq.kmsafe.domain.di.GetVehicleById
+import es.joshluq.kmsafe.domain.di.UpdateContract
+import es.joshluq.kmsafe.domain.di.UploadVehicleImage
 import es.joshluq.kmsafe.domain.model.Feature
 import es.joshluq.kmsafe.domain.usecase.CheckFeatureAccessUseCase
 import es.joshluq.kmsafe.domain.usecase.GetImageBytesUseCase
