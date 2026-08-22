@@ -62,12 +62,13 @@ class MainActivity : ComponentActivity() {
             .launchIn(lifecycleScope)
 
         enableEdgeToEdge()
+
         setContent {
             CanvasKitTheme {
                 AppNavigation(
                     onLaunchBilling = { billingManager.launchBillingFlow(this) },
                     onShowPrivacyOptions = {
-                        consentManager.showPrivacyOptionsForm(this) { canRequestAds ->
+                        consentManager.gatherConsent(this) { canRequestAds ->
                             if (canRequestAds) {
                                 MobileAds.initialize(this)
                             }

@@ -55,5 +55,7 @@ dependencyResolutionManagement {
 
 rootProject.name = "KiloMenos"
 include(":app")
+include(":core:ui")
 include(":core:infrastructure")
 include(":core:domain")
+include(":feature:expenses")

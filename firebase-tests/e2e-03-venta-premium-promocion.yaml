@@ -1,0 +1,23 @@
+# KiloMenos - Test Case: E2E-03 (Firebase App Testing Agent)
+tests:
+  - displayName: "E2E-03: Funnel de Venta Premium y Promoción de Datos"
+    steps:
+      - goal: "Navegar a la pasarela de compra de Premium."
+        hint: "Abre el menú de navegación o perfil desde el Dashboard (FREE) y pulsa en 'KiloMenos Premium'."
+        finalScreenAssertion: "Debo ver la pantalla de paywall (PremiumPaywallRoute) con el botón premium_buy_now_button."
+
+      - goal: "Completar la suscripción de Google Play Billing."
+        hint: "Pulsa sobre premium_buy_now_button y simula una compra exitosa en el flujo del sistema de facturación."
+        finalScreenAssertion: "El paywall debe cerrarse y regresar al Dashboard con la corona de premium activa."
+
+      - goal: "Verificar la promoción de datos locales a la nube."
+        hint: "La aplicación debe lanzar automáticamente el WorkManager de sincronización en segundo plano."
+        finalScreenAssertion: "Los datos de odómetros y contratos acumulados localmente cambian de PENDING a SYNCED."
+
+      - goal: "Comprobar la eliminación de los límites de flota."
+        hint: "Navega a Perfil > Mis Vehículos. Pulsa el botón de añadir vehículo ('+')."
+        finalScreenAssertion: "Debo acceder directamente al SetupWizard para añadir un segundo vehículo sin bloqueos de paywall."
+
+      - goal: "Añadir un segundo coche a la flota y activarlo."
+        hint: "Completa el SetupWizard para un nuevo vehículo (ej. Tesla Model Y) y presiona Guardar. En la lista, pulsa sobre él para activarlo."
+        finalScreenAssertion: "La tarjeta de la lista debe mostrar el Tesla Model Y marcado como 'ACTIVO'."

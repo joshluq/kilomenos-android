@@ -30,6 +30,7 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Locale
+import java.util.TimeZone
 import java.util.UUID
 import javax.inject.Inject
 
@@ -62,6 +63,7 @@ class SetupWizardViewModel @Inject constructor(
             Event.OnSkipStepClicked -> handleSkip()
 
             is Event.OnVehicleNameChanged -> updateState { copy(vehicleName = event.value, vehicleNameError = null) }
+            is Event.OnFuelTypeChanged -> updateState { copy(fuelType = event.value) }
             is Event.OnOriginalImageSelected -> {
                 event.uri?.let { launchEffect(Effect.NavigateToCropper(it.toString())) }
             }
@@ -171,11 +173,11 @@ class SetupWizardViewModel @Inject constructor(
 
     private fun validateMileage(): Boolean {
         var isValid = true
-        if (state.value.totalKms.toIntOrNull() == null) {
+        if (state.value.totalKms.replace(',', '.').toDoubleOrNull() == null) {
             updateState { copy(totalKmsError = TextProvider.Resource(R.string.onboarding_number_feedback)) }
             isValid = false
         }
-        if (state.value.startOdometer.toIntOrNull() == null) {
+        if (state.value.startOdometer.replace(',', '.').toDoubleOrNull() == null) {
             updateState { copy(startOdometerError = TextProvider.Resource(R.string.onboarding_number_feedback)) }
             isValid = false
         }
@@ -194,21 +196,26 @@ class SetupWizardViewModel @Inject constructor(
     @OptIn(ExperimentalCoroutinesApi::class)
     private fun saveContract() {
         val s = state.value
-        val sdf = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
-        val startTime = runCatching { sdf.parse(s.startDate)?.time ?: 0L }.getOrDefault(0L)
+        val sdf = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).apply {
+            timeZone = TimeZone.getTimeZone("UTC")
+        }
+        val startTime = runCatching { 
+            sdf.parse(s.startDate)?.time ?: 0L 
+        }.getOrDefault(0L)
 
         val initialContract = RentingContract(
             id = temporaryContractId,
             vehicleName = s.vehicleName,
             startDate = startTime,
             durationMonths = s.durationMonths.toIntOrNull() ?: 0,
-            totalKms = s.totalKms.toIntOrNull() ?: 0,
-            startOdometer = s.startOdometer.toIntOrNull() ?: 0,
-            currentOdometer = s.currentOdometer.toIntOrNull() ?: s.startOdometer.toIntOrNull() ?: 0,
+            totalKms = s.totalKms.replace(',', '.').toDoubleOrNull() ?: 0.0,
+            startOdometer = s.startOdometer.replace(',', '.').toDoubleOrNull() ?: 0.0,
+            currentOdometer = s.currentOdometer.replace(',', '.').toDoubleOrNull() ?: s.startOdometer.replace(',', '.').toDoubleOrNull() ?: 0.0,
             bluetoothDeviceAddress = s.bluetoothDeviceAddress,
             bluetoothDeviceName = s.bluetoothDeviceName,
-            excessDistancePrice = s.excessDistancePrice.toDoubleOrNull(),
-            courtesyMarginKms = s.courtesyMarginKms.toIntOrNull() ?: 0,
+            excessDistancePrice = s.excessDistancePrice.replace(',', '.').toDoubleOrNull(),
+            courtesyMarginKms = s.courtesyMarginKms.replace(',', '.').toDoubleOrNull() ?: 0.0,
+            fuelType = s.fuelType,
             syncStatus = SyncStatus.PENDING
         )
 

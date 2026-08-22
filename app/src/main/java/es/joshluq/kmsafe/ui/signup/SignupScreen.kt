@@ -34,6 +34,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusDirection
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
@@ -62,7 +63,7 @@ import es.joshluq.canvaskit.foundations.theme.CanvasKitTheme
 import es.joshluq.kmsafe.BuildConfig
 import es.joshluq.kmsafe.R
 import es.joshluq.kmsafe.ui.login.components.BrandingSection
-import es.joshluq.kmsafe.ui.util.safeClick
+import es.joshluq.kmsafe.core.ui.util.safeClick
 import kotlinx.coroutines.flow.Flow
 
 @Composable
@@ -208,7 +209,7 @@ fun SignupScreen(
                                     keyboardActions = KeyboardActions(
                                         onNext = { focusManager.moveFocus(FocusDirection.Next) }
                                     ),
-                                    modifier = Modifier.fillMaxWidth()
+                                    modifier = Modifier.fillMaxWidth().testTag("signup_email_input")
                                 )
 
                                 CanvasKitTextField(
@@ -257,7 +258,7 @@ fun SignupScreen(
                                     },
                                     enabled = state.isSignupEnabled,
                                     loading = state.isLoading,
-                                    modifier = Modifier.fillMaxWidth()
+                                    modifier = Modifier.fillMaxWidth().testTag("signup_submit_button")
                                 )
 
                                 PrivacyPolicyLink(

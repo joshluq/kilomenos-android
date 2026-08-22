@@ -1,7 +1,0 @@
-# KiloMenos - Test Case: Flow J (Firebase App Testing Agent)
-tests:
-  - displayName: "Flow J: Límite de Flota (Premium Wall)"
-    steps:
-      - goal: "Verificar que un usuario FREE no puede añadir más vehículos."
-        hint: "Como usuario FREE con un coche ya registrado, ve a Perfil > Mis Vehículos y pulsa en el botón '+' (Añadir)."
-        finalScreenAssertion: "Debo ver un diálogo informativo bloqueando la acción e invitándome a subir a Premium."

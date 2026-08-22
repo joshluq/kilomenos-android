@@ -22,6 +22,13 @@ interface RentingContractDao {
     suspend fun insertContract(contract: RentingContractEntity)
 
     /**
+     * Updates an existing contract without triggering CASCADE deletes.
+     * @return The number of rows updated.
+     */
+    @androidx.room.Update
+    suspend fun updateContract(contract: RentingContractEntity): Int
+
+    /**
      * Observes the currently selected renting contract from the database.
      *
      * @return A [Flow] emitting the contract entity or null if not found.
@@ -63,6 +70,19 @@ interface RentingContractDao {
     suspend fun updateSelection(selectedId: String)
 
     /**
+     * Updates only the sync status of a contract.
+     * Prevents CASCADE deletes on child tables by avoiding REPLACE strategy.
+     */
+    @Query("UPDATE renting_contract SET syncStatus = :status WHERE id = :id")
+    suspend fun updateSyncStatus(id: String, status: String)
+
+    /**
+     * Updates only the selection status.
+     */
+    @Query("UPDATE renting_contract SET isSelected = :isSelected WHERE id = :id")
+    suspend fun updateSelectionOnly(id: String, isSelected: Int)
+
+    /**
      * Deletes a contract by its ID.
      *
      * @param id The ID of the contract to delete.
@@ -76,6 +96,9 @@ interface RentingContractDao {
      */
     @Query("SELECT userId FROM renting_contract LIMIT 1")
     suspend fun getFirstContractUserId(): String?
+
+    @Query("SELECT COUNT(*) FROM renting_contract")
+    suspend fun getContractCount(): Int
 
     /**
      * Deletes all contracts from the database.

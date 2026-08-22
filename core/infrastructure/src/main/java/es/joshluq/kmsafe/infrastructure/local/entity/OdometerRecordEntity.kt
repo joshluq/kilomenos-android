@@ -13,7 +13,7 @@ data class OdometerRecordEntity(
     @PrimaryKey val id: String,
     val contractId: String,
     val timestamp: Long,
-    val odometerValue: Int,
+    val odometerValue: Double,
     val isInitialRecord: Boolean,
     val label: String? = null,
     val fuelAmount: Double? = null,

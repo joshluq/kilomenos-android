@@ -1,0 +1,19 @@
+# KiloMenos - Test Case: E2E-02 (Firebase App Testing Agent)
+tests:
+  - displayName: "E2E-02: Registro de Kilómetros, SSOT y Balance"
+    steps:
+      - goal: "Iniciar la aplicación y verificar el estado inicial de balance."
+        hint: "Asegúrate de estar en la pantalla de Dashboard (Overview)."
+        finalScreenAssertion: "Debo ver la tarjeta principal de balance de kilómetros con el saldo calculado."
+
+      - goal: "Registrar una lectura válida de odómetro incremental."
+        hint: "Pulsa sobre add_odometer_fab. Ingresa una lectura superior al odómetro actual (ej. añade 150 km) y pulsa en Guardar."
+        finalScreenAssertion: "El diálogo debe cerrarse y el saldo del odómetro debe actualizarse en el Dashboard."
+
+      - goal: "Intentar registrar una lectura menor a la actual (caso de error)."
+        hint: "Pulsa sobre add_odometer_fab de nuevo. Ingresa una lectura menor a la registrada en el paso anterior y presiona Guardar."
+        finalScreenAssertion: "El formulario debe mostrar un mensaje de error indicando que el odómetro no puede ser regresivo."
+
+      - goal: "Verificar la exactitud del cálculo de balances usando SSOT."
+        hint: "Cierra el diálogo erróneo y visualiza las tarjetas de balance en el Dashboard (Theoretical Km, Real Km Consumed, Updated Balance)."
+        finalScreenAssertion: "Los cálculos de la interfaz deben coincidir exactamente con la sumatoria agregada de lecturas históricas (SSOT)."

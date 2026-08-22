@@ -4,11 +4,15 @@ import androidx.room.Database
 import androidx.room.RoomDatabase
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
+import es.joshluq.kmsafe.infrastructure.local.dao.FuelExpenseDao
 import es.joshluq.kmsafe.infrastructure.local.dao.OdometerRecordDao
 import es.joshluq.kmsafe.infrastructure.local.dao.RentingContractDao
+import es.joshluq.kmsafe.infrastructure.local.dao.ServiceStationDao
 import es.joshluq.kmsafe.infrastructure.local.dao.TripRouteDao
+import es.joshluq.kmsafe.infrastructure.local.entity.FuelExpenseEntity
 import es.joshluq.kmsafe.infrastructure.local.entity.OdometerRecordEntity
 import es.joshluq.kmsafe.infrastructure.local.entity.RentingContractEntity
+import es.joshluq.kmsafe.infrastructure.local.entity.ServiceStationEntity
 import es.joshluq.kmsafe.infrastructure.local.entity.TripRouteEntity
 
 /**
@@ -18,15 +22,19 @@ import es.joshluq.kmsafe.infrastructure.local.entity.TripRouteEntity
     entities = [
         RentingContractEntity::class,
         OdometerRecordEntity::class,
-        TripRouteEntity::class
+        TripRouteEntity::class,
+        FuelExpenseEntity::class,
+        ServiceStationEntity::class
     ],
-    version = 12,
+    version = 17,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
     abstract fun rentingContractDao(): RentingContractDao
     abstract fun odometerRecordDao(): OdometerRecordDao
     abstract fun tripRouteDao(): TripRouteDao
+    abstract fun fuelExpenseDao(): FuelExpenseDao
+    abstract fun serviceStationDao(): ServiceStationDao
 
     companion object {
         /**
@@ -312,6 +320,205 @@ abstract class AppDatabase : RoomDatabase() {
         val MIGRATION_11_12 = object : Migration(11, 12) {
             override fun migrate(db: SupportSQLiteDatabase) {
                 db.execSQL("ALTER TABLE renting_contract ADD COLUMN bluetoothDeviceName TEXT")
+            }
+        }
+
+        /**
+         * Migration from version 12 to 13:
+         * - Create 'service_stations' table and indices.
+         * - Create 'fuel_expenses' table with foreign key to 'renting_contract' and indices.
+         */
+        val MIGRATION_12_13 = object : Migration(12, 13) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    """
+                    CREATE TABLE IF NOT EXISTS service_stations (
+                        id TEXT PRIMARY KEY NOT NULL,
+                        name TEXT NOT NULL,
+                        brand TEXT NOT NULL,
+                        latitude REAL NOT NULL,
+                        longitude REAL NOT NULL,
+                        address TEXT NOT NULL,
+                        isFavorite INTEGER NOT NULL DEFAULT 0,
+                        availableEnergies TEXT NOT NULL DEFAULT ''
+                    )
+                    """.trimIndent()
+                )
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_service_stations_isFavorite ON service_stations(isFavorite)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_service_stations_latitude_longitude ON service_stations(latitude, longitude)")
+
+                db.execSQL(
+                    """
+                    CREATE TABLE IF NOT EXISTS fuel_expenses (
+                        id TEXT PRIMARY KEY NOT NULL,
+                        vehicleId TEXT NOT NULL,
+                        stationId TEXT,
+                        stationName TEXT,
+                        timestamp INTEGER NOT NULL,
+                        fuelType TEXT NOT NULL,
+                        unitPrice REAL NOT NULL,
+                        volumeQuantity REAL NOT NULL,
+                        totalCost REAL NOT NULL,
+                        odometerAtExpense INTEGER,
+                        isFullTank INTEGER NOT NULL DEFAULT 1,
+                        notes TEXT,
+                        syncStatus TEXT NOT NULL DEFAULT 'SYNCED',
+                        FOREIGN KEY(vehicleId) REFERENCES renting_contract(id) ON UPDATE NO ACTION ON DELETE CASCADE
+                    )
+                    """.trimIndent()
+                )
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_fuel_expenses_vehicleId ON fuel_expenses(vehicleId)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_fuel_expenses_stationId ON fuel_expenses(stationId)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_fuel_expenses_timestamp ON fuel_expenses(timestamp)")
+            }
+        }
+        /**
+         * Migration from version 13 to 14:
+         * - Adds 'kmSinceLastRefuel' and 'consumptionPer100km' columns to 'fuel_expenses' table
+         *   to support the hybrid A+C consumption tracking algorithm.
+         */
+        val MIGRATION_13_14 = object : Migration(13, 14) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE fuel_expenses ADD COLUMN kmSinceLastRefuel INTEGER")
+                db.execSQL("ALTER TABLE fuel_expenses ADD COLUMN consumptionPer100km REAL")
+            }
+        }
+
+        /**
+         * Migration from version 14 to 15:
+         * - Adds 'fuelType' column to 'renting_contract' table.
+         */
+        val MIGRATION_14_15 = object : Migration(14, 15) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE renting_contract ADD COLUMN fuelType TEXT NOT NULL DEFAULT 'GASOLINE_95'")
+            }
+        }
+
+        /**
+         * Migration from version 15 to 16:
+         * - Add metadata (createdAt, updatedAt, syncStatus) to 'service_stations'.
+         * - Add 'updatedAt' to 'fuel_expenses' for Last-Write-Wins sync logic.
+         */
+        val MIGRATION_15_16 = object : Migration(15, 16) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                val now = System.currentTimeMillis()
+                // Update service_stations
+                db.execSQL("ALTER TABLE service_stations ADD COLUMN createdAt INTEGER NOT NULL DEFAULT $now")
+                db.execSQL("ALTER TABLE service_stations ADD COLUMN updatedAt INTEGER NOT NULL DEFAULT $now")
+                db.execSQL("ALTER TABLE service_stations ADD COLUMN syncStatus TEXT NOT NULL DEFAULT 'PENDING'")
+
+                // Update fuel_expenses
+                db.execSQL("ALTER TABLE fuel_expenses ADD COLUMN updatedAt INTEGER NOT NULL DEFAULT $now")
+            }
+        }
+
+        /**
+         * Migration from version 16 to 17:
+         * - Migrates integer mileage/odometer columns to REAL to support decimal precision (API V2).
+         * - Affected tables: renting_contract, odometer_record, fuel_expenses.
+         */
+        val MIGRATION_16_17 = object : Migration(16, 17) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                // 1. Migrate renting_contract
+                db.execSQL("DROP TABLE IF EXISTS renting_contract_new")
+                db.execSQL(
+                    """
+                    CREATE TABLE renting_contract_new (
+                        id TEXT PRIMARY KEY NOT NULL,
+                        userId TEXT NOT NULL,
+                        vehicleName TEXT NOT NULL,
+                        startDate INTEGER NOT NULL,
+                        durationMonths INTEGER NOT NULL,
+                        totalKms REAL NOT NULL,
+                        startOdometer REAL NOT NULL,
+                        currentOdometer REAL NOT NULL,
+                        isSelected INTEGER NOT NULL,
+                        vehicleImageUrl TEXT,
+                        bluetoothDeviceName TEXT,
+                        bluetoothDeviceAddress TEXT,
+                        excessDistancePrice REAL,
+                        courtesyMarginKms REAL NOT NULL DEFAULT 0.0,
+                        fuelType TEXT NOT NULL DEFAULT 'GASOLINE_95',
+                        syncStatus TEXT NOT NULL
+                    )
+                    """.trimIndent()
+                )
+                db.execSQL(
+                    """
+                    INSERT INTO renting_contract_new (id, userId, vehicleName, startDate, durationMonths, totalKms, startOdometer, currentOdometer, isSelected, vehicleImageUrl, bluetoothDeviceName, bluetoothDeviceAddress, excessDistancePrice, courtesyMarginKms, fuelType, syncStatus)
+                    SELECT id, userId, vehicleName, startDate, durationMonths, CAST(totalKms AS REAL), CAST(startOdometer AS REAL), CAST(currentOdometer AS REAL), isSelected, vehicleImageUrl, bluetoothDeviceName, bluetoothDeviceAddress, excessDistancePrice, CAST(courtesyMarginKms AS REAL), fuelType, syncStatus
+                    FROM renting_contract
+                    """.trimIndent()
+                )
+                db.execSQL("DROP TABLE renting_contract")
+                db.execSQL("ALTER TABLE renting_contract_new RENAME TO renting_contract")
+
+                // 2. Migrate odometer_record
+                db.execSQL("DROP TABLE IF EXISTS odometer_record_new")
+                db.execSQL(
+                    """
+                    CREATE TABLE odometer_record_new (
+                        id TEXT PRIMARY KEY NOT NULL,
+                        contractId TEXT NOT NULL,
+                        timestamp INTEGER NOT NULL,
+                        odometerValue REAL NOT NULL,
+                        isInitialRecord INTEGER NOT NULL,
+                        label TEXT,
+                        fuelAmount REAL,
+                        hasRoute INTEGER NOT NULL DEFAULT 0,
+                        syncStatus TEXT NOT NULL
+                    )
+                    """.trimIndent()
+                )
+                db.execSQL(
+                    """
+                    INSERT INTO odometer_record_new (id, contractId, timestamp, odometerValue, isInitialRecord, label, fuelAmount, hasRoute, syncStatus)
+                    SELECT id, contractId, timestamp, CAST(odometerValue AS REAL), isInitialRecord, label, fuelAmount, hasRoute, syncStatus
+                    FROM odometer_record
+                    """.trimIndent()
+                )
+                db.execSQL("DROP TABLE odometer_record")
+                db.execSQL("ALTER TABLE odometer_record_new RENAME TO odometer_record")
+
+                // 3. Migrate fuel_expenses
+                db.execSQL("DROP TABLE IF EXISTS fuel_expenses_new")
+                db.execSQL(
+                    """
+                    CREATE TABLE fuel_expenses_new (
+                        id TEXT PRIMARY KEY NOT NULL,
+                        vehicleId TEXT NOT NULL,
+                        stationId TEXT,
+                        stationName TEXT,
+                        timestamp INTEGER NOT NULL,
+                        fuelType TEXT NOT NULL,
+                        unitPrice REAL NOT NULL,
+                        volumeQuantity REAL NOT NULL,
+                        totalCost REAL NOT NULL,
+                        odometerAtExpense REAL,
+                        isFullTank INTEGER NOT NULL DEFAULT 1,
+                        notes TEXT,
+                        kmSinceLastRefuel REAL,
+                        consumptionPer100km REAL,
+                        updatedAt INTEGER NOT NULL,
+                        syncStatus TEXT NOT NULL,
+                        FOREIGN KEY(vehicleId) REFERENCES renting_contract(id) ON UPDATE NO ACTION ON DELETE CASCADE
+                    )
+                    """.trimIndent()
+                )
+                db.execSQL(
+                    """
+                    INSERT INTO fuel_expenses_new (id, vehicleId, stationId, stationName, timestamp, fuelType, unitPrice, volumeQuantity, totalCost, odometerAtExpense, isFullTank, notes, kmSinceLastRefuel, consumptionPer100km, updatedAt, syncStatus)
+                    SELECT id, vehicleId, stationId, stationName, timestamp, fuelType, unitPrice, volumeQuantity, totalCost, CAST(odometerAtExpense AS REAL), isFullTank, notes, CAST(kmSinceLastRefuel AS REAL), consumptionPer100km, updatedAt, syncStatus
+                    FROM fuel_expenses
+                    """.trimIndent()
+                )
+                db.execSQL("DROP TABLE fuel_expenses")
+                db.execSQL("ALTER TABLE fuel_expenses_new RENAME TO fuel_expenses")
+                
+                // Re-create indices for fuel_expenses
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_fuel_expenses_vehicleId ON fuel_expenses(vehicleId)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_fuel_expenses_stationId ON fuel_expenses(stationId)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_fuel_expenses_timestamp ON fuel_expenses(timestamp)")
             }
         }
     }

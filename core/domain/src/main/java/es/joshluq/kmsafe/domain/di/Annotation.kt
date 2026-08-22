@@ -337,3 +337,102 @@ annotation class GetRoute
 @Qualifier
 @Retention(AnnotationRetention.BINARY)
 annotation class CheckFeatureAccess
+
+/**
+ * Qualifier for the GetExpensesByVehicleUseCase.
+ */
+@Qualifier
+@Retention(AnnotationRetention.BINARY)
+annotation class GetExpensesByVehicle
+
+/**
+ * Qualifier for the SaveFuelExpenseUseCase.
+ */
+@Qualifier
+@Retention(AnnotationRetention.BINARY)
+annotation class SaveFuelExpense
+
+/**
+ * Qualifier for the DeleteFuelExpenseUseCase.
+ */
+@Qualifier
+@Retention(AnnotationRetention.BINARY)
+annotation class DeleteFuelExpense
+
+/**
+ * Qualifier for the GetStationVolatilityUseCase.
+ */
+@Qualifier
+@Retention(AnnotationRetention.BINARY)
+annotation class GetStationVolatility
+
+/**
+ * Qualifier for the GetElectrificationSavingsUseCase.
+ */
+@Qualifier
+@Retention(AnnotationRetention.BINARY)
+annotation class GetElectrificationSavings
+
+/**
+ * Qualifier for the GetAllServiceStationsUseCase.
+ */
+@Qualifier
+@Retention(AnnotationRetention.BINARY)
+annotation class GetAllServiceStations
+
+/**
+ * Qualifier for the GetFavoriteServiceStationsUseCase.
+ */
+@Qualifier
+@Retention(AnnotationRetention.BINARY)
+annotation class GetFavoriteServiceStations
+
+/**
+ * Qualifier for the SaveServiceStationUseCase.
+ */
+@Qualifier
+@Retention(AnnotationRetention.BINARY)
+annotation class SaveServiceStation
+
+/**
+ * Qualifier for the SetFavoriteStationUseCase.
+ */
+@Qualifier
+@Retention(AnnotationRetention.BINARY)
+annotation class SetFavoriteStation
+
+/**
+ * Qualifier for the DeleteServiceStationUseCase.
+ */
+@Qualifier
+@Retention(AnnotationRetention.BINARY)
+annotation class DeleteServiceStation
+
+/**
+ * Qualifier for the GetServiceStationDetailUseCase.
+ */
+@Qualifier
+@Retention(AnnotationRetention.BINARY)
+annotation class GetServiceStationDetail
+
+/**
+ * Qualifier for the SyncStationGeofencesUseCase.
+ */
+@Qualifier
+@Retention(AnnotationRetention.BINARY)
+annotation class SyncStationGeofences
+
+/**
+ * Qualifier for the HandleGeofenceTransitionUseCase.
+ */
+@Qualifier
+@Retention(AnnotationRetention.BINARY)
+annotation class HandleGeofenceTransition
+
+/**
+ * Qualifier for the SyncStationsUseCase.
+ */
+@Qualifier
+@Retention(AnnotationRetention.BINARY)
+annotation class SyncStations
+

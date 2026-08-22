@@ -8,6 +8,7 @@ import es.joshluq.foundationkit.log.LoggerKit
 import es.joshluq.foundationkit.text.TextProvider
 import es.joshluq.foundationkit.usecase.FlowUseCase
 import es.joshluq.foundationkit.viewmodel.ScreenViewModel
+import es.joshluq.kmsafe.R
 import es.joshluq.kmsafe.domain.di.AddOdometerRecord
 import es.joshluq.kmsafe.domain.di.ClearTracking
 import es.joshluq.kmsafe.domain.di.GetAllContracts
@@ -21,10 +22,12 @@ import es.joshluq.kmsafe.domain.di.SelectContract
 import es.joshluq.kmsafe.domain.di.StartAutoTracking
 import es.joshluq.kmsafe.domain.di.StopAutoTracking
 import es.joshluq.kmsafe.domain.di.StopTracking
+import es.joshluq.kmsafe.domain.di.SyncStationGeofences
 import es.joshluq.kmsafe.domain.di.UpdatePreferences
 import es.joshluq.kmsafe.domain.model.Feature
 import es.joshluq.kmsafe.domain.model.RentingContract
 import es.joshluq.kmsafe.domain.model.SubscriptionLevel
+import es.joshluq.kmsafe.core.domain.usecase.SyncStationGeofencesUseCase
 import es.joshluq.kmsafe.domain.usecase.AddOdometerRecordUseCase
 import es.joshluq.kmsafe.domain.usecase.ClearTrackingUseCase
 import es.joshluq.kmsafe.domain.usecase.GetAllContractsUseCase
@@ -40,6 +43,8 @@ import es.joshluq.kmsafe.domain.usecase.StopAutoTrackingUseCase
 import es.joshluq.kmsafe.domain.usecase.StopTrackingUseCase
 import es.joshluq.kmsafe.domain.usecase.UpdatePreferencesUseCase
 import es.joshluq.kmsafe.ui.overview.model.toUiModel
+import es.joshluq.kmsafe.ui.util.DateUtils.getContractEndDate
+import es.joshluq.kmsafe.ui.util.DateUtils.normalizeToUtc00
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -80,6 +85,8 @@ class OverviewViewModel @Inject constructor(
     @JvmSuppressWildcards FlowUseCase<StartAutoTrackingUseCase.Input, StartAutoTrackingUseCase.Output>,
     @param:StopAutoTracking private val stopAutoTrackingUseCase:
     @JvmSuppressWildcards FlowUseCase<StopAutoTrackingUseCase.Input, StopAutoTrackingUseCase.Output>,
+    @param:SyncStationGeofences private val syncStationGeofencesUseCase:
+    @JvmSuppressWildcards FlowUseCase<SyncStationGeofencesUseCase.Input, SyncStationGeofencesUseCase.Output>,
     private val analytics: AnalyticskitManager,
     private val logger: LoggerKit
 ) : ScreenViewModel<State, Event, Effect>() {
@@ -94,6 +101,12 @@ class OverviewViewModel @Inject constructor(
     init {
         consolidatedInitialLoad()
         observeTracking()
+        startGeofenceSync()
+    }
+
+    private fun startGeofenceSync() {
+        syncStationGeofencesUseCase(SyncStationGeofencesUseCase.Input)
+            .launchIn(viewModelScope)
     }
 
     private fun consolidatedInitialLoad() {
@@ -182,7 +195,7 @@ class OverviewViewModel @Inject constructor(
         val totalDays = renting.durationMonths * DAYS_IN_MONTH
         val daysPassed = ((currentTime - renting.startDate) / MILLIS_IN_DAY.toDouble()).coerceAtLeast(0.0)
         val baseDailyBudget = renting.totalKms / totalDays
-        val monthlyBudget = renting.totalKms.toDouble() / renting.durationMonths
+        val monthlyBudget = renting.totalKms / renting.durationMonths
         val theoreticalKms = daysPassed * baseDailyBudget
         val balance = theoreticalKms - actualKms
 
@@ -199,10 +212,10 @@ class OverviewViewModel @Inject constructor(
 
         return currentState.copy(
             renting = renting,
-            balance = balance.toInt(),
-            dailyLimit = baseDailyBudget.toInt(),
-            monthlyLimit = monthlyBudget.toInt(),
-            totalKmsDriven = currentOdometer.toInt(),
+            balance = balance,
+            dailyLimit = baseDailyBudget,
+            monthlyLimit = monthlyBudget,
+            totalKmsDriven = currentOdometer,
             actualKmsDriven = actualKms,
             timePercentage = timeUsedPercentage,
             kmsPercentage = kmsUsedPercentage,
@@ -227,7 +240,8 @@ class OverviewViewModel @Inject constructor(
                     newOdometerValue = "",
                     newRecordLabel = "",
                     newRecordFuel = "",
-                    newRecordDate = System.currentTimeMillis(),
+                    newRecordDate = normalizeToUtc00(System.currentTimeMillis()),
+                    newRecordDateError = null,
                     currentRoutePolyline = null,
                     currentPointCount = 0
                 )
@@ -241,6 +255,7 @@ class OverviewViewModel @Inject constructor(
             is Event.OnNewOdometerChanged -> updateState { copy(newOdometerValue = event.value) }
             is Event.OnNewLabelChanged -> updateState { copy(newRecordLabel = event.value) }
             is Event.OnNewFuelChanged -> updateState { copy(newRecordFuel = event.value) }
+            is Event.OnNewRecordDateChanged -> handleNewRecordDateChanged(event.timestamp)
             is Event.OnSaveRecordClicked -> handleSaveRecord(event.timestamp)
             Event.OnToggleVehicleSwitcher -> updateState { copy(showVehicleSwitcher = !showVehicleSwitcher) }
             is Event.OnSwitchVehicleClicked -> handleOnSwitchVehicle(event.id)
@@ -346,9 +361,11 @@ class OverviewViewModel @Inject constructor(
     }
 
     private fun handleSaveRecord(timestamp: Long) {
-        val odometerValue = state.value.newOdometerValue.toIntOrNull() ?: return
+        if (!validateRecordDate(timestamp)) return
+
+        val odometerValue = state.value.newOdometerValue.replace(',', '.').toDoubleOrNull() ?: return
         val label = state.value.newRecordLabel.takeIf { it.isNotBlank() }
-        val fuelAmount = state.value.newRecordFuel.toDoubleOrNull()
+        val fuelAmount = state.value.newRecordFuel.replace(',', '.').toDoubleOrNull()
 
         logger.i("OverviewViewModel", "Initiating odometer save: $odometerValue km, Label=$label")
 
@@ -387,6 +404,25 @@ class OverviewViewModel @Inject constructor(
             .launchIn(viewModelScope)
     }
 
+    private fun handleNewRecordDateChanged(timestamp: Long) {
+        val isValid = validateRecordDate(timestamp)
+        updateState {
+            copy(
+                newRecordDate = timestamp,
+                newRecordDateError = if (isValid) null else TextProvider.Resource(R.string.overview_error_date_outside_contract)
+            )
+        }
+    }
+
+    private fun validateRecordDate(timestamp: Long): Boolean {
+        val contract = state.value.renting ?: return true
+        val startDate = normalizeToUtc00(contract.startDate)
+        val endDate = normalizeToUtc00(getContractEndDate(startDate, contract.durationMonths))
+        val normalizedTimestamp = normalizeToUtc00(timestamp)
+
+        return normalizedTimestamp in startDate..endDate
+    }
+
     private fun handleOnRegisterRentingClicked() {
         launchEffect(Effect.NavigateToOnboarding())
     }
@@ -421,12 +457,11 @@ class OverviewViewModel @Inject constructor(
     }
 
     private fun handleConfirmTrackedTrip() {
-        val totalKms = state.value.trackedDistance / 1000.0
-        val tripKms = totalKms.toInt()
+        val tripKms = state.value.trackedDistance / 1000.0
         updateState {
             copy(
                 showBottomSheet = true,
-                newOdometerValue = tripKms.toString()
+                newOdometerValue = String.format(java.util.Locale.getDefault(), "%.2f", tripKms)
             )
         }
         stopTrackingUseCase(StopTrackingUseCase.Input).launchIn(viewModelScope)

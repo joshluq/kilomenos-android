@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.LocalGasStation
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Timeline
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -37,7 +38,7 @@ import es.joshluq.foundationkit.text.TextProvider
 import es.joshluq.kmsafe.R
 import es.joshluq.kmsafe.ui.navigation.DashboardNavigation
 import es.joshluq.kmsafe.ui.navigation.Destination
-import es.joshluq.kmsafe.ui.util.safeClick
+import es.joshluq.kmsafe.core.ui.util.safeClick
 import kotlinx.coroutines.flow.Flow
 
 /**
@@ -50,6 +51,8 @@ fun DashboardRoute(
     onNavigateToDataManagement: () -> Unit,
     onNavigateToPreferences: () -> Unit,
     onNavigateToRecordDetail: (String) -> Unit,
+    onNavigateToStations: () -> Unit,
+    onNavigateToStationDetail: (String) -> Unit,
     onNavigateToLogin: () -> Unit,
     onNavigateToPremiumPaywall: () -> Unit,
     onNavigateToPermissions: () -> Unit,
@@ -68,6 +71,8 @@ fun DashboardRoute(
         onNavigateToDataManagement = onNavigateToDataManagement,
         onNavigateToPreferences = onNavigateToPreferences,
         onNavigateToRecordDetail = onNavigateToRecordDetail,
+        onNavigateToStations = onNavigateToStations,
+        onNavigateToStationDetail = onNavigateToStationDetail,
         onNavigateToLogin = onNavigateToLogin,
         onNavigateToPremiumPaywall = onNavigateToPremiumPaywall,
         onNavigateToPermissions = onNavigateToPermissions,
@@ -91,6 +96,8 @@ fun DashboardScreen(
     onNavigateToDataManagement: () -> Unit,
     onNavigateToPreferences: () -> Unit,
     onNavigateToRecordDetail: (String) -> Unit,
+    onNavigateToStations: () -> Unit,
+    onNavigateToStationDetail: (String) -> Unit,
     onNavigateToLogin: () -> Unit,
     onNavigateToPremiumPaywall: () -> Unit,
     onNavigateToPermissions: () -> Unit,
@@ -107,6 +114,7 @@ fun DashboardScreen(
             val tab = when {
                 dest.hasRoute<Destination.Overview>() -> DashboardTab.OVERVIEW
                 dest.hasRoute<Destination.History>() -> DashboardTab.HISTORY
+                dest.hasRoute(Destination.Expenses::class) -> DashboardTab.EXPENSES
                 dest.hasRoute<Destination.ProjectionAnalysis>() -> DashboardTab.PROJECTION
                 dest.hasRoute<Destination.Profile>() -> DashboardTab.PROFILE
                 else -> null
@@ -137,6 +145,8 @@ fun DashboardScreen(
                 onNavigateToDataManagement = onNavigateToDataManagement,
                 onNavigateToPreferences = onNavigateToPreferences,
                 onNavigateToRecordDetail = onNavigateToRecordDetail,
+                onNavigateToStations = onNavigateToStations,
+                onNavigateToStationDetail = onNavigateToStationDetail,
                 onNavigateToLogin = onNavigateToLogin,
                 onNavigateToPremiumPaywall = onNavigateToPremiumPaywall,
                 onNavigateToPermissions = onNavigateToPermissions,
@@ -167,6 +177,7 @@ private fun NavHostController.HandleEffects(
                     val route = when (effect.tab) {
                         DashboardTab.OVERVIEW -> Destination.Overview
                         DashboardTab.HISTORY -> Destination.History
+                        DashboardTab.EXPENSES -> Destination.Expenses()
                         DashboardTab.PROJECTION -> Destination.ProjectionAnalysis
                         DashboardTab.PROFILE -> Destination.Profile
                     }
@@ -188,6 +199,7 @@ private fun DashboardNavigationBar(
     val selectedTab = state.selectedTab
     val home = TextProvider.Resource(R.string.dashboard_item_home)
     val history = TextProvider.Resource(R.string.dashboard_item_history)
+    val expenses = TextProvider.Resource(R.string.dashboard_item_expenses)
     val projection = TextProvider.Resource(R.string.dashboard_item_projection)
     val profile = TextProvider.Resource(R.string.dashboard_item_profile)
 
@@ -210,6 +222,7 @@ private fun DashboardNavigationBar(
             },
             label = { tint -> Text(history.asString(), color = tint, style = CanvasKitTheme.typography.labelSmall) },
         )
+
         if (state.hasRentingContract) {
             CanvasKitBottomBarItem(
                 selected = selectedTab == DashboardTab.PROJECTION,
@@ -224,6 +237,25 @@ private fun DashboardNavigationBar(
                 label = { tint ->
                     Text(
                         projection.asString(),
+                        color = tint,
+                        style = CanvasKitTheme.typography.labelSmall
+                    )
+                }
+            )
+
+            CanvasKitBottomBarItem(
+                selected = selectedTab == DashboardTab.EXPENSES,
+                onClick = safeClick { onEvent(Event.OnTabSelected(DashboardTab.EXPENSES)) },
+                icon = { tint ->
+                    Icon(
+                        Icons.Default.LocalGasStation,
+                        contentDescription = expenses.asString(),
+                        tint = tint
+                    )
+                },
+                label = { tint ->
+                    Text(
+                        expenses.asString(),
                         color = tint,
                         style = CanvasKitTheme.typography.labelSmall
                     )

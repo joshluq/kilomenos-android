@@ -2,6 +2,7 @@ package es.joshluq.kmsafe.infrastructure.local.entity
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import es.joshluq.kmsafe.domain.model.FuelType
 import es.joshluq.kmsafe.domain.model.RentingContract
 import es.joshluq.kmsafe.domain.model.SyncStatus
 
@@ -28,15 +29,16 @@ data class RentingContractEntity(
     val vehicleName: String,
     val startDate: Long,
     val durationMonths: Int,
-    val totalKms: Int,
-    val startOdometer: Int,
-    val currentOdometer: Int,
+    val totalKms: Double,
+    val startOdometer: Double,
+    val currentOdometer: Double,
     val isSelected: Boolean = false,
     val vehicleImageUrl: String? = null,
     val bluetoothDeviceName: String? = null,
     val bluetoothDeviceAddress: String? = null,
     val excessDistancePrice: Double? = null,
-    val courtesyMarginKms: Int = 0,
+    val courtesyMarginKms: Double = 0.0,
+    val fuelType: String = "GASOLINE_95",
     val syncStatus: String = "SYNCED"
 )
 
@@ -58,6 +60,7 @@ fun RentingContractEntity.toDomain(): RentingContract = RentingContract(
     bluetoothDeviceAddress = bluetoothDeviceAddress,
     excessDistancePrice = excessDistancePrice,
     courtesyMarginKms = courtesyMarginKms,
+    fuelType = FuelType.fromName(fuelType),
     syncStatus = SyncStatus.valueOf(syncStatus)
 )
 
@@ -79,5 +82,6 @@ fun RentingContract.toEntity(): RentingContractEntity = RentingContractEntity(
     bluetoothDeviceAddress = bluetoothDeviceAddress,
     excessDistancePrice = excessDistancePrice,
     courtesyMarginKms = courtesyMarginKms,
+    fuelType = fuelType.name,
     syncStatus = syncStatus.name
 )

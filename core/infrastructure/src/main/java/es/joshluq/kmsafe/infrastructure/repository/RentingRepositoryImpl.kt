@@ -6,8 +6,10 @@ import es.joshluq.foundationkit.coroutines.DispatcherProvider
 import es.joshluq.foundationkit.log.LoggerKit
 import es.joshluq.kmsafe.infrastructure.InfrastructureConfig
 import es.joshluq.kmsafe.infrastructure.local.AppDatabase
+import es.joshluq.kmsafe.infrastructure.local.dao.FuelExpenseDao
 import es.joshluq.kmsafe.infrastructure.local.dao.OdometerRecordDao
 import es.joshluq.kmsafe.infrastructure.local.dao.RentingContractDao
+import es.joshluq.kmsafe.infrastructure.local.dao.ServiceStationDao
 import es.joshluq.kmsafe.infrastructure.local.entity.toDomain as toDomainFromEntity
 import es.joshluq.kmsafe.infrastructure.local.entity.toEntity
 import es.joshluq.kmsafe.infrastructure.mapper.ErrorMapper
@@ -42,6 +44,8 @@ import javax.inject.Inject
 class RentingRepositoryImpl @Inject constructor(
     private val rentingDao: RentingContractDao,
     private val odometerDao: OdometerRecordDao,
+    private val fuelExpenseDao: FuelExpenseDao,
+    private val stationDao: ServiceStationDao,
     private val appDatabase: AppDatabase,
     private val apiService: RentingApiService,
     private val storageApiService: StorageApiService,
@@ -57,9 +61,12 @@ class RentingRepositoryImpl @Inject constructor(
     override fun saveContract(contract: RentingContract): Flow<String> = flow {
         logger.d("RentingRepository", "Saving contract for vehicle: ${contract.vehicleName}")
 
-        // 1. Local-First save. Always PENDING.
+        // 1. Local-First save. Always PENDING. Use safe upsert to avoid CASCADE deletion.
         val contractToSave = contract.copy(syncStatus = SyncStatus.PENDING)
-        rentingDao.insertContract(contractToSave.toEntity())
+        val entity = contractToSave.toEntity()
+        if (rentingDao.updateContract(entity) == 0) {
+            rentingDao.insertContract(entity)
+        }
 
         var finalId = contract.id
 
@@ -80,15 +87,30 @@ class RentingRepositoryImpl @Inject constructor(
                         bluetoothDeviceName = contract.bluetoothDeviceName,
                         bluetoothDeviceAddress = contract.bluetoothDeviceAddress,
                         excessKmPrice = contract.excessDistancePrice,
-                        courtesyKmBuffer = contract.courtesyMarginKms
+                        courtesyKmBuffer = contract.courtesyMarginKms,
+                        fuelType = contract.fuelType.name
                     )
                     val response = apiService.createContract(request)
                     if (response.isSuccessful) {
                         logger.i("RentingRepository", "Remote contract sync successful")
-                        val remoteContract = response.body()?.contract?.toDomainFromApi()
+                        val body = response.body()
+                        val remoteContract = body?.contract?.toDomainFromApi()
+                        val remoteInitialRecord = body?.initialRecord?.toDomainFromApi()
+
                         if (remoteContract != null) {
                             syncIdHandler.resolveRentingId(contract, remoteContract)
                             finalId = remoteContract.id
+
+                            // Reconcile initial odometer record ID if provided
+                            if (remoteInitialRecord != null) {
+                                logger.d("RentingRepository", "Reconciling initial record ID: ${remoteInitialRecord.id}")
+                                // Find the local initial record for this contract
+                                val localRecords = odometerDao.getRecordsByContractIdSync(contract.id)
+                                val localInitial = localRecords.find { it.isInitialRecord }?.toDomainFromEntity()
+                                if (localInitial != null) {
+                                    syncIdHandler.resolveOdometerId(localInitial, remoteInitialRecord)
+                                }
+                            }
                         }
                     } else {
                         syncManager.scheduleSync()
@@ -105,9 +127,9 @@ class RentingRepositoryImpl @Inject constructor(
     override fun updateContract(contract: RentingContract): Flow<Unit> = flow {
         logger.d("RentingRepository", "Updating contract ID: ${contract.id}")
 
-        // 1. Local update with PENDING status
+        // 1. Local update with PENDING status. Use updateContract to avoid CASCADE deletion.
         val contractToUpdate = contract.copy(syncStatus = SyncStatus.PENDING)
-        rentingDao.insertContract(contractToUpdate.toEntity())
+        rentingDao.updateContract(contractToUpdate.toEntity())
 
         // 2. Remote update
         if (sessionDataSource.getSessionState().first() is AuthSessionState.Active &&
@@ -124,13 +146,14 @@ class RentingRepositoryImpl @Inject constructor(
                     bluetoothDeviceName = contract.bluetoothDeviceName,
                     bluetoothDeviceAddress = contract.bluetoothDeviceAddress,
                     excessKmPrice = contract.excessDistancePrice,
-                    courtesyKmBuffer = contract.courtesyMarginKms
+                    courtesyKmBuffer = contract.courtesyMarginKms,
+                    fuelType = contract.fuelType.name
                 )
                 val response = apiService.updateContract(contract.id, request)
                 if (response.isSuccessful) {
                     logger.i("RentingRepository", "Remote contract update successful")
-                    // Success: Mark as SYNCED locally
-                    rentingDao.insertContract(contract.copy(syncStatus = SyncStatus.SYNCED).toEntity())
+                    // Success: Mark as SYNCED locally. Use partial update to avoid CASCADE.
+                    rentingDao.updateSyncStatus(contract.id, SyncStatus.SYNCED.name)
                 } else {
                     logger.e("RentingRepository", "Remote update failed: ${response.code()}")
                     syncManager.scheduleSync()
@@ -176,10 +199,9 @@ class RentingRepositoryImpl @Inject constructor(
 
         appDatabase.withTransaction {
             rentingDao.updateSelection(id)
-            // Mark as PENDING to ensure selection state is synced if offline
-            rentingDao.getContractByIdSync(id)?.let { entity ->
-                rentingDao.insertContract(entity.copy(syncStatus = SyncStatus.PENDING.name))
-            }
+            // Mark as PENDING to ensure selection state is synced if offline.
+            // Use partial update to avoid REPLACE and its CASCADE deletion trigger.
+            rentingDao.updateSyncStatus(id, SyncStatus.PENDING.name)
         }
 
         if (sessionDataSource.getSessionState().first() is AuthSessionState.Active &&
@@ -191,9 +213,7 @@ class RentingRepositoryImpl @Inject constructor(
                 if (response.isSuccessful) {
                     logger.i("RentingRepository", "Remote selection sync successful")
                     appDatabase.withTransaction {
-                        rentingDao.getContractByIdSync(id)?.let { entity ->
-                            rentingDao.insertContract(entity.copy(syncStatus = SyncStatus.SYNCED.name))
-                        }
+                        rentingDao.updateSyncStatus(id, SyncStatus.SYNCED.name)
                     }
                 } else {
                     logger.e("RentingRepository", "Remote selection failed with code: ${response.code()}")
@@ -245,7 +265,13 @@ class RentingRepositoryImpl @Inject constructor(
             logger.i("RentingRepository", "Sync successful: Found ${contracts.size} remote contracts")
 
             contracts.forEach { contract ->
-                rentingDao.insertContract(contract.toEntity())
+                // Use a safe upsert: try Update first, then Insert if it doesn't exist.
+                // This prevents REPLACE from triggering CASCADE deletes on fuel expenses.
+                val entity = contract.toEntity()
+                val updatedRows = rentingDao.updateContract(entity)
+                if (updatedRows == 0) {
+                    rentingDao.insertContract(entity)
+                }
             }
             emit(contracts)
         } else {
@@ -276,11 +302,21 @@ class RentingRepositoryImpl @Inject constructor(
         return ownerId
     }
 
+    override suspend fun hasLocalData(): Boolean {
+        val contracts = rentingDao.getContractCount()
+        val expenses = fuelExpenseDao.getExpenseCount()
+        val stations = stationDao.getStationCount()
+        
+        logger.d("RentingRepository", "Local data check: $contracts contracts, $expenses expenses, $stations stations")
+        return contracts > 0 || expenses > 0 || stations > 0
+    }
+
     override fun clearAllLocalData(): Flow<Unit> = flow {
         logger.i("RentingRepository", "Clearing all local data")
         odometerDao.clearAllRecords()
         rentingDao.clearAllContracts()
-        // trip_route has CASCADE but we clear explicitly for safety
+        fuelExpenseDao.clearAllExpenses()
+        stationDao.clearAllStations()
         appDatabase.tripRouteDao().clearAllRoutes()
         emit(Unit)
     }.flowOn(dispatchers.io)

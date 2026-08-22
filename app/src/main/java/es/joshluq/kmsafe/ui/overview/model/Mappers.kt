@@ -26,8 +26,8 @@ fun MonthlyOdometerAggregation.toUiModel(): MonthlyUsageUiModel {
 
     return MonthlyUsageUiModel(
         monthName = monthName,
-        kmsText = totalKms.toString(),
-        budgetedKmsText = budgetedKms.toString(),
+        kmsText = totalKms.toInt().toString(),
+        budgetedKmsText = budgetedKms.toInt().toString(),
         barPercentage = totalKms.toFloat(), // We pass the raw value to let the UI normalize it against the global max
         budgetPercentage = budgetedKms.toFloat(),
         limitState = limitState

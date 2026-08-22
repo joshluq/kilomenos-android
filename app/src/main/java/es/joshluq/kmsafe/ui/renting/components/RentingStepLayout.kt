@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import es.joshluq.canvaskit.components.buttons.CanvasKitButton
@@ -70,7 +71,7 @@ fun RentingStepLayout(
             onClick = onPrimaryActionClick,
             enabled = primaryActionEnabled,
             loading = primaryActionLoading,
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth().testTag("setup_save_vehicle_button")
         )
 
         if (secondaryAction != null) {

@@ -30,47 +30,45 @@ class SaveInitialContractUseCase @Inject constructor(
         logger.d("SaveInitialContractUseCase", "Saving new contract: ${input.contract.vehicleName}")
 
         return authRepository.getCurrentUser().flatMapLatest { user ->
+            // 1. Prepare Contract & Records
             val userId = user?.id ?: ""
-            // Generate UUID if not present
             val contractId = input.contract.id.ifBlank { UUID.randomUUID().toString() }
 
-            // Ensure the contract is selected and has the userId when saved
+            val initialRecord = OdometerRecord(
+                id = UUID.randomUUID().toString(),
+                contractId = contractId,
+                timestamp = input.contract.startDate,
+                odometerValue = input.contract.startOdometer,
+                isInitialRecord = true
+            )
+
             val contractToSave = input.contract.copy(
                 id = contractId,
                 userId = userId,
                 isSelected = true
             )
 
+            // 2. Save Records Locally FIRST (Crucial for reconciliation in saveContract sync)
+            historyRepository.saveRecord(initialRecord)
+            logger.i("SaveInitialContractUseCase", "Initial record saved locally")
+
+            if (input.contract.currentOdometer > input.contract.startOdometer) {
+                val currentRecord = OdometerRecord(
+                    id = UUID.randomUUID().toString(),
+                    contractId = contractId,
+                    timestamp = System.currentTimeMillis(),
+                    odometerValue = input.contract.currentOdometer,
+                    isInitialRecord = false
+                )
+                historyRepository.saveRecord(currentRecord)
+                logger.i("SaveInitialContractUseCase", "Current odometer record saved locally")
+            }
+
+            // 3. Save Contract (Triggers remote sync and ID reconciliation)
             rentingRepository.saveContract(contractToSave)
                 .flatMapLatest { savedId ->
-                    logger.i(
-                        "SaveInitialContractUseCase",
-                        "Contract saved with ID: $savedId. Proceeding with initial records."
-                    )
-                    // Mark this contract as selected in the database (unselect others)
+                    logger.i("SaveInitialContractUseCase", "Contract saved/synced with ID: $savedId")
                     rentingRepository.selectContract(savedId).map {
-                        val initialRecord = OdometerRecord(
-                            id = UUID.randomUUID().toString(),
-                            contractId = savedId,
-                            timestamp = input.contract.startDate,
-                            odometerValue = input.contract.startOdometer,
-                            isInitialRecord = true
-                        )
-                        historyRepository.saveRecord(initialRecord)
-                        logger.i("SaveInitialContractUseCase", "Initial record saved")
-
-                        if (input.contract.currentOdometer > input.contract.startOdometer) {
-                            val currentRecord = OdometerRecord(
-                                id = UUID.randomUUID().toString(),
-                                contractId = savedId,
-                                timestamp = System.currentTimeMillis(),
-                                odometerValue = input.contract.currentOdometer,
-                                isInitialRecord = false
-                            )
-                            historyRepository.saveRecord(currentRecord)
-                            logger.i("SaveInitialContractUseCase", "Current odometer record saved")
-                        }
-
                         Output.Success as Output
                     }
                 }
@@ -85,8 +83,8 @@ class SaveInitialContractUseCase @Inject constructor(
     data class Input(val contract: RentingContract) : UseCaseInput
 
     sealed interface Output : UseCaseOutput {
-        object Progress : Output
-        object Failure : Output
-        object Success : Output
+        data object Progress : Output
+        data object Failure : Output
+        data object Success : Output
     }
 }

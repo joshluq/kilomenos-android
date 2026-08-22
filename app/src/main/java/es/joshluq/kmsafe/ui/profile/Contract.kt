@@ -9,6 +9,8 @@ import es.joshluq.kmsafe.domain.model.User
 
 data class State(
     val isLoading: Boolean = false,
+    val isDeleting: Boolean = false,
+    val deletionMessage: TextProvider? = null,
     val showLogoutConfirmation: Boolean = false,
     val showDeleteConfirmation: Boolean = false,
     val user: User? = null,

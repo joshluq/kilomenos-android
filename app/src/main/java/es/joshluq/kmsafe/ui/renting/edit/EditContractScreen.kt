@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -55,6 +56,8 @@ import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
 import es.joshluq.canvaskit.components.buttons.CanvasKitButton
+import es.joshluq.canvaskit.components.chips.CanvasKitChip
+import es.joshluq.canvaskit.components.chips.CanvasKitChipVariant
 import es.joshluq.canvaskit.components.cards.CanvasKitCard
 import es.joshluq.canvaskit.components.feedback.CanvasKitAlertVariant
 import es.joshluq.canvaskit.components.feedback.CanvasKitBanner
@@ -63,11 +66,13 @@ import es.joshluq.canvaskit.components.layout.CanvasKitLoadingScaffold
 import es.joshluq.canvaskit.components.navigation.CanvasKitTopBar
 import es.joshluq.canvaskit.foundations.theme.CanvasKitTheme
 import es.joshluq.kmsafe.R
+import es.joshluq.kmsafe.domain.model.FuelType
 import es.joshluq.kmsafe.domain.model.RentingContract
 import es.joshluq.kmsafe.ui.renting.components.BluetoothDevicePicker
 import es.joshluq.kmsafe.ui.renting.components.VehiclePhotoSelector
-import es.joshluq.kmsafe.ui.util.safeClick
-import es.joshluq.kmsafe.ui.util.safeClickable
+import es.joshluq.kmsafe.core.ui.util.toTextProvider
+import es.joshluq.kmsafe.core.ui.util.safeClick
+import es.joshluq.kmsafe.core.ui.util.safeClickable
 
 @Composable
 fun EditContractRoute(
@@ -172,16 +177,48 @@ fun EditContractScreen(
 
                 // Group 1: General Details
                 EditSectionCard(title = stringResource(R.string.onboarding_vehicle_name_label)) {
-                    CanvasKitTextField(
-                        label = stringResource(R.string.onboarding_vehicle_name_label),
-                        value = state.vehicleName,
-                        onValueChange = { onEvent(Event.OnVehicleNameChanged(it)) },
-                        errorText = state.vehicleNameError?.asString(),
-                        isError = state.vehicleNameError != null,
-                        placeholder = stringResource(R.string.onboarding_vehicle_name_placeholder),
-                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
-                        keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) })
-                    )
+                    Column(verticalArrangement = Arrangement.spacedBy(CanvasKitTheme.spacing.md)) {
+                        CanvasKitTextField(
+                            label = stringResource(R.string.onboarding_vehicle_name_label),
+                            value = state.vehicleName,
+                            onValueChange = { onEvent(Event.OnVehicleNameChanged(it)) },
+                            errorText = state.vehicleNameError?.asString(),
+                            isError = state.vehicleNameError != null,
+                            placeholder = stringResource(R.string.onboarding_vehicle_name_placeholder),
+                            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+                            keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) })
+                        )
+
+                        Text(
+                            text = stringResource(R.string.onboarding_fuel_type_label),
+                            style = CanvasKitTheme.typography.labelLarge,
+                            color = CanvasKitTheme.colors.textSecondary,
+                            modifier = Modifier.padding(top = CanvasKitTheme.spacing.sm)
+                        )
+
+                        FlowRow(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            val fuelOptions = listOf(FuelType.GASOLINE_95, FuelType.DIESEL, FuelType.HYBRID_PHEV, FuelType.ELECTRIC_KWH)
+                            fuelOptions.forEach { fuelType ->
+                                CanvasKitChip(
+                                    selected = state.fuelType == fuelType,
+                                    variant = CanvasKitChipVariant.Outlined,
+                                    onClick = safeClick { onEvent(Event.OnFuelTypeChanged(fuelType)) },
+                                    label = { 
+                                        Text(
+                                            text = fuelType.toTextProvider().asString(),
+                                            style = CanvasKitTheme.typography.labelSmall,
+                                            maxLines = 1,
+                                            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                                        ) 
+                                    }
+                                )
+                            }
+                        }
+                    }
                 }
 
                 // Group 2: Contract Adjustments
@@ -209,7 +246,7 @@ fun EditContractScreen(
                             isError = state.totalKmsError != null,
                             suffix = stringResource(R.string.onboarding_km_suffix),
                             keyboardOptions = KeyboardOptions(
-                                keyboardType = KeyboardType.Number,
+                                keyboardType = KeyboardType.Decimal,
                                 imeAction = ImeAction.Next
                             ),
                             keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) })
@@ -223,28 +260,36 @@ fun EditContractScreen(
                     icon = Icons.Default.Security
                 ) {
                     Column(verticalArrangement = Arrangement.spacedBy(CanvasKitTheme.spacing.md)) {
-                        CanvasKitTextField(
-                            label = stringResource(R.string.onboarding_bluetooth_label),
-                            value = state.bluetoothDeviceName ?: state.bluetoothDeviceAddress ?: "",
-                            onValueChange = {},
-                            readOnly = true,
-                            placeholder = stringResource(R.string.onboarding_bluetooth_placeholder),
-                            modifier = Modifier.safeClickable {
-                                keyboardController?.hide()
-                                if (bluetoothPermissionState?.status?.isGranted != false) {
-                                    onEvent(Event.OnToggleBluetoothPicker)
-                                } else {
-                                    bluetoothPermissionState.launchPermissionRequest()
+                        Box(modifier = Modifier.fillMaxWidth()) {
+                            CanvasKitTextField(
+                                label = stringResource(R.string.onboarding_bluetooth_label),
+                                value = state.bluetoothDeviceName ?: state.bluetoothDeviceAddress ?: "",
+                                onValueChange = {},
+                                readOnly = true,
+                                placeholder = stringResource(R.string.onboarding_bluetooth_placeholder),
+                                modifier = Modifier.fillMaxWidth(),
+                                trailingIcon = {
+                                    Icon(
+                                        imageVector = Icons.Default.Bluetooth,
+                                        contentDescription = null,
+                                        tint = CanvasKitTheme.colors.brandAccent
+                                    )
                                 }
-                            },
-                            trailingIcon = {
-                                Icon(
-                                    Icons.Default.Bluetooth,
-                                    contentDescription = null,
-                                    tint = CanvasKitTheme.colors.brandAccent
-                                )
-                            }
-                        )
+                            )
+                            // Transparent overlay to capture clicks on the entire field
+                            Box(
+                                modifier = Modifier
+                                    .matchParentSize()
+                                    .safeClickable {
+                                        keyboardController?.hide()
+                                        if (bluetoothPermissionState?.status?.isGranted != false) {
+                                            onEvent(Event.OnToggleBluetoothPicker)
+                                        } else {
+                                            bluetoothPermissionState.launchPermissionRequest()
+                                        }
+                                    }
+                            )
+                        }
 
                         CanvasKitTextField(
                             label = stringResource(R.string.setup_wizard_step_advanced_price_label),
@@ -266,7 +311,7 @@ fun EditContractScreen(
                             placeholder = stringResource(R.string.setup_wizard_step_advanced_margin_placeholder),
                             suffix = "km",
                             keyboardOptions = KeyboardOptions(
-                                keyboardType = KeyboardType.Number,
+                                keyboardType = KeyboardType.Decimal,
                                 imeAction = ImeAction.Done
                             ),
                             keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() })
@@ -365,13 +410,13 @@ fun EditContractScreenPreview() {
                     vehicleName = "Tesla Model 3",
                     startDate = System.currentTimeMillis() - 3888000000L,
                     durationMonths = 48,
-                    totalKms = 60000,
-                    startOdometer = 0,
-                    currentOdometer = 1200,
+                    totalKms = 60000.0,
+                    startOdometer = 0.0,
+                    currentOdometer = 1200.0,
                     isSelected = true,
                     bluetoothDeviceName = "My Tesla",
                     excessDistancePrice = 0.05,
-                    courtesyMarginKms = 500
+                    courtesyMarginKms = 500.0
                 ),
                 vehicleName = "Tesla Model 3",
                 durationMonths = "48",

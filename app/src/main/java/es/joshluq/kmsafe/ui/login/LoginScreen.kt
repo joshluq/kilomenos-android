@@ -35,6 +35,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusDirection
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
@@ -64,7 +65,7 @@ import es.joshluq.canvaskit.foundations.theme.CanvasKitTheme
 import es.joshluq.kmsafe.BuildConfig
 import es.joshluq.kmsafe.R
 import es.joshluq.kmsafe.ui.login.components.BrandingSection
-import es.joshluq.kmsafe.ui.util.safeClick
+import es.joshluq.kmsafe.core.ui.util.safeClick
 import kotlinx.coroutines.flow.Flow
 
 @Composable
@@ -257,7 +258,7 @@ fun LoginScreen(
                                         onEvent(Event.OnGoogleSignInClicked)
                                     },
                                     variant = CanvasKitButtonVariant.Secondary,
-                                    modifier = Modifier.fillMaxWidth(),
+                                    modifier = Modifier.fillMaxWidth().testTag("google_login_button"),
                                     enabled = !state.isLoading
                                 )
                             }
@@ -285,7 +286,8 @@ fun LoginScreen(
                             keyboardController?.hide()
                             focusManager.clearFocus()
                             onNavigateToSignup()
-                        }
+                        },
+                        modifier = Modifier.testTag("signup_link")
                     )
 
                     Spacer(modifier = Modifier.height(24.dp))

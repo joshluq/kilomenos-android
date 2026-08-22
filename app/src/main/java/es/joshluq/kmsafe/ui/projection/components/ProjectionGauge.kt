@@ -27,6 +27,7 @@ import androidx.compose.ui.unit.sp
 import es.joshluq.canvaskit.foundations.theme.CanvasKitTheme
 import es.joshluq.kmsafe.R
 import kotlin.math.absoluteValue
+import es.joshluq.kmsafe.core.ui.util.NumberFormatter
 
 /**
  * A visual gauge representing the projected mileage versus the contract limit.
@@ -38,9 +39,9 @@ import kotlin.math.absoluteValue
  */
 @Composable
 fun ProjectionGauge(
-    projectedKms: Int,
-    limitKms: Int,
-    balance: Int,
+    projectedKms: Double,
+    limitKms: Double,
+    balance: Double,
     modifier: Modifier = Modifier
 ) {
     val percentage = (projectedKms.toFloat() / limitKms.toFloat()).coerceIn(0f, 1.2f)
@@ -100,7 +101,7 @@ fun ProjectionGauge(
             Text(
                 text = stringResource(
                     if (isOverLimit) R.string.common_km_negative_suffix else R.string.common_km_positive_suffix,
-                    balance.absoluteValue
+                    NumberFormatter.formatDistance(balance.absoluteValue)
                 ),
                 style = CanvasKitTheme.typography.displayMedium,
                 color = accentColor,
@@ -125,9 +126,9 @@ fun ProjectionGaugePreview() {
     CanvasKitTheme {
         androidx.compose.material3.Surface(color = CanvasKitTheme.colors.backgroundPrimary) {
             ProjectionGauge(
-                projectedKms = 12000,
-                limitKms = 10000,
-                balance = -2000,
+                projectedKms = 12000.0,
+                limitKms = 10000.0,
+                balance = -2000.0,
                 modifier = Modifier.padding(16.dp)
             )
         }

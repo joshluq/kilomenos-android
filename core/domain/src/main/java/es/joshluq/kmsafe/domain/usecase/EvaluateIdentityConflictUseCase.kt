@@ -27,21 +27,30 @@ class EvaluateIdentityConflictUseCase @Inject constructor(
 
         // One-shot check for conflict
         val dbOwnerId = rentingRepository.getDatabaseOwnerId()
+        val hasExistingData = rentingRepository.hasLocalData()
+        
         // We use global preferences here because we don't have the userId yet
         val prefs = preferencesRepository.getGlobalPreferences().first()
         val lastEmail = prefs.lastEmail.trim().lowercase()
 
         logger.d(
             "EvaluateIdentityConflict",
-            "Checking conflict - Current: $currentEmail, Last: $lastEmail, DB Owner: $dbOwnerId"
+            "Checking conflict - Current: $currentEmail, Last: $lastEmail, DB Owner: $dbOwnerId, HasData: $hasExistingData"
         )
 
-        val isNewUser = currentEmail != lastEmail && lastEmail.isNotEmpty()
-        val hasDataToProtect = dbOwnerId != null
+        // Conflict detection logic:
+        // 1. If there's an email mismatch and the previous session was authenticated.
+        // 2. If there's NO previous email recorded (Free/Local user) but the DB already contains data.
+        val isNewUser = currentEmail != lastEmail
 
         val result = when {
+            // Case A: Same user as last time -> No conflict.
             !isNewUser -> Output.NoConflict
-            hasDataToProtect -> Output.ShowWarning
+            
+            // Case B: Different user and we have data in the DB -> Warning.
+            hasExistingData -> Output.ShowWarning
+            
+            // Case C: Different user but DB is empty -> Silent cleanup (clears prefs/cache).
             else -> Output.SilentCleanup
         }
 

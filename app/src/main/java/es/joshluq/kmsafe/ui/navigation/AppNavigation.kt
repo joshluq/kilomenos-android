@@ -5,7 +5,11 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navDeepLink
 import androidx.navigation.toRoute
+import es.joshluq.kmsafe.feature.expenses.ExpensesRoute
+import es.joshluq.kmsafe.feature.expenses.stations.StationManagementRoute
+import es.joshluq.kmsafe.feature.expenses.stations.detail.StationDetailRoute
 import es.joshluq.kmsafe.ui.common.cropper.CropImageScreen
 import es.joshluq.kmsafe.ui.common.permissions.AutoTrackingPermissionsScreen
 import es.joshluq.kmsafe.ui.dashboard.DashboardRoute
@@ -157,6 +161,12 @@ fun AppNavigation(
                 onNavigateToRecordDetail = { recordId ->
                     navController.navigate(Destination.RecordDetail(recordId))
                 },
+                onNavigateToStations = {
+                    navController.navigate(Destination.StationManagement)
+                },
+                onNavigateToStationDetail = { stationId ->
+                    navController.navigate(Destination.StationDetail(stationId))
+                },
                 onNavigateToPermissions = {
                     navController.navigate(Destination.AutoTrackingPermissions)
                 },
@@ -286,6 +296,43 @@ fun AppNavigation(
                     navController.popBackStack()
                 },
                 onCancel = {
+                    navController.popBackStack()
+                }
+            )
+        }
+
+        composable<Destination.Expenses>(
+            deepLinks = listOf(
+                navDeepLink<Destination.Expenses>(basePath = "${DeepLinkConfig.BASE_URL}/expenses")
+            )
+        ) {
+            ExpensesRoute(
+                onNavigateToUpgrade = {
+                    navController.navigate(Destination.PremiumPaywall)
+                },
+                onNavigateToStations = {
+                    navController.navigate(Destination.StationManagement)
+                },
+                onNavigateToStationDetail = { stationId ->
+                    navController.navigate(Destination.StationDetail(stationId))
+                }
+            )
+        }
+
+        composable<Destination.StationManagement> {
+            StationManagementRoute(
+                onNavigateBack = {
+                    navController.popBackStack()
+                },
+                onNavigateToDetail = { stationId ->
+                    navController.navigate(Destination.StationDetail(stationId))
+                }
+            )
+        }
+
+        composable<Destination.StationDetail> {
+            StationDetailRoute(
+                onNavigateBack = {
                     navController.popBackStack()
                 }
             )

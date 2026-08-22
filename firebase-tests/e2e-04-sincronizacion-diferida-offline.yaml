@@ -1,0 +1,19 @@
+# KiloMenos - Test Case: E2E-04 (Firebase App Testing Agent)
+tests:
+  - displayName: "E2E-04: Resiliencia de Sincronización Diferida Offline"
+    steps:
+      - goal: "Colocar el emulador del dispositivo en modo avión (sin red)."
+        hint: "Desactiva Wifi y Datos Móviles en la barra de control del emulador."
+        finalScreenAssertion: "El Dashboard debe indicar que está sin conexión."
+
+      - goal: "Añadir lecturas de odómetro y repostajes offline."
+        hint: "Pulsa sobre add_odometer_fab y añade una lectura (ej. +50 km). Navega a gastos e introduce un gasto rápido."
+        finalScreenAssertion: "Los registros deben guardarse localmente en Room y mostrar el sync_pending_indicator en el Dashboard."
+
+      - goal: "Reconectar la red del emulador."
+        hint: "Activa nuevamente la conexión a internet (Wifi/Datos)."
+        finalScreenAssertion: "La conexión de red debe volver a estar activa en el sistema."
+
+      - goal: "Verificar la subida automática diferida."
+        hint: "Espera 2-3 segundos a que el ConnectivityObserver y WorkManager actúen."
+        finalScreenAssertion: "El sync_pending_indicator debe desaparecer automáticamente del Dashboard, indicando que el estado en Room cambió a SYNCED."

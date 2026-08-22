@@ -18,6 +18,8 @@ fun DashboardNavigation(
     onNavigateToDataManagement: () -> Unit,
     onNavigateToPreferences: () -> Unit,
     onNavigateToRecordDetail: (String) -> Unit,
+    onNavigateToStations: () -> Unit,
+    onNavigateToStationDetail: (String) -> Unit,
     onNavigateToLogin: () -> Unit,
     onNavigateToPremiumPaywall: () -> Unit,
     onNavigateToPermissions: () -> Unit,
@@ -54,6 +56,14 @@ fun DashboardNavigation(
 
         composable<Destination.ProjectionAnalysis> {
             ProjectionAnalysisRoute()
+        }
+
+        composable<Destination.Expenses> {
+            es.joshluq.kmsafe.feature.expenses.ExpensesRoute(
+                onNavigateToUpgrade = onNavigateToPremiumPaywall,
+                onNavigateToStations = onNavigateToStations,
+                onNavigateToStationDetail = onNavigateToStationDetail
+            )
         }
 
         composable<Destination.Profile> {

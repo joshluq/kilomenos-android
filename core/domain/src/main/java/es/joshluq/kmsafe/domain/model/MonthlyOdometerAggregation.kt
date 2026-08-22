@@ -7,6 +7,6 @@ package es.joshluq.kmsafe.domain.model
 data class MonthlyOdometerAggregation(
     val year: Int,
     val month: Int,
-    val totalKms: Int,
-    val budgetedKms: Int
+    val totalKms: Double,
+    val budgetedKms: Double
 )

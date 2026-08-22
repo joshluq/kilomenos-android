@@ -14,6 +14,7 @@ import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -41,6 +42,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -57,6 +59,8 @@ import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
 import es.joshluq.canvaskit.components.buttons.CanvasKitButton
 import es.joshluq.canvaskit.components.buttons.CanvasKitButtonVariant
+import es.joshluq.canvaskit.components.chips.CanvasKitChip
+import es.joshluq.canvaskit.components.chips.CanvasKitChipVariant
 import es.joshluq.canvaskit.components.feedback.CanvasKitAlertVariant
 import es.joshluq.canvaskit.components.feedback.CanvasKitBanner
 import es.joshluq.canvaskit.components.inputs.CanvasKitDatePickerField
@@ -65,15 +69,18 @@ import es.joshluq.canvaskit.components.layout.CanvasKitLoadingScaffold
 import es.joshluq.canvaskit.components.navigation.CanvasKitTopBar
 import es.joshluq.canvaskit.foundations.theme.CanvasKitTheme
 import es.joshluq.kmsafe.R
+import es.joshluq.kmsafe.domain.model.FuelType
 import es.joshluq.kmsafe.domain.model.SubscriptionLevel
 import es.joshluq.kmsafe.ui.renting.components.BluetoothDevicePicker
 import es.joshluq.kmsafe.ui.renting.components.RentingStepLayout
 import es.joshluq.kmsafe.ui.renting.components.RentingStepProgressBar
 import es.joshluq.kmsafe.ui.renting.components.VehiclePhotoSelector
-import es.joshluq.kmsafe.ui.util.safeClick
+import es.joshluq.kmsafe.core.ui.util.toTextProvider
+import es.joshluq.kmsafe.core.ui.util.safeClick
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import java.util.TimeZone
 
 @Composable
 fun SetupWizardRoute(
@@ -231,8 +238,39 @@ private fun VehicleIdentityStep(state: State, onEvent: (Event) -> Unit) {
             errorText = state.vehicleNameError?.asString(),
             isError = state.vehicleNameError != null,
             placeholder = stringResource(R.string.onboarding_vehicle_name_placeholder),
-            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done)
+            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+            modifier = Modifier.padding(bottom = CanvasKitTheme.spacing.lg).testTag("setup_vehicle_name_input")
         )
+
+        Text(
+            text = stringResource(R.string.onboarding_fuel_type_label),
+            style = CanvasKitTheme.typography.labelLarge,
+            color = CanvasKitTheme.colors.textSecondary,
+            modifier = Modifier.padding(bottom = CanvasKitTheme.spacing.sm)
+        )
+
+        FlowRow(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            val fuelOptions = listOf(FuelType.GASOLINE_95, FuelType.DIESEL, FuelType.HYBRID_PHEV, FuelType.ELECTRIC_KWH)
+            fuelOptions.forEach { fuelType ->
+                CanvasKitChip(
+                    selected = state.fuelType == fuelType,
+                    variant = CanvasKitChipVariant.Outlined,
+                    onClick = safeClick { onEvent(Event.OnFuelTypeChanged(fuelType)) },
+                    label = { 
+                        Text(
+                            text = fuelType.toTextProvider().asString(),
+                            style = CanvasKitTheme.typography.labelSmall,
+                            maxLines = 1,
+                            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                        ) 
+                    }
+                )
+            }
+        }
     }
 }
 
@@ -248,7 +286,9 @@ private fun ContractTimeframeStep(state: State, onEvent: (Event) -> Unit) {
     ) {
         val selectedDateMillis = remember(state.startDate) {
             runCatching {
-                val sdf = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+                val sdf = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).apply {
+                    timeZone = TimeZone.getTimeZone("UTC")
+                }
                 sdf.parse(state.startDate)?.time
             }.getOrNull()
         }
@@ -257,10 +297,13 @@ private fun ContractTimeframeStep(state: State, onEvent: (Event) -> Unit) {
             label = stringResource(R.string.onboarding_start_date_label),
             selectedDateMillis = selectedDateMillis,
             onDateSelected = { millis ->
-                millis?.let {
-                    val date = Date(it)
-                    val formatter = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
-                    onEvent(Event.OnStartDateChanged(formatter.format(date)))
+                if (millis != null) {
+                    val formatter = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).apply {
+                        timeZone = TimeZone.getTimeZone("UTC")
+                    }
+                    onEvent(Event.OnStartDateChanged(formatter.format(Date(millis))))
+                } else {
+                    onEvent(Event.OnStartDateChanged(""))
                 }
             },
             placeholder = stringResource(R.string.onboarding_start_date_placeholder),
@@ -301,7 +344,7 @@ private fun MileageBudgetStep(state: State, onEvent: (Event) -> Unit) {
             isError = state.totalKmsError != null,
             suffix = stringResource(R.string.onboarding_km_suffix),
             placeholder = stringResource(R.string.onboarding_total_kms_placeholder),
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Next),
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal, imeAction = ImeAction.Next),
             keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) }),
             modifier = Modifier.padding(bottom = CanvasKitTheme.spacing.md)
         )
@@ -314,7 +357,7 @@ private fun MileageBudgetStep(state: State, onEvent: (Event) -> Unit) {
             isError = state.startOdometerError != null,
             suffix = stringResource(R.string.onboarding_km_suffix),
             placeholder = stringResource(R.string.onboarding_start_odometer_placeholder),
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Done),
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal, imeAction = ImeAction.Done),
             keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() })
         )
     }
@@ -449,7 +492,7 @@ private fun AdvancedProtectionStep(state: State, onEvent: (Event) -> Unit) {
             onValueChange = { onEvent(Event.OnCourtesyMarginKmsChanged(it)) },
             placeholder = stringResource(R.string.setup_wizard_step_advanced_margin_placeholder),
             suffix = "km",
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Done),
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal, imeAction = ImeAction.Done),
             keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() })
         )
     }

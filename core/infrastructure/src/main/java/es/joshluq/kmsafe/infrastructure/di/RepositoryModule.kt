@@ -7,18 +7,22 @@ import dagger.hilt.components.SingletonComponent
 import es.joshluq.kmsafe.infrastructure.repository.AuthRepositoryImpl
 import es.joshluq.kmsafe.infrastructure.repository.DataManagementRepositoryImpl
 import es.joshluq.kmsafe.infrastructure.repository.EntitlementsRepositoryImpl
+import es.joshluq.kmsafe.infrastructure.repository.FuelExpenseRepositoryImpl
 import es.joshluq.kmsafe.infrastructure.repository.HistoryRepositoryImpl
 import es.joshluq.kmsafe.infrastructure.repository.MediaRepositoryImpl
 import es.joshluq.kmsafe.infrastructure.repository.PreferencesRepositoryImpl
 import es.joshluq.kmsafe.infrastructure.repository.RentingRepositoryImpl
+import es.joshluq.kmsafe.infrastructure.repository.ServiceStationRepositoryImpl
 import es.joshluq.kmsafe.infrastructure.repository.tracking.TrackingRepositoryImpl
 import es.joshluq.kmsafe.domain.repository.AuthRepository
 import es.joshluq.kmsafe.domain.repository.DataManagementRepository
 import es.joshluq.kmsafe.domain.repository.EntitlementsRepository
+import es.joshluq.kmsafe.domain.repository.FuelExpenseRepository
 import es.joshluq.kmsafe.domain.repository.HistoryRepository
 import es.joshluq.kmsafe.domain.repository.MediaRepository
 import es.joshluq.kmsafe.domain.repository.PreferencesRepository
 import es.joshluq.kmsafe.domain.repository.RentingRepository
+import es.joshluq.kmsafe.domain.repository.ServiceStationRepository
 import es.joshluq.kmsafe.domain.repository.TrackingRepository
 import javax.inject.Singleton
 
@@ -96,4 +100,22 @@ abstract class RepositoryModule {
     abstract fun bindMediaRepository(
         repository: MediaRepositoryImpl
     ): MediaRepository
+
+    /**
+     * Binds the [FuelExpenseRepositoryImpl] to the [FuelExpenseRepository] interface.
+     */
+    @Singleton
+    @Binds
+    abstract fun bindFuelExpenseRepository(
+        repository: FuelExpenseRepositoryImpl
+    ): FuelExpenseRepository
+
+    /**
+     * Binds the [ServiceStationRepositoryImpl] to the [ServiceStationRepository] interface.
+     */
+    @Singleton
+    @Binds
+    abstract fun bindServiceStationRepository(
+        repository: ServiceStationRepositoryImpl
+    ): ServiceStationRepository
 }

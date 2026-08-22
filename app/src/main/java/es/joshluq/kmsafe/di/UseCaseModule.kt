@@ -16,11 +16,15 @@ import es.joshluq.kmsafe.domain.usecase.ClearTrackingUseCase
 import es.joshluq.kmsafe.domain.usecase.DeleteAccountUseCase
 import es.joshluq.kmsafe.domain.usecase.DeleteContractUseCase
 import es.joshluq.kmsafe.domain.usecase.DeleteOdometerRecordUseCase
+import es.joshluq.kmsafe.domain.usecase.DeleteServiceStationUseCase
 import es.joshluq.kmsafe.domain.usecase.EvaluateIdentityConflictUseCase
+import es.joshluq.kmsafe.domain.usecase.GetServiceStationDetailUseCase
 import es.joshluq.kmsafe.domain.usecase.ExportDataUseCase
 import es.joshluq.kmsafe.domain.usecase.GetAllContractsUseCase
+import es.joshluq.kmsafe.domain.usecase.GetAllServiceStationsUseCase
 import es.joshluq.kmsafe.domain.usecase.GetCurrentUserUseCase
 import es.joshluq.kmsafe.domain.usecase.GetEntitlementsUseCase
+import es.joshluq.kmsafe.domain.usecase.GetFavoriteServiceStationsUseCase
 import es.joshluq.kmsafe.domain.usecase.GetHistoryUseCase
 import es.joshluq.kmsafe.domain.usecase.GetImageBytesUseCase
 import es.joshluq.kmsafe.domain.usecase.GetMonthlyUsageUseCase
@@ -31,15 +35,20 @@ import es.joshluq.kmsafe.domain.usecase.GetRentingContractUseCase
 import es.joshluq.kmsafe.domain.usecase.GetRouteUseCase
 import es.joshluq.kmsafe.domain.usecase.GetTripProjectionUseCase
 import es.joshluq.kmsafe.domain.usecase.GetVehicleByIdUseCase
+import es.joshluq.kmsafe.core.domain.usecase.HandleGeofenceTransitionUseCase
 import es.joshluq.kmsafe.domain.usecase.ImportDataUseCase
 import es.joshluq.kmsafe.domain.usecase.MigrateLocalDataToRemoteUseCase
 import es.joshluq.kmsafe.domain.usecase.ObserveTrackingStateUseCase
 import es.joshluq.kmsafe.domain.usecase.SaveInitialContractUseCase
+import es.joshluq.kmsafe.domain.usecase.SaveServiceStationUseCase
 import es.joshluq.kmsafe.domain.usecase.SelectContractUseCase
+import es.joshluq.kmsafe.domain.usecase.SetFavoriteStationUseCase
+import es.joshluq.kmsafe.core.domain.usecase.SyncStationGeofencesUseCase
 import es.joshluq.kmsafe.domain.usecase.SignInUseCase
 import es.joshluq.kmsafe.domain.usecase.SignInWithGoogleUseCase
 import es.joshluq.kmsafe.domain.usecase.SignOutUseCase
 import es.joshluq.kmsafe.domain.usecase.SignUpUseCase
+import es.joshluq.kmsafe.domain.usecase.SyncStationsUseCase
 import es.joshluq.kmsafe.domain.usecase.StartAutoTrackingUseCase
 import es.joshluq.kmsafe.domain.usecase.StartTrialUseCase
 import es.joshluq.kmsafe.domain.usecase.StopAutoTrackingUseCase
@@ -331,4 +340,88 @@ abstract class UseCaseModule {
     abstract fun bindGetImageBytesUseCase(
         useCase: GetImageBytesUseCase
     ): UseCase<GetImageBytesUseCase.Input, GetImageBytesUseCase.Output>
+
+    @Binds
+    @GetExpensesByVehicle
+    abstract fun bindGetExpensesByVehicleUseCase(
+        useCase: es.joshluq.kmsafe.domain.usecase.GetExpensesByVehicleUseCase
+    ): FlowUseCase<es.joshluq.kmsafe.domain.usecase.GetExpensesByVehicleUseCase.Input, es.joshluq.kmsafe.domain.usecase.GetExpensesByVehicleUseCase.Output>
+
+    @Binds
+    @SaveFuelExpense
+    abstract fun bindSaveFuelExpenseUseCase(
+        useCase: es.joshluq.kmsafe.domain.usecase.SaveFuelExpenseUseCase
+    ): FlowUseCase<es.joshluq.kmsafe.domain.usecase.SaveFuelExpenseUseCase.Input, es.joshluq.kmsafe.domain.usecase.SaveFuelExpenseUseCase.Output>
+
+    @Binds
+    @DeleteFuelExpense
+    abstract fun bindDeleteFuelExpenseUseCase(
+        useCase: es.joshluq.kmsafe.domain.usecase.DeleteFuelExpenseUseCase
+    ): FlowUseCase<es.joshluq.kmsafe.domain.usecase.DeleteFuelExpenseUseCase.Input, es.joshluq.kmsafe.domain.usecase.DeleteFuelExpenseUseCase.Output>
+
+    @Binds
+    @GetStationVolatility
+    abstract fun bindGetStationVolatilityUseCase(
+        useCase: es.joshluq.kmsafe.domain.usecase.GetStationVolatilityUseCase
+    ): FlowUseCase<es.joshluq.kmsafe.domain.usecase.GetStationVolatilityUseCase.Input, es.joshluq.kmsafe.domain.usecase.GetStationVolatilityUseCase.Output>
+
+    @Binds
+    @GetElectrificationSavings
+    abstract fun bindGetElectrificationSavingsUseCase(
+        useCase: es.joshluq.kmsafe.domain.usecase.GetElectrificationSavingsUseCase
+    ): FlowUseCase<es.joshluq.kmsafe.domain.usecase.GetElectrificationSavingsUseCase.Input, es.joshluq.kmsafe.domain.usecase.GetElectrificationSavingsUseCase.Output>
+
+    @Binds
+    @GetAllServiceStations
+    abstract fun bindGetAllServiceStationsUseCase(
+        useCase: GetAllServiceStationsUseCase
+    ): FlowUseCase<GetAllServiceStationsUseCase.Input, GetAllServiceStationsUseCase.Output>
+
+    @Binds
+    @GetFavoriteServiceStations
+    abstract fun bindGetFavoriteServiceStationsUseCase(
+        useCase: GetFavoriteServiceStationsUseCase
+    ): FlowUseCase<GetFavoriteServiceStationsUseCase.Input, GetFavoriteServiceStationsUseCase.Output>
+
+    @Binds
+    @SaveServiceStation
+    abstract fun bindSaveServiceStationUseCase(
+        useCase: SaveServiceStationUseCase
+    ): FlowUseCase<SaveServiceStationUseCase.Input, SaveServiceStationUseCase.Output>
+
+    @Binds
+    @SetFavoriteStation
+    abstract fun bindSetFavoriteStationUseCase(
+        useCase: SetFavoriteStationUseCase
+    ): FlowUseCase<SetFavoriteStationUseCase.Input, SetFavoriteStationUseCase.Output>
+
+    @Binds
+    @DeleteServiceStation
+    abstract fun bindDeleteServiceStationUseCase(
+        useCase: DeleteServiceStationUseCase
+    ): FlowUseCase<DeleteServiceStationUseCase.Input, DeleteServiceStationUseCase.Output>
+
+    @Binds
+    @GetServiceStationDetail
+    abstract fun bindGetServiceStationDetailUseCase(
+        useCase: GetServiceStationDetailUseCase
+    ): FlowUseCase<GetServiceStationDetailUseCase.Input, GetServiceStationDetailUseCase.Output>
+
+    @Binds
+    @SyncStationGeofences
+    abstract fun bindSyncStationGeofencesUseCase(
+        useCase: SyncStationGeofencesUseCase
+    ): FlowUseCase<SyncStationGeofencesUseCase.Input, SyncStationGeofencesUseCase.Output>
+
+    @Binds
+    @HandleGeofenceTransition
+    abstract fun bindHandleGeofenceTransitionUseCase(
+        useCase: HandleGeofenceTransitionUseCase
+    ): FlowUseCase<HandleGeofenceTransitionUseCase.Input, HandleGeofenceTransitionUseCase.Output>
+
+    @Binds
+    @SyncStations
+    abstract fun bindSyncStationsUseCase(
+        useCase: SyncStationsUseCase
+    ): FlowUseCase<SyncStationsUseCase.Input, SyncStationsUseCase.Output>
 }

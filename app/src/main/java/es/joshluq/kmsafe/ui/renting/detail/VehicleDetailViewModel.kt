@@ -47,7 +47,18 @@ class VehicleDetailViewModel @Inject constructor(
         when (event) {
             Event.OnBackClicked -> launchEffect(Effect.NavigateBack)
             Event.OnEditClicked -> launchEffect(Effect.NavigateToEdit(vehicleId))
-            Event.OnDeleteClicked -> updateState { copy(error = null) } // Logic for confirmation handled in UI
+            Event.OnDeleteClicked -> {
+                val isSelected = state.value.renting?.isSelected ?: false
+                if (isSelected) {
+                    updateState { 
+                        copy(
+                            error = TextProvider.Resource(R.string.onboarding_error_delete_selected)
+                        ) 
+                    }
+                } else {
+                    // Logic for confirmation handled in UI
+                }
+            }
             Event.OnConfirmDelete -> handleDelete()
             Event.OnCancelDelete -> { /* No-op */ }
             Event.OnDismissError -> updateState { copy(error = null) }

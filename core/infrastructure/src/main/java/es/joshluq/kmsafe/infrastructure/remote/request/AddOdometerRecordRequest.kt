@@ -11,7 +11,7 @@ data class AddOdometerRecordRequest(
     @JsonProperty("timestamp")
     val timestamp: String,
     @JsonProperty("odometer_value")
-    val odometerValue: Int,
+    val odometerValue: Double,
     @JsonProperty("label")
     val label: String? = null,
     @JsonProperty("fuel_consumed")

@@ -55,7 +55,7 @@ import es.joshluq.canvaskit.components.navigation.CanvasKitTopBar
 import es.joshluq.canvaskit.foundations.theme.CanvasKitTheme
 import es.joshluq.kmsafe.R
 import es.joshluq.kmsafe.domain.model.RentingContract
-import es.joshluq.kmsafe.ui.util.safeClick
+import es.joshluq.kmsafe.core.ui.util.safeClick
 import kotlinx.coroutines.flow.Flow
 
 @Composable
@@ -152,7 +152,7 @@ fun VehicleListScreen(
                         action = {
                             CanvasKitButton(
                                 text = stringResource(R.string.vehicles_add_button),
-                                onClick = safeClick { onNavigateToAddVehicle() },
+                                onClick = safeClick { onEvent(Event.OnAddVehicleClicked) },
                                 modifier = Modifier.fillMaxWidth()
                             )
                         }
@@ -348,23 +348,23 @@ fun VehicleListScreenPreview() {
                     RentingContract(
                         id = "1",
                         vehicleName = "Tesla Model 3 Tesla Model 3 Tesla Model 3 Tesla Model 3",
-                        totalKms = 30000,
+                        totalKms = 30000.0,
                         durationMonths = 36,
                         isSelected = true,
                         startDate = 0,
-                        startOdometer = 0,
-                        currentOdometer = 0,
+                        startOdometer = 0.0,
+                        currentOdometer = 0.0,
                         vehicleImageUrl = "https://www.carlogos.org/car-logos/tesla-logo.png"
                     ),
                     RentingContract(
                         id = "2",
                         vehicleName = "Ford Focus",
-                        totalKms = 45000,
+                        totalKms = 45000.0,
                         durationMonths = 48,
                         isSelected = false,
                         startDate = 0,
-                        startOdometer = 0,
-                        currentOdometer = 0,
+                        startOdometer = 0.0,
+                        currentOdometer = 0.0,
                         vehicleImageUrl = "https://www.carlogos.org/car-logos/ford-logo.png"
                     )
                 )

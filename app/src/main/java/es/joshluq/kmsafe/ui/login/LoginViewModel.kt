@@ -69,6 +69,7 @@ class LoginViewModel @Inject constructor(
 ) : ScreenViewModel<State, Event, Effect>() {
 
     private var shouldClearDataOnSuccess = false
+    private var pendingUser: User? = null
 
     init {
         analytics.track(AnalyticsEvent.Custom("login_started"))
@@ -174,7 +175,16 @@ class LoginViewModel @Inject constructor(
     private fun handleConfirmUserConflict() {
         shouldClearDataOnSuccess = true
         updateState { copy(showUserConflictWarning = false) }
-        performLogin()
+        
+        val user = pendingUser
+        if (user != null) {
+            // Continuation for Google Login
+            handleAuthSuccess(user)
+            pendingUser = null
+        } else {
+            // Continuation for Email Login
+            performLogin()
+        }
     }
 
     private fun performLogin() {
@@ -205,7 +215,25 @@ class LoginViewModel @Inject constructor(
                     updateState { copy(isLoading = false, error = output.error.toText()) }
                 }
                 is SignInWithGoogleUseCase.Output.Success -> {
-                    handleAuthSuccess(output.user)
+                    evaluateIdentityConflictUseCase(EvaluateIdentityConflictUseCase.Input(output.user.email))
+                        .onEach { conflictOutput ->
+                            when (conflictOutput) {
+                                EvaluateIdentityConflictUseCase.Output.Progress -> updateState { copy(isLoading = true) }
+                                EvaluateIdentityConflictUseCase.Output.NoConflict -> {
+                                    shouldClearDataOnSuccess = false
+                                    handleAuthSuccess(output.user)
+                                }
+                                EvaluateIdentityConflictUseCase.Output.SilentCleanup -> {
+                                    shouldClearDataOnSuccess = true
+                                    handleAuthSuccess(output.user)
+                                }
+                                EvaluateIdentityConflictUseCase.Output.ShowWarning -> {
+                                    analytics.track(AnalyticsEvent.Custom("user_conflict_alert_shown"))
+                                    pendingUser = output.user
+                                    updateState { copy(showUserConflictWarning = true, isLoading = false) }
+                                }
+                            }
+                        }.launchIn(viewModelScope)
                 }
             }
         }.launchIn(viewModelScope)

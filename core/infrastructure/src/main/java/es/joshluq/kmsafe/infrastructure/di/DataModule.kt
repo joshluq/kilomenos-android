@@ -9,8 +9,10 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import es.joshluq.kmsafe.infrastructure.InfrastructureConfig
 import es.joshluq.kmsafe.infrastructure.local.AppDatabase
+import es.joshluq.kmsafe.infrastructure.local.dao.FuelExpenseDao
 import es.joshluq.kmsafe.infrastructure.local.dao.OdometerRecordDao
 import es.joshluq.kmsafe.infrastructure.local.dao.RentingContractDao
+import es.joshluq.kmsafe.infrastructure.local.dao.ServiceStationDao
 import es.joshluq.kmsafe.infrastructure.local.dao.TripRouteDao
 import javax.inject.Singleton
 
@@ -45,7 +47,12 @@ object DataModule {
                 AppDatabase.MIGRATION_8_9,
                 AppDatabase.MIGRATION_9_10,
                 AppDatabase.MIGRATION_10_11,
-                AppDatabase.MIGRATION_11_12
+                AppDatabase.MIGRATION_11_12,
+                AppDatabase.MIGRATION_12_13,
+                AppDatabase.MIGRATION_13_14,
+                AppDatabase.MIGRATION_14_15,
+                AppDatabase.MIGRATION_15_16,
+                AppDatabase.MIGRATION_16_17
             ).build()
         }
 
@@ -74,5 +81,23 @@ object DataModule {
     @Singleton
     fun provideTripRouteDao(database: AppDatabase): TripRouteDao {
         return database.tripRouteDao()
+    }
+
+    /**
+     * Provides the [FuelExpenseDao] from the [AppDatabase].
+     */
+    @Provides
+    @Singleton
+    fun provideFuelExpenseDao(database: AppDatabase): FuelExpenseDao {
+        return database.fuelExpenseDao()
+    }
+
+    /**
+     * Provides the [ServiceStationDao] from the [AppDatabase].
+     */
+    @Provides
+    @Singleton
+    fun provideServiceStationDao(database: AppDatabase): ServiceStationDao {
+        return database.serviceStationDao()
     }
 }

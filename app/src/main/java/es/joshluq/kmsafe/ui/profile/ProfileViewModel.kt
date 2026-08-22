@@ -16,9 +16,11 @@ import es.joshluq.kmsafe.domain.usecase.DeleteAccountUseCase
 import es.joshluq.kmsafe.domain.usecase.GetCurrentUserUseCase
 import es.joshluq.kmsafe.domain.usecase.GetEntitlementsUseCase
 import es.joshluq.kmsafe.domain.usecase.SignOutUseCase
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import javax.inject.Inject
+import kotlin.time.Duration.Companion.milliseconds
 
 @HiltViewModel
 class ProfileViewModel @Inject constructor(
@@ -121,17 +123,33 @@ class ProfileViewModel @Inject constructor(
     private fun handleDeleteAccount() {
         deleteAccountUseCase(DeleteAccountUseCase.Input).onEach { output ->
             when (output) {
-                DeleteAccountUseCase.Output.Progress -> updateState { copy(isLoading = true) }
+                DeleteAccountUseCase.Output.Progress -> {
+                    updateState { copy(isDeleting = true, deletionMessage = TextProvider.Resource(R.string.profile_delete_account_step_cleaning)) }
+                }
                 is DeleteAccountUseCase.Output.Failure -> {
                     updateState {
                         copy(
-                            isLoading = false,
+                            isDeleting = false,
+                            deletionMessage = null,
                             error = TextProvider.Resource(R.string.profile_delete_account_error)
                         )
                     }
                 }
                 DeleteAccountUseCase.Output.Success -> {
-                    logger.i("ProfileViewModel", "Account deletion success, navigating to Login")
+                    logger.i("ProfileViewModel", "Account deletion success, showing farewell messages")
+                    
+                    updateState { copy(deletionMessage = TextProvider.Resource(R.string.profile_delete_account_step_cloud)) }
+                    delay(1500.milliseconds)
+                    
+                    updateState { copy(deletionMessage = TextProvider.Resource(R.string.profile_delete_account_step_farewell)) }
+                    delay(2000.milliseconds)
+                    
+                    updateState { copy(deletionMessage = TextProvider.Resource(R.string.profile_delete_account_step_final)) }
+                    delay(1500.milliseconds)
+                    
+                    updateState { copy(deletionMessage = TextProvider.Resource(R.string.profile_delete_account_step_welcome_back)) }
+                    delay(2000.milliseconds)
+
                     launchEffect(Effect.NavigateToLogin)
                 }
             }

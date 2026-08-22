@@ -34,6 +34,7 @@ configure<ApplicationExtension> {
     defaultConfig {
         versionCode = AppConfig.versionCode
         versionName = AppConfig.versionName
+        testInstrumentationRunner = "es.joshluq.kmsafe.HiltTestRunner"
     }
 
     buildFeatures {
@@ -93,6 +94,8 @@ configure<ApplicationExtension> {
 }
 
 dependencies {
+    implementation(project(":feature:expenses"))
+    implementation(project(":core:ui"))
     implementation(project(":core:infrastructure"))
     implementation(project(":core:domain"))
 

@@ -83,13 +83,13 @@ class ProjectionAnalysisViewModel @Inject constructor(
                         baselineProjection = projection,
                         currentRealDailyAverage = projection?.dailyAverage?.toFloat() ?: 0f,
                         simulatedDailyKm = projection?.dailyAverage?.toFloat() ?: 0f,
-                        simulatedFinalBalance = projection?.expectedFinalBalance ?: 0,
+                        simulatedFinalBalance = projection?.expectedFinalBalance ?: 0.0,
                         daysRemaining = remainingDays,
                         totalContractKms = contract.totalKms,
                         estimatedPenalty = if (projection != null) {
                             val balanceWithTrip = projection.expectedFinalBalance - plannedTripKms
                             if (balanceWithTrip < 0) {
-                                balanceWithTrip.toDouble() * -penaltyPricePerKm
+                                balanceWithTrip * -penaltyPricePerKm
                             } else {
                                 0.0
                             }
@@ -100,7 +100,7 @@ class ProjectionAnalysisViewModel @Inject constructor(
                             val availableKms = (contract.totalKms + contract.startOdometer - (overviewOutput.actualKmsDrivenSinceStart + contract.startOdometer)).coerceAtLeast(
                                 0.0
                             )
-                            (availableKms / remainingDays).toInt()
+                            availableKms / remainingDays
                         } else {
                             null
                         }
@@ -127,7 +127,7 @@ class ProjectionAnalysisViewModel @Inject constructor(
 
         updateState {
             copy(
-                simulatedFinalBalance = simulatedBalance.toInt(),
+                simulatedFinalBalance = simulatedBalance,
                 estimatedPenalty = if (simulatedBalance < 0) simulatedBalance * -penaltyPricePerKm else 0.0
             )
         }

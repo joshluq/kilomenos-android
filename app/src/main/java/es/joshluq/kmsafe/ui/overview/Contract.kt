@@ -14,10 +14,10 @@ import es.joshluq.kmsafe.ui.overview.model.MonthlyUsageUiModel
  */
 data class State(
     val renting: RentingContract? = null,
-    val balance: Int = 0,
-    val dailyLimit: Int = 0,
-    val monthlyLimit: Int = 0,
-    val totalKmsDriven: Int = 0,
+    val balance: Double = 0.0,
+    val dailyLimit: Double = 0.0,
+    val monthlyLimit: Double = 0.0,
+    val totalKmsDriven: Double = 0.0,
     val timePercentage: Float = 0f,
     val kmsPercentage: Float = 0f,
     val differencePercentage: Float = 0f,
@@ -47,7 +47,8 @@ data class State(
     val currentPointCount: Int = 0,
     val tripStartTime: Long? = null,
     val showBluetoothSuggestionBanner: Boolean = false,
-    val error: TextProvider? = null
+    val error: TextProvider? = null,
+    val newRecordDateError: TextProvider? = null
 ) : UiState {
 
     companion object {
@@ -72,6 +73,7 @@ sealed interface Event : UiEvent {
     data class OnNewOdometerChanged(val value: String) : Event
     data class OnNewLabelChanged(val value: String) : Event
     data class OnNewFuelChanged(val value: String) : Event
+    data class OnNewRecordDateChanged(val timestamp: Long) : Event
     data class OnSaveRecordClicked(val timestamp: Long) : Event
     data class OnSwitchVehicleClicked(val id: String) : Event
     data object OnDismissError : Event

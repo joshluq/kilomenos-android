@@ -20,6 +20,7 @@ import es.joshluq.kmsafe.domain.usecase.SelectContractUseCase
 import es.joshluq.kmsafe.domain.usecase.SyncContractsUseCase
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.take
 import javax.inject.Inject
 
 @HiltViewModel
@@ -53,7 +54,19 @@ class VehicleListViewModel @Inject constructor(
                 logger.d("VehicleListViewModel", "Effect launched: NavigateToVehicleDetails")
                 launchEffect(Effect.NavigateToVehicleDetails(event.id))
             }
-            is Event.OnDeleteVehicleClicked -> updateState { copy(vehicleToDelete = event.vehicle) }
+            is Event.OnDeleteVehicleClicked -> {
+                if (event.vehicle.isSelected) {
+                    updateState { 
+                        copy(
+                            error = es.joshluq.foundationkit.text.TextProvider.Resource(
+                                es.joshluq.kmsafe.R.string.onboarding_error_delete_selected
+                            )
+                        ) 
+                    }
+                } else {
+                    updateState { copy(vehicleToDelete = event.vehicle) }
+                }
+            }
             Event.OnDeleteConfirmed -> {
                 val idToDelete = state.value.vehicleToDelete?.id
                 updateState { copy(vehicleToDelete = null) }
@@ -78,6 +91,7 @@ class VehicleListViewModel @Inject constructor(
 
     private fun handleAddVehicle() {
         checkFeatureAccessUseCase(CheckFeatureAccessUseCase.Input(Feature.MULTI_VEHICLE))
+            .take(1)
             .onEach { output ->
                 if (output is CheckFeatureAccessUseCase.Output.Success) {
                     if (state.value.vehicles.isNotEmpty() && !output.isGranted) {

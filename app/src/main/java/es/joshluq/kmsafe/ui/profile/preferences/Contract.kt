@@ -13,6 +13,7 @@ data class State(
     val canStartTrial: Boolean = false,
     val showTrialOffer: Boolean = false,
     val isPrivacyOptionsRequired: Boolean = false,
+    val isEntitlementsLoaded: Boolean = false,
     val isLoading: Boolean = false,
     val error: TextProvider? = null
 ) : UiState {

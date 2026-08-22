@@ -1,0 +1,19 @@
+# KiloMenos - Test Case: E2E-07 (Firebase App Testing Agent)
+tests:
+  - displayName: "E2E-07: Seguridad de Sesión Cifrada y Derecho al Olvido"
+    steps:
+      - goal: "Simular una sesión inconsistente o corrupta."
+        hint: "Elimina de forma manual el UserSessionModel de las preferencias pero conserva las claves en Android Keystore (simulando cold start corrupto)."
+        finalScreenAssertion: "La aplicación debe lanzar el mecanismo de auto-healing, gatillar un SignOut forzado y redirigir a la pantalla de Login."
+
+      - goal: "Iniciar sesión con credenciales válidas."
+        hint: "Ingresa el email y la contraseña correcta del usuario de prueba y presiona Acceder."
+        finalScreenAssertion: "Debo acceder directamente al Dashboard con la sesión activa restablecida."
+
+      - goal: "Navegar a la pantalla de eliminación de cuenta."
+        hint: "Ve a la pestaña Perfil, busca la sección de privacidad y pulsa en profile_delete_account_button ('Eliminar mi cuenta')."
+        finalScreenAssertion: "Debo ver un diálogo de confirmación con advertencia destructiva de borrado de datos."
+
+      - goal: "Confirmar el borrado total (RGPD Derecho al Olvido)."
+        hint: "Presiona en 'Eliminar para siempre' en el diálogo de confirmación."
+        finalScreenAssertion: "La aplicación debe cerrarse o redirigir al Login. La base local de Room y las SharedPrefs/DataStore deben quedar vacías."

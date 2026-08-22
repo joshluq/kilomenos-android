@@ -76,8 +76,8 @@ import es.joshluq.canvaskit.components.navigation.CanvasKitTopBar
 import es.joshluq.canvaskit.foundations.theme.CanvasKitTheme
 import es.joshluq.kmsafe.R
 import es.joshluq.kmsafe.domain.model.OdometerRecord
-import es.joshluq.kmsafe.ui.util.safeClick
-import es.joshluq.kmsafe.ui.util.safeClickable
+import es.joshluq.kmsafe.core.ui.util.safeClick
+import es.joshluq.kmsafe.core.ui.util.safeClickable
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -349,7 +349,7 @@ private fun TeaserOverlay(
 }
 
 @Composable
-private fun HeroMileageCard(kms: Int) {
+private fun HeroMileageCard(kms: Double) {
     CanvasKitCard(
         modifier = Modifier.fillMaxWidth()
     ) {
@@ -559,7 +559,7 @@ fun EditRecordDialog(
                         placeholder = stringResource(R.string.overview_current_odometer_placeholder),
                         suffix = stringResource(R.string.onboarding_km_suffix),
                         keyboardOptions = KeyboardOptions(
-                            keyboardType = androidx.compose.ui.text.input.KeyboardType.Number,
+                            keyboardType = androidx.compose.ui.text.input.KeyboardType.Decimal,
                             imeAction = ImeAction.Next
                         ),
                         keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Next) })
@@ -647,7 +647,7 @@ fun RecordDetailScreenPreview() {
                     id = "1",
                     contractId = "1",
                     timestamp = System.currentTimeMillis(),
-                    odometerValue = 12000,
+                    odometerValue = 12000.0,
                     isInitialRecord = false,
                     label = "Viaje al trabajo",
                     fuelAmount = 15.0

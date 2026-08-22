@@ -39,7 +39,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.LocalLocale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -60,6 +59,7 @@ import es.joshluq.canvaskit.components.navigation.CanvasKitTopBar
 import es.joshluq.canvaskit.foundations.theme.CanvasKitTheme
 import es.joshluq.kmsafe.BuildConfig
 import es.joshluq.kmsafe.R
+import es.joshluq.kmsafe.core.ui.util.NumberFormatter
 import es.joshluq.kmsafe.domain.model.OdometerRecord
 import es.joshluq.kmsafe.domain.model.RecordWithIndicator
 import es.joshluq.kmsafe.ui.common.components.AdMobBanner
@@ -217,7 +217,7 @@ fun HistoryScreen(
 }
 
 @Composable
-private fun SummaryHeader(totalKms: Int, totalRecordsCount: Int) {
+private fun SummaryHeader(totalKms: Double, totalRecordsCount: Int) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -234,7 +234,7 @@ private fun SummaryHeader(totalKms: Int, totalRecordsCount: Int) {
             modifier = Modifier.padding(top = CanvasKitTheme.spacing.xxs)
         ) {
             Text(
-                text = String.format(LocalLocale.current.platformLocale, "%,d", totalKms),
+                text = NumberFormatter.formatDistance(totalKms),
                 style = CanvasKitTheme.typography.displayLarge,
                 color = CanvasKitTheme.colors.brandAccent,
             )
@@ -365,7 +365,13 @@ private fun HistoryItem(
 ) {
     val formatter = remember {
         SimpleDateFormat("dd MMM, HH:mm", Locale.getDefault()).apply {
-            timeZone = TimeZone.getDefault()
+            // Check if the record is likely a "Day" record (normalized to UTC 00:00)
+            // or if it has a specific time. For now, we keep it simple but consistent.
+            timeZone = if (item.record.isInitialRecord) {
+                TimeZone.getTimeZone("UTC")
+            } else {
+                TimeZone.getDefault()
+            }
         }
     }
     val dateStr = formatter.format(Date(item.record.timestamp))
@@ -438,7 +444,7 @@ fun HistoryScreenPreview() {
     CanvasKitTheme {
         HistoryScreen(
             state = HistoryState(
-                totalKms = 1500,
+                totalKms = 1500.51,
                 totalRecordsCount = 12,
                 filteredGroups = mapOf(
                     "OCTUBRE 2023" to listOf(
@@ -447,7 +453,7 @@ fun HistoryScreenPreview() {
                                 "2",
                                 "1",
                                 System.currentTimeMillis(),
-                                1500,
+                                1500.45,
                                 false,
                                 label = "Viaje Trabajo"
                             ),
@@ -468,7 +474,7 @@ fun HistoryScreenEmptyPreview() {
     CanvasKitTheme {
         HistoryScreen(
             state = HistoryState(
-                totalKms = 0,
+                totalKms = 0.0,
                 totalRecordsCount = 0,
                 filteredGroups = emptyMap()
             ),

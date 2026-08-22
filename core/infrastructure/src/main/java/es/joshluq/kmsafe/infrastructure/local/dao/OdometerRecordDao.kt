@@ -17,6 +17,9 @@ interface OdometerRecordDao {
     @Query("SELECT * FROM odometer_record WHERE contractId = :contractId ORDER BY timestamp DESC")
     fun getAllRecords(contractId: String): Flow<List<OdometerRecordEntity>>
 
+    @Query("SELECT * FROM odometer_record WHERE contractId = :contractId")
+    suspend fun getRecordsByContractIdSync(contractId: String): List<OdometerRecordEntity>
+
     @Query("SELECT * FROM odometer_record")
     fun getAllRecordsForBackup(): Flow<List<OdometerRecordEntity>>
 

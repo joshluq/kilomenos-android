@@ -1,0 +1,23 @@
+# KiloMenos - Test Case: E2E-06 (Firebase App Testing Agent)
+tests:
+  - displayName: "E2E-06: Repostajes A+C, Geocerca y Notificación con Deep Link"
+    steps:
+      - goal: "Navegar a la pantalla de estaciones de servicio."
+        hint: "Pulsa sobre la sección de Combustible / Estaciones."
+        finalScreenAssertion: "Debo ver el listado de estaciones de servicio disponibles en KmSafe."
+
+      - goal: "Agregar y marcar una estación favorita."
+        hint: "Crea una estación de servicio (ej: Repsol Norte), asóciale una ubicación y pulsa en la estrella de favorito."
+        finalScreenAssertion: "La estación 'Repsol Norte' debe aparecer en el listado de favoritos."
+
+      - goal: "Simular entrada en la geocerca de la estación favorita."
+        hint: "Cambia la ubicación del emulador para que coincida con las coordenadas de la estación 'Repsol Norte'."
+        finalScreenAssertion: "Debo recibir una notificación proactiva de KmSafe en la barra de estado del emulador."
+
+      - goal: "Navegar mediante Deep Link y registrar un gasto normal."
+        hint: "Pulsa sobre la notificación recibida. El sistema te redirige a ExpensesScreen. Rellena precio, volumen (Lleno) y pulsa expense_save_button."
+        finalScreenAssertion: "El repostaje normal debe guardarse en Room con el estado correspondiente."
+
+      - goal: "Realizar un segundo repostaje lleno y comprobar algoritmo A+C."
+        hint: "Abre el formulario de gastos, registra un nuevo repostaje lleno en la misma estación con un odómetro superior y pulsa expense_save_button."
+        finalScreenAssertion: "El listado de gastos debe mostrar de forma dinámica un banner con el consumo promedio calculado (L/100km) basado en la diferencia de odómetro."

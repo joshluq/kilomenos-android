@@ -90,7 +90,7 @@ class GetHistoryUseCase @Inject constructor(
         )
     }
 
-    private fun isOverLimit(currentTotalOdometer: Int, timestamp: Long, contract: RentingContract?): Boolean {
+    private fun isOverLimit(currentTotalOdometer: Double, timestamp: Long, contract: RentingContract?): Boolean {
         if (contract == null) return false
         val totalDays = contract.durationMonths * DAYS_IN_MONTH
         val dailyLimit = contract.totalKms / totalDays
@@ -112,7 +112,7 @@ class GetHistoryUseCase @Inject constructor(
             val contractId: String,
             val initialRecord: OdometerRecord?,
             val allRecords: List<RecordWithIndicator>,
-            val totalKms: Int,
+            val totalKms: Double,
             val totalRecordsCount: Int
         ) : Output
     }

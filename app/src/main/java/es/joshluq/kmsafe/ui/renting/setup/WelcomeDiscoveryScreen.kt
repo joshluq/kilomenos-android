@@ -20,6 +20,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddRoad
 import androidx.compose.material3.Icon
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
@@ -36,7 +37,7 @@ import es.joshluq.canvaskit.components.buttons.CanvasKitButton
 import es.joshluq.canvaskit.components.buttons.CanvasKitButtonVariant
 import es.joshluq.canvaskit.foundations.theme.CanvasKitTheme
 import es.joshluq.kmsafe.R
-import es.joshluq.kmsafe.ui.util.safeClick
+import es.joshluq.kmsafe.core.ui.util.safeClick
 import kotlinx.coroutines.launch
 
 @Composable
@@ -47,104 +48,107 @@ fun WelcomeDiscoveryScreen(
     val pagerState = rememberPagerState(pageCount = { 3 })
     val scope = rememberCoroutineScope()
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(CanvasKitTheme.colors.backgroundPrimary)
-            .padding(24.dp)
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.End
-        ) {
-            CanvasKitButton(
-                variant = CanvasKitButtonVariant.Ghost,
-                onClick = safeClick { onSkip() }
+    Scaffold(     containerColor = CanvasKitTheme.colors.backgroundSecondary) { paddingValues ->
+        Box(modifier = Modifier.fillMaxSize().padding(paddingValues)){
+            Column(
+                modifier = Modifier.fillMaxSize()
             ) {
-                Text(
-                    text = stringResource(R.string.welcome_discovery_action_skip),
-                    color = CanvasKitTheme.colors.textSecondary
-                )
-            }
-        }
-
-        HorizontalPager(
-            state = pagerState,
-            modifier = Modifier
-                .weight(1f)
-                .fillMaxWidth()
-        ) { page ->
-            DiscoverySlide(
-                slide = when (page) {
-                    0 -> DiscoverySlideData(
-                        title = stringResource(R.string.welcome_discovery_slide1_title),
-                        description = stringResource(R.string.welcome_discovery_slide1_desc),
-                        visual = { BalanceMockup() }
-                    )
-                    1 -> DiscoverySlideData(
-                        title = stringResource(R.string.welcome_discovery_slide2_title),
-                        description = stringResource(R.string.welcome_discovery_slide2_desc),
-                        visual = { ContractMockup() }
-                    )
-                    else -> DiscoverySlideData(
-                        title = stringResource(R.string.welcome_discovery_slide3_title),
-                        description = stringResource(R.string.welcome_discovery_slide3_desc),
-                        visual = { OdometerMockup() }
-                    )
-                }
-            )
-        }
-
-        Column(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(24.dp)
-        ) {
-            // Pager Indicator
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                repeat(3) { iteration ->
-                    val color = if (pagerState.currentPage == iteration) {
-                        CanvasKitTheme.colors.brandAccent
-                    } else {
-                        CanvasKitTheme.colors.borderSubtle
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp),
+                    horizontalArrangement = Arrangement.End
+                ) {
+                    CanvasKitButton(
+                        variant = CanvasKitButtonVariant.Ghost,
+                        onClick = safeClick { onSkip() }
+                    ) {
+                        Text(
+                            text = stringResource(R.string.welcome_discovery_action_skip),
+                            color = CanvasKitTheme.colors.textSecondary
+                        )
                     }
-                    Box(
-                        modifier = Modifier
-                            .size(8.dp)
-                            .clip(CircleShape)
-                            .background(color)
-                    )
                 }
-            }
 
-            CanvasKitButton(
-                modifier = Modifier.fillMaxWidth(),
-                onClick = safeClick {
-                    if (pagerState.currentPage < 2) {
-                        scope.launch {
-                            pagerState.animateScrollToPage(pagerState.currentPage + 1)
+                HorizontalPager(
+                    state = pagerState,
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxWidth()
+                ) { page ->
+                    DiscoverySlide(
+                        slide = when (page) {
+                            0 -> DiscoverySlideData(
+                                title = stringResource(R.string.welcome_discovery_slide1_title),
+                                description = stringResource(R.string.welcome_discovery_slide1_desc),
+                                visual = { BalanceMockup() }
+                            )
+                            1 -> DiscoverySlideData(
+                                title = stringResource(R.string.welcome_discovery_slide2_title),
+                                description = stringResource(R.string.welcome_discovery_slide2_desc),
+                                visual = { ContractMockup() }
+                            )
+                            else -> DiscoverySlideData(
+                                title = stringResource(R.string.welcome_discovery_slide3_title),
+                                description = stringResource(R.string.welcome_discovery_slide3_desc),
+                                visual = { OdometerMockup() }
+                            )
                         }
-                    } else {
-                        onNavigateToRentingSetup()
+                    )
+                }
+
+                Column(
+                    modifier = Modifier.fillMaxWidth().padding(24.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(24.dp)
+                ) {
+                    // Pager Indicator
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        repeat(3) { iteration ->
+                            val color = if (pagerState.currentPage == iteration) {
+                                CanvasKitTheme.colors.brandAccent
+                            } else {
+                                CanvasKitTheme.colors.borderSubtle
+                            }
+                            Box(
+                                modifier = Modifier
+                                    .size(8.dp)
+                                    .clip(CircleShape)
+                                    .background(color)
+                            )
+                        }
+                    }
+
+                    CanvasKitButton(
+                        modifier = Modifier.fillMaxWidth(),
+                        onClick = safeClick {
+                            if (pagerState.currentPage < 2) {
+                                scope.launch {
+                                    pagerState.animateScrollToPage(pagerState.currentPage + 1)
+                                }
+                            } else {
+                                onNavigateToRentingSetup()
+                            }
+                        }
+                    ) { contentColor ->
+                        Text(
+                            text = if (pagerState.currentPage < 2) {
+                                stringResource(R.string.welcome_discovery_action_next)
+                            } else {
+                                stringResource(R.string.welcome_discovery_action_start)
+                            },
+                            color = contentColor,
+                            style = CanvasKitTheme.typography.bodyLarge,
+                            fontWeight = FontWeight.Bold
+                        )
                     }
                 }
-            ) { contentColor ->
-                Text(
-                    text = if (pagerState.currentPage < 2) {
-                        stringResource(R.string.welcome_discovery_action_next)
-                    } else {
-                        stringResource(R.string.welcome_discovery_action_start)
-                    },
-                    color = contentColor,
-                    style = CanvasKitTheme.typography.bodyLarge,
-                    fontWeight = FontWeight.Bold
-                )
+                Spacer(modifier = Modifier.height(16.dp))
             }
         }
-        Spacer(modifier = Modifier.height(16.dp))
+
     }
+
 }
 
 @Composable

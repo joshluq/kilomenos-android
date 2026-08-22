@@ -91,10 +91,17 @@ class ActivityTransitionReceiver : BroadcastReceiver() {
                 }
 
                 // Bluetooth Validation: If a device is paired, check if it's connected
-                val contractOutput = getRentingContractUseCase(GetRentingContractUseCase.Input).first()
+                val contractOutput =
+                    getRentingContractUseCase(GetRentingContractUseCase.Input).first { it !is GetRentingContractUseCase.Output.Progress }
+
                 val contract = if (contractOutput is GetRentingContractUseCase.Output.Success) contractOutput.contract else null
 
-                val bluetoothMac = contract?.bluetoothDeviceAddress
+                if (contract == null) {
+                    logger.w("ActivityReceiver", "In-Vehicle detected but no active contract found. Aborting.")
+                    return@launch
+                }
+
+                val bluetoothMac = contract.bluetoothDeviceAddress
                 if (bluetoothMac != null && !isBluetoothDeviceConnected(context, bluetoothMac)) {
                     logger.i(
                         "ActivityReceiver",

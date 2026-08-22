@@ -5,6 +5,7 @@ import es.joshluq.foundationkit.text.TextProvider
 import es.joshluq.foundationkit.viewmodel.UiEffect
 import es.joshluq.foundationkit.viewmodel.UiEvent
 import es.joshluq.foundationkit.viewmodel.UiState
+import es.joshluq.kmsafe.domain.model.FuelType
 import es.joshluq.kmsafe.domain.model.SubscriptionLevel
 
 data class State(
@@ -14,6 +15,7 @@ data class State(
 
     // Step 1: Identity
     val vehicleName: String = "",
+    val fuelType: FuelType = FuelType.GASOLINE_95,
     val vehicleImageUrl: String? = null,
     val selectedImageUri: Uri? = null,
 
@@ -69,6 +71,7 @@ sealed interface Event : UiEvent {
 
     // Input Changes
     data class OnVehicleNameChanged(val value: String) : Event
+    data class OnFuelTypeChanged(val value: FuelType) : Event
     data class OnOriginalImageSelected(val uri: Uri?) : Event
     data class OnImageSelected(val uri: Uri) : Event
     data class OnStartDateChanged(val value: String) : Event

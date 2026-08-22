@@ -10,4 +10,7 @@ import com.fasterxml.jackson.annotation.JsonProperty
 class AddRentingResponse : NetworkResponse() {
     @JsonProperty("contract")
     val contract: RentingContractResponse? = null
+
+    @JsonProperty("initial_record")
+    val initialRecord: OdometerRecordResponse? = null
 }

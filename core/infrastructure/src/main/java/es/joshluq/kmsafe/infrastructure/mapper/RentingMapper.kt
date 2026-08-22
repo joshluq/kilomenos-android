@@ -1,6 +1,7 @@
 package es.joshluq.kmsafe.infrastructure.mapper
 
 import es.joshluq.kmsafe.infrastructure.remote.response.RentingContractResponse
+import es.joshluq.kmsafe.domain.model.FuelType
 import es.joshluq.kmsafe.domain.model.RentingContract
 import java.text.SimpleDateFormat
 import java.util.Locale
@@ -27,14 +28,15 @@ fun RentingContractResponse.toDomain(): RentingContract {
         vehicleName = vehicleName ?: "Unknown",
         startDate = parsedDate,
         durationMonths = durationMonths ?: 0,
-        totalKms = totalKms ?: 0,
-        startOdometer = startOdometer ?: 0,
-        currentOdometer = currentOdometer ?: 0,
+        totalKms = totalKms ?: 0.0,
+        startOdometer = startOdometer ?: 0.0,
+        currentOdometer = currentOdometer ?: 0.0,
         isSelected = isSelected ?: false,
         vehicleImageUrl = vehicleImageUrl,
         bluetoothDeviceName = bluetoothDeviceName,
         bluetoothDeviceAddress = bluetoothDeviceAddress,
         excessDistancePrice = excessKmPrice,
-        courtesyMarginKms = courtesyKmBuffer ?: 0
+        courtesyMarginKms = courtesyKmBuffer?.toDouble() ?: 0.0,
+        fuelType = fuelType?.let { FuelType.fromName(it) } ?: FuelType.GASOLINE_95
     )
 }

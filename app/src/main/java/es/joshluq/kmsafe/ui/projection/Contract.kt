@@ -11,14 +11,14 @@ data class State(
     val baselineProjection: TripProjection? = null,
     val simulatedDailyKm: Float = 0f,
     val currentRealDailyAverage: Float = 0f,
-    val simulatedFinalBalance: Int = 0,
+    val simulatedFinalBalance: Double = 0.0,
     val penaltyPricePerKm: Float = 0.05f, // Default 5 cents
     val estimatedPenalty: Double = 0.0,
     val exhaustionDate: Long? = null,
     val daysRemaining: Long = 0,
-    val totalContractKms: Int = 0,
+    val totalContractKms: Double = 0.0,
     val plannedTripKms: Int = 0,
-    val recommendedDailyKm: Int? = null,
+    val recommendedDailyKm: Double? = null,
     val error: TextProvider? = null
 ) : UiState {
     companion object {

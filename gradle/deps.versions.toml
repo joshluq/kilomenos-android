@@ -21,7 +21,7 @@ billing = "9.1.0"
 
 # Maps Utils
 maps-utils = "5.1.1"
-maps-compose = "8.4.0"
+maps-compose = "8.5.0"
 
 # Third Party
 coil = "2.7.0"
@@ -30,9 +30,9 @@ accompanist = "0.37.3"
 javax-inject = "1"
 
 # Firebase
-firebase-bom = "34.17.0"
+firebase-bom = "34.18.0"
 google-services = "4.5.0"
-crashlytics = "3.0.7"
+crashlytics = "3.0.8"
 
 [libraries]
 # kits

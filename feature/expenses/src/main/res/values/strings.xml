@@ -1,0 +1,102 @@
+<resources>
+    <!-- Screen & General -->
+    <string name="expenses_title">Gastos de Combustible</string>
+    <string name="expenses_action_add">Añadir gasto</string>
+    <string name="expenses_action_delete">Eliminar</string>
+    <string name="expenses_action_cancel">Cancelar</string>
+    <string name="expenses_delete_confirmation_title">Eliminar Gasto</string>
+    <string name="expenses_delete_confirmation_message">¿Estás seguro de que deseas eliminar este registro de gasto?</string>
+    <string name="expenses_location_captured">Ubicación capturada</string>
+
+    <!-- Empty State -->
+    <string name="expenses_empty_title">Sin gastos registrados</string>
+    <string name="expenses_empty_description">Toca el botón + para registrar tu primer repostaje o recarga eléctrica.</string>
+
+    <!-- KPI Section -->
+    <string name="expenses_kpi_month_spent">Gasto del mes</string>
+    <string name="expenses_kpi_total_spent">Total: %1$.2f €</string>
+    <string name="expenses_kpi_km_since_refuel">Distancia desde el último lleno: %.1f km</string>
+    <string name="expenses_trips_since_refuel_title">Viajes desde el último repostaje</string>
+    <string name="expenses_trip_generic_label">Viaje sin categoría</string>
+    <string name="expenses_trip_km_format">+ %.1f km</string>
+    <string name="expenses_no_trips_yet">Sin viajes registrados en este tramo.</string>
+    <string name="expenses_kpi_ev_savings">Ahorro estimado en eléctrico: %1$.2f €</string>
+
+    <!-- Filters -->
+    <string name="expenses_filter_all">Todos</string>
+    <string name="expenses_filter_combustion">Combustible</string>
+    <string name="expenses_filter_electric">Eléctrico</string>
+
+    <!-- Volatility Card -->
+    <string name="expenses_volatility_title">Análisis de precio: %1$s</string>
+    <string name="expenses_volatility_current_price">Precio actual</string>
+    <string name="expenses_volatility_historical_avg">Media histórica</string>
+    <string name="expenses_volatility_cheaper">¡Más barato que tu media habitual en esta estación!</string>
+    <string name="expenses_volatility_expensive">Por encima de tu media histórica habitual</string>
+    <string name="expenses_volatility_average">Precio en línea con tu histórico</string>
+
+    <!-- Add Expense Bottom Sheet -->
+    <string name="expenses_sheet_title_ev">Registrar carga eléctrica</string>
+    <string name="expenses_sheet_title_fuel">Registrar repostaje</string>
+    <string name="expenses_sheet_title_price_report">Actualizar precio</string>
+    <string name="expenses_sheet_energy_type">Tipo de energía</string>
+    <string name="expenses_sheet_station_ev">Punto de carga / Proveedor</string>
+    <string name="expenses_sheet_station_fuel">Estación de servicio (Repsol, Cepsa…)</string>
+    <string name="expenses_sheet_price_ev">Precio (€/kWh)</string>
+    <string name="expenses_sheet_price_fuel">Precio (€/L)</string>
+    <string name="expenses_sheet_volume_ev">Energía (kWh)</string>
+    <string name="expenses_sheet_volume_fuel">Volumen (Litros)</string>
+    <string name="expenses_sheet_total_cost">Coste total (€)</string>
+    <string name="expenses_sheet_odometer">Odómetro (km)</string>
+    <string name="expenses_sheet_odometer_hint">Valor actual del vehículo: %.1f km</string>
+    <string name="expenses_sheet_full_tank">Depósito lleno</string>
+    <string name="expenses_sheet_full_tank_hint">Activa el cálculo de consumo L/100km</string>
+    <string name="expenses_sheet_notes">Notas (opcional)</string>
+    <string name="expenses_sheet_action_save">Guardar repostaje</string>
+    <string name="expenses_sheet_action_save_ev">Guardar carga eléctrica</string>
+    <string name="expenses_sheet_action_update_price">Actualizar precio</string>
+    <string name="expenses_sheet_price_delta_label">vs. último</string>
+
+    <!-- Messages and Errors -->
+    <string name="expenses_error_load">Error al cargar los gastos</string>
+    <string name="expenses_error_no_active_vehicle">No hay un vehículo activo</string>
+    <string name="expenses_error_save">Error al guardar el gasto</string>
+    <string name="expenses_success_saved">Gasto registrado con éxito</string>
+    <string name="expenses_success_deleted">Gasto eliminado</string>
+    <string name="error_invalid_fuel_values">Los valores del gasto deben ser mayores a 0.</string>
+    <string name="error_premium_only_feature">Esta función es exclusiva para usuarios PREMIUM.</string>
+    <string name="error_expense_not_found">El registro de gasto no se ha encontrado.</string>
+    <string name="error_network">No se pudo conectar con el servidor. Revisa tu conexión.</string>
+    <string name="error_unknown">Ha ocurrido un error inesperado. Por favor, inténtalo de nuevo.</string>
+    <string name="expenses_consumption_badge">%1$.1f %2$s/100km</string>
+    <string name="expenses_km_since_refuel">%.1f km recorridos</string>
+    <string name="expenses_banner_consumption">⛽ %1$.1f %2$s/100km</string>
+    <string name="expenses_banner_better_than_avg">Mejor que tu media (%1$.1f)</string>
+    <string name="expenses_banner_worse_than_avg">Por encima de tu media (%1$.1f)</string>
+
+    <!-- Station Management -->
+    <string name="stations_management_title">Mis Estaciones</string>
+    <string name="stations_search_placeholder">Buscar por nombre o marca…</string>
+    <string name="stations_empty_title">Tu red de estaciones está vacía</string>
+    <string name="stations_empty_desc">Guarda tus gasolineras o puntos de carga habituales para analizar la evolución de los precios y optimizar tus gastos.</string>
+    <string name="stations_action_add">Añadir estación</string>
+    <string name="stations_edit_title">Editar Estación</string>
+    <string name="stations_add_title">Nueva Estación</string>
+    <string name="stations_location_toggle">Estoy en la estación ahora</string>
+    <string name="stations_location_toggle_desc">Activa para guardar tu ubicación actual.</string>
+    <string name="stations_field_name">Nombre comercial</string>
+    <string name="stations_field_brand">Marca</string>
+    <string name="stations_field_address">Dirección</string>
+    <string name="stations_action_edit">Editar</string>
+    <string name="stations_action_delete">Eliminar</string>
+    <string name="stations_action_cancel">Cancelar</string>
+    <string name="stations_delete_confirmation_title">Eliminar Estación</string>
+    <string name="stations_delete_confirmation_message">¿Estás seguro de que deseas eliminar esta estación? Los gastos asociados dejarán de estar vinculados a ella.</string>
+    <string name="stations_action_save">Guardar cambios</string>
+    <string name="stations_action_view_detail">Ver detalle de estación</string>
+
+    <!-- Station Detail -->
+    <string name="stations_detail_total_spent">Gasto total</string>
+    <string name="stations_detail_refuel_count">Visitas</string>
+    <string name="stations_detail_history_title">Historial de gastos</string>
+</resources>

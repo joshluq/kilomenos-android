@@ -24,7 +24,7 @@ data class HistoryState(
     val expandedGroups: Set<String> = emptySet(),
     val isLoading: Boolean = false,
     val isRefreshing: Boolean = false,
-    val totalKms: Int = 0,
+    val totalKms: Double = 0.0,
     val totalRecordsCount: Int = 0,
     val selectedDailyRecords: List<RecordWithIndicator>? = null,
     val isPremium: Boolean = false,

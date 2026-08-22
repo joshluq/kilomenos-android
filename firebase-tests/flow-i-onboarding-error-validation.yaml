@@ -1,7 +1,0 @@
-# KiloMenos - Test Case: Flow I (Firebase App Testing Agent)
-tests:
-  - displayName: "Flow I: Configuración - Errores de Validación"
-    steps:
-      - goal: "Validar que el formulario de vehículo exige datos correctos."
-        hint: "En 'Configura tu Renting', deja el nombre vacío o pon un odómetro actual menor al inicial (ej: Inicial 1000, Actual 500). Pulsa 'Guardar'."
-        finalScreenAssertion: "Debo ver mensajes de error en color rojo debajo de los campos mal rellenados."

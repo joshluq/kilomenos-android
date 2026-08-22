@@ -27,7 +27,7 @@ class OdometerRecordResponse {
     val timestamp: String? = null
 
     @JsonProperty("odometer_value")
-    val odometerValue: Int? = null
+    val odometerValue: Double? = null
 
     @JsonProperty("is_initial_record")
     val isInitialRecord: Boolean? = null

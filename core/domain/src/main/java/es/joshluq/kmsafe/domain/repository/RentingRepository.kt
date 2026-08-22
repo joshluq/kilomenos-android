@@ -86,6 +86,12 @@ interface RentingRepository {
     suspend fun getDatabaseOwnerId(): String?
 
     /**
+     * Returns true if there is any data stored in the local database (Contracts, Expenses or Stations).
+     * Used for identity conflict detection.
+     */
+    suspend fun hasLocalData(): Boolean
+
+    /**
      * Clears all local application data (DB).
      */
     fun clearAllLocalData(): Flow<Unit>

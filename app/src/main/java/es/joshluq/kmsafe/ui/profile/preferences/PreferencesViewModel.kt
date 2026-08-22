@@ -105,9 +105,11 @@ class PreferencesViewModel @Inject constructor(
                     updateState {
                         copy(
                             isUserPremium = entitlements.isFeatureActive(Feature.AUTO_TRACKING),
-                            canStartTrial = entitlements.isFeatureTrialable(Feature.AUTO_TRACKING)
+                            canStartTrial = entitlements.isFeatureTrialable(Feature.AUTO_TRACKING),
+                            isEntitlementsLoaded = true
                         )
                     }
+                    checkAndHealAutoTracking()
                 }
             }.launchIn(viewModelScope)
     }
@@ -124,8 +126,17 @@ class PreferencesViewModel @Inject constructor(
                             autoTrackingEnabled = output.preferences.autoTrackingEnabled
                         )
                     }
+                    checkAndHealAutoTracking()
                 }
             }.launchIn(viewModelScope)
+    }
+
+    private fun checkAndHealAutoTracking() {
+        val currentState = state.value
+        if (currentState.isEntitlementsLoaded && !currentState.isUserPremium && currentState.autoTrackingEnabled) {
+            logger.w("PreferencesViewModel", "Self-healing triggered: User is FREE but auto-tracking was ON. Disabling.")
+            executeAutoTrackingToggle(false)
+        }
     }
 
     private fun handleRememberEmailToggled(enabled: Boolean) {

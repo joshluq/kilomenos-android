@@ -33,13 +33,13 @@ class RentingContractResponse {
     val durationMonths: Int? = null
 
     @JsonProperty("total_kms")
-    val totalKms: Int? = null
+    val totalKms: Double? = null
 
     @JsonProperty("start_odometer")
-    val startOdometer: Int? = null
+    val startOdometer: Double? = null
 
     @JsonProperty("current_odometer")
-    val currentOdometer: Int? = null
+    val currentOdometer: Double? = null
 
     @JsonProperty("is_selected")
     val isSelected: Boolean? = null
@@ -58,4 +58,7 @@ class RentingContractResponse {
 
     @JsonProperty("courtesy_km_buffer")
     val courtesyKmBuffer: Int? = null
+
+    @JsonProperty("fuel_type")
+    val fuelType: String? = null
 }

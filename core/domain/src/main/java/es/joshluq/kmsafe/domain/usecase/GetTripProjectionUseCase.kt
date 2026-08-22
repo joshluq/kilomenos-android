@@ -51,7 +51,6 @@ class GetTripProjectionUseCase @Inject constructor(
                 // Calculate total real kms driven (excluding initial record)
                 val realKmsDriven = records.filter { !it.isInitialRecord }
                     .sumOf { it.odometerValue }
-                    .toDouble()
 
                 val hasEnoughData = elapsedDays >= MIN_DAYS_FOR_PROJECTION
 
@@ -62,8 +61,8 @@ class GetTripProjectionUseCase @Inject constructor(
                 val expectedBalance = contractedLimitKms - projectedFinalKms
 
                 val projection = TripProjection(
-                    projectedTotalKms = projectedFinalKms.toInt(),
-                    expectedFinalBalance = expectedBalance.toInt(),
+                    projectedTotalKms = projectedFinalKms,
+                    expectedFinalBalance = expectedBalance,
                     isOverLimit = expectedBalance < 0,
                     dailyAverage = dailyAverage,
                     hasEnoughData = hasEnoughData

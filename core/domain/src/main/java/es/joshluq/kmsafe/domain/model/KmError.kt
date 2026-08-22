@@ -23,6 +23,15 @@ sealed interface KmError {
     /** A server-side error occurred with a specific HTTP status code. */
     data class ServerError(val code: Int) : KmError
 
+    /** The provided numeric values for a fuel expense (volume, price, total) are invalid. */
+    data object InvalidFuelExpenseValues : KmError
+
+    /** The fuel expenses feature is only available for Premium or Trial users. */
+    data object FuelExpensesPremiumOnly : KmError
+
+    /** The requested fuel expense entry was not found. */
+    data object ExpenseNotFound : KmError
+
     /** An unexpected or unhandled error occurred. */
     data object UnknownError : KmError
 }

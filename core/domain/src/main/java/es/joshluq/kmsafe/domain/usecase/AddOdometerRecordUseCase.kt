@@ -54,7 +54,7 @@ class AddOdometerRecordUseCase @Inject constructor(
         .catch { emit(Output.Failure(it.message ?: "Unknown error")) }
 
     data class Input(
-        val odometerValue: Int,
+        val odometerValue: Double,
         val timestamp: Long,
         val label: String? = null,
         val fuelAmount: Double? = null,

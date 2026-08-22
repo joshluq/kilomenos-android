@@ -47,6 +47,7 @@ import es.joshluq.kmsafe.R
 import es.joshluq.kmsafe.domain.model.TripProjection
 import es.joshluq.kmsafe.ui.projection.components.ProjectionGauge
 import kotlin.math.absoluteValue
+import es.joshluq.kmsafe.core.ui.util.NumberFormatter
 
 @Composable
 fun ProjectionAnalysisRoute() {
@@ -180,14 +181,14 @@ private fun SimulationSection(
                             color = CanvasKitTheme.colors.textSecondary
                         )
                         Text(
-                            text = stringResource(R.string.projection_analysis_actual_average, currentRealKm.toInt()),
+                            text = stringResource(R.string.projection_analysis_actual_average, NumberFormatter.formatRate(currentRealKm.toDouble())),
                             style = CanvasKitTheme.typography.labelSmall,
                             color = CanvasKitTheme.colors.brandAccent.copy(alpha = 0.6f)
                         )
                     }
                     Text(
                         modifier = Modifier.weight(1f),
-                        text = stringResource(R.string.projection_analysis_daily_km_slider, currentSimulatedKm.toInt()),
+                        text = stringResource(R.string.projection_analysis_daily_km_slider, NumberFormatter.formatRate(currentSimulatedKm.toDouble())),
                         style = CanvasKitTheme.typography.bodyLarge,
                         color = CanvasKitTheme.colors.brandAccent,
                         textAlign = TextAlign.End,
@@ -199,9 +200,9 @@ private fun SimulationSection(
                     onValueChange = onKmChanged,
                     valueRange = 0f..150f,
                     colors = SliderDefaults.colors(
-                        thumbColor = CanvasKitTheme.colors.brandAccent,
-                        activeTrackColor = CanvasKitTheme.colors.brandAccent,
-                        inactiveTrackColor = CanvasKitTheme.colors.borderSubtle
+                        thumbColor = if (isOverLimit) CanvasKitTheme.colors.error else CanvasKitTheme.colors.brandAccent,
+                        activeTrackColor = if (isOverLimit) CanvasKitTheme.colors.error else CanvasKitTheme.colors.brandAccent,
+                        inactiveTrackColor = CanvasKitTheme.colors.borderSubtle,
                     )
                 )
             }
@@ -242,10 +243,10 @@ private fun SimulationSection(
 
 @Composable
 private fun FinancialImpactCard(
-    finalBalance: Int,
+    finalBalance: Double,
     penaltyPrice: Float,
     estimatedPenalty: Double,
-    recommendedKm: Int?
+    recommendedKm: Double?
 ) {
     val isPositive = finalBalance >= 0
     val cardColor = if (isPositive) {
@@ -311,7 +312,7 @@ private fun FinancialImpactCard(
                         modifier = Modifier.weight(1f),
                         text = stringResource(
                             if (isPositive) R.string.common_km_positive_suffix else R.string.common_km_negative_suffix,
-                            finalBalance.absoluteValue
+                            NumberFormatter.formatDistance(finalBalance.absoluteValue)
                         ),
                         style = CanvasKitTheme.typography.headingLarge,
                         color = accentColor,
@@ -362,7 +363,7 @@ private fun FinancialImpactCard(
                     )
                     Text(
                         text = if (recommendedKm != null) {
-                            stringResource(R.string.projection_advisory_action, recommendedKm)
+                            stringResource(R.string.projection_advisory_action, NumberFormatter.formatRate(recommendedKm))
                         } else {
                             stringResource(R.string.projection_advisory_safe)
                         },
@@ -385,17 +386,17 @@ fun ProjectionAnalysisScreenPreview() {
             state = State(
                 isLoading = false,
                 baselineProjection = TripProjection(
-                    projectedTotalKms = 46200,
-                    expectedFinalBalance = -1200,
+                    projectedTotalKms = 46200.0,
+                    expectedFinalBalance = -1200.0,
                     isOverLimit = true,
                     dailyAverage = 42.5,
                     hasEnoughData = true
                 ),
                 simulatedDailyKm = 48f,
-                simulatedFinalBalance = -1200,
+                simulatedFinalBalance = -1200.0,
                 estimatedPenalty = 60.0,
                 daysRemaining = 450,
-                totalContractKms = 45000
+                totalContractKms = 45000.0
             ),
             onEvent = {}
         )

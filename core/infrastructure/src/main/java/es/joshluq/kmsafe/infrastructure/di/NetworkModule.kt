@@ -11,6 +11,7 @@ import es.joshluq.kmsafe.infrastructure.InfrastructureConfig
 import es.joshluq.kmsafe.infrastructure.remote.api.AuthApiService
 import es.joshluq.kmsafe.infrastructure.remote.api.AuthenticatedAuthApiService
 import es.joshluq.kmsafe.infrastructure.remote.api.EntitlementsApiService
+import es.joshluq.kmsafe.infrastructure.remote.api.FuelApiService
 import es.joshluq.kmsafe.infrastructure.remote.api.RentingApiService
 import es.joshluq.kmsafe.infrastructure.remote.api.StorageApiService
 import okhttp3.Interceptor
@@ -45,6 +46,7 @@ object NetworkModule {
             val originalRequest = chain.request()
             val newRequest = originalRequest.newBuilder()
                 .header("apikey", config.apiKey)
+                .header("X-API-Version", "2")
                 .header("Content-Type", "application/json")
                 .build()
             chain.proceed(newRequest)
@@ -125,5 +127,11 @@ object NetworkModule {
     @Singleton
     fun provideEntitlementsApiService(@Authenticated retrofit: Retrofit): EntitlementsApiService {
         return retrofit.create(EntitlementsApiService::class.java)
+    }
+
+    @Provides
+    @Singleton
+    fun provideFuelApiService(@Authenticated retrofit: Retrofit): FuelApiService {
+        return retrofit.create(FuelApiService::class.java)
     }
 }

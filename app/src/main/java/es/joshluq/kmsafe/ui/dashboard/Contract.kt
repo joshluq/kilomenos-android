@@ -40,5 +40,5 @@ sealed interface Effect : UiEffect {
  * Enum representing the available tabs in the Bottom Navigation.
  */
 enum class DashboardTab {
-    OVERVIEW, HISTORY, PROJECTION, PROFILE
+    OVERVIEW, HISTORY, EXPENSES, PROJECTION, PROFILE
 }

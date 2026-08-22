@@ -5,6 +5,7 @@ import es.joshluq.foundationkit.text.TextProvider
 import es.joshluq.foundationkit.viewmodel.UiEffect
 import es.joshluq.foundationkit.viewmodel.UiEvent
 import es.joshluq.foundationkit.viewmodel.UiState
+import es.joshluq.kmsafe.domain.model.FuelType
 import es.joshluq.kmsafe.domain.model.RentingContract
 
 data class State(
@@ -15,6 +16,7 @@ data class State(
 
     // Editable fields
     val vehicleName: String = "",
+    val fuelType: FuelType = FuelType.GASOLINE_95,
     val vehicleImageUrl: String? = null,
     val selectedImageUri: Uri? = null,
     val durationMonths: String = "",
@@ -43,6 +45,7 @@ sealed interface Event : UiEvent {
 
     // Input Changes
     data class OnVehicleNameChanged(val value: String) : Event
+    data class OnFuelTypeChanged(val value: FuelType) : Event
     data class OnOriginalImageSelected(val uri: Uri?) : Event
     data class OnImageSelected(val uri: Uri) : Event
     data class OnDurationMonthsChanged(val value: String) : Event

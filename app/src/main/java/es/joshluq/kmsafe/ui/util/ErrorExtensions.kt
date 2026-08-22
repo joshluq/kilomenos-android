@@ -14,6 +14,9 @@ fun KmError.toText(): TextProvider {
         KmError.WeakPassword -> TextProvider.Resource(R.string.error_weak_password)
         KmError.InvalidEmail -> TextProvider.Resource(R.string.error_invalid_email)
         KmError.NetworkError -> TextProvider.Resource(R.string.error_network)
+        KmError.InvalidFuelExpenseValues -> TextProvider.Resource(R.string.error_invalid_fuel_values)
+        KmError.FuelExpensesPremiumOnly -> TextProvider.Resource(R.string.error_premium_only_feature)
+        KmError.ExpenseNotFound -> TextProvider.Resource(R.string.error_expense_not_found)
         is KmError.ServerError -> TextProvider.Resource(R.string.error_server, this.code)
         KmError.UnknownError -> TextProvider.Resource(R.string.error_unknown)
     }

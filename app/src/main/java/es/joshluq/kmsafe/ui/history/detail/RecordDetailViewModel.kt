@@ -179,14 +179,14 @@ class RecordDetailViewModel @Inject constructor(
         if (previous == null || record.fuelAmount == null) return null
         val distance = record.odometerValue - previous.odometerValue
         if (distance <= 0) return null
-        return (record.fuelAmount!! / distance.toDouble()) * 100.0
+        return (record.fuelAmount!! / distance) * 100.0
     }
 
     private fun handleUpdateRecord() {
         val record = state.value.record ?: return
-        val newValue = state.value.editingOdometerValue.toIntOrNull() ?: return
+        val newValue = state.value.editingOdometerValue.replace(',', '.').toDoubleOrNull() ?: return
         val label = state.value.editingLabel.takeIf { it.isNotBlank() }
-        val fuelAmount = state.value.editingFuel.toDoubleOrNull()
+        val fuelAmount = state.value.editingFuel.replace(',', '.').toDoubleOrNull()
 
         val updatedRecord = record.copy(
             odometerValue = newValue,

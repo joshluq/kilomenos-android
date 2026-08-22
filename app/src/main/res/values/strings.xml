@@ -4,6 +4,7 @@
     <!-- Dashboard -->
     <string name="dashboard_item_home">Inicio</string>
     <string name="dashboard_item_history">Historial</string>
+    <string name="dashboard_item_expenses">Gastos</string>
     <string name="dashboard_item_projection">Proyecciones</string>
     <string name="dashboard_item_profile">Perfil</string>
 
@@ -67,7 +68,7 @@
     <string name="vehicles_delete_cancel">Cancelar</string>
     <string name="vehicles_empty_title">Tu flota empieza aquí</string>
     <string name="vehicles_empty_description">Aún no has registrado ningún vehículo. Configura tu primer contrato para empezar a tomar el control de tus kilómetros.</string>
-    <string name="vehicle_list_item_summary">%1$d Km · %2$d meses</string>
+    <string name="vehicle_list_item_summary">%1$s Km · %2$d meses</string>
 
     <!-- Data Management -->
     <string name="profile_data_management_title">GESTIÓN DE DATOS</string>
@@ -123,26 +124,26 @@
     <string name="projection_card_projected_total">Lectura al entregar</string>
     <string name="projection_card_daily_average">Tu ritmo actual</string>
     <string name="projection_card_not_enough_data">Dibujando tu futuro (faltan %1$d días de datos)&#8230;</string>
-    <string name="projection_card_status_safe">¡Todo bajo control! Te sobrarían %1$d km.</string>
-    <string name="projection_card_status_over">⚠️ Atención: superarás tu límite por %1$d km.</string>
+    <string name="projection_card_status_safe">¡Todo bajo control! Te sobrarían %1$s km.</string>
+    <string name="projection_card_status_over">⚠️ Atención: superarás tu límite por %1$s km.</string>
     <string name="projection_analysis_financial_impact_title">PROTECCIÓN DE TU BOLSILLO</string>
     <string name="projection_analysis_penalty_price_label">Coste pactado por KM extra</string>
     <string name="projection_analysis_estimated_penalty">Gasto evitable estimado</string>
     <string name="projection_analysis_simulator_title">SIMULADOR DE RITMO</string>
     <string name="projection_analysis_simulator_desc">Ajusta tu conducción futura para ver el cambio:</string>
     <string name="projection_analysis_simulated_balance">Nuevo saldo previsto</string>
-    <string name="projection_analysis_daily_km_slider">%1$d km/día</string>
-    <string name="projection_analysis_actual_average">Actual: %1$d km/día</string>
-    <string name="projection_analysis_planned_trip_increment">+ %1$d km</string>
+    <string name="projection_analysis_daily_km_slider">%1$s km/día</string>
+    <string name="projection_analysis_actual_average">Actual: %1$s km/día</string>
+    <string name="projection_analysis_planned_trip_increment">+ %1$s km</string>
     <string name="projection_analysis_budget_protected">Presupuesto protegido</string>
     <string name="projection_analysis_timeline_exhaustion">Agotarás tus KM el:</string>
     <string name="projection_analysis_timeline_safe">Contrato cubierto hasta el final.</string>
     <string name="projection_advisory_title">CONSEJO DE TU CO-PILOTO</string>
     <string name="projection_advisory_safe">Vas perfecto. Sigue disfrutando del camino sin preocupaciones.</string>
-    <string name="projection_advisory_action">Para evitar gastos extra, ajusta tu ritmo a %1$d km/día.</string>
+    <string name="projection_advisory_action">Para evitar gastos extra, ajusta tu ritmo a %1$s km/día.</string>
     <string name="projection_planner_title">PLANIFICA TUS ESCAPADAS</string>
     <string name="projection_planner_desc">Simula un viaje largo y mira si encaja:</string>
-    <string name="projection_planner_add_trip">Añadir viaje (+%1$d km)</string>
+    <string name="projection_planner_add_trip">Añadir viaje (+%1$s km)</string>
     <string name="projection_planner_impact_warning">⚠️ Este viaje te acerca al límite de tu contrato.</string>
     <string name="projection_planner_impact_safe">Viaje totalmente asumible. ¡A disfrutar!</string>
 
@@ -151,6 +152,7 @@
     <string name="onboarding_title_alternative">Información de tu Renting</string>
     <string name="onboarding_vehicle_name_label">Nombre del vehículo</string>
     <string name="onboarding_vehicle_name_placeholder">Ej. Mi Toyota Corolla</string>
+    <string name="onboarding_fuel_type_label">Tipo de propulsión</string>
     <string name="onboarding_start_date_label">Fecha de inicio</string>
     <string name="onboarding_start_date_placeholder">Ej. 12/05/2023</string>
     <string name="onboarding_duration_months_label">Duración en meses</string>
@@ -185,6 +187,7 @@
     <string name="onboarding_crop_button">Aplicar Recorte</string>
     <string name="onboarding_register_error">Ha ocurrido un error al registrar el renting. Por favor, inténtalo de nuevo.</string>
     <string name="onboarding_saving_button">Guardando…</string>
+    <string name="onboarding_error_delete_selected">No se puede eliminar el vehículo seleccionado. Por favor, selecciona otro vehículo antes de intentar eliminar este.</string>
 
     <!-- Vehicle Detail -->
     <string name="vehicle_detail_title">Detalle del Vehículo</string>
@@ -273,9 +276,9 @@
     <string name="common_brand_menos">Menos</string>
     <string name="common_processing">Procesando…</string>
     <string name="common_fuel_consumption_format">%.1f L/100km</string>
-    <string name="common_km_suffix">%1$d km</string>
-    <string name="common_km_positive_suffix">+ %1$d km</string>
-    <string name="common_km_negative_suffix">- %1$d km</string>
+    <string name="common_km_suffix">%1$s km</string>
+    <string name="common_km_positive_suffix">+ %1$s km</string>
+    <string name="common_km_negative_suffix">- %1$s km</string>
     <string name="common_ratio_label">%1$s/%2$s</string>
     <string name="common_percentage_format">%.1f%%</string>
     <string name="common_currency_format">%.2f€</string>
@@ -302,9 +305,13 @@
     <string name="error_user_already_registered">Este correo electrónico ya está registrado.</string>
     <string name="error_weak_password">La contraseña debe tener al menos 8 caracteres, mayúsculas, minúsculas, números y un carácter especial.</string>
     <string name="error_invalid_email">El formato del correo electrónico no es válido.</string>
+    <string name="error_invalid_fuel_values">Los valores del gasto deben ser mayores a 0.</string>
+    <string name="error_premium_only_feature">Esta función es exclusiva para usuarios PREMIUM.</string>
+    <string name="error_expense_not_found">El registro de gasto no se ha encontrado.</string>
     <string name="error_network">No se pudo conectar con el servidor. Revisa tu conexión.</string>
     <string name="error_server">Error en el servidor (%1$d). Inténtalo más tarde.</string>
     <string name="error_unknown">Ha ocurrido un error inesperado. Por favor, inténtalo de nuevo.</string>
+    <string name="overview_error_date_outside_contract">La fecha debe estar dentro del periodo de vigencia del contrato.</string>
 
     <!-- Signup -->
     <string name="signup_title">Registro de Conductor</string>
@@ -342,6 +349,11 @@
     <string name="profile_delete_account_confirmation_message">Esta acción no se puede deshacer. Se borrarán todos tus vehículos, registros de kilometraje y datos de perfil tanto de este dispositivo como de la nube.</string>
     <string name="profile_delete_account_confirm">Eliminar para siempre</string>
     <string name="profile_delete_account_error">No se pudo eliminar la cuenta. Por favor, inténtalo de nuevo.</string>
+    <string name="profile_delete_account_step_cleaning">Borrando tus vehículos y configuraciones…</string>
+    <string name="profile_delete_account_step_cloud">Eliminando rastro de la nube…</string>
+    <string name="profile_delete_account_step_farewell">Es una lástima que te vayas, pero respetamos tu decisión.</string>
+    <string name="profile_delete_account_step_final">Toda tu información ha sido eliminada permanentemente.</string>
+    <string name="profile_delete_account_step_welcome_back">¡Vuelve cuando quieras! Siempre habrá un sitio para ti en KiloMenos.</string>
 
     <!-- Accessibility (EAA) -->
     <string name="acc_back">Volver</string>
@@ -372,6 +384,14 @@
     <string name="reminder_channel_description">Notificaciones para recordarte actualizar tu kilometraje.</string>
     <string name="reminder_notification_title">¿Cómo va ese odómetro? 🚗</string>
     <string name="reminder_notification_message">No has actualizado tus kilómetros en unos días. ¡Regístralos ahora para mantener tu balance al día!</string>
+
+    <!-- Station Proximity Notifications -->
+    <string name="notification_channel_stations_name">Ahorro en Estaciones</string>
+    <string name="notification_channel_stations_desc">Avisos proactivos cuando estás en una gasolinera o punto de carga.</string>
+    <string name="notification_station_proximity_title">¿Repostando en %1$s? ⛽</string>
+    <string name="notification_station_proximity_desc">Actualiza el precio de hoy para mantener tu historial de ahorro al día.</string>
+    <string name="notification_station_proximity_action_price">Solo Precio</string>
+    <string name="notification_station_proximity_action_refuel">Añadir Repostaje</string>
 
     <!-- Background Location & Activity Recognition Rationale -->
     <string name="overview_permissions_required_title">Configuración necesaria</string>

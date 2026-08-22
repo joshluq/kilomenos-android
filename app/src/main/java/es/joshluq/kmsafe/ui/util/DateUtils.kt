@@ -31,4 +31,31 @@ object DateUtils {
 
         return resultCalendar.timeInMillis
     }
+
+    /**
+     * Converts UTC 00:00 millis to Local 00:00 millis.
+     * Useful for components that format dates using the local timezone.
+     */
+    /**
+     * Normalizes a timestamp to the start of the day (00:00:00.000) in UTC.
+     */
+    fun normalizeToUtc00(millis: Long): Long {
+        return Calendar.getInstance(TimeZone.getTimeZone("UTC")).apply {
+            timeInMillis = millis
+            set(Calendar.HOUR_OF_DAY, 0)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+        }.timeInMillis
+    }
+
+    /**
+     * Calculates the end date of a contract based on its start date and duration in months.
+     */
+    fun getContractEndDate(startDate: Long, durationMonths: Int): Long {
+        return Calendar.getInstance(TimeZone.getTimeZone("UTC")).apply {
+            timeInMillis = startDate
+            add(Calendar.MONTH, durationMonths)
+        }.timeInMillis
+    }
 }

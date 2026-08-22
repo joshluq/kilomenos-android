@@ -40,7 +40,7 @@ fun OdometerRecordResponse.toDomain(): OdometerRecord {
         id = id ?: "",
         contractId = contractId ?: "",
         timestamp = parsedDate,
-        odometerValue = odometerValue ?: 0,
+        odometerValue = odometerValue ?: 0.0,
         isInitialRecord = isInitialRecord ?: false,
         label = label,
         fuelAmount = fuelConsumed,

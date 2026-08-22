@@ -1,0 +1,16 @@
+<resources>
+    <!-- Fuel Types -->
+    <string name="fuel_type_gasoline_95">Gasoline 95</string>
+    <string name="fuel_type_gasoline_98">Gasoline 98</string>
+    <string name="fuel_type_diesel">Diesel</string>
+    <string name="fuel_type_diesel_plus">Diesel Plus</string>
+    <string name="fuel_type_lpg">LPG / Autogas</string>
+    <string name="fuel_type_cng">CNG</string>
+    <string name="fuel_type_electric">Electric Charge</string>
+    <string name="fuel_type_hybrid">Plug-in Hybrid</string>
+    <string name="fuel_type_hydrogen">Hydrogen</string>
+    <string name="fuel_type_biodiesel">Biodiesel</string>
+    <string name="fuel_type_ethanol_e85">Ethanol (E85)</string>
+    <string name="fuel_type_adblue">AdBlue</string>
+    <string name="fuel_type_other">Other</string>
+</resources>

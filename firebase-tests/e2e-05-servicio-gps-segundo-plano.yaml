@@ -1,0 +1,23 @@
+# KiloMenos - Test Case: E2E-05 (Firebase App Testing Agent)
+tests:
+  - displayName: "E2E-05: Servicio GPS de Trayecto en Segundo Plano"
+    steps:
+      - goal: "Conceder permisos de ubicación a la aplicación."
+        hint: "Asegúrate de conceder permisos de localización (Fine Location) en primer y segundo plano."
+        finalScreenAssertion: "Debo ver el botón de 'Iniciar Viaje' activo en la tarjeta de rastreo GPS (TrackingCard) del Dashboard."
+
+      - goal: "Iniciar el trayecto asistido."
+        hint: "Pulsa sobre el botón 'Iniciar Viaje' en la tarjeta de rastreo."
+        finalScreenAssertion: "El estado de la tarjeta de rastreo debe cambiar a 'Rastreo de viaje activo' y el contador de kilómetros debe empezar a acumular."
+
+      - goal: "Enviar la aplicación a segundo plano."
+        hint: "Presiona el botón Home del dispositivo para minimizar la app."
+        finalScreenAssertion: "Debo ver la notificación persistente del Foreground Service de KiloMenos en la barra de notificaciones del SO."
+
+      - goal: "Simular muerte de proceso (Process Death)."
+        hint: "Fuerza la detención del proceso de la app usando comandos del emulador, simulando una falta de memoria."
+        finalScreenAssertion: "El proceso de la app de primer plano debe estar muerto, pero el Foreground Service de rastreo debe seguir activo."
+
+      - goal: "Reabrir la aplicación y guardar el trayecto."
+        hint: "Abre de nuevo KmSafe. En la tarjeta de rastreo, pulsa sobre 'Detener Viaje' y luego sobre 'Guardar'."
+        finalScreenAssertion: "El viaje debe registrarse en Room de manera incremental, recalculando los balances del odómetro de forma SSOT."

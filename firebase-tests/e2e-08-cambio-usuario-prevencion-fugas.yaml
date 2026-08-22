@@ -1,0 +1,27 @@
+# KiloMenos - Test Case: E2E-08 (Firebase App Testing Agent)
+tests:
+  - displayName: "E2E-08: Cambio de Usuario y Prevención de Fugas de Datos"
+    steps:
+      - goal: "Iniciar sesión como Usuario A (Free)."
+        hint: "Ingresa el correo del Usuario A, escribe su contraseña y pulsa en Acceder."
+        finalScreenAssertion: "Debo ingresar al Dashboard y ver los datos asociados al Conductor A."
+
+      - goal: "Agregar un vehículo y lecturas para el Usuario A."
+        hint: "Asegúrate de configurar un vehículo y registrar al menos 3 odómetros de viaje."
+        finalScreenAssertion: "El historial de odómetro debe mostrar las 3 lecturas ingresadas."
+
+      - goal: "Cerrar la sesión de forma segura."
+        hint: "Navega a Perfil, desplázate hasta abajo y pulsa en 'Cerrar Sesión'. Confirma en el diálogo."
+        finalScreenAssertion: "Debo ser redirigido a la pantalla de Login."
+
+      - goal: "Iniciar sesión como Usuario B (Premium) en el mismo dispositivo."
+        hint: "Ingresa el correo del Usuario B, su contraseña y pulsa en Acceder."
+        finalScreenAssertion: "Debo visualizar el diálogo de conflicto 'Otro conductor detectado' indicando que existen datos locales de otro usuario."
+
+      - goal: "Confirmar la purga de la base de datos local."
+        hint: "Pulsa el botón de confirmar en el diálogo."
+        finalScreenAssertion: "La base de datos local (Room) y caché deben quedar vacías antes de descargar la información de la nube para el Usuario B."
+
+      - goal: "Verificar el aislamiento de datos final."
+        hint: "Navega al Dashboard e historial del Usuario B."
+        finalScreenAssertion: "No debe haber ningún registro cruzado ni vehículo perteneciente al Usuario A (prevención total de fuga de información)."

@@ -1,0 +1,23 @@
+# KiloMenos - Test Case: E2E-01 (Firebase App Testing Agent)
+tests:
+  - displayName: "E2E-01: Funnel de Onboarding y Configuración Inicial (FREE)"
+    steps:
+      - goal: "Lanzamiento inicial de la aplicación y aceptación de políticas de privacidad."
+        hint: "Acepta el diálogo de consentimiento de AdMob (UMP) si se muestra."
+        finalScreenAssertion: "Debo ver la pantalla de Login con el botón de Google y la opción de crear cuenta."
+
+      - goal: "Crear un nuevo usuario con correo electrónico."
+        hint: "Pulsa en signup_link. Completa el Nombre, escribe un email único en signup_email_input, ingresa la contraseña y pulsa signup_submit_button."
+        finalScreenAssertion: "Debo ver la pantalla de WelcomeDiscovery con la introducción a KiloMenos."
+
+      - goal: "Iniciar el asistente de configuración del primer vehículo."
+        hint: "Pulsa en 'Configurar mi Renting' para navegar al SetupWizard."
+        finalScreenAssertion: "Debo ver el primer paso del SetupWizard con el campo de nombre del coche."
+
+      - goal: "Ingresar los detalles del vehículo e imagen."
+        hint: "Escribe en setup_vehicle_name_input (ej: Peugeot 3008), selecciona tipo de combustible y pulsa en el selector de fotos. Selecciona una foto y recórtala en el ImageCropper."
+        finalScreenAssertion: "La imagen recortada debe cargarse en el formulario del asistente y habilitar el botón de siguiente."
+
+      - goal: "Completar la configuración de plazos, kilómetros y odómetro."
+        hint: "Presiona el botón de guardar en cada paso (setup_save_vehicle_button). Ingresa fecha de inicio, duración, kilómetros totales contratados (ej: 20000 km) y lectura de odómetro inicial."
+        finalScreenAssertion: "Debo aterrizar en el Dashboard con la tarjeta de información del vehículo 'Peugeot 3008' activa."

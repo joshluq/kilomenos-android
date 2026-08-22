@@ -77,6 +77,13 @@ class HistoryRepositoryImpl @Inject constructor(
 
         // Remote Sync (Only if session is active and user has Cloud Sync feature)
         if (sessionDataSource.getSessionState().first() is AuthSessionState.Active) {
+            // Initial records are created automatically by the server during contract creation.
+            // We skip explicit POST here to avoid duplication.
+            if (record.isInitialRecord) {
+                logger.d("HistoryRepository", "Skipping remote sync for initial record ${record.id}")
+                return@withContext
+            }
+
             runCatching {
                 if (sessionDataSource.hasFeature(Feature.CLOUD_SYNC.id)) {
                     val response = apiService.addOdometerRecord(
@@ -95,7 +102,6 @@ class HistoryRepositoryImpl @Inject constructor(
                             val remoteRecord = remoteRecordDto.toDomainFromApi()
                             syncIdHandler.resolveOdometerId(record, remoteRecord)
 
-                            // If IDs didn't change but we have a route, ensure it's synced
                             if (remoteRecord.id == record.id && (route != null || record.hasRoute)) {
                                 val routeToSync = route ?: routeDao.getRouteByRecordIdSync(record.id)?.toDomainFromEntity()
                                 routeToSync?.let { saveRoute(it) }

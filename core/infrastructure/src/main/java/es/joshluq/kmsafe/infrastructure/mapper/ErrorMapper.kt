@@ -2,7 +2,6 @@ package es.joshluq.kmsafe.infrastructure.mapper
 
 import es.joshluq.kmsafe.domain.model.KmError
 import retrofit2.Response
-import java.io.IOException
 import javax.inject.Inject
 
 /**
@@ -22,17 +21,9 @@ class ErrorMapper @Inject constructor() {
             errorMsg.contains("User already registered", ignoreCase = true) -> KmError.UserAlreadyRegistered
             errorMsg.contains("password", ignoreCase = true) && errorMsg.contains("characters", ignoreCase = true) -> KmError.WeakPassword
             errorMsg.contains("email", ignoreCase = true) && errorMsg.contains("format", ignoreCase = true) -> KmError.InvalidEmail
+            errorMsg.contains("usuarios PREMIUM", ignoreCase = true) -> KmError.FuelExpensesPremiumOnly
+            errorMsg.contains("no encontrado", ignoreCase = true) && errorMsg.contains("Gasto", ignoreCase = true) -> KmError.ExpenseNotFound
             response.code() >= 500 -> KmError.ServerError(response.code())
-            else -> KmError.UnknownError
-        }
-    }
-
-    /**
-     * Maps a [Throwable] to a [KmError].
-     */
-    fun mapThrowable(throwable: Throwable): KmError {
-        return when (throwable) {
-            is IOException -> KmError.NetworkError
             else -> KmError.UnknownError
         }
     }

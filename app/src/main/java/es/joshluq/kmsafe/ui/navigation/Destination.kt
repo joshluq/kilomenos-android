@@ -3,8 +3,18 @@ package es.joshluq.kmsafe.ui.navigation
 import kotlinx.serialization.Serializable
 
 /**
+ * Deep link configuration constants.
+ */
+object DeepLinkConfig {
+    const val SCHEME = "https"
+    const val HOST = "kmsafe.app"
+    const val BASE_URL = "$SCHEME://$HOST"
+}
+
+/**
  * Interface for all navigation destinations in the application.
  */
+@Serializable
 sealed interface Destination {
 
     /**
@@ -121,4 +131,26 @@ sealed interface Destination {
      */
     @Serializable
     object AutoTrackingPermissions : Destination
+
+    /**
+     * Expenses destination.
+     */
+    @Serializable
+    data class Expenses(
+        val stationId: String? = null,
+        val autoOpenAdd: Boolean = false,
+        val priceReportMode: Boolean = false
+    ) : Destination
+
+    /**
+     * Station Management destination.
+     */
+    @Serializable
+    object StationManagement : Destination
+
+    /**
+     * Station Detail destination.
+     */
+    @Serializable
+    data class StationDetail(val stationId: String) : Destination
 }

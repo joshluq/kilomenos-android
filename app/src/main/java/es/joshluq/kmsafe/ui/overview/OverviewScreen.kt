@@ -67,6 +67,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
@@ -123,9 +124,10 @@ import es.joshluq.kmsafe.ui.common.components.BrandingLogo
 import es.joshluq.kmsafe.ui.overview.components.TrackingCard
 import es.joshluq.kmsafe.ui.overview.model.MonthlyUsageUiModel
 import es.joshluq.kmsafe.ui.util.DateUtils
-import es.joshluq.kmsafe.ui.util.safeClick
-import es.joshluq.kmsafe.ui.util.safeClickable
+import es.joshluq.kmsafe.core.ui.util.safeClick
+import es.joshluq.kmsafe.core.ui.util.safeClickable
 import kotlin.math.absoluteValue
+import es.joshluq.kmsafe.core.ui.util.NumberFormatter
 
 /**
  * Navigation entry point for the Overview screen.
@@ -275,7 +277,8 @@ fun OverviewScreen(
                         },
                         containerColor = CanvasKitTheme.colors.brandAccent,
                         contentColor = CanvasKitTheme.colors.onBrandAccent,
-                        shape = CircleShape
+                        shape = CircleShape,
+                        modifier = Modifier.testTag("add_odometer_fab")
                     ) {
                         Icon(
                             Icons.Default.Add,
@@ -360,10 +363,10 @@ fun OverviewScreen(
                             text = if (projection.isOverLimit) {
                                 stringResource(
                                     R.string.projection_card_status_over,
-                                    projection.expectedFinalBalance.absoluteValue
+                                    NumberFormatter.formatDistance(projection.expectedFinalBalance.absoluteValue)
                                 )
                             } else {
-                                stringResource(R.string.projection_card_status_safe, projection.expectedFinalBalance)
+                                stringResource(R.string.projection_card_status_safe, NumberFormatter.formatDistance(projection.expectedFinalBalance))
                             },
                             style = CanvasKitTheme.typography.bodyMedium
                         )
@@ -483,8 +486,8 @@ private fun RentingState(
 @Composable
 private fun MainBalanceCard(
     vehicleName: String,
-    balance: Int,
-    totalKms: Int,
+    balance: Double,
+    totalKms: Double,
     imageUrl: String? = null,
     onEditClick: () -> Unit,
     onCardClick: () -> Unit
@@ -599,7 +602,7 @@ private fun MainBalanceCard(
                     color = CanvasKitTheme.colors.textSecondary
                 )
                 Text(
-                    text = stringResource(R.string.common_km_suffix, totalKms),
+                    text = stringResource(R.string.common_km_suffix, NumberFormatter.formatDistance(totalKms)),
                     style = CanvasKitTheme.typography.headingMedium,
                     color = CanvasKitTheme.colors.textPrimary,
                     fontWeight = FontWeight.Bold
@@ -634,7 +637,7 @@ private fun MainBalanceCard(
                     modifier = Modifier.weight(1f),
                     text = stringResource(
                         if (isPositive) R.string.common_km_positive_suffix else R.string.common_km_negative_suffix,
-                        balance.absoluteValue
+                        balance.absoluteValue.toInt()
                     ),
                     style = CanvasKitTheme.typography.displayLarge,
                     textAlign = TextAlign.Center,
@@ -648,8 +651,8 @@ private fun MainBalanceCard(
 
 @Composable
 private fun TheoreticalLimitsSection(
-    dailyLimit: Int,
-    monthlyLimit: Int
+    dailyLimit: Double,
+    monthlyLimit: Double
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Text(
@@ -665,12 +668,12 @@ private fun TheoreticalLimitsSection(
         ) {
             MetricCard(
                 label = stringResource(R.string.overview_daily_limit),
-                value = stringResource(R.string.common_km_suffix, dailyLimit),
+                value = stringResource(R.string.common_km_suffix, dailyLimit.toInt()),
                 modifier = Modifier.weight(1f)
             )
             MetricCard(
                 label = stringResource(R.string.overview_monthly_limit),
-                value = stringResource(R.string.common_km_suffix, monthlyLimit),
+                value = stringResource(R.string.common_km_suffix, monthlyLimit.toInt()),
                 modifier = Modifier.weight(1f)
             )
         }
@@ -996,7 +999,6 @@ private fun UpdateOdometerContent(
     state: State,
     onEvent: (Event) -> Unit
 ) {
-    var selectedDate by remember { mutableStateOf<Long?>(state.newRecordDate) }
     val focusManager = LocalFocusManager.current
     val keyboardController = LocalSoftwareKeyboardController.current
 
@@ -1022,7 +1024,7 @@ private fun UpdateOdometerContent(
                     placeholder = stringResource(R.string.overview_current_odometer_placeholder),
                     suffix = stringResource(R.string.onboarding_km_suffix),
                     keyboardOptions = KeyboardOptions(
-                        keyboardType = KeyboardType.Number,
+                        keyboardType = KeyboardType.Decimal,
                         imeAction = ImeAction.Next
                     ),
                     keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Next) })
@@ -1046,9 +1048,13 @@ private fun UpdateOdometerContent(
 
         CanvasKitDatePickerField(
             label = stringResource(R.string.overview_record_date_label),
-            selectedDateMillis = selectedDate,
-            onDateSelected = { selectedDate = it },
-            placeholder = stringResource(R.string.onboarding_start_date_placeholder)
+            selectedDateMillis = state.newRecordDate,
+            onDateSelected = { millis ->
+                millis?.let { onEvent(Event.OnNewRecordDateChanged(it)) }
+            },
+            placeholder = stringResource(R.string.onboarding_start_date_placeholder),
+            isError = state.newRecordDateError != null,
+            errorText = state.newRecordDateError?.asString()
         )
 
         CanvasKitButton(
@@ -1057,14 +1063,13 @@ private fun UpdateOdometerContent(
             onClick = safeClick {
                 keyboardController?.hide()
                 focusManager.clearFocus()
-                selectedDate?.let {
-                    val preciseTimestamp = DateUtils.mergeDateWithCurrentTime(it)
-                    onEvent(Event.OnSaveRecordClicked(preciseTimestamp))
-                }
+                val preciseTimestamp = DateUtils.mergeDateWithCurrentTime(state.newRecordDate)
+                onEvent(Event.OnSaveRecordClicked(preciseTimestamp))
             },
-            enabled = !state.isSaving && state.newOdometerValue.isNotBlank() && selectedDate != null,
+            enabled = !state.isSaving &&
+                    state.newOdometerValue.isNotBlank() &&
+                    state.newRecordDateError == null,
             loading = state.isSaving
-
         )
         Spacer(modifier = Modifier.height(24.dp))
     }
@@ -1172,7 +1177,10 @@ private fun OverviewTopbarActions(
                     ),
                     label = "SyncAlpha"
                 )
-                IconButton(onClick = { /* No-op, just indicator */ }) {
+                IconButton(
+                    onClick = { /* No-op, just indicator */ },
+                    modifier = Modifier.testTag("sync_pending_indicator")
+                ) {
                     Icon(
                         imageVector = Icons.Default.SyncProblem,
                         contentDescription = stringResource(R.string.acc_sync_pending),
@@ -1264,7 +1272,7 @@ private fun EmptyState(
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     CanvasKitButton(
                         onClick = safeClick { onRegisterClick() },
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth().testTag("overview_register_renting_button")
                     ) { contentColor ->
                         Text(
                             stringResource(R.string.overview_register_renting_button),
@@ -1298,21 +1306,21 @@ internal class OverviewStateProvider : PreviewParameterProvider<State> {
                 vehicleName = "Volkswagen ID.3",
                 startDate = System.currentTimeMillis() - 3888000000L,
                 durationMonths = 36,
-                totalKms = 45000,
-                startOdometer = 0,
-                currentOdometer = 150,
+                totalKms = 45000.0,
+                startOdometer = 0.0,
+                currentOdometer = 150.0,
                 isSelected = true,
                 vehicleImageUrl = "https://www.carlogos.org/car-logos/volkswagen-id-3-logo.png"
             ),
-            balance = 150, dailyLimit = 50, monthlyLimit = 1250, totalKmsDriven = 300,
+            balance = 150.0, dailyLimit = 50.0, monthlyLimit = 1250.0, totalKmsDriven = 300.0,
             timePercentage = 0.75f, kmsPercentage = 0.60f, differencePercentage = 15.0f,
             monthlyUsage = listOf(
                 MonthlyUsageUiModel("Ene", "1200", "1500", 1200f, 1500f, MonthlyUsageUiModel.LimitState.SAFE)
             ),
             showProjectionBanner = false,
             projection = TripProjection(
-                projectedTotalKms = 10000,
-                expectedFinalBalance = 1000000,
+                projectedTotalKms = 10000.0,
+                expectedFinalBalance = 1000000.0,
                 isOverLimit = false,
                 dailyAverage = 1000.0,
                 hasEnoughData = true,
@@ -1323,9 +1331,9 @@ internal class OverviewStateProvider : PreviewParameterProvider<State> {
                     vehicleName = "Volkswagen ID.3",
                     startDate = 0,
                     durationMonths = 36,
-                    totalKms = 45000,
-                    startOdometer = 0,
-                    currentOdometer = 0,
+                    totalKms = 45000.0,
+                    startOdometer = 0.0,
+                    currentOdometer = 0.0,
                     isSelected = true,
                     vehicleImageUrl = "https://www.carlogos.org/car-logos/volkswagen-id-3-logo.png"
                 ),
@@ -1334,9 +1342,9 @@ internal class OverviewStateProvider : PreviewParameterProvider<State> {
                     vehicleName = "Tesla Model 3",
                     startDate = 0,
                     durationMonths = 24,
-                    totalKms = 20000,
-                    startOdometer = 0,
-                    currentOdometer = 0,
+                    totalKms = 20000.0,
+                    startOdometer = 0.0,
+                    currentOdometer = 0.0,
                     isSelected = false,
                     vehicleImageUrl = "https://www.carlogos.org/car-logos/tesla-logo.png"
                 )

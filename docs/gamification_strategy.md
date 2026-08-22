@@ -13,6 +13,7 @@ KmSafe deja de ser una calculadora pasiva para convertirse en un asistente de co
 | **Registro Manual** | +10 XP | Mantener la base de datos actualizada. |
 | **Uso de Auto-tracking** | +50 XP | Fomentar la precisión del GPS y uso de feature Premium. |
 | **Día en "Zona Verde"** | +20 XP | Reforzar el cumplimiento del contrato diario. |
+| **Registro de Gasto** | +40 XP | Completar perfil de ahorro y datos de electrificación. |
 | **Semana Consistente** | +100 XP | Fomentar el uso recurrente de la App (Retención). |
 | **Categorización** | +30 XP | Mejorar la calidad de los datos para la IA. |
 
@@ -44,7 +45,24 @@ En lugar de mostrar solo números rojos, personificamos el riesgo financiero de 
 
 ---
 
-## 4. Puntos de Mejora y Refinamiento (V2)
+## 4. Recompensas de Gasto: "The Armory" 🛡️⚔️
+Para incentivar el uso de la funcionalidad de **Fuel Expenses**, hemos introducido el concepto de equipamiento defensivo.
+
+### 🛡️ Escudo de Gasto (Armor)
+El registro recurrente de gastos de combustible otorga al usuario el "Escudo Financiero".
+- **Efecto**: Bloquea visualmente los ataques de "Mr. Penalty" cuando el exceso es menor al 2%.
+- **Niveles**:
+    - **Armadura de Cuero**: 3 gastos registrados (Protección base).
+    - **Coraza de Carbono**: 10 gastos registrados (Añade aura de éxito en el Dashboard).
+
+### ⚡ Espada de Electrificación (Weapon)
+Especial para usuarios que registran cargas eléctricas (EV).
+- **Efecto**: "Corta" la incertidumbre financiera mostrando con mayor énfasis el KPI de ahorros acumulados.
+- **Bonus**: Desbloquea un rayo visual sobre el icono del vehículo cuando está cargando.
+
+---
+
+## 5. Puntos de Mejora y Refinamiento (V2)
 - **Desafíos Temporales**: *"Este mes recorre menos de 500km y gana el emblema 'Eco-City'"*.
 - **Integración con Partners**: Convertir el XP en descuentos reales para cambio de neumáticos o revisiones en talleres asociados.
 - **Leaderboard Anónimo**: Comparar tu nivel de eficiencia con la media de conductores del mismo modelo de vehículo.
@@ -52,7 +70,7 @@ En lugar de mostrar solo números rojos, personificamos el riesgo financiero de 
 
 ---
 
-## 5. Viabilidad Técnica y Riesgos
+## 6. Viabilidad Técnica y Riesgos
 
 ### 🛠️ Viabilidad
 - **Arquitectura**: Se puede implementar extendiendo el `UserSessionModel` para incluir `totalXp` y `level`.

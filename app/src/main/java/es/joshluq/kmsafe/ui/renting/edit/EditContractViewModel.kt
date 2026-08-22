@@ -67,6 +67,10 @@ class EditContractViewModel @Inject constructor(
                 updateState { copy(vehicleName = event.value, vehicleNameError = null) }
                 checkDirtyState()
             }
+            is Event.OnFuelTypeChanged -> {
+                updateState { copy(fuelType = event.value) }
+                checkDirtyState()
+            }
             is Event.OnOriginalImageSelected -> {
                 event.uri?.let { launchEffect(Effect.NavigateToCropper(it.toString())) }
             }
@@ -101,7 +105,11 @@ class EditContractViewModel @Inject constructor(
                 checkDirtyState()
             }
 
-            Event.OnToggleBluetoothPicker -> updateState { copy(showBluetoothPicker = !showBluetoothPicker) }
+            Event.OnToggleBluetoothPicker -> {
+                val newState = !state.value.showBluetoothPicker
+                logger.d("EditContractVM", "Toggling bluetooth picker to: $newState")
+                updateState { copy(showBluetoothPicker = newState) }
+            }
             Event.OnDismissError -> updateState { copy(error = null) }
         }
     }
@@ -111,6 +119,7 @@ class EditContractViewModel @Inject constructor(
         val r = s.renting ?: return
 
         val isNameDirty = s.vehicleName != r.vehicleName
+        val isFuelDirty = s.fuelType != r.fuelType
         val isImageDirty = s.selectedImageUri != null
         val isDurationDirty = s.durationMonths != r.durationMonths.toString()
         val isTotalKmsDirty = s.totalKms != r.totalKms.toString()
@@ -118,7 +127,7 @@ class EditContractViewModel @Inject constructor(
         val isPriceDirty = s.excessDistancePrice != (r.excessDistancePrice?.toString() ?: "")
         val isMarginDirty = s.courtesyMarginKms != r.courtesyMarginKms.toString()
 
-        val dirty = isNameDirty || isImageDirty || isDurationDirty || isTotalKmsDirty || isBluetoothDirty || isPriceDirty || isMarginDirty
+        val dirty = isNameDirty || isFuelDirty || isImageDirty || isDurationDirty || isTotalKmsDirty || isBluetoothDirty || isPriceDirty || isMarginDirty
         updateState { copy(isDirty = dirty) }
     }
 
@@ -143,6 +152,7 @@ class EditContractViewModel @Inject constructor(
                                 isLoading = false,
                                 renting = contract,
                                 vehicleName = contract.vehicleName,
+                                fuelType = contract.fuelType,
                                 vehicleImageUrl = contract.vehicleImageUrl,
                                 durationMonths = contract.durationMonths.toString(),
                                 totalKms = contract.totalKms.toString(),
@@ -169,12 +179,13 @@ class EditContractViewModel @Inject constructor(
 
         val updatedContract = baseContract.copy(
             vehicleName = s.vehicleName,
+            fuelType = s.fuelType,
             durationMonths = s.durationMonths.toIntOrNull() ?: baseContract.durationMonths,
-            totalKms = s.totalKms.toIntOrNull() ?: baseContract.totalKms,
+            totalKms = s.totalKms.replace(',', '.').toDoubleOrNull() ?: baseContract.totalKms,
             bluetoothDeviceAddress = s.bluetoothDeviceAddress,
             bluetoothDeviceName = s.bluetoothDeviceName,
-            excessDistancePrice = s.excessDistancePrice.toDoubleOrNull(),
-            courtesyMarginKms = s.courtesyMarginKms.toIntOrNull() ?: 0
+            excessDistancePrice = s.excessDistancePrice.replace(',', '.').toDoubleOrNull(),
+            courtesyMarginKms = s.courtesyMarginKms.replace(',', '.').toDoubleOrNull() ?: 0.0
         )
 
         val imageUri = s.selectedImageUri
@@ -249,7 +260,7 @@ class EditContractViewModel @Inject constructor(
             updateState { copy(durationMonthsError = TextProvider.Resource(R.string.onboarding_number_feedback)) }
             isValid = false
         }
-        if (state.value.totalKms.toIntOrNull() == null) {
+        if (state.value.totalKms.replace(',', '.').toDoubleOrNull() == null) {
             updateState { copy(totalKmsError = TextProvider.Resource(R.string.onboarding_number_feedback)) }
             isValid = false
         }

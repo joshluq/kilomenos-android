@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -44,6 +45,8 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import es.joshluq.canvaskit.components.buttons.CanvasKitButton
 import es.joshluq.canvaskit.components.buttons.CanvasKitButtonVariant
+import es.joshluq.canvaskit.components.feedback.CanvasKitAlertVariant
+import es.joshluq.canvaskit.components.feedback.CanvasKitBanner
 import es.joshluq.canvaskit.components.feedback.CanvasKitConfirmDialog
 import es.joshluq.canvaskit.components.layout.CanvasKitLoadingScaffold
 import es.joshluq.canvaskit.components.navigation.CanvasKitTopBar
@@ -52,7 +55,7 @@ import es.joshluq.kmsafe.R
 import es.joshluq.kmsafe.domain.model.RentingContract
 import es.joshluq.kmsafe.ui.renting.components.ContractMetricCard
 import es.joshluq.kmsafe.ui.renting.components.VehiclePhotoSelector
-import es.joshluq.kmsafe.ui.util.safeClick
+import es.joshluq.kmsafe.core.ui.util.safeClick
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -220,7 +223,14 @@ fun VehicleDetailScreen(
                     CanvasKitButton(
                         text = stringResource(R.string.history_delete_action),
                         icon = Icons.Default.Delete,
-                        onClick = safeClick { showDeleteDialog = true },
+                        onClick = safeClick { 
+                            val isSelected = contract.isSelected
+                            if (isSelected) {
+                                onEvent(Event.OnDeleteClicked)
+                            } else {
+                                showDeleteDialog = true 
+                            }
+                        },
                         variant = CanvasKitButtonVariant.Ghost,
                         modifier = Modifier.align(Alignment.CenterHorizontally)
                     )
@@ -228,6 +238,18 @@ fun VehicleDetailScreen(
                     Spacer(modifier = Modifier.height(32.dp))
                 }
             }
+
+            // Error Banner
+            CanvasKitBanner(
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(16.dp)
+                    .navigationBarsPadding(),
+                variant = CanvasKitAlertVariant.Error,
+                message = { Text(state.error?.asString() ?: "") },
+                visible = state.error != null,
+                onDismiss = { onEvent(Event.OnDismissError) }
+            )
 
             if (showDeleteDialog) {
                 DeleteConfirmationDialog(
@@ -288,13 +310,13 @@ fun VehicleDetailScreenPreview() {
                     vehicleName = "Tesla Model 3",
                     startDate = System.currentTimeMillis() - 3888000000L,
                     durationMonths = 48,
-                    totalKms = 60000,
-                    startOdometer = 0,
-                    currentOdometer = 1200,
+                    totalKms = 60000.0,
+                    startOdometer = 0.0,
+                    currentOdometer = 1200.0,
                     isSelected = true,
                     bluetoothDeviceName = "My Tesla",
                     excessDistancePrice = 0.05,
-                    courtesyMarginKms = 500
+                    courtesyMarginKms = 500.0
                 )
             ),
             onEvent = {}

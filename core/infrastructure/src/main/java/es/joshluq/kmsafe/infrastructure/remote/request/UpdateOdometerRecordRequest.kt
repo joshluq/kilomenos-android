@@ -6,7 +6,7 @@ import com.fasterxml.jackson.annotation.JsonProperty
  * Request DTO for updating an existing odometer record.
  */
 data class UpdateOdometerRecordRequest(
-    @JsonProperty("odometer_value") val odometerValue: Int,
+    @JsonProperty("odometer_value") val odometerValue: Double,
     @JsonProperty("timestamp") val timestamp: String,
     @JsonProperty("label") val label: String? = null,
     @JsonProperty("fuel_consumed") val fuelConsumed: Double? = null
