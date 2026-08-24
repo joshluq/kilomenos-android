@@ -232,6 +232,8 @@
     <string name="history_edit_title">Ajustar Registro</string>
     <string name="history_edit_save">Confirmar Cambios</string>
     <string name="history_delete_action">Eliminar</string>
+    <string name="history_delete_confirmation_title">Eliminar Registro</string>
+    <string name="history_delete_confirmation_message">¿Estás seguro de que deseas eliminar este registro de kilometraje?</string>
     <string name="history_close_button">Entendido</string>
     <string name="history_daily_records_title">Registros del %1$s</string>
     <string name="history_expand_desc">Expandir</string>

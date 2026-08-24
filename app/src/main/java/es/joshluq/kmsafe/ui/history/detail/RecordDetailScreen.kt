@@ -520,9 +520,9 @@ private fun ActionButtons(onEvent: (RecordDetailEvent) -> Unit) {
 @Composable
 private fun DeleteConfirmationDialog(onEvent: (RecordDetailEvent) -> Unit) {
     CanvasKitConfirmDialog(
-        title = stringResource(R.string.vehicles_delete_confirmation_title),
-        message = stringResource(R.string.vehicles_delete_confirmation_message),
-        confirmText = stringResource(R.string.vehicles_delete_confirm),
+        title = stringResource(R.string.history_delete_confirmation_title),
+        message = stringResource(R.string.history_delete_confirmation_message),
+        confirmText = stringResource(R.string.history_delete_action),
         cancelText = stringResource(R.string.profile_logout_cancel),
         onConfirm = { onEvent(RecordDetailEvent.OnConfirmDelete) },
         onDismissRequest = { onEvent(RecordDetailEvent.OnCancelDelete) },
