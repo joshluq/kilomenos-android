@@ -81,7 +81,11 @@
 
         <receiver
             android:name=".data.location.ActivityTransitionReceiver"
-            android:exported="false" />
+            android:exported="false">
+            <intent-filter>
+                <action android:name="es.joshluq.kmsafe.data.location.ActivityTransitionReceiver" />
+            </intent-filter>
+        </receiver>
 
         <receiver
             android:name=".data.location.BluetoothConnectionReceiver"

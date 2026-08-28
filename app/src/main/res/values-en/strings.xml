@@ -271,6 +271,7 @@
     <string name="tracking_channel_name">Trip Tracking</string>
     <string name="tracking_notification_title">KiloMenos Tracking</string>
     <string name="tracking_notification_content">Trip in progress: %1$.2f km</string>
+    <string name="tracking_validation_content">Detecting vehicle connection…</string>
 
     <!-- Common -->
     <string name="common_brand_kilo">Kilo</string>

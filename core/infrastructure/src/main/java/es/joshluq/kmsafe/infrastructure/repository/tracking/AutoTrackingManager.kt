@@ -36,7 +36,8 @@ class AutoTrackingManager @Inject constructor(
 
     private val pendingIntent: PendingIntent by lazy {
         val intent = Intent(ACTIVITY_TRANSITION_RECEIVER)
-        intent.setPackage(context.packageName)
+        intent.setClassName(context.packageName, ACTIVITY_TRANSITION_RECEIVER)
+        
         val flags = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_MUTABLE
         } else {
@@ -50,6 +51,7 @@ class AutoTrackingManager @Inject constructor(
      */
     @SuppressLint("MissingPermission")
     fun startAutoTracking() {
+        logger.d("AutoTrackingManager", "Registering for activity transitions...")
         val transitions = listOf(
             ActivityTransition.Builder()
                 .setActivityType(DetectedActivity.IN_VEHICLE)
@@ -64,6 +66,9 @@ class AutoTrackingManager @Inject constructor(
         val request = ActivityTransitionRequest(transitions)
 
         activityRecognitionClient.requestActivityTransitionUpdates(request, pendingIntent)
+            .addOnSuccessListener {
+                logger.i("AutoTrackingManager", "Successfully REGISTERED for auto-tracking")
+            }
             .addOnFailureListener { e ->
                 logger.e("AutoTrackingManager", "Failed to register for auto-tracking", e)
             }
@@ -74,7 +79,11 @@ class AutoTrackingManager @Inject constructor(
      */
     @SuppressLint("MissingPermission")
     fun stopAutoTracking() {
+        logger.d("AutoTrackingManager", "Unregistering from activity transitions...")
         activityRecognitionClient.removeActivityTransitionUpdates(pendingIntent)
+            .addOnSuccessListener {
+                logger.i("AutoTrackingManager", "Successfully UNREGISTERED from auto-tracking")
+            }
             .addOnFailureListener { e ->
                 logger.e("AutoTrackingManager", "Failed to unregister from auto-tracking", e)
             }

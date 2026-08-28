@@ -270,6 +270,7 @@
     <string name="tracking_channel_name">Seguimiento de Viaje</string>
     <string name="tracking_notification_title">KiloMenos Tracking</string>
     <string name="tracking_notification_content">Viaje en curso: %1$.2f km</string>
+    <string name="tracking_validation_content">Detectando conexión con vehículo…</string>
 
     <!-- Common -->
     <string name="common_brand_kilo">Kilo</string>

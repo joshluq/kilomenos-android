@@ -5,6 +5,9 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.app.Service
+import android.bluetooth.BluetoothManager
+import android.bluetooth.BluetoothProfile
+import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.content.pm.ServiceInfo
@@ -14,6 +17,9 @@ import android.os.IBinder
 import android.os.Looper
 import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
+import com.google.android.gms.location.ActivityTransition
+import com.google.android.gms.location.ActivityTransitionResult
+import com.google.android.gms.location.DetectedActivity
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationRequest
@@ -24,25 +30,51 @@ import dagger.hilt.android.AndroidEntryPoint
 import es.joshluq.analyticskit.domain.model.AnalyticsEvent
 import es.joshluq.analyticskit.sdk.AnalyticskitManager
 import es.joshluq.foundationkit.log.LoggerKit
+import es.joshluq.foundationkit.usecase.FlowUseCase
 import es.joshluq.kmsafe.BuildConfig
 import es.joshluq.kmsafe.MainActivity
 import es.joshluq.kmsafe.R
+import es.joshluq.kmsafe.domain.di.CheckFeatureAccess
+import es.joshluq.kmsafe.domain.di.GetRenting
+import es.joshluq.kmsafe.domain.model.Feature
 import es.joshluq.kmsafe.domain.repository.TrackingRepository
+import es.joshluq.kmsafe.domain.usecase.CheckFeatureAccessUseCase
+import es.joshluq.kmsafe.domain.usecase.GetRentingContractUseCase
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.suspendCancellableCoroutine
 import javax.inject.Inject
+import kotlin.coroutines.resume
+import kotlin.time.Duration.Companion.milliseconds
 
+/**
+ * Foreground service responsible for tracking vehicle trips via GPS.
+ *
+ * It handles both manual starts from the UI and automated starts from physical activity transitions.
+ * It performs validations (Premium status, Bluetooth connection) before activating GPS updates.
+ */
 @AndroidEntryPoint
 class LocationTrackingService : Service() {
 
     @Inject
     lateinit var trackingRepository: TrackingRepository
+
+    @Inject
+    @CheckFeatureAccess
+    lateinit var checkFeatureAccessUseCase:
+        @JvmSuppressWildcards FlowUseCase<CheckFeatureAccessUseCase.Input, CheckFeatureAccessUseCase.Output>
+
+    @Inject
+    @GetRenting
+    lateinit var getRentingContractUseCase:
+        @JvmSuppressWildcards FlowUseCase<GetRentingContractUseCase.Input, GetRentingContractUseCase.Output>
 
     @Inject
     lateinit var logger: LoggerKit
@@ -62,10 +94,9 @@ class LocationTrackingService : Service() {
         const val ACTION_START = "ACTION_START"
         const val ACTION_STOP = "ACTION_STOP"
 
-        // BUSINESS RULE: To avoid false positives (e.g. gym, walking, GPS drift)
-        // We only count distance if the precision is high and there is a minimum speed.
-        private const val MIN_SPEED_THRESHOLD_MPS = 1.5 // ~5.4 km/h (Walking/Driving speed)
-        private const val MAX_HORIZONTAL_ACCURACY_METERS = 30.0 // Acceptable GPS precision
+        // BUSINESS RULE: To avoid false positives (e.g. drift when stationary)
+        private const val MIN_SPEED_THRESHOLD_MPS = 1.5 // ~5.4 km/h
+        private const val MAX_HORIZONTAL_ACCURACY_METERS = 30.0
     }
 
     override fun onCreate() {
@@ -90,17 +121,148 @@ class LocationTrackingService : Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        logger.d("LocationService", "onStartCommand received with action: ${intent?.action}")
+        logger.d("LocationService", "onStartCommand received. Action: ${intent?.action}")
+
+        // 1. Handle explicit UI actions
         when (intent?.action) {
-            ACTION_START -> startTracking()
-            ACTION_STOP -> stopTracking()
+            ACTION_START -> {
+                startTracking()
+                return START_STICKY
+            }
+            ACTION_STOP -> {
+                stopTracking()
+                return START_NOT_STICKY
+            }
         }
+
+        // 2. Handle Intelligent Transitions from ActivityTransitionReceiver
+        val transitionResult = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            intent?.getParcelableExtra("EXTRA_TRANSITION_RESULT", ActivityTransitionResult::class.java)
+        } else {
+            @Suppress("DEPRECATION")
+            intent?.getParcelableExtra("EXTRA_TRANSITION_RESULT")
+        }
+
+        if (transitionResult != null) {
+            logger.i("LocationService", "ActivityTransitionResult received. Processing events...")
+            transitionResult.transitionEvents.forEach { event ->
+                if (event.activityType == DetectedActivity.IN_VEHICLE) {
+                    processTransition(event.transitionType)
+                }
+            }
+        }
+
         return START_STICKY
     }
 
-    private fun startTracking() {
+    private fun processTransition(type: Int) {
+        if (type == ActivityTransition.ACTIVITY_TRANSITION_ENTER) {
+            startAutoValidationAndTracking()
+        } else if (type == ActivityTransition.ACTIVITY_TRANSITION_EXIT) {
+            logger.i("LocationService", "IN_VEHICLE EXIT detected. Stopping service.")
+            stopTracking()
+        }
+    }
+
+    private fun startAutoValidationAndTracking() {
         serviceScope.launch {
-            // Check if already tracking in repository to avoid resetting distance to 0
+            // A. Show "Validation" notification immediately to comply with Android background rules
+            showValidationNotification()
+
+            try {
+                // B. Run business validations
+                logger.d("LocationService", "Starting autostart validation flow...")
+                
+                // 1. Check Access
+                val access = checkFeatureAccessUseCase(CheckFeatureAccessUseCase.Input(Feature.AUTO_TRACKING)).first()
+                if (access !is CheckFeatureAccessUseCase.Output.Success || !access.isGranted) {
+                    logger.w("LocationService", "Validation failed: User has no Premium access.")
+                    stopSelf()
+                    return@launch
+                }
+
+                // 2. Check if already tracking
+                if (trackingRepository.isTracking.first()) {
+                    logger.d("LocationService", "Already tracking. Validation aborted.")
+                    return@launch
+                }
+
+                // 3. Check Bluetooth if linked
+                val contractOutput = getRentingContractUseCase(GetRentingContractUseCase.Input).first { it !is GetRentingContractUseCase.Output.Progress }
+                if (contractOutput is GetRentingContractUseCase.Output.Success) {
+                    val mac = contractOutput.contract.bluetoothDeviceAddress
+                    if (mac != null) {
+                        if (!isBluetoothDeviceConnected(this@LocationTrackingService, mac)) {
+                            logger.i("LocationService", "Validation failed: Vehicle Bluetooth ($mac) not found.")
+                            stopSelf()
+                            return@launch
+                        }
+                    }
+                } else {
+                    logger.w("LocationService", "Validation failed: No active vehicle selected.")
+                    stopSelf()
+                    return@launch
+                }
+
+                // C. Validations passed! Start GPS capture
+                logger.i("LocationService", "VALIDATIONS PASSED. Switching to active tracking.")
+                startTracking()
+
+            } catch (e: Exception) {
+                logger.e("LocationService", "Error during autostart validation", e)
+                stopSelf()
+            }
+        }
+    }
+
+    private fun showValidationNotification() {
+        val notification = NotificationCompat.Builder(this, CHANNEL_ID)
+            .setContentTitle(getString(R.string.app_name))
+            .setContentText(getString(R.string.tracking_validation_content))
+            .setSmallIcon(R.drawable.ic_launcher_foreground)
+            .setOngoing(true)
+            .setPriority(NotificationCompat.PRIORITY_LOW)
+            .build()
+        
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            startForeground(NOTIFICATION_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION)
+        } else {
+            startForeground(NOTIFICATION_ID, notification)
+        }
+    }
+
+    @SuppressLint("MissingPermission")
+    private suspend fun isBluetoothDeviceConnected(context: Context, macAddress: String): Boolean {
+        val normalizedTarget = macAddress.replace(":", "").uppercase().trim()
+        val bluetoothManager = context.getSystemService(BLUETOOTH_SERVICE) as? BluetoothManager
+        val adapter = bluetoothManager?.adapter ?: return false
+        if (!adapter.isEnabled) return false
+
+        return suspendCancellableCoroutine { continuation ->
+            val profileListener = object : BluetoothProfile.ServiceListener {
+                override fun onServiceConnected(profile: Int, proxy: BluetoothProfile) {
+                    val connectedDevices = proxy.connectedDevices
+                    val isTargetConnected = connectedDevices.any {
+                        it.address.replace(":", "").uppercase().trim() == normalizedTarget
+                    }
+                    if (isTargetConnected && !continuation.isCompleted) continuation.resume(true)
+                    adapter.closeProfileProxy(profile, proxy)
+                }
+                override fun onServiceDisconnected(profile: Int) {}
+            }
+            adapter.getProfileProxy(context, profileListener, BluetoothProfile.HEADSET)
+            adapter.getProfileProxy(context, profileListener, BluetoothProfile.A2DP)
+
+            serviceScope.launch {
+                delay(3000.milliseconds)
+                if (!continuation.isCompleted) continuation.resume(false)
+            }
+        }
+    }
+
+    private fun startTracking() {
+        logger.i("LocationService", "startTracking initiated")
+        serviceScope.launch {
             val isAlreadyTracking = trackingRepository.isTracking.first()
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
@@ -113,12 +275,7 @@ class LocationTrackingService : Service() {
                 startForeground(NOTIFICATION_ID, createNotification(0.0))
             }
 
-            if (isAlreadyTracking) {
-                logger.d(
-                    "LocationService",
-                    "Service started but already tracking in repository. Skipping re-initialization."
-                )
-            } else {
+            if (!isAlreadyTracking) {
                 trackingRepository.startTracking()
             }
 
@@ -145,7 +302,7 @@ class LocationTrackingService : Service() {
             super.onLocationResult(result)
             val location = result.lastLocation ?: return
 
-            // SECURITY CONTROL: Prevent GPS Spoofing (Mock Locations)
+            // SECURITY CONTROL: Prevent GPS Spoofing
             val isMock = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                 location.isMock
             } else {
@@ -159,14 +316,8 @@ class LocationTrackingService : Service() {
                 return
             }
 
-            // FILTER 1: Accuracy check. Indoors (gym) GPS accuracy is usually poor (> 50m).
-            if (location.hasAccuracy() && location.accuracy > MAX_HORIZONTAL_ACCURACY_METERS) {
-                logger.d("LocationService", "Low accuracy: ${location.accuracy}m. Skipping update.")
-                return
-            }
-
-            // FILTER 2: Speed check. Prevent distance accumulation when stationary or moving very slowly.
-            // If speed is below threshold, we update 'lastLocation' to keep a fresh reference but don't add distance.
+            // Accuracy & Speed Filters
+            if (location.hasAccuracy() && location.accuracy > MAX_HORIZONTAL_ACCURACY_METERS) return
             if (location.hasSpeed() && location.speed < MIN_SPEED_THRESHOLD_MPS) {
                 lastLocation = location
                 return
@@ -174,7 +325,7 @@ class LocationTrackingService : Service() {
 
             lastLocation?.let { last ->
                 val distance = last.distanceTo(location)
-                if (distance > 20.0) { // BUSINESS RULE: Capture points every 20 meters for a smooth but light polyline
+                if (distance > 20.0) {
                     serviceScope.launch {
                         trackingRepository.updateTracking(
                             distanceMeters = distance.toDouble(),
@@ -182,9 +333,8 @@ class LocationTrackingService : Service() {
                             longitude = location.longitude
                         )
                     }
-                    lastLocation = location // Update reference for distance filter
+                    lastLocation = location
                 } else if (distance > 1.0) {
-                    // Update only distance for micro-movements, but don't record a map point yet
                     serviceScope.launch {
                         trackingRepository.updateTracking(
                             distanceMeters = distance.toDouble()
@@ -203,16 +353,10 @@ class LocationTrackingService : Service() {
         distanceJob?.cancel()
 
         serviceScope.launch {
-            logger.d("LocationService", "Calling repository stopTracking")
             trackingRepository.stopTracking()
-            logger.d("LocationService", "Repository stopTracking call finished")
-
-            // Move cleanup inside the scope to ensure order
             stopForeground(STOP_FOREGROUND_REMOVE)
             val notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
             notificationManager.cancel(NOTIFICATION_ID)
-
-            logger.d("LocationService", "Foreground removed and notification cancelled, calling stopSelf")
             stopSelf()
         }
     }
@@ -242,11 +386,11 @@ class LocationTrackingService : Service() {
         return NotificationCompat.Builder(this, CHANNEL_ID)
             .setContentTitle(getString(R.string.tracking_notification_title))
             .setContentText(contentText)
-            .setSmallIcon(R.drawable.ic_launcher_foreground) // Use app icon
+            .setSmallIcon(R.drawable.ic_launcher_foreground)
             .setOngoing(true)
             .setContentIntent(pendingIntent)
             .addAction(
-                R.drawable.ic_launcher_foreground, // Replace with appropriate stop icon if available
+                R.drawable.ic_launcher_foreground,
                 getString(R.string.tracking_card_stop_action),
                 stopPendingIntent
             )
