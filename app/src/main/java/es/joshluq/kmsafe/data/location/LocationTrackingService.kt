@@ -233,6 +233,16 @@ class LocationTrackingService : Service() {
 
     @SuppressLint("MissingPermission")
     private suspend fun isBluetoothDeviceConnected(context: Context, macAddress: String): Boolean {
+        // 1. Permission Guard for Android 12+ (API 31)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            val permission = android.Manifest.permission.BLUETOOTH_CONNECT
+            if (ActivityCompat.checkSelfPermission(context, permission) != PackageManager.PERMISSION_GRANTED) {
+                logger.w("LocationService", "Bluetooth validation skipped: BLUETOOTH_CONNECT permission missing.")
+                analytics.track(AnalyticsEvent.Custom("tracking_bt_validation_skipped_no_permission"))
+                return true // Fallback: prioritize tracking over validation
+            }
+        }
+
         val normalizedTarget = macAddress.replace(":", "").uppercase().trim()
         val bluetoothManager = context.getSystemService(BLUETOOTH_SERVICE) as? BluetoothManager
         val adapter = bluetoothManager?.adapter ?: return false
@@ -241,12 +251,22 @@ class LocationTrackingService : Service() {
         return suspendCancellableCoroutine { continuation ->
             val profileListener = object : BluetoothProfile.ServiceListener {
                 override fun onServiceConnected(profile: Int, proxy: BluetoothProfile) {
-                    val connectedDevices = proxy.connectedDevices
-                    val isTargetConnected = connectedDevices.any {
-                        it.address.replace(":", "").uppercase().trim() == normalizedTarget
+                    try {
+                        val connectedDevices = proxy.connectedDevices
+                        val isTargetConnected = connectedDevices.any {
+                            it.address.replace(":", "").uppercase().trim() == normalizedTarget
+                        }
+                        if (isTargetConnected && !continuation.isCompleted) continuation.resume(true)
+                    } catch (e: SecurityException) {
+                        // Double-safety: Handle unexpected late permission revocation or system inconsistencies
+                        logger.e("LocationService", "SecurityException during Bluetooth check fallback applied", e)
+                        if (!continuation.isCompleted) continuation.resume(true)
+                    } catch (e: Exception) {
+                        logger.e("LocationService", "Unexpected error during Bluetooth check", e)
+                        if (!continuation.isCompleted) continuation.resume(true)
+                    } finally {
+                        adapter.closeProfileProxy(profile, proxy)
                     }
-                    if (isTargetConnected && !continuation.isCompleted) continuation.resume(true)
-                    adapter.closeProfileProxy(profile, proxy)
                 }
                 override fun onServiceDisconnected(profile: Int) {}
             }

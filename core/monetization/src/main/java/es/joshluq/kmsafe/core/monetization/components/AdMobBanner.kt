@@ -14,6 +14,8 @@ import com.google.android.gms.ads.AdView
  * @param adUnitId The AdMob ad unit ID.
  * @param modifier Root layout modifier.
  */
+
+@androidx.annotation.RequiresPermission(android.Manifest.permission.INTERNET)
 @Composable
 fun AdMobBanner(
     adUnitId: String,
@@ -22,7 +24,7 @@ fun AdMobBanner(
     AndroidView(
         modifier = modifier.fillMaxWidth(),
         factory = { context ->
-            AdView(context).apply {
+            AdView(context).apply  {
                 setAdSize(AdSize.BANNER)
                 setAdUnitId(adUnitId)
                 loadAd(AdRequest.Builder().build())

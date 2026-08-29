@@ -57,6 +57,7 @@ import es.joshluq.kmsafe.domain.model.RentingContract
 import es.joshluq.kmsafe.ui.renting.components.ContractMetricCard
 import es.joshluq.kmsafe.ui.renting.components.VehiclePhotoSelector
 import es.joshluq.kmsafe.core.ui.util.safeClick
+import es.joshluq.kmsafe.ui.util.DateUtils
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -152,7 +153,7 @@ fun VehicleDetailScreen(
                         ContractMetricCard(
                             icon = Icons.Default.Event,
                             label = stringResource(R.string.onboarding_start_date_label),
-                            value = formatDate(contract.startDate),
+                            value = DateUtils.formatDate(contract.startDate),
                             modifier = Modifier.weight(1f)
                         )
                         ContractMetricCard(
@@ -291,11 +292,6 @@ private fun DeleteConfirmationDialog(
         isDestructive = true,
         icon = Icons.Default.Delete
     )
-}
-
-private fun formatDate(timestamp: Long): String {
-    val sdf = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
-    return sdf.format(Date(timestamp))
 }
 
 @Preview(showBackground = true)

@@ -22,7 +22,6 @@ import es.joshluq.kmsafe.domain.usecase.DeleteOdometerRecordUseCase
 import es.joshluq.kmsafe.domain.usecase.GetOdometerRecordUseCase
 import es.joshluq.kmsafe.domain.usecase.GetRouteUseCase
 import es.joshluq.kmsafe.domain.usecase.UpdateOdometerRecordUseCase
-import es.joshluq.kmsafe.core.ui.util.toText
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import javax.inject.Inject

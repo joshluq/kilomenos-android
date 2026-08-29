@@ -1,7 +1,9 @@
 package es.joshluq.kmsafe.core.monetization.util
 
+import android.Manifest
 import android.app.Activity
 import android.content.Context
+import androidx.annotation.RequiresPermission
 import com.google.android.gms.ads.MobileAds
 import com.google.android.ump.ConsentInformation
 import com.google.android.ump.ConsentRequestParameters
@@ -62,6 +64,7 @@ class ConsentManager @Inject constructor(
     /**
      * Initializes the Mobile Ads SDK if consent is given.
      */
+    @RequiresPermission(Manifest.permission.INTERNET)
     fun initializeAds(context: Context) {
         if (canRequestAds()) {
             MobileAds.initialize(context)
