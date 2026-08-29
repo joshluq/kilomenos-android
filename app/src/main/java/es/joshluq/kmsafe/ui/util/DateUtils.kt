@@ -1,12 +1,22 @@
 package es.joshluq.kmsafe.ui.util
 
+import java.text.SimpleDateFormat
 import java.util.Calendar
+import java.util.Locale
 import java.util.TimeZone
 
 /**
  * Utility functions for date and time manipulations.
  */
 object DateUtils {
+
+    /**
+     * Formats a timestamp into a human-readable date string.
+     */
+    fun formatDate(timestamp: Long): String {
+        val sdf = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+        return sdf.format(timestamp)
+    }
 
     /**
      * Merges the date component of [selectedDateMillis] (usually from a DatePicker at 00:00 UTC)

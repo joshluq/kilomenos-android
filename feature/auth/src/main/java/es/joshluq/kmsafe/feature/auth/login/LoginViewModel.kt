@@ -11,8 +11,6 @@ import es.joshluq.foundationkit.usecase.FlowUseCase
 import es.joshluq.foundationkit.usecase.UseCase
 import es.joshluq.foundationkit.viewmodel.ScreenViewModel
 import es.joshluq.kmsafe.feature.auth.R
-import es.joshluq.kmsafe.infrastructure.remote.auth.GoogleAuthManager
-import es.joshluq.kmsafe.infrastructure.util.DeviceFingerprintProvider
 import es.joshluq.kmsafe.domain.di.ClearLocalData
 import es.joshluq.kmsafe.domain.di.EvaluateIdentityConflict
 import es.joshluq.kmsafe.domain.di.GetEntitlements
@@ -24,6 +22,8 @@ import es.joshluq.kmsafe.domain.di.UpdatePreferences
 import es.joshluq.kmsafe.domain.di.ValidateCredentials
 import es.joshluq.kmsafe.domain.model.SubscriptionLevel
 import es.joshluq.kmsafe.domain.model.User
+import es.joshluq.kmsafe.domain.service.FingerprintProvider
+import es.joshluq.kmsafe.domain.service.SocialAuthService
 import es.joshluq.kmsafe.domain.usecase.ClearLocalDataUseCase
 import es.joshluq.kmsafe.domain.usecase.EvaluateIdentityConflictUseCase
 import es.joshluq.kmsafe.domain.usecase.GetEntitlementsUseCase
@@ -62,8 +62,8 @@ class LoginViewModel @Inject constructor(
     @JvmSuppressWildcards FlowUseCase<UpdatePreferencesUseCase.Input, UpdatePreferencesUseCase.Output>,
     @param:GetEntitlements private val getEntitlementsUseCase:
     @JvmSuppressWildcards FlowUseCase<GetEntitlementsUseCase.Input, GetEntitlementsUseCase.Output>,
-    private val fingerprintProvider: DeviceFingerprintProvider,
-    private val googleAuthManager: GoogleAuthManager,
+    private val fingerprintProvider: FingerprintProvider,
+    private val socialAuthService: SocialAuthService,
     private val analytics: AnalyticskitManager,
     private val logger: LoggerKit
 ) : ScreenViewModel<State, Event, Effect>() {
@@ -166,7 +166,7 @@ class LoginViewModel @Inject constructor(
 
     fun triggerGoogleSignIn(context: Context) {
         viewModelScope.launch {
-            googleAuthManager.signIn(context)?.let { idToken ->
+            socialAuthService.signIn(context)?.let { idToken ->
                 performGoogleLogin(idToken)
             }
         }

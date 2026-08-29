@@ -8,7 +8,7 @@ import es.joshluq.foundationkit.log.LoggerKit
 import es.joshluq.foundationkit.text.TextProvider
 import es.joshluq.foundationkit.usecase.FlowUseCase
 import es.joshluq.foundationkit.viewmodel.ScreenViewModel
-import es.joshluq.kmsafe.infrastructure.util.DeviceFingerprintProvider
+import es.joshluq.kmsafe.core.monetization.util.ConsentManager
 import es.joshluq.kmsafe.domain.di.GetEntitlements
 import es.joshluq.kmsafe.domain.di.GetPreferences
 import es.joshluq.kmsafe.domain.di.StartAutoTracking
@@ -16,13 +16,13 @@ import es.joshluq.kmsafe.domain.di.StartTrial
 import es.joshluq.kmsafe.domain.di.StopAutoTracking
 import es.joshluq.kmsafe.domain.di.UpdatePreferences
 import es.joshluq.kmsafe.domain.model.Feature
+import es.joshluq.kmsafe.domain.service.FingerprintProvider
 import es.joshluq.kmsafe.domain.usecase.GetEntitlementsUseCase
 import es.joshluq.kmsafe.domain.usecase.GetPreferencesUseCase
 import es.joshluq.kmsafe.domain.usecase.StartAutoTrackingUseCase
 import es.joshluq.kmsafe.domain.usecase.StartTrialUseCase
 import es.joshluq.kmsafe.domain.usecase.StopAutoTrackingUseCase
 import es.joshluq.kmsafe.domain.usecase.UpdatePreferencesUseCase
-import es.joshluq.kmsafe.ui.util.ConsentManager
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import javax.inject.Inject
@@ -37,7 +37,7 @@ class PreferencesViewModel @Inject constructor(
     @JvmSuppressWildcards FlowUseCase<GetEntitlementsUseCase.Input, GetEntitlementsUseCase.Output>,
     @param:StartTrial private val startTrialUseCase:
     @JvmSuppressWildcards FlowUseCase<StartTrialUseCase.Input, StartTrialUseCase.Output>,
-    private val fingerprintProvider: DeviceFingerprintProvider,
+    private val fingerprintProvider: FingerprintProvider,
     @param:StartAutoTracking private val startAutoTrackingUseCase:
     @JvmSuppressWildcards FlowUseCase<StartAutoTrackingUseCase.Input, StartAutoTrackingUseCase.Output>,
     @param:StopAutoTracking private val stopAutoTrackingUseCase:

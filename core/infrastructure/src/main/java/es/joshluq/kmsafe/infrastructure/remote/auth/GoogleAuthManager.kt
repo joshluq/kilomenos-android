@@ -7,6 +7,7 @@ import androidx.credentials.GetCredentialResponse
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import es.joshluq.foundationkit.log.LoggerKit
+import es.joshluq.kmsafe.domain.service.SocialAuthService
 import es.joshluq.kmsafe.infrastructure.InfrastructureConfig
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -18,12 +19,13 @@ import javax.inject.Singleton
 class GoogleAuthManager @Inject constructor(
     private val config: InfrastructureConfig,
     private val logger: LoggerKit
-) {
+) : SocialAuthService {
     /**
      * Initiates the Google Sign-In flow and returns the ID Token.
      */
-    suspend fun signIn(context: Context): String? {
-        val credentialManager = CredentialManager.create(context)
+    override suspend fun signIn(context: Any): String? {
+        val platformContext = context as? Context ?: return null
+        val credentialManager = CredentialManager.create(platformContext)
 
         val googleIdOption = GetGoogleIdOption.Builder()
             .setFilterByAuthorizedAccounts(false)
@@ -37,7 +39,7 @@ class GoogleAuthManager @Inject constructor(
 
         return try {
             val result = credentialManager.getCredential(
-                context = context,
+                context = platformContext,
                 request = request
             )
             handleSignInResult(result)

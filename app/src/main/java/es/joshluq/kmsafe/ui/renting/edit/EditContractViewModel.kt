@@ -11,6 +11,7 @@ import es.joshluq.foundationkit.usecase.FlowUseCase
 import es.joshluq.foundationkit.usecase.UseCase
 import es.joshluq.foundationkit.viewmodel.ScreenViewModel
 import es.joshluq.kmsafe.R
+import es.joshluq.kmsafe.core.ui.R as CoreR
 import es.joshluq.kmsafe.domain.di.CheckFeatureAccess
 import es.joshluq.kmsafe.domain.di.GetImageBytes
 import es.joshluq.kmsafe.domain.di.GetVehicleById
@@ -164,7 +165,7 @@ class EditContractViewModel @Inject constructor(
                         }
                     }
                     is GetVehicleByIdUseCase.Output.Failure -> updateState {
-                        copy(isLoading = false, error = TextProvider.Resource(R.string.history_load_error))
+                        copy(isLoading = false, error = TextProvider.Resource(CoreR.string.history_load_error))
                     }
                 }
             }.launchIn(viewModelScope)
@@ -267,3 +268,4 @@ class EditContractViewModel @Inject constructor(
         return isValid
     }
 }
+

@@ -54,6 +54,7 @@ import es.joshluq.canvaskit.components.feedback.CanvasKitBanner
 import es.joshluq.canvaskit.components.layout.CanvasKitLoadingScaffold
 import es.joshluq.canvaskit.foundations.theme.CanvasKitTheme
 import es.joshluq.kmsafe.R
+import es.joshluq.kmsafe.core.ui.R as CoreR
 import es.joshluq.kmsafe.core.ui.util.safeClick
 
 @Composable
@@ -249,7 +250,7 @@ fun PremiumPaywallScreen(
                         Text(
                             text = if (state.isLoading) {
                                 stringResource(
-                                    R.string.common_processing
+                                    CoreR.string.common_processing
                                 )
                             } else {
                                 stringResource(R.string.premium_upgrade_button)
@@ -347,3 +348,4 @@ fun PremiumPaywallScreenPreview() {
         )
     }
 }
+

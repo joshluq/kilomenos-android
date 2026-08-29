@@ -1,4 +1,4 @@
-package es.joshluq.kmsafe.ui.common.components
+package es.joshluq.kmsafe.core.monetization.components
 
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable

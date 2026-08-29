@@ -45,6 +45,7 @@ import es.joshluq.canvaskit.components.buttons.CanvasKitButton
 import es.joshluq.canvaskit.components.navigation.CanvasKitTopBar
 import es.joshluq.canvaskit.foundations.theme.CanvasKitTheme
 import es.joshluq.kmsafe.R
+import es.joshluq.kmsafe.core.ui.R as CoreR
 import es.joshluq.kmsafe.core.ui.util.safeClick
 import java.io.File
 import java.io.FileOutputStream
@@ -79,7 +80,7 @@ fun CropImageScreen(
                     IconButton(onClick = safeClick { onCancel() }) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = stringResource(R.string.acc_back),
+                            contentDescription = stringResource(CoreR.string.acc_back),
                             tint = Color.White
                         )
                     }
@@ -102,7 +103,7 @@ fun CropImageScreen(
                         ImageCropper(
                             modifier = Modifier.fillMaxSize(),
                             imageBitmap = imageBitmap,
-                            contentDescription = stringResource(R.string.acc_crop_image),
+                            contentDescription = stringResource(CoreR.string.acc_crop_image),
                             crop = triggerCrop,
                             cropProperties = CropDefaults.properties(
                                 cropOutlineProperty = CropOutlineProperty(

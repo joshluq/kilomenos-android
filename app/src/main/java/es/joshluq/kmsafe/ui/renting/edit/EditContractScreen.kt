@@ -66,6 +66,7 @@ import es.joshluq.canvaskit.components.layout.CanvasKitLoadingScaffold
 import es.joshluq.canvaskit.components.navigation.CanvasKitTopBar
 import es.joshluq.canvaskit.foundations.theme.CanvasKitTheme
 import es.joshluq.kmsafe.R
+import es.joshluq.kmsafe.core.ui.R as CoreR
 import es.joshluq.kmsafe.domain.model.FuelType
 import es.joshluq.kmsafe.domain.model.RentingContract
 import es.joshluq.kmsafe.ui.renting.components.BluetoothDevicePicker
@@ -135,7 +136,7 @@ fun EditContractScreen(
             CanvasKitTopBar(
                 title = {
                     Text(
-                        text = stringResource(R.string.history_edit_title),
+                        text = stringResource(CoreR.string.history_edit_title),
                         style = CanvasKitTheme.typography.headingMedium
                     )
                 },
@@ -148,7 +149,7 @@ fun EditContractScreen(
                     ) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = stringResource(R.string.acc_back),
+                            contentDescription = stringResource(CoreR.string.acc_back),
                             tint = CanvasKitTheme.colors.textPrimary
                         )
                     }
@@ -244,7 +245,7 @@ fun EditContractScreen(
                             onValueChange = { onEvent(Event.OnTotalKmsChanged(it)) },
                             errorText = state.totalKmsError?.asString(),
                             isError = state.totalKmsError != null,
-                            suffix = stringResource(R.string.onboarding_km_suffix),
+                            suffix = stringResource(CoreR.string.onboarding_km_suffix),
                             keyboardOptions = KeyboardOptions(
                                 keyboardType = KeyboardType.Decimal,
                                 imeAction = ImeAction.Next
@@ -322,7 +323,7 @@ fun EditContractScreen(
                 Spacer(modifier = Modifier.height(CanvasKitTheme.spacing.xs))
 
                 CanvasKitButton(
-                    text = stringResource(R.string.history_edit_save),
+                    text = stringResource(CoreR.string.history_edit_save),
                     onClick = safeClick {
                         keyboardController?.hide()
                         onEvent(Event.OnSaveClicked)

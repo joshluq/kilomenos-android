@@ -55,6 +55,7 @@ import es.joshluq.canvaskit.components.layout.CanvasKitLoadingScaffold
 import es.joshluq.canvaskit.components.navigation.CanvasKitTopBar
 import es.joshluq.canvaskit.foundations.theme.CanvasKitTheme
 import es.joshluq.kmsafe.R
+import es.joshluq.kmsafe.core.ui.R as CoreR
 import es.joshluq.kmsafe.core.ui.util.safeClick
 
 @Composable
@@ -129,7 +130,7 @@ fun PreferencesScreen(
                     IconButton(onClick = safeClick { onEvent(Event.OnBackClicked) }) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = stringResource(R.string.acc_back),
+                            contentDescription = stringResource(CoreR.string.acc_back),
                             tint = CanvasKitTheme.colors.textPrimary
                         )
                     }

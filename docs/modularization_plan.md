@@ -68,12 +68,17 @@ Este documento detalla la hoja de ruta técnica y el estado de ejecución para t
 3. **`:feature:dashboard` (Extracción de la pantalla principal) 📅 Planificado**:
    - Migración de las pantallas del Dashboard a su propio feature module desacoplado.
 
-4. **`:feature:history` (Histórico de odómetro y filtros) 📅 Planificado**:
-   - Módulo independiente para consulta y edición granular de registros.
+4. **`:feature:history` (Histórico de odómetro y filtros) ✅ COMPLETADO**:
+   - **Propósito**: Consulta, edición y visualización de rutas GPS en un mapa.
+   - **Componentes**: `HistoryRoute`, `RecordDetailRoute`.
+   - **Aislamiento**: Encapsula dependencias de Google Maps y lógica de filtrado temporal.
+   - **Monetización**: Consume `AdMobBanner` desde el nuevo módulo core `:core:monetization`.
 
----
+5. **`:core:monetization` (Ads & Consent) ✅ COMPLETADO**:
+   - **Propósito**: Aislar el SDK de AdMob y la gestión de privacidad (GDPR/UMP).
+   - **Impacto**: Reduce el acoplamiento técnico en `:app` y `:core:ui`.
 
-## 📐 Matriz de Dependencias Arquitectónicas
+6. **`:feature:reporting` (Motor de Reportes & Exportación PDF) 📅 Planificado**:
 
 ```mermaid
 graph TD
@@ -110,3 +115,20 @@ graph TD
 2. **`:core:infrastructure`**: Depende únicamente de `:core:domain` y bibliotecas de plataforma/infraestructura.
 3. **`:feature:*`**: Dependen de `:core:domain` (para casos de uso y modelos) y de `:designsystem` / `CanvasKit` (para componentes visuales). **No deben depender directamente de `:core:infrastructure`**.
 4. **`:app` (Shell)**: Orquesta la navegación, contiene el `AndroidManifest.xml`, la clase `Application`, la configuración de entorno (`ConfigModule` / `BuildConfig`) y los servicios/receptores del sistema Android (`LocationTrackingService`, `ReminderWorker`).
+
+---
+
+## 🛡️ Salvaguardas y Anti-patrones (Lecciones Aprendidas)
+
+Para garantizar la integridad del diseño y la estabilidad del Shell durante el proceso de desacople, se establecen las siguientes reglas de obligado cumplimiento:
+
+### Lo que debemos EVITAR:
+1. **Refactorización Visual "al paso"**: No se debe modificar el diseño de una pantalla existente (como `OverviewScreen`) mientras se corrigen errores de compilación tras mover recursos. El objetivo es mantener el **Cambio Mínimo Viable (MVC)** para que el Shell compile.
+2. **Re-implementación de Componentes Estables**: Si un componente visual (ej. Gráficos de barras) funciona, no se debe intentar "mejorar" o "re-escribir" su lógica interna durante una tarea de modularización técnica.
+3. **Ignorar el Estado Original**: Antes de realizar cambios masivos (scripts de reemplazo), se debe asegurar una lectura completa del archivo (`read_file`) para tener una referencia visual y técnica clara del estado anterior.
+4. **Acoplamiento de "Literales de UI" en Features**: Las cadenas que no son exclusivas de una feature (ej. `common_km_suffix`) deben vivir en `:core:ui`. Si una feature las necesita, se mueven **antes** de empezar la migración del código funcional.
+
+### Proceso de Verificación post-migración:
+* **Diff de Integridad**: Comparar el archivo afectado en el Shell contra el commit anterior (`git diff`). El cambio solo debe reflejar nuevos `imports` y cambio de IDs de recursos (`R.string` -> `CoreR.string`).
+* **Compilación Aislada**: Siempre verificar que el nuevo módulo compila de forma independiente (`./gradlew :feature:xxx:assembleDebug`) antes de integrarlo en el Shell.
+* **Preservación de Lógica**: Cualquier cambio en los ViewModels del Shell que no sean del alcance de la feature debe limitarse a la inyección de nuevos UseCases con la misma firma o funcionalidad que los anteriores.

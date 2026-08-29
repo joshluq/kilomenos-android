@@ -10,6 +10,7 @@ import es.joshluq.foundationkit.text.TextProvider
 import es.joshluq.foundationkit.usecase.FlowUseCase
 import es.joshluq.foundationkit.viewmodel.ScreenViewModel
 import es.joshluq.kmsafe.R
+import es.joshluq.kmsafe.core.ui.R as CoreR
 import es.joshluq.kmsafe.domain.di.CheckFeatureAccess
 import es.joshluq.kmsafe.domain.di.DeleteContract
 import es.joshluq.kmsafe.domain.di.GetVehicleById
@@ -84,7 +85,7 @@ class VehicleDetailViewModel @Inject constructor(
                         copy(isLoading = false, renting = output.contract)
                     }
                     is GetVehicleByIdUseCase.Output.Failure -> updateState {
-                        copy(isLoading = false, error = TextProvider.Resource(R.string.history_load_error))
+                        copy(isLoading = false, error = TextProvider.Resource(CoreR.string.history_load_error))
                     }
                 }
             }.launchIn(viewModelScope)

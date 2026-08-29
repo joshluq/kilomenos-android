@@ -1,6 +1,8 @@
-package es.joshluq.kmsafe.ui.util
+package es.joshluq.kmsafe.core.monetization.util
 
 import android.app.Activity
+import android.content.Context
+import com.google.android.gms.ads.MobileAds
 import com.google.android.ump.ConsentInformation
 import com.google.android.ump.ConsentRequestParameters
 import com.google.android.ump.UserMessagingPlatform
@@ -56,6 +58,15 @@ class ConsentManager @Inject constructor(
      * Checks if ads can be requested based on the current consent state.
      */
     fun canRequestAds(): Boolean = ::consentInformation.isInitialized && consentInformation.canRequestAds()
+
+    /**
+     * Initializes the Mobile Ads SDK if consent is given.
+     */
+    fun initializeAds(context: Context) {
+        if (canRequestAds()) {
+            MobileAds.initialize(context)
+        }
+    }
 
     /**
      * Checks if the privacy options form is required (GDPR requirement).

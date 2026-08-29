@@ -2,11 +2,6 @@
     <string name="app_name">KiloMenos</string>
 
     <!-- Dashboard -->
-    <string name="dashboard_item_home">Inicio</string>
-    <string name="dashboard_item_history">Historial</string>
-    <string name="dashboard_item_expenses">Gastos</string>
-    <string name="dashboard_item_projection">Proyecciones</string>
-    <string name="dashboard_item_profile">Perfil</string>
 
     <!-- Profile -->
     <string name="profile_title">Perfil</string>
@@ -55,7 +50,6 @@
     <string name="premium_limit_vehicle_message">La versión gratuita permite gestionar un vehículo. Pásate a Premium para gestionar toda tu flota en la nube.</string>
     <string name="premium_limit_data_title">Función Premium</string>
     <string name="premium_limit_data_message">El backup completo y la restauración de datos son funciones exclusivas de KiloMenos Premium.</string>
-    <string name="premium_upgrade_confirm">Saber más</string>
     <string name="premium_upgrade_cancel">Ahora no</string>
 
     <!-- Vehicles -->
@@ -101,14 +95,7 @@
     <string name="overview_time_used_label">Tiempo\nUsado</string>
     <string name="overview_kms_used_label">Kms\nUsados</string>
     <string name="overview_update_odometer_title">Registrar Kilómetros</string>
-    <string name="overview_current_odometer_label">Kilómetros recorridos</string>
-    <string name="overview_current_odometer_placeholder">Ej. 25</string>
-    <string name="overview_record_date_label">Fecha del registro</string>
     <string name="overview_save_record_button">Guardar Registro</string>
-    <string name="overview_record_label_label">Categoría (ej. Viaje)</string>
-    <string name="overview_record_label_placeholder">Opcional</string>
-    <string name="overview_record_fuel_label">Combustible consumido (L)</string>
-    <string name="overview_record_fuel_placeholder">Opcional</string>
     <string name="overview_register_renting_button">Registrar mi Renting</string>
     <string name="overview_chart_info_title">Ayuda del Gráfico</string>
     <string name="overview_chart_comparison_info">Este gráfico compara el tiempo que ha pasado de tu contrato frente a los kilómetros que ya has consumido.\n\n• Si el círculo azul es mayor que el gris, has gastado más porcentaje de kilómetros que de tiempo (¡Cuidado!).\n\n• La diferencia (%) te indica cuánto margen tienes respecto a tu presupuesto temporal.</string>
@@ -222,35 +209,6 @@
     <string name="setup_wizard_action_skip">Configurar más tarde</string>
 
     <!-- History -->
-    <string name="history_empty_state_title">Tu historia empieza aquí</string>
-    <string name="history_search_label">Busca entre tus viajes</string>
-    <string name="history_empty_state_description">Registra tus kilómetros de vez en cuando para que podamos dibujar tu evolución.</string>
-    <string name="history_register_error">No se pudo borrar el registro</string>
-    <string name="history_load_error">No se pudo sincronizar el historial</string>
-    <string name="history_initial_kms_label">Tu punto de partida</string>
-    <string name="history_total_kms_label">Kilómetros recorridos juntos</string>
-    <string name="history_records_count_label">Llevamos %1$d hitos registrados</string>
-    <string name="history_detail_action">Detalle</string>
-    <string name="history_edit_action">Editar</string>
-    <string name="history_edit_title">Ajustar Registro</string>
-    <string name="history_edit_save">Confirmar Cambios</string>
-    <string name="history_delete_action">Eliminar</string>
-    <string name="history_delete_confirmation_title">Eliminar Registro</string>
-    <string name="history_delete_confirmation_message">¿Estás seguro de que deseas eliminar este registro de kilometraje?</string>
-    <string name="history_close_button">Entendido</string>
-    <string name="history_daily_records_title">Registros del %1$s</string>
-    <string name="history_expand_desc">Expandir</string>
-    <string name="history_collapse_desc">Colapsar</string>
-    <string name="history_label_day">Día</string>
-    <string name="history_label_month">Mes</string>
-    <string name="history_label_year">Año</string>
-    <string name="history_delete_desc">Borrar</string>
-    <string name="history_no_history_yet">Aún no hay viajes en tu historial</string>
-    <string name="history_detail_time_label">Hora</string>
-    <string name="history_detail_consumption_title">CONSUMO ESTIMADO</string>
-    <string name="history_detail_route_title">RUTA DEL VIAJE</string>
-    <string name="history_detail_route_premium_teaser">Vuelve a vivir tu ruta. Disponible para usuarios PREMIUM.</string>
-    <string name="history_detail_no_route">No se capturó ninguna ruta para este registro.</string>
 
     <!-- Tracking -->
     <string name="tracking_card_status_pending">Detectando conducción…</string>
@@ -273,14 +231,6 @@
     <string name="tracking_validation_content">Detectando conexión con vehículo…</string>
 
     <!-- Common -->
-    <string name="common_processing">Procesando…</string>
-    <string name="common_fuel_consumption_format">%.1f L/100km</string>
-    <string name="common_km_suffix">%1$s km</string>
-    <string name="common_km_positive_suffix">+ %1$s km</string>
-    <string name="common_km_negative_suffix">- %1$s km</string>
-    <string name="common_ratio_label">%1$s/%2$s</string>
-    <string name="common_percentage_format">%.1f%%</string>
-    <string name="common_currency_format">%.2f€</string>
 
     <!-- Login -->
 

@@ -5,11 +5,11 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import es.joshluq.foundationkit.log.LoggerKit
 import es.joshluq.foundationkit.usecase.FlowUseCase
 import es.joshluq.foundationkit.viewmodel.ScreenViewModel
-import es.joshluq.kmsafe.infrastructure.util.DeviceFingerprintProvider
 import es.joshluq.kmsafe.domain.di.CheckSession
 import es.joshluq.kmsafe.domain.di.GetEntitlements
 import es.joshluq.kmsafe.domain.di.SignOut
 import es.joshluq.kmsafe.domain.di.SyncContracts
+import es.joshluq.kmsafe.domain.service.FingerprintProvider
 import es.joshluq.kmsafe.domain.usecase.CheckSessionUseCase
 import es.joshluq.kmsafe.domain.usecase.GetEntitlementsUseCase
 import es.joshluq.kmsafe.domain.usecase.SignOutUseCase
@@ -32,7 +32,7 @@ class LaunchViewModel @Inject constructor(
     @JvmSuppressWildcards FlowUseCase<GetEntitlementsUseCase.Input, GetEntitlementsUseCase.Output>,
     @param:SignOut private val signOutUseCase:
     @JvmSuppressWildcards FlowUseCase<SignOutUseCase.Input, SignOutUseCase.Output>,
-    private val fingerprintProvider: DeviceFingerprintProvider,
+    private val fingerprintProvider: FingerprintProvider,
     private val logger: LoggerKit
 ) : ScreenViewModel<LaunchState, LaunchEvent, LaunchEffect>() {
 

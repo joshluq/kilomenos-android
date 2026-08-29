@@ -235,6 +235,9 @@ class OverviewViewModel @Inject constructor(
         logger.d("OverviewViewModel", "Event received: $event")
         when (event) {
             Event.OnRegisterRentingClicked -> handleOnRegisterRentingClicked()
+            is Event.OnVehicleDetailClicked -> {
+                launchEffect(Effect.NavigateToVehicleDetail(event.id))
+            }
             is Event.OnEditContractClicked -> {
                 updateState { copy(showBluetoothSuggestionBanner = false) }
                 launchEffect(Effect.NavigateToOnboarding(event.id, isEdit = true))

@@ -6,14 +6,13 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.lifecycleScope
-import com.google.android.gms.ads.MobileAds
 import dagger.hilt.android.AndroidEntryPoint
 import es.joshluq.canvaskit.foundations.theme.CanvasKitTheme
 import es.joshluq.foundationkit.log.LoggerKit
+import es.joshluq.kmsafe.core.monetization.util.ConsentManager
 import es.joshluq.kmsafe.infrastructure.remote.billing.BillingManager
 import es.joshluq.kmsafe.infrastructure.worker.SyncManager
 import es.joshluq.kmsafe.ui.navigation.AppNavigation
-import es.joshluq.kmsafe.ui.util.ConsentManager
 import es.joshluq.kmsafe.ui.util.NetworkConnectivityObserver
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.launchIn
@@ -45,7 +44,7 @@ class MainActivity : ComponentActivity() {
 
         consentManager.gatherConsent(this) { canRequestAds ->
             if (canRequestAds) {
-                MobileAds.initialize(this)
+                consentManager.initializeAds(this)
             }
         }
 
@@ -70,7 +69,7 @@ class MainActivity : ComponentActivity() {
                     onShowPrivacyOptions = {
                         consentManager.gatherConsent(this) { canRequestAds ->
                             if (canRequestAds) {
-                                MobileAds.initialize(this)
+                                consentManager.initializeAds(this)
                             }
                         }
                     }

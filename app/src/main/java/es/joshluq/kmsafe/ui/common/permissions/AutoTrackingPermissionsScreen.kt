@@ -38,6 +38,7 @@ import es.joshluq.canvaskit.components.buttons.CanvasKitButtonVariant
 import es.joshluq.canvaskit.components.cards.CanvasKitCard
 import es.joshluq.canvaskit.foundations.theme.CanvasKitTheme
 import es.joshluq.kmsafe.R
+import es.joshluq.kmsafe.core.ui.R as CoreR
 import es.joshluq.kmsafe.core.ui.util.safeClick
 
 @OptIn(ExperimentalPermissionsApi::class)
@@ -157,7 +158,7 @@ fun AutoTrackingPermissionsScreen(
                     text = if (!isAllGranted) {
                         stringResource(R.string.overview_permissions_button_continue)
                     } else {
-                        stringResource(R.string.history_close_button)
+                        stringResource(CoreR.string.history_close_button)
                     },
                     color = contentColor
                 )
@@ -169,7 +170,7 @@ fun AutoTrackingPermissionsScreen(
                 variant = CanvasKitButtonVariant.Ghost
             ) {
                 Text(
-                    text = stringResource(R.string.history_close_button),
+                    text = stringResource(CoreR.string.history_close_button),
                     color = CanvasKitTheme.colors.textSecondary
                 )
             }

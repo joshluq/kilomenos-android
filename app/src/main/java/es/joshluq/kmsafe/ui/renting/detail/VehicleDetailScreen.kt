@@ -52,6 +52,7 @@ import es.joshluq.canvaskit.components.layout.CanvasKitLoadingScaffold
 import es.joshluq.canvaskit.components.navigation.CanvasKitTopBar
 import es.joshluq.canvaskit.foundations.theme.CanvasKitTheme
 import es.joshluq.kmsafe.R
+import es.joshluq.kmsafe.core.ui.R as CoreR
 import es.joshluq.kmsafe.domain.model.RentingContract
 import es.joshluq.kmsafe.ui.renting.components.ContractMetricCard
 import es.joshluq.kmsafe.ui.renting.components.VehiclePhotoSelector
@@ -105,14 +106,14 @@ fun VehicleDetailScreen(
                     IconButton(onClick = safeClick { onEvent(Event.OnBackClicked) }) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = stringResource(R.string.acc_back),
+                            contentDescription = stringResource(CoreR.string.acc_back),
                             tint = CanvasKitTheme.colors.textPrimary
                         )
                     }
                 },
                 actions = {
                     IconButton(onClick = safeClick { onEvent(Event.OnEditClicked) }) {
-                        Icon(Icons.Default.Edit, contentDescription = stringResource(R.string.history_edit_action))
+                        Icon(Icons.Default.Edit, contentDescription = stringResource(CoreR.string.history_edit_action))
                     }
                 },
                 centeredTitle = true
@@ -221,7 +222,7 @@ fun VehicleDetailScreen(
 
                     // Delete Action
                     CanvasKitButton(
-                        text = stringResource(R.string.history_delete_action),
+                        text = stringResource(CoreR.string.history_delete_action),
                         icon = Icons.Default.Delete,
                         onClick = safeClick { 
                             val isSelected = contract.isSelected
@@ -284,7 +285,7 @@ private fun DeleteConfirmationDialog(
         title = stringResource(R.string.vehicles_delete_confirmation_title),
         message = stringResource(R.string.vehicle_detail_delete_msg),
         confirmText = stringResource(R.string.vehicles_delete_confirm),
-        cancelText = stringResource(R.string.profile_logout_cancel),
+        cancelText = stringResource(CoreR.string.profile_logout_cancel),
         onConfirm = onConfirm,
         onDismissRequest = onDismiss,
         isDestructive = true,

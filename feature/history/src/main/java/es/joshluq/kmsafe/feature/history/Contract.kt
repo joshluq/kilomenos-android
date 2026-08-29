@@ -1,4 +1,4 @@
-package es.joshluq.kmsafe.ui.history
+package es.joshluq.kmsafe.feature.history
 
 import es.joshluq.foundationkit.text.TextProvider
 import es.joshluq.foundationkit.viewmodel.UiEffect

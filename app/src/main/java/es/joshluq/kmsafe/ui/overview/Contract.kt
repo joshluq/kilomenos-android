@@ -65,6 +65,7 @@ data class State(
 sealed interface Event : UiEvent {
     data object OnRegisterRentingClicked : Event
     data class OnEditContractClicked(val id: String) : Event
+    data class OnVehicleDetailClicked(val id: String) : Event
     data object OnUpdateOdometerClicked : Event
     data object OnBottomSheetDismissed : Event
     data object OnDismissProjectionBanner : Event
@@ -99,6 +100,7 @@ sealed interface Effect : UiEffect {
         val vehicleId: String? = null,
         val isEdit: Boolean = false
     ) : Effect
+    data class NavigateToVehicleDetail(val id: String) : Effect
     data object NavigateToProjection : Effect
     data object StartTrackingService : Effect
     data object StopTrackingService : Effect

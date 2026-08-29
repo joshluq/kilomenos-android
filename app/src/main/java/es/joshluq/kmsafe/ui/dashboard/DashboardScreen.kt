@@ -35,7 +35,7 @@ import es.joshluq.canvaskit.components.navigation.CanvasKitBottomBar
 import es.joshluq.canvaskit.components.navigation.CanvasKitBottomBarItem
 import es.joshluq.canvaskit.foundations.theme.CanvasKitTheme
 import es.joshluq.foundationkit.text.TextProvider
-import es.joshluq.kmsafe.R
+import es.joshluq.kmsafe.core.ui.R as CoreR
 import es.joshluq.kmsafe.ui.navigation.DashboardNavigation
 import es.joshluq.kmsafe.ui.navigation.Destination
 import es.joshluq.kmsafe.core.ui.util.safeClick
@@ -197,11 +197,11 @@ private fun DashboardNavigationBar(
     onEvent: (Event) -> Unit
 ) {
     val selectedTab = state.selectedTab
-    val home = TextProvider.Resource(R.string.dashboard_item_home)
-    val history = TextProvider.Resource(R.string.dashboard_item_history)
-    val expenses = TextProvider.Resource(R.string.dashboard_item_expenses)
-    val projection = TextProvider.Resource(R.string.dashboard_item_projection)
-    val profile = TextProvider.Resource(R.string.dashboard_item_profile)
+    val home = TextProvider.Resource(CoreR.string.dashboard_item_home)
+    val history = TextProvider.Resource(CoreR.string.dashboard_item_history)
+    val expenses = TextProvider.Resource(CoreR.string.dashboard_item_expenses)
+    val projection = TextProvider.Resource(CoreR.string.dashboard_item_projection)
+    val profile = TextProvider.Resource(CoreR.string.dashboard_item_profile)
 
     CanvasKitBottomBar {
         CanvasKitBottomBarItem(

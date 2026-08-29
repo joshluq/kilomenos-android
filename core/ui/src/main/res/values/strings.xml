@@ -1,6 +1,36 @@
 <resources>
     <string name="common_brand_kilo">Kilo</string>
     <string name="common_brand_menos">Menos</string>
+    <!-- Common -->
+    <string name="common_processing">Procesando…</string>
+    <string name="common_fuel_consumption_format">%.1f L/100km</string>
+    <string name="common_km_suffix">%1$s km</string>
+    <string name="common_km_positive_suffix">+ %1$s km</string>
+    <string name="common_km_negative_suffix">- %1$s km</string>
+    <string name="common_ratio_label">%1$s/%2$s</string>
+    <string name="common_percentage_format">%.1f%%</string>
+    <string name="common_currency_format">%.2f€</string>
+
+    <!-- Shared Overview/History/Renting -->
+    <string name="overview_current_odometer_label">Kilómetros recorridos</string>
+    <string name="overview_current_odometer_placeholder">Ej. 25</string>
+    <string name="overview_record_date_label">Fecha del registro</string>
+    <string name="overview_record_label_label">Categoría (ej. Viaje)</string>
+    <string name="overview_record_label_placeholder">Opcional</string>
+    <string name="overview_record_fuel_label">Combustible consumido (L)</string>
+    <string name="overview_record_fuel_placeholder">Opcional</string>
+    <string name="onboarding_km_suffix">Km</string>
+    <string name="premium_upgrade_confirm">Saber más</string>
+
+    <!-- Shared Actions -->
+    <string name="history_close_button">Entendido</string>
+    <string name="history_load_error">No se pudo sincronizar el historial</string>
+    <string name="history_register_error">No se pudo guardar el registro</string>
+    <string name="history_edit_action">Editar</string>
+    <string name="history_delete_action">Eliminar</string>
+    <string name="history_edit_title">Ajustar Registro</string>
+    <string name="history_edit_save">Confirmar Cambios</string>
+
     <string name="error_invalid_credentials">El correo o la contraseña son incorrectos.</string>
     <string name="error_user_already_registered">Este correo electrónico ya está registrado.</string>
     <string name="error_weak_password">La contraseña debe tener al menos 8 caracteres, mayúsculas, minúsculas, números y un carácter especial.</string>
@@ -31,6 +61,13 @@
     <string name="profile_logout_cancel">Cancelar</string>
     <string name="profile_privacy_policy">Política de privacidad</string>
     <string name="profile_terms_conditions">Términos y condiciones</string>
+
+    <!-- Dashboard Items -->
+    <string name="dashboard_item_home">Inicio</string>
+    <string name="dashboard_item_history">Historial</string>
+    <string name="dashboard_item_expenses">Gastos</string>
+    <string name="dashboard_item_projection">Proyecciones</string>
+    <string name="dashboard_item_profile">Perfil</string>
 
     <!-- Fuel Types -->
     <string name="fuel_type_gasoline_95">Gasolina 95</string>

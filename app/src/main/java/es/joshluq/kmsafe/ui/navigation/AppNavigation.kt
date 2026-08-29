@@ -17,7 +17,7 @@ import es.joshluq.kmsafe.ui.common.cropper.CropImageScreen
 import es.joshluq.kmsafe.ui.common.permissions.AutoTrackingPermissionsScreen
 import es.joshluq.kmsafe.ui.dashboard.DashboardRoute
 import es.joshluq.kmsafe.ui.datamanagement.DataManagementRoute
-import es.joshluq.kmsafe.ui.history.detail.RecordDetailRoute
+import es.joshluq.kmsafe.feature.history.detail.RecordDetailRoute
 import es.joshluq.kmsafe.ui.premium.PremiumPaywallRoute
 import es.joshluq.kmsafe.ui.profile.preferences.PreferencesRoute
 import es.joshluq.kmsafe.ui.profile.vehicles.VehicleListRoute

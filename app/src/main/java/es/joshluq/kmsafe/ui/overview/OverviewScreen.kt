@@ -119,8 +119,9 @@ import es.joshluq.kmsafe.data.location.LocationTrackingService
 import es.joshluq.kmsafe.domain.model.RentingContract
 import es.joshluq.kmsafe.domain.model.SubscriptionLevel
 import es.joshluq.kmsafe.domain.model.TripProjection
-import es.joshluq.kmsafe.ui.common.components.AdMobBanner
+import es.joshluq.kmsafe.core.monetization.components.AdMobBanner
 import es.joshluq.kmsafe.core.ui.components.BrandingLogo
+import es.joshluq.kmsafe.core.ui.R as CoreR
 import es.joshluq.kmsafe.ui.overview.components.TrackingCard
 import es.joshluq.kmsafe.ui.overview.model.MonthlyUsageUiModel
 import es.joshluq.kmsafe.ui.util.DateUtils
@@ -198,6 +199,7 @@ fun OverviewRoute(
                 }
 
                 Effect.NavigateToWelcomeDiscovery -> onNavigateToWelcomeDiscovery()
+                is Effect.NavigateToVehicleDetail -> onNavigateToVehicleDetail(effect.id)
             }
         }
     }
@@ -513,7 +515,7 @@ private fun MainBalanceCard(
                             .memoryCachePolicy(CachePolicy.ENABLED)
                             .diskCacheKey(imageUrl)
                             .build(),
-                        contentDescription = stringResource(R.string.acc_vehicle_info),
+                        contentDescription = stringResource(CoreR.string.acc_vehicle_info),
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(120.dp)
@@ -549,7 +551,7 @@ private fun MainBalanceCard(
                 ) {
                     Icon(
                         imageVector = Icons.Default.Edit,
-                        contentDescription = stringResource(R.string.acc_edit_contract),
+                        contentDescription = stringResource(CoreR.string.acc_edit_contract),
                         tint = if (imageUrl != null) Color.White else CanvasKitTheme.colors.textSecondary,
                         modifier = Modifier
                             .size(24.dp)
@@ -602,7 +604,7 @@ private fun MainBalanceCard(
                     color = CanvasKitTheme.colors.textSecondary
                 )
                 Text(
-                    text = stringResource(R.string.common_km_suffix, NumberFormatter.formatDistance(totalKms)),
+                    text = stringResource(CoreR.string.common_km_suffix, NumberFormatter.formatDistance(totalKms)),
                     style = CanvasKitTheme.typography.headingMedium,
                     color = CanvasKitTheme.colors.textPrimary,
                     fontWeight = FontWeight.Bold
@@ -636,7 +638,7 @@ private fun MainBalanceCard(
                 Text(
                     modifier = Modifier.weight(1f),
                     text = stringResource(
-                        if (isPositive) R.string.common_km_positive_suffix else R.string.common_km_negative_suffix,
+                        if (isPositive) CoreR.string.common_km_positive_suffix else CoreR.string.common_km_negative_suffix,
                         balance.absoluteValue.toInt()
                     ),
                     style = CanvasKitTheme.typography.displayLarge,
@@ -668,12 +670,12 @@ private fun TheoreticalLimitsSection(
         ) {
             MetricCard(
                 label = stringResource(R.string.overview_daily_limit),
-                value = stringResource(R.string.common_km_suffix, dailyLimit.toInt()),
+                value = stringResource(CoreR.string.common_km_suffix, dailyLimit.toInt()),
                 modifier = Modifier.weight(1f)
             )
             MetricCard(
                 label = stringResource(R.string.overview_monthly_limit),
-                value = stringResource(R.string.common_km_suffix, monthlyLimit.toInt()),
+                value = stringResource(CoreR.string.common_km_suffix, monthlyLimit.toInt()),
                 modifier = Modifier.weight(1f)
             )
         }
@@ -756,7 +758,7 @@ fun MonthlyBarChart(monthlyUsage: List<MonthlyUsageUiModel>) {
                 IconButton(onClick = { showInfo = true }) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.HelpOutline,
-                        contentDescription = stringResource(R.string.acc_chart_help),
+                        contentDescription = stringResource(CoreR.string.acc_chart_help),
                         tint = CanvasKitTheme.colors.textSecondary,
                         modifier = Modifier.size(20.dp)
                     )
@@ -804,7 +806,7 @@ fun MonthlyBarChart(monthlyUsage: List<MonthlyUsageUiModel>) {
                         ) {
                             Text(
                                 text = stringResource(
-                                    R.string.common_ratio_label,
+                                    CoreR.string.common_ratio_label,
                                     usage.kmsText,
                                     usage.budgetedKmsText
                                 ),
@@ -910,7 +912,7 @@ private fun ComparisonChart(timeP: Float, kmsP: Float, diff: Float) {
                 IconButton(onClick = { showInfo = true }) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.HelpOutline,
-                        contentDescription = stringResource(R.string.acc_chart_help),
+                        contentDescription = stringResource(CoreR.string.acc_chart_help),
                         tint = CanvasKitTheme.colors.textSecondary,
                         modifier = Modifier.size(20.dp)
                     )
@@ -934,7 +936,7 @@ private fun ComparisonChart(timeP: Float, kmsP: Float, diff: Float) {
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text(
-                        stringResource(R.string.common_percentage_format, diff.absoluteValue),
+                        stringResource(CoreR.string.common_percentage_format, diff.absoluteValue),
                         style = CanvasKitTheme.typography.headingLarge,
                         color = CanvasKitTheme.colors.textSecondary
                     )
@@ -1018,11 +1020,11 @@ private fun UpdateOdometerContent(
         Row(horizontalArrangement = Arrangement.spacedBy(CanvasKitTheme.spacing.md)) {
             Column(modifier = Modifier.weight(1f)) {
                 CanvasKitTextField(
-                    label = stringResource(R.string.overview_current_odometer_label),
+                    label = stringResource(CoreR.string.overview_current_odometer_label),
                     value = state.newOdometerValue,
                     onValueChange = { onEvent(Event.OnNewOdometerChanged(it)) },
-                    placeholder = stringResource(R.string.overview_current_odometer_placeholder),
-                    suffix = stringResource(R.string.onboarding_km_suffix),
+                    placeholder = stringResource(CoreR.string.overview_current_odometer_placeholder),
+                    suffix = stringResource(CoreR.string.onboarding_km_suffix),
                     keyboardOptions = KeyboardOptions(
                         keyboardType = KeyboardType.Decimal,
                         imeAction = ImeAction.Next
@@ -1032,10 +1034,10 @@ private fun UpdateOdometerContent(
             }
             Column(modifier = Modifier.weight(1f)) {
                 CanvasKitTextField(
-                    label = stringResource(R.string.overview_record_label_label),
+                    label = stringResource(CoreR.string.overview_record_label_label),
                     value = state.newRecordLabel,
                     onValueChange = { onEvent(Event.OnNewLabelChanged(it)) },
-                    placeholder = stringResource(R.string.overview_record_label_placeholder),
+                    placeholder = stringResource(CoreR.string.overview_record_label_placeholder),
                     enabled = true,
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
                     keyboardActions = KeyboardActions(onDone = {
@@ -1047,7 +1049,7 @@ private fun UpdateOdometerContent(
         }
 
         CanvasKitDatePickerField(
-            label = stringResource(R.string.overview_record_date_label),
+            label = stringResource(CoreR.string.overview_record_date_label),
             selectedDateMillis = state.newRecordDate,
             onDateSelected = { millis ->
                 millis?.let { onEvent(Event.OnNewRecordDateChanged(it)) }
@@ -1092,7 +1094,7 @@ private fun OverviewTopBar(state: State, onEvent: (Event) -> Unit) {
                 if (state.availableVehicles.size > 1) {
                     Icon(
                         imageVector = Icons.Default.ArrowDropDown,
-                        contentDescription = stringResource(R.string.acc_open_menu),
+                        contentDescription = stringResource(CoreR.string.acc_open_menu),
                         tint = CanvasKitTheme.colors.textSecondary,
                         modifier = Modifier.padding(start = 4.dp)
                     )
@@ -1159,7 +1161,7 @@ private fun OverviewTopbarActions(
             IconButton(onClick = safeClick { onEvent(Event.OnPremiumUpgradeClicked) }) {
                 Icon(
                     imageVector = Icons.Default.AutoAwesome,
-                    contentDescription = stringResource(R.string.acc_upgrade_premium),
+                    contentDescription = stringResource(CoreR.string.acc_upgrade_premium),
                     tint = CanvasKitTheme.colors.brandAccent,
                     modifier = Modifier.size(22.dp)
                 )
@@ -1183,7 +1185,7 @@ private fun OverviewTopbarActions(
                 ) {
                     Icon(
                         imageVector = Icons.Default.SyncProblem,
-                        contentDescription = stringResource(R.string.acc_sync_pending),
+                        contentDescription = stringResource(CoreR.string.acc_sync_pending),
                         tint = CanvasKitTheme.colors.brandAccent.copy(alpha = alpha),
                         modifier = Modifier.size(20.dp)
                     )
@@ -1223,7 +1225,7 @@ private fun ChartInfoDialog(
     CanvasKitConfirmDialog(
         title = stringResource(R.string.overview_chart_info_title),
         message = content,
-        confirmText = stringResource(R.string.history_close_button),
+        confirmText = stringResource(CoreR.string.history_close_button),
         onConfirm = onDismiss,
         onDismissRequest = onDismiss
     )

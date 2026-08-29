@@ -2,11 +2,6 @@
     <string name="app_name">KiloMenos</string>
 
     <!-- Dashboard -->
-    <string name="dashboard_item_home">Home</string>
-    <string name="dashboard_item_history">History</string>
-    <string name="dashboard_item_expenses">Expenses</string>
-    <string name="dashboard_item_projection">Projections</string>
-    <string name="dashboard_item_profile">Profile</string>
 
     <!-- Profile -->
     <string name="profile_title">Profile</string>
@@ -55,7 +50,6 @@
     <string name="premium_limit_vehicle_message">The free version allows you to manage one vehicle. Upgrade to Premium to manage your entire fleet in the cloud.</string>
     <string name="premium_limit_data_title">Premium Feature</string>
     <string name="premium_limit_data_message">Full backup and data restoration are exclusive features of KiloMenos Premium.</string>
-    <string name="premium_upgrade_confirm">Learn More</string>
     <string name="premium_upgrade_cancel">Not now</string>
 
     <!-- Vehicles -->
@@ -102,14 +96,7 @@
     <string name="overview_time_used_label">Time\nUsed</string>
     <string name="overview_kms_used_label">Kms\nUsed</string>
     <string name="overview_update_odometer_title">Register Kilometers</string>
-    <string name="overview_current_odometer_label">Kilometers traveled</string>
-    <string name="overview_current_odometer_placeholder">e.g. 25</string>
-    <string name="overview_record_date_label">Record date</string>
     <string name="overview_save_record_button">Save Record</string>
-    <string name="overview_record_label_label">Category (e.g. Trip)</string>
-    <string name="overview_record_label_placeholder">Optional</string>
-    <string name="overview_record_fuel_label">Fuel consumed (L)</string>
-    <string name="overview_record_fuel_placeholder">Optional</string>
     <string name="overview_register_renting_button">Register my Renting</string>
     <string name="overview_chart_info_title">Chart Help</string>
     <string name="overview_chart_comparison_info">This chart compares the time elapsed in your contract versus the kilometers you have already consumed.\n\n• If the blue circle is larger than the grey one, you have spent a higher percentage of kilometers than time (Be careful!).\n\n• The difference (%) tells you how much margin you have relative to your temporal budget.</string>
@@ -223,35 +210,6 @@
     <string name="setup_wizard_action_skip">Setup later</string>
 
     <!-- History -->
-    <string name="history_search_label">Search through your trips</string>
-    <string name="history_empty_state_title">Your journey starts here</string>
-    <string name="history_empty_state_description">Register your kilometers every now and then so we can map your evolution.</string>
-    <string name="history_register_error">Could not delete record</string>
-    <string name="history_load_error">Could not synchronize history</string>
-    <string name="history_initial_kms_label">Your starting point</string>
-    <string name="history_total_kms_label">Kilometers covered together</string>
-    <string name="history_records_count_label">We have %1$d milestones registered</string>
-    <string name="history_detail_action">Detail</string>
-    <string name="history_edit_action">Edit</string>
-    <string name="history_edit_title">Adjust Record</string>
-    <string name="history_edit_save">Confirm Changes</string>
-    <string name="history_delete_action">Delete</string>
-    <string name="history_delete_confirmation_title">Delete Record</string>
-    <string name="history_delete_confirmation_message">Are you sure you want to delete this mileage record?</string>
-    <string name="history_close_button">Got it</string>
-    <string name="history_daily_records_title">Records from %1$s</string>
-    <string name="history_expand_desc">Expand</string>
-    <string name="history_collapse_desc">Collapse</string>
-    <string name="history_label_day">Day</string>
-    <string name="history_label_month">Month</string>
-    <string name="history_label_year">Year</string>
-    <string name="history_delete_desc">Delete</string>
-    <string name="history_no_history_yet">No history yet</string>
-    <string name="history_detail_time_label">Time</string>
-    <string name="history_detail_consumption_title">ESTIMATED CONSUMPTION</string>
-    <string name="history_detail_route_title">TRIP ROUTE</string>
-    <string name="history_detail_route_premium_teaser">Relive your route. Available for PREMIUM users.</string>
-    <string name="history_detail_no_route">No route was captured for this record.</string>
 
     <!-- Tracking -->
     <string name="tracking_card_status_pending">Detecting driving&#8230;</string>
@@ -274,14 +232,6 @@
     <string name="tracking_validation_content">Detecting vehicle connection…</string>
 
     <!-- Common -->
-    <string name="common_processing">Processing&#8230;</string>
-    <string name="common_fuel_consumption_format">%.1f L/100km</string>
-    <string name="common_km_suffix">%1$s km</string>
-    <string name="common_km_positive_suffix">+ %1$s km</string>
-    <string name="common_km_negative_suffix">- %1$s km</string>
-    <string name="common_ratio_label">%1$s/%2$s</string>
-    <string name="common_percentage_format">%.1f%%</string>
-    <string name="common_currency_format">€%.2f</string>
 
     <!-- Login -->
 

@@ -44,6 +44,7 @@ import es.joshluq.canvaskit.components.layout.CanvasKitLoadingScaffold
 import es.joshluq.canvaskit.components.navigation.CanvasKitTopBar
 import es.joshluq.canvaskit.foundations.theme.CanvasKitTheme
 import es.joshluq.kmsafe.R
+import es.joshluq.kmsafe.core.ui.R as CoreR
 import es.joshluq.kmsafe.domain.model.TripProjection
 import es.joshluq.kmsafe.ui.projection.components.ProjectionGauge
 import kotlin.math.absoluteValue
@@ -71,7 +72,7 @@ fun ProjectionAnalysisScreen(
             CanvasKitTopBar(
                 title = {
                     Text(
-                        text = stringResource(R.string.dashboard_item_projection),
+                        text = stringResource(CoreR.string.dashboard_item_projection),
                         style = CanvasKitTheme.typography.headingMedium,
                         color = CanvasKitTheme.colors.textPrimary
                     )
@@ -311,7 +312,7 @@ private fun FinancialImpactCard(
                     Text(
                         modifier = Modifier.weight(1f),
                         text = stringResource(
-                            if (isPositive) R.string.common_km_positive_suffix else R.string.common_km_negative_suffix,
+                            if (isPositive) CoreR.string.common_km_positive_suffix else CoreR.string.common_km_negative_suffix,
                             NumberFormatter.formatDistance(finalBalance.absoluteValue)
                         ),
                         style = CanvasKitTheme.typography.headingLarge,
@@ -335,13 +336,13 @@ private fun FinancialImpactCard(
                                 color = CanvasKitTheme.colors.textSecondary
                             )
                             Text(
-                                text = stringResource(R.string.common_currency_format, estimatedPenalty),
+                                text = stringResource(CoreR.string.common_currency_format, estimatedPenalty),
                                 style = CanvasKitTheme.typography.displayMedium,
                                 color = CanvasKitTheme.colors.error,
                                 fontWeight = FontWeight.Black
                             )
                             Text(
-                                text = stringResource(R.string.projection_analysis_penalty_price_label) + ": " + stringResource(R.string.common_currency_format, penaltyPrice),
+                                text = stringResource(R.string.projection_analysis_penalty_price_label) + ": " + stringResource(CoreR.string.common_currency_format, penaltyPrice),
                                 style = CanvasKitTheme.typography.labelSmall,
                                 color = CanvasKitTheme.colors.textSecondary
                             )
@@ -402,3 +403,4 @@ fun ProjectionAnalysisScreenPreview() {
         )
     }
 }
+

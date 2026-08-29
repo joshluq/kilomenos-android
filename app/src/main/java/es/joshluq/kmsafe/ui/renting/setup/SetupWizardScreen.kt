@@ -69,6 +69,7 @@ import es.joshluq.canvaskit.components.layout.CanvasKitLoadingScaffold
 import es.joshluq.canvaskit.components.navigation.CanvasKitTopBar
 import es.joshluq.canvaskit.foundations.theme.CanvasKitTheme
 import es.joshluq.kmsafe.R
+import es.joshluq.kmsafe.core.ui.R as CoreR
 import es.joshluq.kmsafe.domain.model.FuelType
 import es.joshluq.kmsafe.domain.model.SubscriptionLevel
 import es.joshluq.kmsafe.ui.renting.components.BluetoothDevicePicker
@@ -149,7 +150,7 @@ fun SetupWizardScreen(
                     ) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = stringResource(R.string.acc_back),
+                            contentDescription = stringResource(CoreR.string.acc_back),
                             tint = CanvasKitTheme.colors.textPrimary
                         )
                     }
@@ -342,7 +343,7 @@ private fun MileageBudgetStep(state: State, onEvent: (Event) -> Unit) {
             onValueChange = { onEvent(Event.OnTotalKmsChanged(it)) },
             errorText = state.totalKmsError?.asString(),
             isError = state.totalKmsError != null,
-            suffix = stringResource(R.string.onboarding_km_suffix),
+            suffix = stringResource(CoreR.string.onboarding_km_suffix),
             placeholder = stringResource(R.string.onboarding_total_kms_placeholder),
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal, imeAction = ImeAction.Next),
             keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) }),
@@ -355,7 +356,7 @@ private fun MileageBudgetStep(state: State, onEvent: (Event) -> Unit) {
             onValueChange = { onEvent(Event.OnStartOdometerChanged(it)) },
             errorText = state.startOdometerError?.asString(),
             isError = state.startOdometerError != null,
-            suffix = stringResource(R.string.onboarding_km_suffix),
+            suffix = stringResource(CoreR.string.onboarding_km_suffix),
             placeholder = stringResource(R.string.onboarding_start_odometer_placeholder),
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal, imeAction = ImeAction.Done),
             keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() })

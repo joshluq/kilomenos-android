@@ -1,0 +1,25 @@
+<resources>
+    <!-- History -->
+    <string name="history_empty_state_title">Tu historia empieza aquí</string>
+    <string name="history_search_label">Busca entre tus viajes</string>
+    <string name="history_empty_state_description">Registra tus kilómetros de vez en cuando para que podamos dibujar tu evolución.</string>
+    <string name="history_initial_kms_label">Tu punto de partida</string>
+    <string name="history_total_kms_label">Kilómetros recorridos juntos</string>
+    <string name="history_records_count_label">Llevamos %1$d hitos registrados</string>
+    <string name="history_detail_action">Detalle</string>
+    <string name="history_delete_confirmation_title">Eliminar Registro</string>
+    <string name="history_delete_confirmation_message">¿Estás seguro de que deseas eliminar este registro de kilometraje?</string>
+    <string name="history_daily_records_title">Registros del %1$s</string>
+    <string name="history_expand_desc">Expandir</string>
+    <string name="history_collapse_desc">Colapsar</string>
+    <string name="history_label_day">Día</string>
+    <string name="history_label_month">Mes</string>
+    <string name="history_label_year">Año</string>
+    <string name="history_delete_desc">Borrar</string>
+    <string name="history_no_history_yet">Aún no hay viajes en tu historial</string>
+    <string name="history_detail_time_label">Hora</string>
+    <string name="history_detail_consumption_title">CONSUMO ESTIMADO</string>
+    <string name="history_detail_route_title">RUTA DEL VIAJE</string>
+    <string name="history_detail_route_premium_teaser">Vuelve a vivir tu ruta. Disponible para usuarios PREMIUM.</string>
+    <string name="history_detail_no_route">No se capturó ninguna ruta para este registro.</string>
+</resources>

@@ -1,4 +1,4 @@
-package es.joshluq.kmsafe.ui.history
+package es.joshluq.kmsafe.feature.history
 
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -7,7 +7,7 @@ import es.joshluq.foundationkit.log.LoggerKit
 import es.joshluq.foundationkit.text.TextProvider
 import es.joshluq.foundationkit.usecase.FlowUseCase
 import es.joshluq.foundationkit.viewmodel.ScreenViewModel
-import es.joshluq.kmsafe.R
+import es.joshluq.kmsafe.core.ui.R as CoreR
 import es.joshluq.kmsafe.domain.di.CheckFeatureAccess
 import es.joshluq.kmsafe.domain.di.DeleteOdometerRecord
 import es.joshluq.kmsafe.domain.di.GetHistory
@@ -113,7 +113,7 @@ class HistoryViewModel @Inject constructor(
                             copy(
                                 isLoading = false,
                                 isRefreshing = false,
-                                error = TextProvider.Resource(R.string.history_load_error)
+                                error = TextProvider.Resource(CoreR.string.history_load_error)
                             )
                         }
                     }
@@ -189,7 +189,7 @@ class HistoryViewModel @Inject constructor(
                         is DeleteOdometerRecordUseCase.Output.Failure -> {
                             updateState {
                                 copy(
-                                    error = TextProvider.Resource(R.string.history_register_error)
+                                    error = TextProvider.Resource(CoreR.string.history_register_error)
                                 )
                             }
                         }

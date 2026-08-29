@@ -47,6 +47,7 @@ import es.joshluq.canvaskit.components.layout.CanvasKitLoadingScaffold
 import es.joshluq.canvaskit.components.navigation.CanvasKitTopBar
 import es.joshluq.canvaskit.foundations.theme.CanvasKitTheme
 import es.joshluq.kmsafe.R
+import es.joshluq.kmsafe.core.ui.R as CoreR
 import es.joshluq.kmsafe.domain.usecase.ExportDataUseCase
 import es.joshluq.kmsafe.core.ui.util.safeClick
 
@@ -216,7 +217,7 @@ fun DataManagementScreen(
             CanvasKitConfirmDialog(
                 title = stringResource(R.string.premium_limit_data_title),
                 message = stringResource(R.string.premium_limit_data_message),
-                confirmText = stringResource(R.string.premium_upgrade_confirm),
+                confirmText = stringResource(CoreR.string.premium_upgrade_confirm),
                 cancelText = stringResource(R.string.premium_upgrade_cancel),
                 onConfirm = { onEvent(Event.OnUpgradeClicked) },
                 onDismissRequest = { onEvent(Event.OnDismissPremiumLimit) },
@@ -257,7 +258,7 @@ private fun DataOptionContent(
             if (isLocked) {
                 Icon(
                     imageVector = Icons.Default.Lock,
-                    contentDescription = stringResource(R.string.acc_locked),
+                    contentDescription = stringResource(CoreR.string.acc_locked),
                     tint = CanvasKitTheme.colors.textSecondary,
                     modifier = Modifier.size(20.dp)
                 )

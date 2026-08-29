@@ -1,0 +1,25 @@
+<resources>
+    <!-- History -->
+    <string name="history_search_label">Search through your trips</string>
+    <string name="history_empty_state_title">Your journey starts here</string>
+    <string name="history_empty_state_description">Register your kilometers every now and then so we can map your evolution.</string>
+    <string name="history_initial_kms_label">Your starting point</string>
+    <string name="history_total_kms_label">Kilometers covered together</string>
+    <string name="history_records_count_label">We have %1$d milestones registered</string>
+    <string name="history_detail_action">Detail</string>
+    <string name="history_delete_confirmation_title">Delete Record</string>
+    <string name="history_delete_confirmation_message">Are you sure you want to delete this mileage record?</string>
+    <string name="history_daily_records_title">Records from %1$s</string>
+    <string name="history_expand_desc">Expand</string>
+    <string name="history_collapse_desc">Collapse</string>
+    <string name="history_label_day">Day</string>
+    <string name="history_label_month">Month</string>
+    <string name="history_label_year">Year</string>
+    <string name="history_delete_desc">Delete</string>
+    <string name="history_no_history_yet">No history yet</string>
+    <string name="history_detail_time_label">Time</string>
+    <string name="history_detail_consumption_title">ESTIMATED CONSUMPTION</string>
+    <string name="history_detail_route_title">TRIP ROUTE</string>
+    <string name="history_detail_route_premium_teaser">Relive your route. Available for PREMIUM users.</string>
+    <string name="history_detail_no_route">No route was captured for this record.</string>
+</resources>

@@ -1,4 +1,4 @@
-package es.joshluq.kmsafe.ui.history.detail
+package es.joshluq.kmsafe.feature.history.detail
 
 import android.content.res.Configuration
 import androidx.compose.foundation.background
@@ -74,7 +74,8 @@ import es.joshluq.canvaskit.components.inputs.CanvasKitTextField
 import es.joshluq.canvaskit.components.layout.CanvasKitLoadingScaffold
 import es.joshluq.canvaskit.components.navigation.CanvasKitTopBar
 import es.joshluq.canvaskit.foundations.theme.CanvasKitTheme
-import es.joshluq.kmsafe.R
+import es.joshluq.kmsafe.feature.history.R
+import es.joshluq.kmsafe.core.ui.R as CoreR
 import es.joshluq.kmsafe.domain.model.OdometerRecord
 import es.joshluq.kmsafe.core.ui.util.safeClick
 import es.joshluq.kmsafe.core.ui.util.safeClickable
@@ -133,7 +134,7 @@ fun RecordDetailScreen(
                     ) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = stringResource(R.string.acc_back),
+                            contentDescription = stringResource(CoreR.string.acc_back),
                             tint = CanvasKitTheme.colors.textPrimary
                         )
                     }
@@ -339,7 +340,7 @@ private fun TeaserOverlay(
             )
             Spacer(modifier = Modifier.height(12.dp))
             Text(
-                text = stringResource(R.string.premium_upgrade_confirm),
+                text = stringResource(CoreR.string.premium_upgrade_confirm),
                 style = CanvasKitTheme.typography.labelLarge,
                 color = CanvasKitTheme.colors.brandAccent,
                 fontWeight = FontWeight.Bold
@@ -358,13 +359,13 @@ private fun HeroMileageCard(kms: Double) {
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
-                text = stringResource(R.string.overview_current_odometer_label).uppercase(),
+                text = stringResource(CoreR.string.overview_current_odometer_label).uppercase(),
                 style = CanvasKitTheme.typography.labelSmall,
                 color = CanvasKitTheme.colors.textSecondary,
                 letterSpacing = 1.sp
             )
             Text(
-                text = stringResource(R.string.common_km_suffix, kms),
+                text = stringResource(CoreR.string.common_km_suffix, kms),
                 style = CanvasKitTheme.typography.displayLarge,
                 color = CanvasKitTheme.colors.brandAccent,
                 fontWeight = FontWeight.Black
@@ -392,7 +393,7 @@ private fun DetailSection(record: OdometerRecord) {
         ) {
             DetailRow(
                 icon = Icons.Default.CalendarToday,
-                label = stringResource(R.string.overview_record_date_label),
+                label = stringResource(CoreR.string.overview_record_date_label),
                 value = dateFormatter.format(Date(record.timestamp))
             )
 
@@ -405,7 +406,7 @@ private fun DetailSection(record: OdometerRecord) {
             if (record.label != null) {
                 DetailRow(
                     icon = Icons.AutoMirrored.Default.Label,
-                    label = stringResource(R.string.overview_record_label_label),
+                    label = stringResource(CoreR.string.overview_record_label_label),
                     value = record.label!!
                 )
             }
@@ -462,7 +463,7 @@ private fun ConsumptionCard(l100km: Double) {
                         fontWeight = FontWeight.Bold
                     )
                     Text(
-                        text = stringResource(R.string.common_fuel_consumption_format, l100km),
+                        text = stringResource(CoreR.string.common_fuel_consumption_format, l100km),
                         style = CanvasKitTheme.typography.headingLarge,
                         color = CanvasKitTheme.colors.textPrimary,
                         fontWeight = FontWeight.Black
@@ -493,7 +494,7 @@ private fun ActionButtons(onEvent: (RecordDetailEvent) -> Unit) {
 
     Column(verticalArrangement = Arrangement.spacedBy(CanvasKitTheme.spacing.md)) {
         CanvasKitButton(
-            text = stringResource(R.string.history_edit_action),
+            text = stringResource(CoreR.string.history_edit_action),
             icon = Icons.Default.Edit,
             onClick = safeClick {
                 keyboardController?.hide()
@@ -504,7 +505,7 @@ private fun ActionButtons(onEvent: (RecordDetailEvent) -> Unit) {
         )
 
         CanvasKitButton(
-            text = stringResource(R.string.history_delete_action),
+            text = stringResource(CoreR.string.history_delete_action),
             icon = Icons.Default.Delete,
             onClick = safeClick {
                 keyboardController?.hide()
@@ -522,8 +523,8 @@ private fun DeleteConfirmationDialog(onEvent: (RecordDetailEvent) -> Unit) {
     CanvasKitConfirmDialog(
         title = stringResource(R.string.history_delete_confirmation_title),
         message = stringResource(R.string.history_delete_confirmation_message),
-        confirmText = stringResource(R.string.history_delete_action),
-        cancelText = stringResource(R.string.profile_logout_cancel),
+        confirmText = stringResource(CoreR.string.history_delete_action),
+        cancelText = stringResource(CoreR.string.profile_logout_cancel),
         onConfirm = { onEvent(RecordDetailEvent.OnConfirmDelete) },
         onDismissRequest = { onEvent(RecordDetailEvent.OnCancelDelete) },
         isDestructive = true,
@@ -545,7 +546,7 @@ fun EditRecordDialog(
         CanvasKitDialogContent(
             title = {
                 Text(
-                    text = stringResource(R.string.history_edit_title),
+                    text = stringResource(CoreR.string.history_edit_title),
                     style = CanvasKitTheme.typography.bodyLarge,
                     fontWeight = FontWeight.Bold
                 )
@@ -553,11 +554,11 @@ fun EditRecordDialog(
             content = {
                 Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
                     CanvasKitTextField(
-                        label = stringResource(R.string.overview_current_odometer_label),
+                        label = stringResource(CoreR.string.overview_current_odometer_label),
                         value = state.editingOdometerValue,
                         onValueChange = { onEvent(RecordDetailEvent.OnEditingOdometerChanged(it)) },
-                        placeholder = stringResource(R.string.overview_current_odometer_placeholder),
-                        suffix = stringResource(R.string.onboarding_km_suffix),
+                        placeholder = stringResource(CoreR.string.overview_current_odometer_placeholder),
+                        suffix = stringResource(CoreR.string.onboarding_km_suffix),
                         keyboardOptions = KeyboardOptions(
                             keyboardType = androidx.compose.ui.text.input.KeyboardType.Decimal,
                             imeAction = ImeAction.Next
@@ -566,10 +567,10 @@ fun EditRecordDialog(
                     )
 
                     CanvasKitTextField(
-                        label = stringResource(R.string.overview_record_label_label),
+                        label = stringResource(CoreR.string.overview_record_label_label),
                         value = state.editingLabel,
                         onValueChange = { onEvent(RecordDetailEvent.OnEditingLabelChanged(it)) },
-                        placeholder = stringResource(R.string.overview_record_label_placeholder),
+                        placeholder = stringResource(CoreR.string.overview_record_label_placeholder),
                         keyboardOptions = KeyboardOptions(
                             imeAction = if (state.isPremium) ImeAction.Next else ImeAction.Done
                         ),
@@ -584,10 +585,10 @@ fun EditRecordDialog(
 
                     if (state.isPremium) {
                         CanvasKitTextField(
-                            label = stringResource(R.string.overview_record_fuel_label),
+                            label = stringResource(CoreR.string.overview_record_fuel_label),
                             value = state.editingFuel,
                             onValueChange = { onEvent(RecordDetailEvent.OnEditingFuelChanged(it)) },
-                            placeholder = stringResource(R.string.overview_record_fuel_placeholder),
+                            placeholder = stringResource(CoreR.string.overview_record_fuel_placeholder),
                             suffix = "L",
                             keyboardOptions = KeyboardOptions(
                                 keyboardType = androidx.compose.ui.text.input.KeyboardType.Decimal,
@@ -607,7 +608,7 @@ fun EditRecordDialog(
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     CanvasKitButton(
-                        text = stringResource(R.string.history_close_button),
+                        text = stringResource(CoreR.string.history_close_button),
                         variant = CanvasKitButtonVariant.Secondary,
                         onClick = {
                             keyboardController?.hide()
@@ -617,7 +618,7 @@ fun EditRecordDialog(
                         modifier = Modifier.weight(1f)
                     )
                     CanvasKitButton(
-                        text = stringResource(R.string.history_edit_save),
+                        text = stringResource(CoreR.string.history_edit_save),
                         onClick = {
                             keyboardController?.hide()
                             focusManager.clearFocus()

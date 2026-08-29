@@ -52,6 +52,7 @@ import es.joshluq.canvaskit.components.layout.CanvasKitLoadingScaffold
 import es.joshluq.canvaskit.components.navigation.CanvasKitTopBar
 import es.joshluq.canvaskit.foundations.theme.CanvasKitTheme
 import es.joshluq.kmsafe.R
+import es.joshluq.kmsafe.core.ui.R as CoreR
 import es.joshluq.kmsafe.domain.model.SubscriptionLevel
 import es.joshluq.kmsafe.core.ui.util.safeClick
 
@@ -226,7 +227,7 @@ fun ProfileScreen(
                 title = stringResource(R.string.profile_logout_confirmation_title),
                 message = stringResource(messageRes),
                 confirmText = stringResource(R.string.profile_logout_confirm),
-                cancelText = stringResource(R.string.profile_logout_cancel),
+                cancelText = stringResource(CoreR.string.profile_logout_cancel),
                 onConfirm = { onEvent(Event.OnLogoutConfirmed) },
                 onDismissRequest = { onEvent(Event.OnLogoutCancelled) },
                 isDestructive = true
@@ -238,7 +239,7 @@ fun ProfileScreen(
                 title = stringResource(R.string.profile_delete_account_confirmation_title),
                 message = stringResource(R.string.profile_delete_account_confirmation_message),
                 confirmText = stringResource(R.string.profile_delete_account_confirm),
-                cancelText = stringResource(R.string.profile_logout_cancel),
+                cancelText = stringResource(CoreR.string.profile_logout_cancel),
                 onConfirm = { onEvent(Event.OnDeleteAccountConfirmed) },
                 onDismissRequest = { onEvent(Event.OnDeleteAccountCancelled) },
                 isDestructive = true,

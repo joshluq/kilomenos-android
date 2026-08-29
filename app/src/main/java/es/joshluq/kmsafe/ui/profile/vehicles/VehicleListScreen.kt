@@ -54,6 +54,7 @@ import es.joshluq.canvaskit.components.layout.CanvasKitLoadingScaffold
 import es.joshluq.canvaskit.components.navigation.CanvasKitTopBar
 import es.joshluq.canvaskit.foundations.theme.CanvasKitTheme
 import es.joshluq.kmsafe.R
+import es.joshluq.kmsafe.core.ui.R as CoreR
 import es.joshluq.kmsafe.domain.model.RentingContract
 import es.joshluq.kmsafe.core.ui.util.safeClick
 import kotlinx.coroutines.flow.Flow
@@ -116,7 +117,7 @@ fun VehicleListScreen(
                     IconButton(onClick = safeClick { onEvent(Event.OnBackClicked) }) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = stringResource(R.string.acc_back),
+                            contentDescription = stringResource(CoreR.string.acc_back),
                             tint = CanvasKitTheme.colors.textPrimary
                         )
                     }
@@ -125,7 +126,7 @@ fun VehicleListScreen(
                     IconButton(onClick = safeClick { onEvent(Event.OnAddVehicleClicked) }) {
                         Icon(
                             imageVector = Icons.Default.Add,
-                            contentDescription = stringResource(R.string.acc_add_vehicle),
+                            contentDescription = stringResource(CoreR.string.acc_add_vehicle),
                             tint = CanvasKitTheme.colors.brandAccent
                         )
                     }
@@ -205,7 +206,7 @@ fun VehicleListScreen(
             CanvasKitConfirmDialog(
                 title = stringResource(R.string.premium_limit_vehicle_title),
                 message = stringResource(R.string.premium_limit_vehicle_message),
-                confirmText = stringResource(R.string.premium_upgrade_confirm),
+                confirmText = stringResource(CoreR.string.premium_upgrade_confirm),
                 cancelText = stringResource(R.string.premium_upgrade_cancel),
                 onConfirm = { onEvent(Event.OnUpgradeClicked) },
                 onDismissRequest = { onEvent(Event.OnDismissPremiumLimit) },
@@ -289,14 +290,14 @@ private fun VehicleItem(
                 IconButton(onClick = onDetails) {
                     Icon(
                         imageVector = Icons.Default.Info,
-                        contentDescription = stringResource(R.string.acc_vehicle_info),
+                        contentDescription = stringResource(CoreR.string.acc_vehicle_info),
                         tint = CanvasKitTheme.colors.textSecondary
                     )
                 }
                 IconButton(onClick = onDelete) {
                     Icon(
                         imageVector = Icons.Default.Delete,
-                        contentDescription = stringResource(R.string.acc_delete_vehicle),
+                        contentDescription = stringResource(CoreR.string.acc_delete_vehicle),
                         tint = CanvasKitTheme.colors.error
                     )
                 }

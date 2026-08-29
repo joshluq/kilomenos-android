@@ -11,6 +11,7 @@ import es.joshluq.kmsafe.domain.model.RentingContract
  */
 data class State(
     val isLoading: Boolean = false,
+    val isPremium: Boolean = false,
     val vehicles: List<RentingContract> = emptyList(),
     val vehicleToDelete: RentingContract? = null,
     val showPremiumLimit: Boolean = false,

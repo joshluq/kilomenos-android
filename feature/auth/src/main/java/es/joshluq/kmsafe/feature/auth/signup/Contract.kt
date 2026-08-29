@@ -4,7 +4,6 @@ import es.joshluq.foundationkit.text.TextProvider
 import es.joshluq.foundationkit.viewmodel.UiEffect
 import es.joshluq.foundationkit.viewmodel.UiEvent
 import es.joshluq.foundationkit.viewmodel.UiState
-import es.joshluq.kmsafe.domain.model.User
 
 /**
  * Represents the UI state for the Signup screen.

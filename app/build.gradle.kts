@@ -96,9 +96,11 @@ configure<ApplicationExtension> {
 dependencies {
     implementation(project(":feature:expenses"))
     implementation(project(":feature:auth"))
+    implementation(project(":feature:history"))
     implementation(project(":core:ui"))
     implementation(project(":core:infrastructure"))
     implementation(project(":core:domain"))
+    implementation(project(":core:monetization"))
 
     implementation(deps.foundationkit)
     implementation(deps.canvaskit)
@@ -109,9 +111,7 @@ dependencies {
     implementation(deps.androidx.splashscreen)
     implementation(deps.androidx.datastore.preferences)
     implementation(deps.coil.compose)
-    implementation(deps.play.services.ads)
     implementation(deps.play.services.location)
-    implementation(deps.user.messaging.platform)
     implementation(deps.compose.cropper)
     implementation(deps.googleid)
     implementation(deps.accompanist.permissions)

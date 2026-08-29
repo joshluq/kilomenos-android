@@ -1,4 +1,4 @@
-package es.joshluq.kmsafe.ui.history.detail
+package es.joshluq.kmsafe.feature.history.detail
 
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
@@ -9,7 +9,7 @@ import es.joshluq.foundationkit.log.LoggerKit
 import es.joshluq.foundationkit.text.TextProvider
 import es.joshluq.foundationkit.usecase.FlowUseCase
 import es.joshluq.foundationkit.viewmodel.ScreenViewModel
-import es.joshluq.kmsafe.R
+import es.joshluq.kmsafe.core.ui.R as CoreR
 import es.joshluq.kmsafe.domain.di.CheckFeatureAccess
 import es.joshluq.kmsafe.domain.di.DeleteOdometerRecord
 import es.joshluq.kmsafe.domain.di.GetOdometerRecord
@@ -22,6 +22,7 @@ import es.joshluq.kmsafe.domain.usecase.DeleteOdometerRecordUseCase
 import es.joshluq.kmsafe.domain.usecase.GetOdometerRecordUseCase
 import es.joshluq.kmsafe.domain.usecase.GetRouteUseCase
 import es.joshluq.kmsafe.domain.usecase.UpdateOdometerRecordUseCase
+import es.joshluq.kmsafe.core.ui.util.toText
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import javax.inject.Inject
@@ -140,7 +141,7 @@ class RecordDetailViewModel @Inject constructor(
                             updateState {
                                 copy(
                                     isLoading = false,
-                                    error = TextProvider.Resource(R.string.history_load_error)
+                                    error = TextProvider.Resource(CoreR.string.history_load_error)
                                 )
                             }
                         }
@@ -209,7 +210,7 @@ class RecordDetailViewModel @Inject constructor(
                         updateState {
                             copy(
                                 isEditing = false,
-                                error = TextProvider.Resource(R.string.history_register_error)
+                                error = TextProvider.Resource(CoreR.string.history_register_error)
                             )
                         }
                     }
@@ -234,7 +235,7 @@ class RecordDetailViewModel @Inject constructor(
                             updateState {
                                 copy(
                                     isDeleting = false,
-                                    error = TextProvider.Resource(R.string.history_register_error)
+                                    error = TextProvider.Resource(CoreR.string.history_register_error)
                                 )
                             }
                         }

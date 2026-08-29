@@ -5,34 +5,31 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import es.joshluq.analyticskit.domain.model.AnalyticsEvent
 import es.joshluq.analyticskit.sdk.AnalyticskitManager
 import es.joshluq.foundationkit.log.LoggerKit
+import es.joshluq.foundationkit.text.TextProvider
 import es.joshluq.foundationkit.usecase.FlowUseCase
 import es.joshluq.foundationkit.viewmodel.ScreenViewModel
+import es.joshluq.kmsafe.core.ui.R as CoreR
 import es.joshluq.kmsafe.domain.di.CheckFeatureAccess
 import es.joshluq.kmsafe.domain.di.DeleteContract
 import es.joshluq.kmsafe.domain.di.GetAllContracts
 import es.joshluq.kmsafe.domain.di.SelectContract
-import es.joshluq.kmsafe.domain.di.SyncContracts
 import es.joshluq.kmsafe.domain.model.Feature
 import es.joshluq.kmsafe.domain.usecase.CheckFeatureAccessUseCase
 import es.joshluq.kmsafe.domain.usecase.DeleteContractUseCase
 import es.joshluq.kmsafe.domain.usecase.GetAllContractsUseCase
 import es.joshluq.kmsafe.domain.usecase.SelectContractUseCase
-import es.joshluq.kmsafe.domain.usecase.SyncContractsUseCase
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.flow.take
 import javax.inject.Inject
 
 @HiltViewModel
 class VehicleListViewModel @Inject constructor(
     @param:GetAllContracts private val getAllContractsUseCase:
     @JvmSuppressWildcards FlowUseCase<GetAllContractsUseCase.Input, GetAllContractsUseCase.Output>,
-    @param:SelectContract private val selectContractUseCase:
-    @JvmSuppressWildcards FlowUseCase<SelectContractUseCase.Input, SelectContractUseCase.Output>,
     @param:DeleteContract private val deleteContractUseCase:
     @JvmSuppressWildcards FlowUseCase<DeleteContractUseCase.Input, DeleteContractUseCase.Output>,
-    @param:SyncContracts private val syncContractsUseCase:
-    @JvmSuppressWildcards FlowUseCase<SyncContractsUseCase.Input, SyncContractsUseCase.Output>,
+    @param:SelectContract private val selectContractUseCase:
+    @JvmSuppressWildcards FlowUseCase<SelectContractUseCase.Input, SelectContractUseCase.Output>,
     @param:CheckFeatureAccess private val checkFeatureAccessUseCase:
     @JvmSuppressWildcards FlowUseCase<CheckFeatureAccessUseCase.Input, CheckFeatureAccessUseCase.Output>,
     private val analytics: AnalyticskitManager,
@@ -40,7 +37,7 @@ class VehicleListViewModel @Inject constructor(
 ) : ScreenViewModel<State, Event, Effect>() {
 
     init {
-        syncVehicles()
+        checkPremiumStatus()
         loadVehicles()
     }
 
@@ -49,62 +46,30 @@ class VehicleListViewModel @Inject constructor(
     override fun handleEvent(event: Event) {
         logger.d("VehicleListViewModel", "Event received: $event")
         when (event) {
-            is Event.OnVehicleSelected -> selectVehicle(event.id)
-            is Event.OnVehicleDetailsClicked -> {
-                logger.d("VehicleListViewModel", "Effect launched: NavigateToVehicleDetails")
-                launchEffect(Effect.NavigateToVehicleDetails(event.id))
+            is Event.OnDeleteVehicleClicked -> updateState { 
+                copy(vehicleToDelete = event.vehicle) 
             }
-            is Event.OnDeleteVehicleClicked -> {
-                if (event.vehicle.isSelected) {
-                    updateState { 
-                        copy(
-                            error = es.joshluq.foundationkit.text.TextProvider.Resource(
-                                es.joshluq.kmsafe.R.string.onboarding_error_delete_selected
-                            )
-                        ) 
-                    }
-                } else {
-                    updateState { copy(vehicleToDelete = event.vehicle) }
-                }
+            Event.OnDeleteConfirmed -> handleDelete()
+            Event.OnDeleteCancelled -> updateState { 
+                copy(vehicleToDelete = null) 
             }
-            Event.OnDeleteConfirmed -> {
-                val idToDelete = state.value.vehicleToDelete?.id
-                updateState { copy(vehicleToDelete = null) }
-                idToDelete?.let { deleteVehicle(it) }
-            }
-            Event.OnDeleteCancelled -> updateState { copy(vehicleToDelete = null) }
+            is Event.OnVehicleSelected -> handleSwitch(event.id)
             Event.OnAddVehicleClicked -> handleAddVehicle()
-            Event.OnUpgradeClicked -> {
-                analytics.track(
-                    AnalyticsEvent.Custom("premium_upgrade_clicked", mapOf("source" to "vehicle_list_limit"))
-                )
-                launchEffect(Effect.NavigateToPremiumPaywall)
-            }
-            Event.OnBackClicked -> {
-                logger.d("VehicleListViewModel", "Effect launched: NavigateBack")
-                launchEffect(Effect.NavigateBack)
-            }
-            Event.OnDismissPremiumLimit -> updateState { copy(showPremiumLimit = false) }
             Event.OnDismissError -> updateState { copy(error = null) }
+            Event.OnBackClicked -> launchEffect(Effect.NavigateBack)
+            is Event.OnVehicleDetailsClicked -> launchEffect(Effect.NavigateToVehicleDetails(event.id))
+            Event.OnUpgradeClicked -> launchEffect(Effect.NavigateToPremiumPaywall)
+            Event.OnDismissPremiumLimit -> updateState { copy(showPremiumLimit = false) }
         }
     }
 
-    private fun handleAddVehicle() {
+    private fun checkPremiumStatus() {
         checkFeatureAccessUseCase(CheckFeatureAccessUseCase.Input(Feature.MULTI_VEHICLE))
-            .take(1)
             .onEach { output ->
                 if (output is CheckFeatureAccessUseCase.Output.Success) {
-                    if (state.value.vehicles.isNotEmpty() && !output.isGranted) {
-                        analytics.track(
-                            AnalyticsEvent.Custom("premium_limit_reached", mapOf("feature_id" to "multi_vehicle"))
-                        )
-                        updateState { copy(showPremiumLimit = true) }
-                    } else {
-                        launchEffect(Effect.NavigateToAddVehicle)
-                    }
+                    updateState { copy(isPremium = output.isGranted) }
                 }
-            }
-            .launchIn(viewModelScope)
+            }.launchIn(viewModelScope)
     }
 
     private fun loadVehicles() {
@@ -113,50 +78,62 @@ class VehicleListViewModel @Inject constructor(
                 when (output) {
                     is GetAllContractsUseCase.Output.Progress -> updateState { copy(isLoading = true) }
                     is GetAllContractsUseCase.Output.Success -> updateState {
-                        copy(isLoading = false, vehicles = output.contracts)
+                        copy(
+                            isLoading = false,
+                            vehicles = output.contracts
+                        )
                     }
                     is GetAllContractsUseCase.Output.Failure -> updateState {
                         copy(
                             isLoading = false,
-                            error = es.joshluq.foundationkit.text.TextProvider.Resource(
-                                es.joshluq.kmsafe.R.string.history_load_error
-                            )
+                            error = TextProvider.Resource(CoreR.string.history_load_error)
                         )
                     }
                 }
-            }
-            .launchIn(viewModelScope)
+            }.launchIn(viewModelScope)
     }
 
-    private fun syncVehicles() {
-        syncContractsUseCase(SyncContractsUseCase.Input).launchIn(viewModelScope)
+    private fun handleSwitch(vehicleId: String) {
+        selectContractUseCase(SelectContractUseCase.Input(vehicleId))
+            .onEach { output ->
+                if (output is SelectContractUseCase.Output.Success) {
+                    analytics.track(AnalyticsEvent.Custom("vehicle_switched"))
+                    loadVehicles()
+                }
+            }.launchIn(viewModelScope)
     }
 
-    private fun selectVehicle(id: String) {
-        selectContractUseCase(SelectContractUseCase.Input(id)).launchIn(viewModelScope)
+    private fun handleAddVehicle() {
+        if (!state.value.isPremium && state.value.vehicles.isNotEmpty()) {
+            analytics.track(AnalyticsEvent.Custom("multi_vehicle_limit_reached"))
+            updateState { copy(showPremiumLimit = true) }
+        } else {
+            launchEffect(Effect.NavigateToAddVehicle)
+        }
     }
 
-    private fun deleteVehicle(vehicleId: String) {
-        deleteContractUseCase(DeleteContractUseCase.Input(vehicleId))
+    private fun handleDelete() {
+        val vehicle = state.value.vehicleToDelete ?: return
+        
+        deleteContractUseCase(DeleteContractUseCase.Input(vehicle.id))
             .onEach { output ->
                 when (output) {
+                    is DeleteContractUseCase.Output.Progress -> updateState { copy(isLoading = true) }
                     is DeleteContractUseCase.Output.Success -> {
                         analytics.track(AnalyticsEvent.Custom("vehicle_deleted"))
-                        updateState { copy(isLoading = false) }
+                        updateState { copy(isLoading = false, vehicleToDelete = null) }
+                        loadVehicles()
                     }
                     is DeleteContractUseCase.Output.Failure -> {
                         updateState {
                             copy(
                                 isLoading = false,
-                                error = es.joshluq.foundationkit.text.TextProvider.Resource(
-                                    es.joshluq.kmsafe.R.string.onboarding_register_error
-                                )
+                                vehicleToDelete = null,
+                                error = TextProvider.Resource(CoreR.string.history_register_error)
                             )
                         }
                     }
-                    is DeleteContractUseCase.Output.Progress -> updateState { copy(isLoading = true) }
                 }
-            }
-            .launchIn(viewModelScope)
+            }.launchIn(viewModelScope)
     }
 }

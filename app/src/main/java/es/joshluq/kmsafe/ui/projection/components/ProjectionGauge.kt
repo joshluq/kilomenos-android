@@ -26,6 +26,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import es.joshluq.canvaskit.foundations.theme.CanvasKitTheme
 import es.joshluq.kmsafe.R
+import es.joshluq.kmsafe.core.ui.R as CoreR
 import kotlin.math.absoluteValue
 import es.joshluq.kmsafe.core.ui.util.NumberFormatter
 
@@ -100,7 +101,7 @@ fun ProjectionGauge(
         ) {
             Text(
                 text = stringResource(
-                    if (isOverLimit) R.string.common_km_negative_suffix else R.string.common_km_positive_suffix,
+                    if (isOverLimit) CoreR.string.common_km_negative_suffix else CoreR.string.common_km_positive_suffix,
                     NumberFormatter.formatDistance(balance.absoluteValue)
                 ),
                 style = CanvasKitTheme.typography.displayMedium,

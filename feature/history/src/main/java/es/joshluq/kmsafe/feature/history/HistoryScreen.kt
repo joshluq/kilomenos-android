@@ -1,4 +1,4 @@
-package es.joshluq.kmsafe.ui.history
+package es.joshluq.kmsafe.feature.history
 
 import android.content.res.Configuration
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -57,12 +57,13 @@ import es.joshluq.canvaskit.components.layout.CanvasKitAccordion
 import es.joshluq.canvaskit.components.layout.CanvasKitLoadingScaffold
 import es.joshluq.canvaskit.components.navigation.CanvasKitTopBar
 import es.joshluq.canvaskit.foundations.theme.CanvasKitTheme
-import es.joshluq.kmsafe.BuildConfig
-import es.joshluq.kmsafe.R
+import es.joshluq.kmsafe.feature.history.BuildConfig
+import es.joshluq.kmsafe.feature.history.R
+import es.joshluq.kmsafe.core.ui.R as CoreR
 import es.joshluq.kmsafe.core.ui.util.NumberFormatter
 import es.joshluq.kmsafe.domain.model.OdometerRecord
+import es.joshluq.kmsafe.core.monetization.components.AdMobBanner
 import es.joshluq.kmsafe.domain.model.RecordWithIndicator
-import es.joshluq.kmsafe.ui.common.components.AdMobBanner
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -101,7 +102,7 @@ fun HistoryScreen(
             CanvasKitTopBar(
                 title = {
                     Text(
-                        text = stringResource(R.string.dashboard_item_history),
+                        text = stringResource(CoreR.string.dashboard_item_history),
                         style = CanvasKitTheme.typography.headingMedium,
                     )
                 },
@@ -162,7 +163,7 @@ fun HistoryScreen(
                                             },
                                             trailingContent = {
                                                 Text(
-                                                    text = stringResource(R.string.common_km_suffix, totalGroupKms),
+                                                    text = stringResource(CoreR.string.common_km_suffix, totalGroupKms),
                                                     style = CanvasKitTheme.typography.labelLarge,
                                                     color = CanvasKitTheme.colors.brandAccent,
                                                     modifier = Modifier.padding(horizontal = 8.dp)
@@ -239,7 +240,7 @@ private fun SummaryHeader(totalKms: Double, totalRecordsCount: Int) {
                 color = CanvasKitTheme.colors.brandAccent,
             )
             Text(
-                text = " " + stringResource(R.string.onboarding_km_suffix).lowercase(),
+                text = " " + stringResource(CoreR.string.onboarding_km_suffix).lowercase(),
                 style = CanvasKitTheme.typography.bodyLarge,
                 fontWeight = FontWeight.Bold,
                 color = CanvasKitTheme.colors.brandAccent,
@@ -400,7 +401,7 @@ private fun HistoryItem(
                         color = CanvasKitTheme.colors.textSecondary
                     )
                     Text(
-                        text = stringResource(R.string.common_km_suffix, item.record.odometerValue),
+                        text = stringResource(CoreR.string.common_km_suffix, item.record.odometerValue),
                         style = CanvasKitTheme.typography.bodyLarge,
                         fontWeight = FontWeight.Bold,
                         color = CanvasKitTheme.colors.textPrimary
