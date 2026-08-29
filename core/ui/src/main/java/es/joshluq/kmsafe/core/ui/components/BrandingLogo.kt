@@ -1,4 +1,4 @@
-package es.joshluq.kmsafe.ui.common.components
+package es.joshluq.kmsafe.core.ui.components
 
 import android.content.res.Configuration
 import androidx.compose.foundation.layout.Arrangement
@@ -20,14 +20,10 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import es.joshluq.canvaskit.foundations.theme.CanvasKitTheme
-import es.joshluq.kmsafe.R
+import es.joshluq.kmsafe.core.ui.R
 
 /**
  * Reusable branding component that combines the Animated "K" logo with the brand text.
- *
- * @param modifier Root modifier.
- * @param logoSize The size of the "K" logo.
- * @param textStyle Style for the "iloMenos" text.
  */
 @Composable
 fun BrandingLogo(

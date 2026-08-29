@@ -1,12 +1,45 @@
 <resources>
+    <string name="common_brand_kilo">Kilo</string>
+    <string name="common_brand_menos">Menos</string>
+    <string name="error_invalid_credentials">El correo o la contraseña son incorrectos.</string>
+    <string name="error_user_already_registered">Este correo electrónico ya está registrado.</string>
+    <string name="error_weak_password">La contraseña debe tener al menos 8 caracteres, mayúsculas, minúsculas, números y un carácter especial.</string>
+    <string name="error_invalid_email">El formato del correo electrónico no es válido.</string>
+    <string name="error_network">No se pudo conectar con el servidor. Revisa tu conexión.</string>
+    <string name="error_server">Error en el servidor (%1$d). Inténtalo más tarde.</string>
+    <string name="error_unknown">Ha ocurrido un error inesperado. Por favor, inténtalo de nuevo.</string>
+    <string name="error_invalid_fuel_values">Los valores del gasto deben ser mayores a 0.</string>
+    <string name="error_premium_only_feature">Esta función es exclusiva para usuarios PREMIUM.</string>
+    <string name="error_expense_not_found">El registro de gasto no se ha encontrado.</string>
+
+    <!-- Accessibility -->
+    <string name="acc_back">Volver</string>
+    <string name="acc_add_vehicle">Añadir vehículo</string>
+    <string name="acc_edit_contract">Editar contrato</string>
+    <string name="acc_delete_vehicle">Eliminar vehículo</string>
+    <string name="acc_vehicle_info">Información del vehículo</string>
+    <string name="acc_upgrade_premium">Hacerse Premium</string>
+    <string name="acc_open_menu">Abrir menú</string>
+    <string name="acc_chart_help">Ayuda sobre el gráfico</string>
+    <string name="acc_sync_pending">Sincronización pendiente</string>
+    <string name="acc_locked">Bloqueado</string>
+    <string name="acc_crop_image">Recortar imagen</string>
+    <string name="acc_close">Cerrar</string>
+    <string name="acc_scan_odometer">Escanear odómetro</string>
+
+    <!-- Profile (Shared) -->
+    <string name="profile_logout_cancel">Cancelar</string>
+    <string name="profile_privacy_policy">Política de privacidad</string>
+    <string name="profile_terms_conditions">Términos y condiciones</string>
+
     <!-- Fuel Types -->
     <string name="fuel_type_gasoline_95">Gasolina 95</string>
     <string name="fuel_type_gasoline_98">Gasolina 98</string>
     <string name="fuel_type_diesel">Diésel</string>
-    <string name="fuel_type_diesel_plus">Diésel Plus</string>
-    <string name="fuel_type_lpg">GLP / Autogas</string>
-    <string name="fuel_type_cng">GNC</string>
-    <string name="fuel_type_electric">Carga Eléctrica</string>
+    <string name="fuel_type_diesel_plus">Diésel+</string>
+    <string name="fuel_type_lpg">GLP (Gas Licuado)</string>
+    <string name="fuel_type_cng">GNC (Gas Natural)</string>
+    <string name="fuel_type_electric">Eléctrico (kWh)</string>
     <string name="fuel_type_hybrid">Híbrido Enchufable</string>
     <string name="fuel_type_hydrogen">Hidrógeno</string>
     <string name="fuel_type_biodiesel">Biodiésel</string>

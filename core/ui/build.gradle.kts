@@ -13,5 +13,6 @@ configure<LibraryExtension> {
 dependencies {
     implementation(project(":core:domain"))
     implementation(deps.foundationkit)
-
+    implementation(deps.canvaskit)
+    implementation(deps.coil.compose)
 }

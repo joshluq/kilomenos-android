@@ -6,12 +6,7 @@ Este documento detalla la hoja de ruta técnica y el estado de ejecución para t
 
 ## 📊 Estado General del Plan
 
-| Fase | Descripción | Estado |
-| :--- | :--- | :--- |
-| **Fase 1** | Estandarización y Version Catalog | ✅ **Completado** |
-| **Fase 2** | Módulo de Infraestructura Centralizada (`:core:infrastructure`) | ✅ **Completado** |
-| **Fase 3** | Vertical Slicing & Pure Domain (`:core:domain` + Data Layer) | ✅ **Completado** |
-| **Fase 4** | Módulos de Funcionalidad (`:feature:*`) | ⏳ **Siguiente Paso** |
+| Fase 4 | Módulos de Funcionalidad (`:feature:*`) | ⏳ **En Progreso** |
 
 ---
 
@@ -56,7 +51,12 @@ Este documento detalla la hoja de ruta técnica y el estado de ejecución para t
 ## 4. Fase 4: Modularización de Features y Nuevas Funcionalidades 🚀
 
 ### Módulos Creados / Planificados:
-1. **`:feature:expenses` (Fuel & Energy Management) ✅ COMPLETADO**:
+1. **`:feature:auth` (Authentication & Launch) ✅ COMPLETADO**:
+   - **Propósito**: Gestión del ciclo de vida de la sesión, Login, Registro y Splash screen.
+   - **Componentes**: `LaunchRoute`, `LoginRoute`, `SignupRoute`.
+   - **Dependencias**: `:core:domain`, `:core:ui`, `:core:infrastructure` (temporal).
+
+2. **`:feature:expenses` (Fuel & Energy Management) ✅ COMPLETADO**:
    - **Dominio**: Modelos de combustible/eléctrico (`FuelType`, `EnergyCategory`, `FuelExpense`, `ServiceStation`, `StationPriceVolatility`), repositorios y 5 casos de uso (`GetExpensesByVehicleUseCase`, `SaveFuelExpenseUseCase`, `DeleteFuelExpenseUseCase`, `GetStationVolatilityUseCase`, `GetElectrificationSavingsUseCase`).
    - **Infraestructura**: Room entities (`FuelExpenseEntity`, `ServiceStationEntity`), DAOs (`FuelExpenseDao`, `ServiceStationDao`), migración de esquema de base de datos `MIGRATION_12_13` (versión 13) y repositorios reactivos.
    - **Presentación**: MVI (`ExpensesState`, `ExpensesEvent`, `ExpensesEffect`), `ExpensesViewModel`, coordinator `ExpensesRoute`, `ExpensesScreen` (diseño homogéneo con las pantallas principales mediante `CanvasKitLoadingScaffold` y `CanvasKitTopBar` centrado), bottom sheet dinámico de repostaje/carga y tarjeta de volatilidad histórica de precios.

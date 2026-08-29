@@ -1,0 +1,28 @@
+<resources>
+    <!-- Login -->
+    <string name="login_subtitle">Tu centro de mando para una conducción eficiente</string>
+    <string name="login_email_label">Correo corporativo o personal</string>
+    <string name="login_email_placeholder">ejemplo@correo.com</string>
+    <string name="login_email_error">Formato de correo inválido</string>
+    <string name="login_password_error">La contraseña debe tener al menos 8 caracteres, e incluir al menos una letra mayúscula, una letra minúscula, un número y un carácter especial.</string>
+    <string name="login_password_label">Contraseña de acceso</string>
+    <string name="login_password_placeholder">••••••••</string>
+    <string name="login_divider_or"> O </string>
+    <string name="login_google_button">Continuar con Google</string>
+    <string name="login_button">Acceder</string>
+    <string name="login_create_account">¿Eres nuevo conductor? Crea una cuenta</string>
+    <string name="login_conflict_title">Otro conductor detectado</string>
+    <string name="login_conflict_message">Este dispositivo contiene datos de otro conductor. Para iniciar tu sesión, es necesario eliminar la información anterior.</string>
+    <string name="login_conflict_confirm">Borrar y continuar</string>
+    <string name="login_privacy_agreement">Al acceder, confirmas que has leído nuestros %1$s y %2$s.</string>
+
+    <!-- Signup -->
+    <string name="signup_title">Registro de Conductor</string>
+    <string name="signup_subtitle">Únete a la comunidad de conductores inteligentes</string>
+    <string name="signup_name_label">Nombre y apellidos</string>
+    <string name="signup_name_placeholder">Ej. Juan Pérez</string>
+    <string name="signup_button">Registrarse</string>
+    <string name="signup_success_title">¡Registro exitoso!</string>
+    <string name="signup_success_message">Por favor, verifica tu correo electrónico para confirmar tu cuenta antes de iniciar sesión.</string>
+    <string name="signup_privacy_agreement">Al registrarte, aceptas nuestros %1$s y la %2$s.</string>
+</resources>

@@ -1,51 +1,50 @@
-package es.joshluq.kmsafe.ui.signup
+package es.joshluq.kmsafe.feature.auth.login
 
 import es.joshluq.foundationkit.text.TextProvider
 import es.joshluq.foundationkit.viewmodel.UiEffect
 import es.joshluq.foundationkit.viewmodel.UiEvent
 import es.joshluq.foundationkit.viewmodel.UiState
+import es.joshluq.kmsafe.domain.model.User
 
 /**
- * Represents the UI state for the Signup screen.
+ * Represents the UI state for the Login screen.
  */
 data class State(
-    val name: String = "",
     val email: String = "",
     val emailError: TextProvider? = null,
     val password: String = "",
-    val passwordError: TextProvider? = null,
     val isPasswordVisible: Boolean = false,
+    val isLoginEnabled: Boolean = false,
     val isLoading: Boolean = false,
-    val isSignupEnabled: Boolean = false,
     val showUserConflictWarning: Boolean = false,
+    val pendingUser: User? = null,
     val error: TextProvider? = null
 ) : UiState {
+
     companion object {
         val Empty = State()
     }
 }
 
 /**
- * Represents the UI events for the Signup screen.
+ * Represents the UI events that can be triggered from the Login screen.
  */
 sealed interface Event : UiEvent {
-    data class OnNameChanged(val value: String) : Event
     data class OnEmailChanged(val value: String) : Event
     data class OnPasswordChanged(val value: String) : Event
-    object OnTogglePasswordVisibility : Event
-    object OnSignupClicked : Event
-    object OnConfirmUserConflict : Event
-    object OnDismissUserConflict : Event
-    object OnDismissError : Event
-    object OnBackClicked : Event
+    data object OnTogglePasswordVisibility : Event
+    data object OnLoginClicked : Event
+    data object OnConfirmUserConflict : Event
+    data object OnDismissUserConflict : Event
+    data object OnGoogleSignInClicked : Event
+    data object OnDismissError : Event
 }
 
 /**
- * Represents the side effects for the Signup screen.
+ * Represents the side effects that can occur on the Login screen.
  */
 sealed interface Effect : UiEffect {
-    object NavigateBack : Effect
-    object NavigateToDashboard : Effect
-    object NavigateToWelcomeDiscovery : Effect
-    object NavigateToPremiumPaywall : Effect
+    data object NavigateToDashboard : Effect
+    data object NavigateToPremiumPaywall : Effect
+    data object TriggerGoogleSignIn : Effect
 }

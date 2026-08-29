@@ -274,8 +274,6 @@
     <string name="tracking_validation_content">Detecting vehicle connection…</string>
 
     <!-- Common -->
-    <string name="common_brand_kilo">Kilo</string>
-    <string name="common_brand_menos">Menos</string>
     <string name="common_processing">Processing&#8230;</string>
     <string name="common_fuel_consumption_format">%.1f L/100km</string>
     <string name="common_km_suffix">%1$s km</string>
@@ -286,43 +284,10 @@
     <string name="common_currency_format">€%.2f</string>
 
     <!-- Login -->
-    <string name="login_subtitle">Your command center for efficient driving</string>
-    <string name="login_email_label">Corporate or personal email</string>
-    <string name="login_email_placeholder">example@email.com</string>
-    <string name="login_email_error">Invalid email format</string>
-    <string name="login_password_error">Password must be at least 8 characters, and include at least one uppercase letter, one lowercase letter, one number, and one special character.</string>
-    <string name="login_password_label">Access password</string>
-    <string name="login_password_placeholder">••••••••</string>
-    <string name="login_divider_or"> OR </string>
-    <string name="login_google_button">Continue with Google</string>
-    <string name="login_button">Access</string>
-    <string name="login_create_account">New driver? Create an account</string>
-    <string name="login_conflict_title">Another driver detected</string>
-    <string name="login_conflict_message">This device contains data from another driver. To start your session, the previous information must be deleted.</string>
-    <string name="login_conflict_confirm">Delete and continue</string>
-    <string name="login_privacy_agreement">By logging in, you confirm you have read our %1$s and %2$s.</string>
 
     <!-- Error Messages -->
-    <string name="error_invalid_credentials">The email or password is incorrect.</string>
-    <string name="error_user_already_registered">This email address is already registered.</string>
-    <string name="error_weak_password">Password must be at least 8 characters, including uppercase, lowercase, numbers, and a special character.</string>
-    <string name="error_invalid_email">The email format is not valid.</string>
-    <string name="error_invalid_fuel_values">Expense values must be greater than 0.</string>
-    <string name="error_premium_only_feature">This feature is exclusive for PREMIUM users.</string>
-    <string name="error_expense_not_found">The expense record was not found.</string>
-    <string name="error_network">Could not connect to the server. Please check your connection.</string>
-    <string name="error_server">Server error (%1$d). Please try again later.</string>
-    <string name="error_unknown">An unexpected error occurred. Please try again.</string>
 
     <!-- Signup -->
-    <string name="signup_title">Driver Registration</string>
-    <string name="signup_subtitle">Join the community of efficient drivers</string>
-    <string name="signup_name_label">Full name</string>
-    <string name="signup_name_placeholder">e.g. John Doe</string>
-    <string name="signup_button">Sign Up</string>
-    <string name="signup_success_title">Registration successful!</string>
-    <string name="signup_success_message">Please check your email to confirm your account before signing in.</string>
-    <string name="signup_privacy_agreement">By signing up, you agree to our %1$s and %2$s.</string>
 
     <!-- Preferences UI Strings -->
     <string name="preferences_account_settings_title">ACCOUNT SETTINGS</string>

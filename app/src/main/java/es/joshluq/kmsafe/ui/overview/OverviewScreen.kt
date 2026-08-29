@@ -120,7 +120,7 @@ import es.joshluq.kmsafe.domain.model.RentingContract
 import es.joshluq.kmsafe.domain.model.SubscriptionLevel
 import es.joshluq.kmsafe.domain.model.TripProjection
 import es.joshluq.kmsafe.ui.common.components.AdMobBanner
-import es.joshluq.kmsafe.ui.common.components.BrandingLogo
+import es.joshluq.kmsafe.core.ui.components.BrandingLogo
 import es.joshluq.kmsafe.ui.overview.components.TrackingCard
 import es.joshluq.kmsafe.ui.overview.model.MonthlyUsageUiModel
 import es.joshluq.kmsafe.ui.util.DateUtils

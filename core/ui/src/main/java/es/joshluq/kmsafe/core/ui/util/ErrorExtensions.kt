@@ -1,7 +1,7 @@
-package es.joshluq.kmsafe.ui.util
+package es.joshluq.kmsafe.core.ui.util
 
 import es.joshluq.foundationkit.text.TextProvider
-import es.joshluq.kmsafe.R
+import es.joshluq.kmsafe.core.ui.R
 import es.joshluq.kmsafe.domain.model.KmError
 
 /**

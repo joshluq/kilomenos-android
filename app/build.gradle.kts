@@ -95,6 +95,7 @@ configure<ApplicationExtension> {
 
 dependencies {
     implementation(project(":feature:expenses"))
+    implementation(project(":feature:auth"))
     implementation(project(":core:ui"))
     implementation(project(":core:infrastructure"))
     implementation(project(":core:domain"))

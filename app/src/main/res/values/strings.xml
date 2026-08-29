@@ -273,8 +273,6 @@
     <string name="tracking_validation_content">Detectando conexión con vehículo…</string>
 
     <!-- Common -->
-    <string name="common_brand_kilo">Kilo</string>
-    <string name="common_brand_menos">Menos</string>
     <string name="common_processing">Procesando…</string>
     <string name="common_fuel_consumption_format">%.1f L/100km</string>
     <string name="common_km_suffix">%1$s km</string>
@@ -285,44 +283,11 @@
     <string name="common_currency_format">%.2f€</string>
 
     <!-- Login -->
-    <string name="login_subtitle">Tu centro de mando para una conducción eficiente</string>
-    <string name="login_email_label">Correo corporativo o personal</string>
-    <string name="login_email_placeholder">ejemplo@correo.com</string>
-    <string name="login_email_error">Formato de correo inválido</string>
-    <string name="login_password_error">La contraseña debe tener al menos 8 caracteres, e incluir al menos una letra mayúscula, una letra minúscula, un número y un carácter especial.</string>
-    <string name="login_password_label">Contraseña de acceso</string>
-    <string name="login_password_placeholder">••••••••</string>
-    <string name="login_divider_or"> O </string>
-    <string name="login_google_button">Continuar con Google</string>
-    <string name="login_button">Acceder</string>
-    <string name="login_create_account">¿Eres nuevo conductor? Crea una cuenta</string>
-    <string name="login_conflict_title">Otro conductor detectado</string>
-    <string name="login_conflict_message">Este dispositivo contiene datos de otro conductor. Para iniciar tu sesión, es necesario eliminar la información anterior.</string>
-    <string name="login_conflict_confirm">Borrar y continuar</string>
-    <string name="login_privacy_agreement">Al acceder, confirmas que has leído nuestros %1$s y %2$s.</string>
 
     <!-- Error Messages -->
-    <string name="error_invalid_credentials">El correo o la contraseña son incorrectos.</string>
-    <string name="error_user_already_registered">Este correo electrónico ya está registrado.</string>
-    <string name="error_weak_password">La contraseña debe tener al menos 8 caracteres, mayúsculas, minúsculas, números y un carácter especial.</string>
-    <string name="error_invalid_email">El formato del correo electrónico no es válido.</string>
-    <string name="error_invalid_fuel_values">Los valores del gasto deben ser mayores a 0.</string>
-    <string name="error_premium_only_feature">Esta función es exclusiva para usuarios PREMIUM.</string>
-    <string name="error_expense_not_found">El registro de gasto no se ha encontrado.</string>
-    <string name="error_network">No se pudo conectar con el servidor. Revisa tu conexión.</string>
-    <string name="error_server">Error en el servidor (%1$d). Inténtalo más tarde.</string>
-    <string name="error_unknown">Ha ocurrido un error inesperado. Por favor, inténtalo de nuevo.</string>
     <string name="overview_error_date_outside_contract">La fecha debe estar dentro del periodo de vigencia del contrato.</string>
 
     <!-- Signup -->
-    <string name="signup_title">Registro de Conductor</string>
-    <string name="signup_subtitle">Únete a la comunidad de conductores inteligentes</string>
-    <string name="signup_name_label">Nombre y apellidos</string>
-    <string name="signup_name_placeholder">Ej. Juan Pérez</string>
-    <string name="signup_button">Registrarse</string>
-    <string name="signup_success_title">¡Registro exitoso!</string>
-    <string name="signup_success_message">Por favor, verifica tu correo electrónico para confirmar tu cuenta antes de iniciar sesión.</string>
-    <string name="signup_privacy_agreement">Al registrarte, aceptas nuestros %1$s y la %2$s.</string>
 
     <!-- Preferences UI Strings -->
     <string name="preferences_account_settings_title">AJUSTES DE CUENTA</string>

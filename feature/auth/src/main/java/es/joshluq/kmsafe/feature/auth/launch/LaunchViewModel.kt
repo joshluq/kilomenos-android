@@ -1,4 +1,4 @@
-package es.joshluq.kmsafe.ui.launch
+package es.joshluq.kmsafe.feature.auth.launch
 
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel

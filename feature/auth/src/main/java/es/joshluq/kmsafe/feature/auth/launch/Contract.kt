@@ -1,4 +1,4 @@
-package es.joshluq.kmsafe.ui.launch
+package es.joshluq.kmsafe.feature.auth.launch
 
 import es.joshluq.foundationkit.viewmodel.UiEffect
 import es.joshluq.foundationkit.viewmodel.UiEvent

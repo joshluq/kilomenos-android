@@ -1,4 +1,4 @@
-package es.joshluq.kmsafe.ui.login
+package es.joshluq.kmsafe.feature.auth.login
 
 import android.content.Context
 import androidx.lifecycle.viewModelScope
@@ -10,7 +10,7 @@ import es.joshluq.foundationkit.text.TextProvider
 import es.joshluq.foundationkit.usecase.FlowUseCase
 import es.joshluq.foundationkit.usecase.UseCase
 import es.joshluq.foundationkit.viewmodel.ScreenViewModel
-import es.joshluq.kmsafe.R
+import es.joshluq.kmsafe.feature.auth.R
 import es.joshluq.kmsafe.infrastructure.remote.auth.GoogleAuthManager
 import es.joshluq.kmsafe.infrastructure.util.DeviceFingerprintProvider
 import es.joshluq.kmsafe.domain.di.ClearLocalData
@@ -33,7 +33,7 @@ import es.joshluq.kmsafe.domain.usecase.SignInWithGoogleUseCase
 import es.joshluq.kmsafe.domain.usecase.SyncContractsUseCase
 import es.joshluq.kmsafe.domain.usecase.UpdatePreferencesUseCase
 import es.joshluq.kmsafe.domain.usecase.ValidateCredentialsUseCase
-import es.joshluq.kmsafe.ui.util.toText
+import es.joshluq.kmsafe.core.ui.util.toText
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch

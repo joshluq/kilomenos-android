@@ -1,12 +1,45 @@
 <resources>
+    <string name="common_brand_kilo">Kilo</string>
+    <string name="common_brand_menos">Menos</string>
+    <string name="error_invalid_credentials">The email or password is incorrect.</string>
+    <string name="error_user_already_registered">This email address is already registered.</string>
+    <string name="error_weak_password">Password must be at least 8 characters, including uppercase, lowercase, numbers, and a special character.</string>
+    <string name="error_invalid_email">The email format is not valid.</string>
+    <string name="error_network">Could not connect to the server. Please check your connection.</string>
+    <string name="error_server">Server error (%1$d). Please try again later.</string>
+    <string name="error_unknown">An unexpected error occurred. Please try again.</string>
+    <string name="error_invalid_fuel_values">Expense values must be greater than 0.</string>
+    <string name="error_premium_only_feature">This feature is exclusive for PREMIUM users.</string>
+    <string name="error_expense_not_found">The expense record was not found.</string>
+
+    <!-- Accessibility -->
+    <string name="acc_back">Back</string>
+    <string name="acc_add_vehicle">Add vehicle</string>
+    <string name="acc_edit_contract">Edit contract</string>
+    <string name="acc_delete_vehicle">Delete vehicle</string>
+    <string name="acc_vehicle_info">Vehicle information</string>
+    <string name="acc_upgrade_premium">Get Premium</string>
+    <string name="acc_open_menu">Open menu</string>
+    <string name="acc_chart_help">Chart help</string>
+    <string name="acc_sync_pending">Sync pending</string>
+    <string name="acc_locked">Locked</string>
+    <string name="acc_crop_image">Crop image</string>
+    <string name="acc_close">Close</string>
+    <string name="acc_scan_odometer">Scan odometer</string>
+
+    <!-- Profile (Shared) -->
+    <string name="profile_logout_cancel">Cancel</string>
+    <string name="profile_privacy_policy">Privacy Policy</string>
+    <string name="profile_terms_conditions">Terms and Conditions</string>
+
     <!-- Fuel Types -->
     <string name="fuel_type_gasoline_95">Gasoline 95</string>
     <string name="fuel_type_gasoline_98">Gasoline 98</string>
     <string name="fuel_type_diesel">Diesel</string>
-    <string name="fuel_type_diesel_plus">Diesel Plus</string>
-    <string name="fuel_type_lpg">LPG / Autogas</string>
+    <string name="fuel_type_diesel_plus">Diesel+</string>
+    <string name="fuel_type_lpg">LPG</string>
     <string name="fuel_type_cng">CNG</string>
-    <string name="fuel_type_electric">Electric Charge</string>
+    <string name="fuel_type_electric">Electric (kWh)</string>
     <string name="fuel_type_hybrid">Plug-in Hybrid</string>
     <string name="fuel_type_hydrogen">Hydrogen</string>
     <string name="fuel_type_biodiesel">Biodiesel</string>

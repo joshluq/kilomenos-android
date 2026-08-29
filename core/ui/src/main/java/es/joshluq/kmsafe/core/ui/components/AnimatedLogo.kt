@@ -1,4 +1,4 @@
-package es.joshluq.kmsafe.ui.common.components
+package es.joshluq.kmsafe.core.ui.components
 
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
@@ -19,10 +19,6 @@ import es.joshluq.canvaskit.foundations.theme.CanvasKitTheme
 /**
  * A specialized component that draws the KiloMenos "Intelligent Path" logo
  * with a high-end drawing animation.
- *
- * @param modifier Root layout modifier.
- * @param logoSize Side dimension of the logo.
- * @param animationDuration Duration of the drawing effect in milliseconds.
  */
 @Composable
 fun AnimatedLogo(

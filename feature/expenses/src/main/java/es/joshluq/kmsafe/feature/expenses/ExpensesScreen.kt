@@ -628,7 +628,7 @@ private fun ConsumptionBadge(
     isSecondary: Boolean = false
 ) {
     Surface(
-        shape = androidx.compose.foundation.shape.RoundedCornerShape(20.dp),
+        shape = RoundedCornerShape(20.dp),
         color = if (isSecondary) {
             CanvasKitTheme.colors.backgroundSecondary
         } else {

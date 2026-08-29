@@ -7,6 +7,9 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navDeepLink
 import androidx.navigation.toRoute
+import es.joshluq.kmsafe.feature.auth.launch.LaunchRoute
+import es.joshluq.kmsafe.feature.auth.login.LoginRoute
+import es.joshluq.kmsafe.feature.auth.signup.SignupRoute
 import es.joshluq.kmsafe.feature.expenses.ExpensesRoute
 import es.joshluq.kmsafe.feature.expenses.stations.StationManagementRoute
 import es.joshluq.kmsafe.feature.expenses.stations.detail.StationDetailRoute
@@ -15,8 +18,6 @@ import es.joshluq.kmsafe.ui.common.permissions.AutoTrackingPermissionsScreen
 import es.joshluq.kmsafe.ui.dashboard.DashboardRoute
 import es.joshluq.kmsafe.ui.datamanagement.DataManagementRoute
 import es.joshluq.kmsafe.ui.history.detail.RecordDetailRoute
-import es.joshluq.kmsafe.ui.launch.LaunchRoute
-import es.joshluq.kmsafe.ui.login.LoginRoute
 import es.joshluq.kmsafe.ui.premium.PremiumPaywallRoute
 import es.joshluq.kmsafe.ui.profile.preferences.PreferencesRoute
 import es.joshluq.kmsafe.ui.profile.vehicles.VehicleListRoute
@@ -24,7 +25,6 @@ import es.joshluq.kmsafe.ui.renting.detail.VehicleDetailRoute
 import es.joshluq.kmsafe.ui.renting.edit.EditContractRoute
 import es.joshluq.kmsafe.ui.renting.setup.SetupWizardRoute
 import es.joshluq.kmsafe.ui.renting.setup.WelcomeDiscoveryScreen
-import es.joshluq.kmsafe.ui.signup.SignupRoute
 
 @Composable
 fun AppNavigation(

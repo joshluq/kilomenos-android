@@ -1,12 +1,10 @@
-package es.joshluq.kmsafe.ui.login
+package es.joshluq.kmsafe.feature.auth.signup
 
 import android.content.res.Configuration
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -20,12 +18,13 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Badge
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
@@ -37,7 +36,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.LocalUriHandler
@@ -52,7 +50,6 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import es.joshluq.canvaskit.components.buttons.CanvasKitButton
-import es.joshluq.canvaskit.components.buttons.CanvasKitButtonVariant
 import es.joshluq.canvaskit.components.cards.CanvasKitCard
 import es.joshluq.canvaskit.components.feedback.CanvasKitAlertVariant
 import es.joshluq.canvaskit.components.feedback.CanvasKitBanner
@@ -60,47 +57,47 @@ import es.joshluq.canvaskit.components.feedback.CanvasKitConfirmDialog
 import es.joshluq.canvaskit.components.inputs.CanvasKitTextField
 import es.joshluq.canvaskit.components.layout.CanvasKitLoadingScaffold
 import es.joshluq.canvaskit.components.layout.CanvasKitLoadingStrategy
+import es.joshluq.canvaskit.components.navigation.CanvasKitTopBar
 import es.joshluq.canvaskit.components.text.CanvasKitRichText
 import es.joshluq.canvaskit.foundations.theme.CanvasKitTheme
-import es.joshluq.kmsafe.BuildConfig
-import es.joshluq.kmsafe.R
-import es.joshluq.kmsafe.ui.login.components.BrandingSection
+import es.joshluq.kmsafe.feature.auth.BuildConfig
+import es.joshluq.kmsafe.feature.auth.R
+import es.joshluq.kmsafe.core.ui.R as CoreR
+import es.joshluq.kmsafe.feature.auth.login.components.BrandingSection
 import es.joshluq.kmsafe.core.ui.util.safeClick
 import kotlinx.coroutines.flow.Flow
 
 @Composable
-fun LoginRoute(
+fun SignupRoute(
+    onNavigateBack: () -> Unit,
     onNavigateToDashboard: () -> Unit,
+    onNavigateToWelcomeDiscovery: () -> Unit,
     onNavigateToPremiumPaywall: () -> Unit,
-    onNavigateToSignup: () -> Unit,
-    viewModel: LoginViewModel = hiltViewModel()
+    viewModel: SignupViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
-    val context = LocalContext.current
 
-    LoginScreen(
+    SignupScreen(
         state = state,
         effects = viewModel.effects,
         onEvent = viewModel::sendEvent,
+        onNavigateBack = onNavigateBack,
         onNavigateToDashboard = onNavigateToDashboard,
-        onNavigateToPremiumPaywall = onNavigateToPremiumPaywall,
-        onNavigateToSignup = onNavigateToSignup,
-        onTriggerGoogleSignIn = {
-            viewModel.triggerGoogleSignIn(context)
-        }
+        onNavigateToWelcomeDiscovery = onNavigateToWelcomeDiscovery,
+        onNavigateToPremiumPaywall = onNavigateToPremiumPaywall
     )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun LoginScreen(
+fun SignupScreen(
     state: State,
     effects: Flow<Effect>? = null,
     onEvent: (Event) -> Unit,
+    onNavigateBack: () -> Unit,
     onNavigateToDashboard: () -> Unit,
-    onNavigateToPremiumPaywall: () -> Unit,
-    onNavigateToSignup: () -> Unit,
-    onTriggerGoogleSignIn: () -> Unit = {}
+    onNavigateToWelcomeDiscovery: () -> Unit,
+    onNavigateToPremiumPaywall: () -> Unit
 ) {
     val uriHandler = LocalUriHandler.current
     val focusManager = LocalFocusManager.current
@@ -109,35 +106,53 @@ fun LoginScreen(
     LaunchedEffect(effects) {
         effects?.collect { effect ->
             when (effect) {
+                Effect.NavigateBack -> onNavigateBack()
                 Effect.NavigateToDashboard -> onNavigateToDashboard()
+                Effect.NavigateToWelcomeDiscovery -> onNavigateToWelcomeDiscovery()
                 Effect.NavigateToPremiumPaywall -> onNavigateToPremiumPaywall()
-                Effect.TriggerGoogleSignIn -> onTriggerGoogleSignIn()
             }
         }
     }
 
     CanvasKitLoadingScaffold(
-        isLoading = false, // Disable global overlay
+        isLoading = false,
         loadingStrategy = CanvasKitLoadingStrategy.OverlayFullscreen,
-        containerColor = CanvasKitTheme.colors.backgroundSecondary,
-        contentWindowInsets = WindowInsets()
+        topBar = {
+            CanvasKitTopBar(
+                title = {
+                    Text(
+                        text = stringResource(R.string.signup_title),
+                        style = CanvasKitTheme.typography.headingMedium,
+                        color = CanvasKitTheme.colors.textPrimary
+                    )
+                },
+                navigationIcon = {
+                    IconButton(
+                        onClick = safeClick {
+                            keyboardController?.hide()
+                            onNavigateBack()
+                        }
+                    ) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = stringResource(CoreR.string.acc_back),
+                            tint = CanvasKitTheme.colors.textPrimary
+                        )
+                    }
+                },
+                centeredTitle = true
+            )
+        },
+        containerColor = CanvasKitTheme.colors.backgroundSecondary
     ) { innerPadding ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-        ) {
+        Box(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
                     .verticalScroll(rememberScrollState()),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                BrandingSection(
-                    modifier = Modifier.fillMaxWidth(),
-                    subtitle = stringResource(R.string.login_subtitle),
-                    topPadding = true
-                )
+                BrandingSection(subtitle = stringResource(R.string.signup_subtitle))
 
                 Column(
                     modifier = Modifier
@@ -154,6 +169,26 @@ fun LoginScreen(
                                 verticalArrangement = Arrangement.spacedBy(CanvasKitTheme.spacing.md)
                             ) {
                                 CanvasKitTextField(
+                                    value = state.name,
+                                    onValueChange = { onEvent(Event.OnNameChanged(it)) },
+                                    label = stringResource(R.string.signup_name_label),
+                                    placeholder = stringResource(R.string.signup_name_placeholder),
+                                    leadingIcon = {
+                                        Icon(
+                                            imageVector = Icons.Default.Badge,
+                                            contentDescription = null,
+                                            tint = CanvasKitTheme.colors.brandAccent,
+                                            modifier = Modifier.size(20.dp)
+                                        )
+                                    },
+                                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+                                    keyboardActions = KeyboardActions(
+                                        onNext = { focusManager.moveFocus(FocusDirection.Next) }
+                                    ),
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+
+                                CanvasKitTextField(
                                     value = state.email,
                                     onValueChange = { onEvent(Event.OnEmailChanged(it)) },
                                     label = stringResource(R.string.login_email_label),
@@ -163,7 +198,7 @@ fun LoginScreen(
                                     leadingIcon = {
                                         Icon(
                                             imageVector = Icons.Default.Email,
-                                            contentDescription = stringResource(R.string.login_email_label),
+                                            contentDescription = null,
                                             tint = CanvasKitTheme.colors.brandAccent,
                                             modifier = Modifier.size(20.dp)
                                         )
@@ -172,12 +207,10 @@ fun LoginScreen(
                                         keyboardType = KeyboardType.Email,
                                         imeAction = ImeAction.Next
                                     ),
-                                    keyboardActions = KeyboardActions(onNext = {
-                                        focusManager.moveFocus(
-                                            FocusDirection.Next
-                                        )
-                                    }),
-                                    modifier = Modifier.fillMaxWidth()
+                                    keyboardActions = KeyboardActions(
+                                        onNext = { focusManager.moveFocus(FocusDirection.Next) }
+                                    ),
+                                    modifier = Modifier.fillMaxWidth().testTag("signup_email_input")
                                 )
 
                                 CanvasKitTextField(
@@ -185,11 +218,13 @@ fun LoginScreen(
                                     onValueChange = { onEvent(Event.OnPasswordChanged(it)) },
                                     label = stringResource(R.string.login_password_label),
                                     placeholder = stringResource(R.string.login_password_placeholder),
+                                    errorText = state.passwordError?.asString(),
+                                    isError = state.passwordError != null,
                                     visualTransformation = if (state.isPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                                     leadingIcon = {
                                         Icon(
                                             imageVector = Icons.Default.Lock,
-                                            contentDescription = stringResource(R.string.login_password_label),
+                                            contentDescription = null,
                                             tint = CanvasKitTheme.colors.brandAccent,
                                             modifier = Modifier.size(20.dp)
                                         )
@@ -198,9 +233,7 @@ fun LoginScreen(
                                         IconButton(onClick = { onEvent(Event.OnTogglePasswordVisibility) }) {
                                             Icon(
                                                 imageVector = if (state.isPasswordVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
-                                                contentDescription = stringResource(
-                                                    if (state.isPasswordVisible) R.string.acc_close else R.string.acc_open_menu
-                                                ),
+                                                contentDescription = null,
                                                 tint = CanvasKitTheme.colors.textSecondary
                                             )
                                         }
@@ -212,54 +245,26 @@ fun LoginScreen(
                                     keyboardActions = KeyboardActions(onDone = {
                                         keyboardController?.hide()
                                         focusManager.clearFocus()
-                                        if (state.isLoginEnabled) onEvent(Event.OnLoginClicked)
+                                        if (state.isSignupEnabled) onEvent(Event.OnSignupClicked)
                                     }),
                                     modifier = Modifier.fillMaxWidth()
                                 )
 
                                 CanvasKitButton(
-                                    text = stringResource(R.string.login_button),
+                                    text = stringResource(R.string.signup_button),
                                     onClick = {
                                         keyboardController?.hide()
                                         focusManager.clearFocus()
-                                        onEvent(Event.OnLoginClicked)
+                                        onEvent(Event.OnSignupClicked)
                                     },
-                                    enabled = state.isLoginEnabled,
+                                    enabled = state.isSignupEnabled,
                                     loading = state.isLoading,
-                                    modifier = Modifier.fillMaxWidth()
+                                    modifier = Modifier.fillMaxWidth().testTag("signup_submit_button")
                                 )
 
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    HorizontalDivider(
-                                        modifier = Modifier.weight(1f),
-                                        color = CanvasKitTheme.colors.borderSubtle
-                                    )
-                                    Text(
-                                        text = stringResource(R.string.login_divider_or),
-                                        modifier = Modifier.padding(horizontal = 16.dp),
-                                        style = CanvasKitTheme.typography.labelSmall,
-                                        color = CanvasKitTheme.colors.textSecondary
-                                    )
-                                    HorizontalDivider(
-                                        modifier = Modifier.weight(1f),
-                                        color = CanvasKitTheme.colors.borderSubtle
-                                    )
-                                }
-
-                                CanvasKitButton(
-                                    text = stringResource(R.string.login_google_button),
-                                    icon = Icons.Default.Email, // Icon should be Google but keeping it simple for now
-                                    onClick = {
-                                        keyboardController?.hide()
-                                        focusManager.clearFocus()
-                                        onEvent(Event.OnGoogleSignInClicked)
-                                    },
-                                    variant = CanvasKitButtonVariant.Secondary,
-                                    modifier = Modifier.fillMaxWidth().testTag("google_login_button"),
-                                    enabled = !state.isLoading
+                                PrivacyPolicyLink(
+                                    onTermsClick = { uriHandler.openUri(BuildConfig.TERMS_URL) },
+                                    onPrivacyClick = { uriHandler.openUri(BuildConfig.PRIVACY_URL) }
                                 )
                             }
 
@@ -275,33 +280,11 @@ fun LoginScreen(
                             }
                         }
                     }
-
-                    Spacer(modifier = Modifier.height(32.dp))
-
-                    CanvasKitButton(
-                        text = stringResource(R.string.login_create_account),
-                        enabled = !state.isLoading,
-                        variant = CanvasKitButtonVariant.Ghost,
-                        onClick = safeClick {
-                            keyboardController?.hide()
-                            focusManager.clearFocus()
-                            onNavigateToSignup()
-                        },
-                        modifier = Modifier.testTag("signup_link")
-                    )
-
-                    Spacer(modifier = Modifier.height(24.dp))
-
-                    LegalFooter(
-                        onTermsClick = { uriHandler.openUri(BuildConfig.TERMS_URL) },
-                        onPrivacyClick = { uriHandler.openUri(BuildConfig.PRIVACY_URL) }
-                    )
-
                     Spacer(modifier = Modifier.height(24.dp))
                 }
             }
 
-            // Toast-style Banner (Error)
+            // Toast-style Banner
             CanvasKitBanner(
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
@@ -320,8 +303,12 @@ fun LoginScreen(
                 title = stringResource(R.string.login_conflict_title),
                 message = stringResource(R.string.login_conflict_message),
                 confirmText = stringResource(R.string.login_conflict_confirm),
-                cancelText = stringResource(R.string.profile_logout_cancel),
-                onConfirm = { onEvent(Event.OnConfirmUserConflict) },
+                cancelText = stringResource(CoreR.string.profile_logout_cancel),
+                onConfirm = {
+                    keyboardController?.hide()
+                    focusManager.clearFocus()
+                    onEvent(Event.OnConfirmUserConflict)
+                },
                 onDismissRequest = { onEvent(Event.OnDismissUserConflict) },
                 isDestructive = true
             )
@@ -330,13 +317,13 @@ fun LoginScreen(
 }
 
 @Composable
-private fun LegalFooter(
+private fun PrivacyPolicyLink(
     onTermsClick: () -> Unit,
     onPrivacyClick: () -> Unit
 ) {
-    val termsText = stringResource(R.string.profile_terms_conditions)
-    val privacyText = stringResource(R.string.profile_privacy_policy)
-    val fullString = stringResource(R.string.login_privacy_agreement, termsText, privacyText)
+    val termsText = stringResource(CoreR.string.profile_terms_conditions)
+    val privacyText = stringResource(CoreR.string.profile_privacy_policy)
+    val fullString = stringResource(R.string.signup_privacy_agreement, termsText, privacyText)
 
     // Splitting the string to maintain i18n while using the RichText DSL
     val parts = fullString.split(termsText, privacyText)
@@ -357,17 +344,19 @@ private fun LegalFooter(
 @Preview(uiMode = Configuration.UI_MODE_NIGHT_YES or Configuration.UI_MODE_TYPE_NORMAL)
 @Preview
 @Composable
-internal fun LoginScreenPreview() {
+fun SignupScreenPreview() {
     CanvasKitTheme {
-        LoginScreen(
+        SignupScreen(
             state = State(
-                email = "josh@kmsafe.es",
-                isLoginEnabled = true
+                name = "Juan Pérez",
+                email = "juan@example.com",
+                isSignupEnabled = true
             ),
             onEvent = {},
+            onNavigateBack = {},
             onNavigateToDashboard = {},
-            onNavigateToPremiumPaywall = {},
-            onNavigateToSignup = {}
+            onNavigateToWelcomeDiscovery = {},
+            onNavigateToPremiumPaywall = {}
         )
     }
 }

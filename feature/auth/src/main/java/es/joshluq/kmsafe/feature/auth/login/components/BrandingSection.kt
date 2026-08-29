@@ -1,4 +1,4 @@
-package es.joshluq.kmsafe.ui.login.components
+package es.joshluq.kmsafe.feature.auth.login.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
@@ -14,7 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import es.joshluq.canvaskit.foundations.theme.CanvasKitTheme
-import es.joshluq.kmsafe.ui.common.components.BrandingLogo
+import es.joshluq.kmsafe.core.ui.components.BrandingLogo
 
 /**
  * A reusable branding header for the onboarding and authentication screens.
