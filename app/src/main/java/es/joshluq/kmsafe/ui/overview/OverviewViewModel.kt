@@ -242,17 +242,21 @@ class OverviewViewModel @Inject constructor(
                 updateState { copy(showBluetoothSuggestionBanner = false) }
                 launchEffect(Effect.NavigateToOnboarding(event.id, isEdit = true))
             }
-            Event.OnUpdateOdometerClicked -> updateState {
-                copy(
-                    showBottomSheet = true,
-                    newOdometerValue = "",
-                    newRecordLabel = "",
-                    newRecordFuel = "",
-                    newRecordDate = normalizeToUtc00(System.currentTimeMillis()),
-                    newRecordDateError = null,
-                    currentRoutePolyline = null,
-                    currentPointCount = 0
-                )
+            Event.OnUpdateOdometerClicked -> {
+                val initialDate = normalizeToUtc00(System.currentTimeMillis())
+                val isValid = validateRecordDate(initialDate)
+                updateState {
+                    copy(
+                        showBottomSheet = true,
+                        newOdometerValue = "",
+                        newRecordLabel = "",
+                        newRecordFuel = "",
+                        newRecordDate = initialDate,
+                        newRecordDateError = if (isValid) null else TextProvider.Resource(R.string.overview_error_date_outside_contract),
+                        currentRoutePolyline = null,
+                        currentPointCount = 0
+                    )
+                }
             }
             Event.OnBottomSheetDismissed -> updateState { copy(showBottomSheet = false) }
             Event.OnDismissProjectionBanner -> updateState { copy(showProjectionBanner = false) }
@@ -369,7 +373,12 @@ class OverviewViewModel @Inject constructor(
     }
 
     private fun handleSaveRecord(timestamp: Long) {
-        if (!validateRecordDate(timestamp)) return
+        if (!validateRecordDate(timestamp)) {
+            updateState {
+                copy(newRecordDateError = TextProvider.Resource(R.string.overview_error_date_outside_contract))
+            }
+            return
+        }
 
         val odometerValue = state.value.newOdometerValue.replace(',', '.').toDoubleOrNull() ?: return
         val label = state.value.newRecordLabel.takeIf { it.isNotBlank() }
