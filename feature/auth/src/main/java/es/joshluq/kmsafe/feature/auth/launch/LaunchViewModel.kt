@@ -16,6 +16,7 @@ import es.joshluq.kmsafe.domain.usecase.SignOutUseCase
 import es.joshluq.kmsafe.domain.usecase.SyncContractsUseCase
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
@@ -85,37 +86,31 @@ class LaunchViewModel @Inject constructor(
     }
 
     private fun fetchInitialData() {
-        val fingerprint = fingerprintProvider.getFingerprint()
+        viewModelScope.launch {
+            val fingerprint = fingerprintProvider.getFingerprint()
 
-        // 1. Fetch Entitlements FIRST
-        getEntitlementsUseCase(GetEntitlementsUseCase.Input(fingerprint, forceRefresh = true))
-            .onEach { output ->
-                when (output) {
-                    is GetEntitlementsUseCase.Output.Success -> {
-                        logger.d("LaunchViewModel", "Entitlements sync finished. Starting contract sync.")
-                        // 2. Fetch Contracts SECOND
-                        fetchContracts()
-                    }
-                    is GetEntitlementsUseCase.Output.Failure -> {
-                        logger.e("LaunchViewModel", "Entitlements sync failed: ${output.message}")
-                        fetchContracts() // Proceed anyway to allow local-first access
-                    }
-                }
-            }.launchIn(viewModelScope)
-    }
+            // 1. Fetch Entitlements FIRST (Linearized)
+            try {
+                getEntitlementsUseCase(GetEntitlementsUseCase.Input(fingerprint, forceRefresh = true))
+                    .first() // We take the first terminal emission
+                logger.d("LaunchViewModel", "Entitlements sync finished.")
+            } catch (e: Exception) {
+                logger.e("LaunchViewModel", "Entitlements sync failed: ${e.message}")
+            }
 
-    private fun fetchContracts() {
-        syncContractsUseCase(SyncContractsUseCase.Input)
-            .onEach { syncOutput ->
-                when (syncOutput) {
-                    SyncContractsUseCase.Output.Progress -> Unit
-                    is SyncContractsUseCase.Output.Failure,
-                    SyncContractsUseCase.Output.Success -> {
-                        logger.d("LaunchViewModel", "Initial data sync finished, navigating to Dashboard")
-                        delay(500.milliseconds)
-                        launchEffect(LaunchEffect.NavigateToDashboard)
-                    }
-                }
-            }.launchIn(viewModelScope)
+            // 2. Fetch Contracts SECOND (Linearized)
+            try {
+                syncContractsUseCase(SyncContractsUseCase.Input)
+                    .first { it !is SyncContractsUseCase.Output.Progress }
+                logger.d("LaunchViewModel", "Initial data sync finished.")
+            } catch (e: Exception) {
+                logger.e("LaunchViewModel", "Contract sync failed: ${e.message}")
+            }
+
+            // 3. Final Navigation (Guaranteed once)
+            logger.d("LaunchViewModel", "Linear startup finished, navigating to Dashboard")
+            delay(500.milliseconds)
+            launchEffect(LaunchEffect.NavigateToDashboard)
+        }
     }
 }
