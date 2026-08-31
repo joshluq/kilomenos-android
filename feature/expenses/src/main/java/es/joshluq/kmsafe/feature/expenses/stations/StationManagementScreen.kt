@@ -215,8 +215,8 @@ fun StationManagementScreen(
                         else onEvent(StationManagementEvent.OnLocationCaptured(0.0, 0.0))
                     },
                     onDismiss = { onEvent(StationManagementEvent.OnDismissEdit) },
-                    onSave = { name, brand, address ->
-                        onEvent(StationManagementEvent.OnSaveStation(state.selectedStation?.id, name, brand, address))
+                    onSave = { name, brand ->
+                        onEvent(StationManagementEvent.OnSaveStation(state.selectedStation?.id, name, brand))
                     }
                 )
             }
@@ -299,15 +299,6 @@ private fun StationItemCard(
                     style = CanvasKitTheme.typography.labelLarge,
                     color = CanvasKitTheme.colors.brandAccent
                 )
-                if (station.address.isNotBlank()) {
-                    Text(
-                        text = station.address,
-                        style = CanvasKitTheme.typography.labelSmall,
-                        color = CanvasKitTheme.colors.textSecondary,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                }
             }
 
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -330,11 +321,10 @@ private fun EditStationBottomSheet(
     isLocationCaptured: Boolean,
     onLocationToggle: (Boolean) -> Unit,
     onDismiss: () -> Unit,
-    onSave: (name: String, brand: String, address: String) -> Unit
+    onSave: (name: String, brand: String) -> Unit
 ) {
     var name by remember { mutableStateOf(station?.name ?: "") }
     var brand by remember { mutableStateOf(station?.brand ?: "") }
-    var address by remember { mutableStateOf(station?.address ?: "") }
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -363,6 +353,7 @@ private fun EditStationBottomSheet(
                 label = stringResource(R.string.stations_field_name),
                 value = name,
                 onValueChange = { name = it },
+                placeholder = stringResource(R.string.stations_field_name_placeholder),
                 modifier = Modifier.fillMaxWidth()
             )
 
@@ -370,13 +361,7 @@ private fun EditStationBottomSheet(
                 label = stringResource(R.string.stations_field_brand),
                 value = brand,
                 onValueChange = { brand = it },
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            CanvasKitTextField(
-                label = stringResource(R.string.stations_field_address),
-                value = address,
-                onValueChange = { address = it },
+                placeholder = stringResource(R.string.stations_field_brand_placeholder),
                 modifier = Modifier.fillMaxWidth()
             )
 
@@ -430,7 +415,7 @@ private fun EditStationBottomSheet(
 
             CanvasKitButton(
                 text = stringResource(R.string.stations_action_save),
-                onClick = safeClick { onSave(name, brand, address) },
+                onClick = safeClick { onSave(name, brand) },
                 enabled = !isSaving && name.isNotBlank() && brand.isNotBlank(),
                 loading = isSaving,
                 modifier = Modifier.fillMaxWidth()

@@ -256,8 +256,11 @@ fun ExpensesScreen(
             if (state.isAddExpenseSheetOpen) {
                 AddExpenseBottomSheet(
                     currentOdometer = state.currentOdometer,
+                    vehicleFuelType = state.vehicleFuelType,
                     lastUsedFuelType = state.lastUsedFuelType,
                     lastUnitPrice = state.lastUnitPrice,
+                    lastGasolinePrice = state.lastGasolinePrice,
+                    lastElectricPrice = state.lastElectricPrice,
                     initialStationId = state.initialStationId,
                     isSaving = state.isSaving,
                     stations = state.stations,

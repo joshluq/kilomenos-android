@@ -22,7 +22,7 @@ class GetElectrificationSavingsUseCase @Inject constructor(
 
     companion object {
         // Average benchmark: ~6.5L/100km for gasoline at standard average price
-        private const val BENCHMARK_GASOLINE_PRICE_PER_LITER = 1.65
+        private const val BENCHMARK_GASOLINE_PRICE_PER_LITER = 1.85
         private const val BENCHMARK_GASOLINE_LITERS_PER_100KM = 6.5
         // Benchmark EV: ~17 kWh/100km
         private const val BENCHMARK_EV_KWH_PER_100KM = 17.0

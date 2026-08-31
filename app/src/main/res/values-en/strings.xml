@@ -44,6 +44,11 @@
     <string name="premium_trial_offer_message">Start your 7-day trial today and unlock advanced features designed to save you time and money. No strings attached.</string>
     <string name="premium_trial_offer_confirm">Start 7-day trial</string>
     <string name="premium_trial_offer_cancel">Not now</string>
+
+    <!-- Preferences Auto-Tracking Trial -->
+    <string name="preferences_autotracking_trial_title">Try Auto-Tracking ⚡</string>
+    <string name="preferences_autotracking_trial_message">Enable automatic trip recording for free for 7 days. You can test the smart GPS accuracy with no commitment.</string>
+    <string name="preferences_autotracking_trial_confirm">Start free trial</string>
     <string name="premium_paywall_migrating_msg">Securing your data in the cloud&#8230;</string>
     <string name="premium_continue_free">Continue with free version</string>
     <string name="premium_limit_vehicle_title">Vehicle Limit</string>
@@ -252,9 +257,9 @@
     <string name="preferences_oss_description">KiloMenos is built thanks to the incredible work of the open source community. Below are the main libraries used:</string>
     <string name="preferences_oss_license_generic">License: Apache 2.0 / MIT</string>
     <string name="preferences_oss_license_label">License: %1$s</string>
-    <string name="preferences_auto_tracking_label">Automatic trip detection</string>
-    <string name="preferences_auto_tracking_desc">Automatically start GPS when entering a vehicle.</string>
-    <string name="preferences_auto_tracking_locked_desc">Automatic detection available only in Premium version.</string>
+    <string name="preferences_auto_tracking_label">Auto-Tracking</string>
+    <string name="preferences_auto_tracking_desc">Record your trips automatically without pressing any buttons.</string>
+    <string name="preferences_auto_tracking_locked_desc">Record your trips automatically without pressing any buttons.</string>
 
     <!-- Privacy & Legal (GDPR) -->
     <string name="profile_privacy_section">PRIVACY &amp; DATA</string>
@@ -318,14 +323,21 @@
     <string name="overview_permissions_step_location_desc">Allows recording the route even if the app is closed. You must select \"Allow all the time\" in settings.</string>
     <string name="overview_permissions_step_notifications_title">3. Notifications</string>
     <string name="overview_permissions_step_notifications_desc">Allows showing the real-time tracking status in your status bar.</string>
+    <string name="overview_permissions_step_bluetooth_title">4. Bluetooth Connectivity</string>
+    <string name="overview_permissions_step_bluetooth_desc">Allows validating that you are in your linked vehicle for better accuracy.</string>
     <string name="overview_permissions_button_continue">Continue</string>
     <string name="overview_permissions_button_settings">Go to Settings</string>
 
+    <!-- Bluetooth Validation Warning -->
+    <string name="vehicle_detail_bt_permission_warning_title">Bluetooth Permission Required</string>
+    <string name="vehicle_detail_bt_permission_warning_desc">You have linked this vehicle via Bluetooth, but we don\'t have permission to validate the connection. Auto-Tracking might be less accurate.</string>
+    <string name="vehicle_detail_bt_permission_warning_action">Grant Permission</string>
+
     <!-- Auto-Tracking Promotion -->
-    <string name="overview_promotion_autotracking_title">Simplify your trips! 🚗</string>
-    <string name="overview_promotion_autotracking_desc">Auto-Tracking is available for you. Forget about registering kilometers manually; the app will do it for you when it detects you are driving.</string>
-    <string name="overview_promotion_autotracking_confirm">Set up now</string>
-    <string name="overview_promotion_autotracking_dismiss">Not now, don\'t show again</string>
+    <string name="overview_promotion_autotracking_title">Auto-Tracking</string>
+    <string name="overview_promotion_autotracking_desc">Record your trips automatically without pressing any buttons.\n\n*This notice will not appear again.</string>
+    <string name="overview_promotion_autotracking_confirm">Activate</string>
+    <string name="overview_promotion_autotracking_dismiss">Skip</string>
 
     <!-- Welcome Discovery -->
     <string name="welcome_discovery_title">Welcome to KiloMenos</string>

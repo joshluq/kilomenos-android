@@ -196,7 +196,7 @@ class StationManagementViewModel @Inject constructor(
                 brand = event.brand,
                 latitude = state.value.currentLat ?: state.value.selectedStation?.latitude ?: 0.0,
                 longitude = state.value.currentLng ?: state.value.selectedStation?.longitude ?: 0.0,
-                address = event.address,
+                address = "",
                 isFavorite = state.value.selectedStation?.isFavorite ?: false
             )
         ).onEach { output ->

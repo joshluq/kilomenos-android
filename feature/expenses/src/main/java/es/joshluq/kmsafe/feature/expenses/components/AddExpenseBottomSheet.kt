@@ -76,15 +76,20 @@ import java.util.Locale
  * - **No notes field**: removed to reduce friction; can be added in a future edit flow.
  *
  * @param currentOdometer Pre-filled odometer from ExpensesState.
- * @param lastUsedFuelType Fuel type inferred from the most recent expense.
+ * @param vehicleFuelType The primary fuel type of the vehicle (determines if hybrid).
  * @param lastUnitPrice Unit price from the most recent expense of the same type.
+ * @param lastGasolinePrice Last price for combustion type (for hybrid switching).
+ * @param lastElectricPrice Last price for electric type (for hybrid switching).
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddExpenseBottomSheet(
     currentOdometer: Double = 0.0,
+    vehicleFuelType: FuelType = FuelType.GASOLINE_95,
     lastUsedFuelType: FuelType = FuelType.GASOLINE_95,
     lastUnitPrice: Double? = null,
+    lastGasolinePrice: Double? = null,
+    lastElectricPrice: Double? = null,
     initialStationId: String? = null,
     priceReportMode: Boolean = false,
     isSaving: Boolean = false,
@@ -121,9 +126,26 @@ fun AddExpenseBottomSheet(
         mutableStateOf(stations.find { it.id == initialStationId }) 
     }
     var stationNameInput by remember { mutableStateOf("") }
+    
+    // Hybrid state logic: 
+    // We determine if it's hybrid based on the vehicle's default fuel type, 
+    // but we pre-select the category based on what was last used.
+    val isHybrid = vehicleFuelType.category == EnergyCategory.HYBRID
+    var selectedHybridCategory by remember { 
+        mutableStateOf(
+            if (lastUsedFuelType.category == EnergyCategory.ELECTRIC) EnergyCategory.ELECTRIC 
+            else EnergyCategory.COMBUSTION
+        ) 
+    }
 
-    val unit = lastUsedFuelType.unitOfMeasure
-    val isElectric = lastUsedFuelType.category == EnergyCategory.ELECTRIC
+    val effectiveFuelType = when {
+        isHybrid && selectedHybridCategory == EnergyCategory.ELECTRIC -> FuelType.ELECTRIC_KWH
+        isHybrid && selectedHybridCategory == EnergyCategory.COMBUSTION -> FuelType.GASOLINE_95
+        else -> lastUsedFuelType
+    }
+
+    val unit = effectiveFuelType.unitOfMeasure
+    val isElectric = effectiveFuelType.category == EnergyCategory.ELECTRIC
 
     /** Normalizes comma-decimal input (e.g. "1,5" → "1.5") for consistent parsing. */
     fun String.normalizeDecimal() = this.replace(',', '.')
@@ -139,8 +161,13 @@ fun AddExpenseBottomSheet(
         label = "total_animation"
     )
 
-    // Price delta vs. last refuel
-    val priceDelta = if (lastUnitPrice != null && unitPrice > 0.0) unitPrice - lastUnitPrice else null
+    // Price delta vs. last refuel (Context-aware for Hybrid switching)
+    val effectiveLastPrice = when {
+        isHybrid && selectedHybridCategory == EnergyCategory.ELECTRIC -> lastElectricPrice
+        isHybrid && selectedHybridCategory == EnergyCategory.COMBUSTION -> lastGasolinePrice
+        else -> lastUnitPrice
+    }
+    val priceDelta = if (effectiveLastPrice != null && unitPrice > 0.0) unitPrice - effectiveLastPrice else null
 
     LaunchedEffect(Unit) { 
         if (priceReportMode) priceFocusRequester.requestFocus()
@@ -168,10 +195,12 @@ fun AddExpenseBottomSheet(
             ) {
                 Column {
                     Text(
-                        text = if (isElectric) {
-                            stringResource(R.string.expenses_sheet_title_ev)
-                        } else if (priceReportMode) {
+                        text = if (priceReportMode) {
                             stringResource(R.string.expenses_sheet_title_price_report)
+                        } else if (isHybrid) {
+                            stringResource(R.string.expenses_sheet_title_hybrid)
+                        } else if (isElectric) {
+                            stringResource(R.string.expenses_sheet_title_ev)
                         } else {
                             stringResource(R.string.expenses_sheet_title_fuel)
                         },
@@ -225,6 +254,38 @@ fun AddExpenseBottomSheet(
             }
 
             Spacer(modifier = Modifier.height(4.dp))
+
+            // Hybrid Selector
+            if (isHybrid) {
+                Column(verticalArrangement = Arrangement.spacedBy(CanvasKitTheme.spacing.xs)) {
+                    Text(
+                        text = stringResource(R.string.expenses_sheet_energy_type),
+                        style = CanvasKitTheme.typography.labelSmall,
+                        color = CanvasKitTheme.colors.textSecondary
+                    )
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        CanvasKitChip(
+                            selected = selectedHybridCategory == EnergyCategory.COMBUSTION,
+                            label = { Text(stringResource(R.string.expenses_sheet_energy_combustion)) },
+                            onClick = safeClick { 
+                                selectedHybridCategory = EnergyCategory.COMBUSTION
+                                unitPriceText = lastGasolinePrice?.let { String.format(Locale.getDefault(), "%.3f", it) } ?: ""
+                            },
+                            variant = CanvasKitChipVariant.Outlined
+                        )
+                        CanvasKitChip(
+                            selected = selectedHybridCategory == EnergyCategory.ELECTRIC,
+                            label = { Text(stringResource(R.string.expenses_sheet_energy_electric)) },
+                            onClick = safeClick { 
+                                selectedHybridCategory = EnergyCategory.ELECTRIC 
+                                unitPriceText = lastElectricPrice?.let { String.format(Locale.getDefault(), "%.3f", it) } ?: ""
+                            },
+                            variant = CanvasKitChipVariant.Outlined
+                        )
+                    }
+                }
+                Spacer(modifier = Modifier.height(4.dp))
+            }
 
             // ⓪ Station Selection
             Column(verticalArrangement = Arrangement.spacedBy(CanvasKitTheme.spacing.xs)) {
@@ -416,7 +477,7 @@ fun AddExpenseBottomSheet(
                 onClick = safeClick {
                     if (unitPrice > 0.0 && (priceReportMode || volume > 0.0)) {
                         onSave(
-                            lastUsedFuelType,
+                            effectiveFuelType,
                             unitPrice,
                             if (priceReportMode) 0.0 else volume,
                             if (priceReportMode) 0.0 else computedTotal,

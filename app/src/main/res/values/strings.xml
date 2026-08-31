@@ -44,6 +44,11 @@
     <string name="premium_trial_offer_message">Empieza hoy mismo tu periodo de prueba de 7 días y desbloquea funciones avanzadas diseñadas para ahorrarte tiempo y dinero. Sin compromisos.</string>
     <string name="premium_trial_offer_confirm">Empezar prueba de 7 días</string>
     <string name="premium_trial_offer_cancel">Ahora no</string>
+
+    <!-- Preferences Auto-Tracking Trial -->
+    <string name="preferences_autotracking_trial_title">Probar Auto-Tracking ⚡</string>
+    <string name="preferences_autotracking_trial_message">Activa el registro automático de viajes gratis durante 7 días. Podrás probar la precisión del GPS inteligente sin compromiso.</string>
+    <string name="preferences_autotracking_trial_confirm">Empezar prueba gratuita</string>
     <string name="premium_paywall_migrating_msg">Asegurando tus datos en la nube…</string>
     <string name="premium_continue_free">Continuar con la versión gratuita</string>
     <string name="premium_limit_vehicle_title">Límite de vehículos</string>
@@ -252,9 +257,9 @@
     <string name="preferences_oss_description">KiloMenos se construye gracias al increíble trabajo de la comunidad de código abierto. A continuación, se detallan las principales librerías utilizadas:</string>
     <string name="preferences_oss_license_generic">Licencia: Apache 2.0 / MIT</string>
     <string name="preferences_oss_license_label">Licencia: %1$s</string>
-    <string name="preferences_auto_tracking_label">Detección automática de viajes</string>
-    <string name="preferences_auto_tracking_desc">Inicia el GPS automáticamente al entrar en un vehículo.</string>
-    <string name="preferences_auto_tracking_locked_desc">Detección automática disponible solo en la versión Premium.</string>
+    <string name="preferences_auto_tracking_label">Auto-Tracking</string>
+    <string name="preferences_auto_tracking_desc">Registra tus viajes automáticamente sin pulsar ningún botón.</string>
+    <string name="preferences_auto_tracking_locked_desc">Registra tus viajes automáticamente sin pulsar ningún botón.</string>
 
     <!-- Privacy & Legal (GDPR) -->
     <string name="profile_privacy_section">PRIVACIDAD Y DATOS</string>
@@ -329,10 +334,10 @@
     <string name="vehicle_detail_bt_permission_warning_action">Conceder Permiso</string>
 
     <!-- Auto-Tracking Promotion -->
-    <string name="overview_promotion_autotracking_title">¡Simplifica tus viajes! 🚗</string>
-    <string name="overview_promotion_autotracking_desc">Tienes disponible el Seguimiento Automático. Olvida registrar tus kilómetros manualmente; la app lo hará por ti al detectar que conduces.</string>
-    <string name="overview_promotion_autotracking_confirm">Configurar ahora</string>
-    <string name="overview_promotion_autotracking_dismiss">Ahora no, no volver a mostrar</string>
+    <string name="overview_promotion_autotracking_title">Auto-Tracking</string>
+    <string name="overview_promotion_autotracking_desc">Registra tus viajes automáticamente sin pulsar ningún botón.\n\n*Este aviso no volverá a aparecer.</string>
+    <string name="overview_promotion_autotracking_confirm">Activar</string>
+    <string name="overview_promotion_autotracking_dismiss">Omitir</string>
 
     <!-- Welcome Discovery -->
     <string name="welcome_discovery_title">Bienvenido a KiloMenos</string>

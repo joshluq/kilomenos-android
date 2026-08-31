@@ -47,8 +47,7 @@ sealed interface StationManagementEvent : UiEvent {
     data class OnSaveStation(
         val id: String?,
         val name: String,
-        val brand: String,
-        val address: String
+        val brand: String
     ) : StationManagementEvent
     data object OnDismissError : StationManagementEvent
 }

@@ -38,8 +38,11 @@
     <!-- Add Expense Bottom Sheet -->
     <string name="expenses_sheet_title_ev">Log EV charge</string>
     <string name="expenses_sheet_title_fuel">Log refuel</string>
+    <string name="expenses_sheet_title_hybrid">Log expense (Hybrid)</string>
     <string name="expenses_sheet_title_price_report">Update price</string>
     <string name="expenses_sheet_energy_type">Energy type</string>
+    <string name="expenses_sheet_energy_combustion">Fuel</string>
+    <string name="expenses_sheet_energy_electric">Electricity</string>
     <string name="expenses_sheet_station_ev">Charging point / Provider</string>
     <string name="expenses_sheet_station_fuel">Service station (Repsol, Shell…)</string>
     <string name="expenses_sheet_price_ev">Price (€/kWh)</string>
@@ -85,7 +88,9 @@
     <string name="stations_location_toggle">I am at the station now</string>
     <string name="stations_location_toggle_desc">Enable to save your current location.</string>
     <string name="stations_field_name">Commercial name</string>
+    <string name="stations_field_name_placeholder">e.g. Repsol Paseo la Castellana</string>
     <string name="stations_field_brand">Brand</string>
+    <string name="stations_field_brand_placeholder">e.g. Repsol</string>
     <string name="stations_field_address">Address</string>
     <string name="stations_action_edit">Edit</string>
     <string name="stations_action_delete">Delete</string>

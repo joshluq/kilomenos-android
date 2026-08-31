@@ -59,6 +59,10 @@ data class ExpensesState(
     val lastUsedFuelType: FuelType = FuelType.GASOLINE_95,
     /** Unit price from the most recent expense of the same fuel type. Used to pre-fill the price field. */
     val lastUnitPrice: Double? = null,
+    /** Last price recorded for combustion (Gasoline/Diesel). */
+    val lastGasolinePrice: Double? = null,
+    /** Last price recorded for electricity. */
+    val lastElectricPrice: Double? = null,
     /** Consumption result to display in the post-save banner. Null when not yet available. */
     val consumptionBannerData: ConsumptionBannerData? = null,
     val showDeleteConfirmation: Boolean = false,

@@ -161,6 +161,17 @@ class ExpensesViewModel @Inject constructor(
                                 .filter { it.fuelType == derivedFuelType }
                                 .maxByOrNull { it.timestamp }
                                 ?.unitPrice
+
+                            val lastGasPrice = output.expenses
+                                .filter { it.fuelType.category == EnergyCategory.COMBUSTION }
+                                .maxByOrNull { it.timestamp }
+                                ?.unitPrice
+
+                            val lastElecPrice = output.expenses
+                                .filter { it.fuelType.category == EnergyCategory.ELECTRIC }
+                                .maxByOrNull { it.timestamp }
+                                ?.unitPrice
+
                             copy(
                                 isLoading = false,
                                 vehicleId = output.vehicleId,
@@ -176,7 +187,9 @@ class ExpensesViewModel @Inject constructor(
                                 recordsSinceLastRefuel = output.recordsSinceLastRefuel,
                                 vehicleFuelType = output.defaultFuelType,
                                 lastUsedFuelType = derivedFuelType,
-                                lastUnitPrice = lastPrice
+                                lastUnitPrice = lastPrice,
+                                lastGasolinePrice = lastGasPrice,
+                                lastElectricPrice = lastElecPrice
                             )
                         }
                         loadElectrificationSavings(output.vehicleId)

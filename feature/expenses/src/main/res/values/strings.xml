@@ -38,8 +38,11 @@
     <!-- Add Expense Bottom Sheet -->
     <string name="expenses_sheet_title_ev">Registrar carga eléctrica</string>
     <string name="expenses_sheet_title_fuel">Registrar repostaje</string>
+    <string name="expenses_sheet_title_hybrid">Registrar gasto (Híbrido)</string>
     <string name="expenses_sheet_title_price_report">Actualizar precio</string>
     <string name="expenses_sheet_energy_type">Tipo de energía</string>
+    <string name="expenses_sheet_energy_combustion">Combustible</string>
+    <string name="expenses_sheet_energy_electric">Electricidad</string>
     <string name="expenses_sheet_station_ev">Punto de carga / Proveedor</string>
     <string name="expenses_sheet_station_fuel">Estación de servicio (Repsol, Cepsa…)</string>
     <string name="expenses_sheet_price_ev">Precio (€/kWh)</string>
@@ -85,7 +88,9 @@
     <string name="stations_location_toggle">Estoy en la estación ahora</string>
     <string name="stations_location_toggle_desc">Activa para guardar tu ubicación actual.</string>
     <string name="stations_field_name">Nombre comercial</string>
+    <string name="stations_field_name_placeholder">Ej. Repsol Paseo la Castellana</string>
     <string name="stations_field_brand">Marca</string>
+    <string name="stations_field_brand_placeholder">Ej. Repsol</string>
     <string name="stations_field_address">Dirección</string>
     <string name="stations_action_edit">Editar</string>
     <string name="stations_action_delete">Eliminar</string>

@@ -192,11 +192,7 @@ fun PreferencesScreen(
 
                         PreferenceSwitchItem(
                             label = stringResource(R.string.preferences_auto_tracking_label),
-                            description = if (state.isUserPremium) {
-                                stringResource(R.string.preferences_auto_tracking_desc)
-                            } else {
-                                stringResource(R.string.preferences_auto_tracking_locked_desc)
-                            },
+                            description = stringResource(R.string.preferences_auto_tracking_desc),
                             checked = state.autoTrackingEnabled,
                             onCheckedChange = { onEvent(Event.OnAutoTrackingToggled(it)) },
                             enabled = state.isUserPremium || state.canStartTrial,
@@ -324,9 +320,9 @@ private fun TrialOfferDialog(
     onDismiss: () -> Unit
 ) {
     CanvasKitConfirmDialog(
-        title = stringResource(R.string.premium_trial_offer_title),
-        message = stringResource(R.string.premium_trial_offer_message),
-        confirmText = stringResource(R.string.premium_trial_offer_confirm),
+        title = stringResource(R.string.preferences_autotracking_trial_title),
+        message = stringResource(R.string.preferences_autotracking_trial_message),
+        confirmText = stringResource(R.string.preferences_autotracking_trial_confirm),
         cancelText = stringResource(R.string.premium_trial_offer_cancel),
         onConfirm = onConfirm,
         onDismissRequest = onDismiss,
