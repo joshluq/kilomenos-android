@@ -22,6 +22,7 @@ class ErrorMapper @Inject constructor() {
             errorMsg.contains("password", ignoreCase = true) && errorMsg.contains("characters", ignoreCase = true) -> KmError.WeakPassword
             errorMsg.contains("email", ignoreCase = true) && errorMsg.contains("format", ignoreCase = true) -> KmError.InvalidEmail
             errorMsg.contains("usuarios PREMIUM", ignoreCase = true) -> KmError.FuelExpensesPremiumOnly
+            errorMsg.contains("periodo de prueba", ignoreCase = true) -> KmError.TrialAlreadyUsed
             errorMsg.contains("no encontrado", ignoreCase = true) && errorMsg.contains("Gasto", ignoreCase = true) -> KmError.ExpenseNotFound
             response.code() >= 500 -> KmError.ServerError(response.code())
             else -> KmError.UnknownError

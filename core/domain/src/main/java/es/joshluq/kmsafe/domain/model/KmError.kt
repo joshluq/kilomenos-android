@@ -29,6 +29,9 @@ sealed interface KmError {
     /** The fuel expenses feature is only available for Premium or Trial users. */
     data object FuelExpensesPremiumOnly : KmError
 
+    /** The promotional trial period has already been used on this device. */
+    data object TrialAlreadyUsed : KmError
+
     /** The requested fuel expense entry was not found. */
     data object ExpenseNotFound : KmError
 

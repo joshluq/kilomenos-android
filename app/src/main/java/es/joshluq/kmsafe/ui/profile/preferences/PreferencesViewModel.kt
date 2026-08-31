@@ -5,10 +5,10 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import es.joshluq.analyticskit.domain.model.AnalyticsEvent
 import es.joshluq.analyticskit.sdk.AnalyticskitManager
 import es.joshluq.foundationkit.log.LoggerKit
-import es.joshluq.foundationkit.text.TextProvider
 import es.joshluq.foundationkit.usecase.FlowUseCase
 import es.joshluq.foundationkit.viewmodel.ScreenViewModel
 import es.joshluq.kmsafe.core.monetization.util.ConsentManager
+import es.joshluq.kmsafe.core.ui.util.toText
 import es.joshluq.kmsafe.domain.di.GetEntitlements
 import es.joshluq.kmsafe.domain.di.GetPreferences
 import es.joshluq.kmsafe.domain.di.StartAutoTracking
@@ -193,7 +193,7 @@ class PreferencesViewModel @Inject constructor(
                         updateState {
                             copy(
                                 isLoading = false,
-                                error = TextProvider.Dynamic(output.message)
+                                error = output.error.toText()
                             )
                         }
                     }

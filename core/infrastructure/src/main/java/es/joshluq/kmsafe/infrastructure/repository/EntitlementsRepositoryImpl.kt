@@ -1,6 +1,8 @@
 package es.joshluq.kmsafe.infrastructure.repository
 
 import es.joshluq.kmsafe.domain.model.AuthSessionState
+import es.joshluq.kmsafe.domain.model.KmException
+import es.joshluq.kmsafe.infrastructure.mapper.ErrorMapper
 import es.joshluq.kmsafe.infrastructure.mapper.toDomain
 import es.joshluq.kmsafe.infrastructure.remote.api.EntitlementsApiService
 import es.joshluq.kmsafe.infrastructure.remote.api.StartTrialRequest
@@ -30,7 +32,8 @@ import javax.inject.Singleton
 @Singleton
 class EntitlementsRepositoryImpl @Inject constructor(
     private val apiService: EntitlementsApiService,
-    private val authRepository: AuthRepository
+    private val authRepository: AuthRepository,
+    private val errorMapper: ErrorMapper
 ) : EntitlementsRepository {
 
     companion object {
@@ -83,13 +86,18 @@ class EntitlementsRepositoryImpl @Inject constructor(
      * @return Flow emitting the updated [Entitlements] reflecting the trial status.
      */
     override fun startTrial(deviceFingerprint: String): Flow<Entitlements> = flow {
-        runCatching {
-            val response = apiService.startTrial(StartTrialRequest(deviceFingerprint))
-            if (response.isSuccessful) {
-                val domainEntitlements = response.body()?.entitlements?.toDomain() ?: Entitlements.Default
+        val response = apiService.startTrial(StartTrialRequest(deviceFingerprint))
+        if (response.isSuccessful) {
+            val body = response.body()
+            if (body != null && body.success) {
+                val domainEntitlements = body.entitlements?.toDomain() ?: Entitlements.Default
                 authRepository.updateEntitlements(domainEntitlements)
                 lastFetchTime = System.currentTimeMillis()
+            } else {
+                throw KmException(errorMapper.mapApiResponse(response, body?.error))
             }
+        } else {
+            throw KmException(errorMapper.mapApiResponse(response))
         }
         emitAll(authRepository.getEntitlements())
     }

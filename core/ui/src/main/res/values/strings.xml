@@ -40,6 +40,7 @@
     <string name="error_unknown">Ha ocurrido un error inesperado. Por favor, inténtalo de nuevo.</string>
     <string name="error_invalid_fuel_values">Los valores del gasto deben ser mayores a 0.</string>
     <string name="error_premium_only_feature">Esta función es exclusiva para usuarios PREMIUM.</string>
+    <string name="error_trial_already_used">El periodo de prueba ya ha sido utilizado en este dispositivo.</string>
     <string name="error_expense_not_found">El registro de gasto no se ha encontrado.</string>
 
     <!-- Accessibility -->
