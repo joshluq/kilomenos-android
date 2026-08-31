@@ -13,8 +13,8 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import es.joshluq.kmsafe.MainActivity
 import es.joshluq.kmsafe.R
 import es.joshluq.kmsafe.core.domain.service.StationNotificationService
+import es.joshluq.kmsafe.core.navigation.DeepLinkConfig
 import es.joshluq.kmsafe.domain.model.ServiceStation
-import es.joshluq.kmsafe.ui.navigation.DeepLinkConfig
 import javax.inject.Inject
 import javax.inject.Singleton
 

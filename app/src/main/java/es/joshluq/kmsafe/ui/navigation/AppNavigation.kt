@@ -10,12 +10,14 @@ import androidx.navigation.toRoute
 import es.joshluq.kmsafe.feature.auth.launch.LaunchRoute
 import es.joshluq.kmsafe.feature.auth.login.LoginRoute
 import es.joshluq.kmsafe.feature.auth.signup.SignupRoute
+import es.joshluq.kmsafe.feature.dashboard.DashboardRoute
 import es.joshluq.kmsafe.feature.expenses.ExpensesRoute
 import es.joshluq.kmsafe.feature.expenses.stations.StationManagementRoute
 import es.joshluq.kmsafe.feature.expenses.stations.detail.StationDetailRoute
+import es.joshluq.kmsafe.core.navigation.DeepLinkConfig
+import es.joshluq.kmsafe.core.navigation.Destination
 import es.joshluq.kmsafe.ui.common.cropper.CropImageScreen
 import es.joshluq.kmsafe.ui.common.permissions.AutoTrackingPermissionsScreen
-import es.joshluq.kmsafe.ui.dashboard.DashboardRoute
 import es.joshluq.kmsafe.ui.datamanagement.DataManagementRoute
 import es.joshluq.kmsafe.feature.history.detail.RecordDetailRoute
 import es.joshluq.kmsafe.ui.premium.PremiumPaywallRoute
@@ -134,49 +136,54 @@ fun AppNavigation(
 
         composable<Destination.Dashboard> { backStackEntry ->
             DashboardRoute(
-                onNavigateToOnboarding = { vehicleId, isEdit ->
-                    if (isEdit && vehicleId != null) {
-                        navController.navigate(Destination.EditContract(vehicleId))
-                    } else {
-                        navController.navigate(Destination.SetupWizard)
-                    }
-                },
-                onNavigateToVehicles = {
-                    navController.navigate(Destination.VehicleList)
-                },
-                onNavigateToDataManagement = {
-                    navController.navigate(Destination.DataManagement)
-                },
-                onNavigateToLogin = {
-                    navController.navigate(Destination.Login) {
-                        popUpTo(Destination.Dashboard) { inclusive = true }
-                    }
-                },
-                onNavigateToPremiumPaywall = {
-                    navController.navigate(Destination.PremiumPaywall)
-                },
-                onNavigateToPreferences = {
-                    navController.navigate(Destination.Preferences)
-                },
-                onNavigateToRecordDetail = { recordId ->
-                    navController.navigate(Destination.RecordDetail(recordId))
-                },
-                onNavigateToStations = {
-                    navController.navigate(Destination.StationManagement)
-                },
-                onNavigateToStationDetail = { stationId ->
-                    navController.navigate(Destination.StationDetail(stationId))
-                },
-                onNavigateToPermissions = {
-                    navController.navigate(Destination.AutoTrackingPermissions)
-                },
-                onNavigateToWelcomeDiscovery = {
-                    navController.navigate(Destination.WelcomeDiscovery)
-                },
-                onNavigateToVehicleDetail = { vehicleId ->
-                    navController.navigate(Destination.VehicleDetail(vehicleId))
-                },
-                backStackEntry = backStackEntry
+                navigationContent = { dashboardNavController ->
+                    DashboardNavigation(
+                        navController = dashboardNavController,
+                        onNavigateToOnboarding = { vehicleId, isEdit ->
+                            if (isEdit && vehicleId != null) {
+                                navController.navigate(Destination.EditContract(vehicleId))
+                            } else {
+                                navController.navigate(Destination.SetupWizard)
+                            }
+                        },
+                        onNavigateToVehicles = {
+                            navController.navigate(Destination.VehicleList)
+                        },
+                        onNavigateToDataManagement = {
+                            navController.navigate(Destination.DataManagement)
+                        },
+                        onNavigateToLogin = {
+                            navController.navigate(Destination.Login) {
+                                popUpTo(Destination.Dashboard) { inclusive = true }
+                            }
+                        },
+                        onNavigateToPremiumPaywall = {
+                            navController.navigate(Destination.PremiumPaywall)
+                        },
+                        onNavigateToPreferences = {
+                            navController.navigate(Destination.Preferences)
+                        },
+                        onNavigateToRecordDetail = { recordId ->
+                            navController.navigate(Destination.RecordDetail(recordId))
+                        },
+                        onNavigateToStations = {
+                            navController.navigate(Destination.StationManagement)
+                        },
+                        onNavigateToStationDetail = { stationId ->
+                            navController.navigate(Destination.StationDetail(stationId))
+                        },
+                        onNavigateToPermissions = {
+                            navController.navigate(Destination.AutoTrackingPermissions)
+                        },
+                        onNavigateToWelcomeDiscovery = {
+                            navController.navigate(Destination.WelcomeDiscovery)
+                        },
+                        onNavigateToVehicleDetail = { vehicleId ->
+                            navController.navigate(Destination.VehicleDetail(vehicleId))
+                        },
+                        backStackEntry = backStackEntry
+                    )
+                }
             )
         }
 

@@ -97,9 +97,11 @@ dependencies {
     implementation(project(":feature:expenses"))
     implementation(project(":feature:auth"))
     implementation(project(":feature:history"))
+    implementation(project(":feature:dashboard"))
     implementation(project(":core:ui"))
     implementation(project(":core:infrastructure"))
     implementation(project(":core:domain"))
+    implementation(project(":core:navigation"))
     implementation(project(":core:monetization"))
 
     implementation(deps.foundationkit)

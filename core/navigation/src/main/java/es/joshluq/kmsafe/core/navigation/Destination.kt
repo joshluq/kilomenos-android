@@ -1,4 +1,4 @@
-package es.joshluq.kmsafe.ui.navigation
+package es.joshluq.kmsafe.core.navigation
 
 import kotlinx.serialization.Serializable
 

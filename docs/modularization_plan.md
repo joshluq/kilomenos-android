@@ -62,11 +62,13 @@ Este documento detalla la hoja de ruta técnica y el estado de ejecución para t
    - **Presentación**: MVI (`ExpensesState`, `ExpensesEvent`, `ExpensesEffect`), `ExpensesViewModel`, coordinator `ExpensesRoute`, `ExpensesScreen` (diseño homogéneo con las pantallas principales mediante `CanvasKitLoadingScaffold` y `CanvasKitTopBar` centrado), bottom sheet dinámico de repostaje/carga y tarjeta de volatilidad histórica de precios.
    - **Integración**: Enlazado en `:app` vía DI en [UseCaseModule.kt](file:///c:/Users/josh_/AndroidStudioProjects/KmSafe/app/src/main/java/es/joshluq/kmsafe/di/UseCaseModule.kt), registrado como pestaña principal del `BottomNavigationBar` (`DashboardTab.EXPENSES`) en [DashboardScreen.kt](file:///c:/Users/josh_/AndroidStudioProjects/KmSafe/app/src/main/java/es/joshluq/kmsafe/ui/dashboard/DashboardScreen.kt) y ruteado con [AppNavigation.kt](file:///c:/Users/josh_/AndroidStudioProjects/KmSafe/app/src/main/java/es/joshluq/kmsafe/ui/navigation/AppNavigation.kt) y [DashboardNavigation.kt](file:///c:/Users/josh_/AndroidStudioProjects/KmSafe/app/src/main/java/es/joshluq/kmsafe/ui/navigation/DashboardNavigation.kt).
 
-2. **`:feature:reporting` (Motor de Reportes & Exportación PDF) 📅 Planificado**:
-   - Generación de informes profesionales de kilometraje y consumo en PDF para empresas de renting.
+3. **`:feature:dashboard` (Shell de Navegación Principal) ✅ COMPLETADO**:
+   - **Propósito**: Contenedor principal de la aplicación con `BottomNavigationBar` y gestión de estados de pestañas.
+   - **Componentes**: `DashboardRoute`, `DashboardScreen`, `DashboardViewModel`.
+   - **Desacoplamiento**: Utiliza el patrón Slot para recibir el `NavHost` desde el Shell (`:app`), eliminando el acoplamiento directo con las pantallas que aloja.
+   - **Navegación**: Depende del nuevo módulo `:core:navigation` para la definición de rutas globales.
 
-3. **`:feature:dashboard` (Extracción de la pantalla principal) 📅 Planificado**:
-   - Migración de las pantallas del Dashboard a su propio feature module desacoplado.
+4. **`:feature:reporting` (Motor de Reportes & Exportación PDF) 📅 Planificado**:
 
 4. **`:feature:history` (Histórico de odómetro y filtros) ✅ COMPLETADO**:
    - **Propósito**: Consulta, edición y visualización de rutas GPS en un mapa.
@@ -85,27 +87,31 @@ graph TD
     App[":app (Shell / Navigation / Manifest / System Glue)"]
     Domain[":core:domain (Pure Business Logic)"]
     Infra[":core:infrastructure (Room / Retrofit / Repositories / Workers)"]
+    Nav[":core:navigation (Global Destinations)"]
     DesignSystem[":designsystem / CanvasKit (UI Foundations)"]
     FeatureAuth[":feature:auth"]
-    FeatureOverview[":feature:overview"]
+    FeatureDashboard[":feature:dashboard"]
     FeatureHistory[":feature:history"]
-    FeatureSettings[":feature:settings"]
+    FeatureExpenses[":feature:expenses"]
 
     App --> FeatureAuth
-    App --> FeatureOverview
+    App --> FeatureDashboard
     App --> FeatureHistory
-    App --> FeatureSettings
+    App --> FeatureExpenses
     App --> Infra
     App --> Domain
+    App --> Nav
+
+    FeatureDashboard --> Nav
+    FeatureDashboard --> Domain
+    FeatureDashboard --> DesignSystem
 
     FeatureAuth --> Domain
     FeatureAuth --> DesignSystem
-    FeatureOverview --> Domain
-    FeatureOverview --> DesignSystem
+    FeatureExpenses --> Domain
+    FeatureExpenses --> DesignSystem
     FeatureHistory --> Domain
     FeatureHistory --> DesignSystem
-    FeatureSettings --> Domain
-    FeatureSettings --> DesignSystem
 
     Infra --> Domain
 ```

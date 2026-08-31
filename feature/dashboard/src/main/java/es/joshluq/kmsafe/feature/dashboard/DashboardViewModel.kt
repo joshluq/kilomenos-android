@@ -1,0 +1,76 @@
+package es.joshluq.kmsafe.feature.dashboard
+
+import androidx.lifecycle.viewModelScope
+import dagger.hilt.android.lifecycle.HiltViewModel
+import es.joshluq.foundationkit.log.LoggerKit
+import es.joshluq.foundationkit.usecase.FlowUseCase
+import es.joshluq.foundationkit.viewmodel.ScreenViewModel
+import es.joshluq.kmsafe.domain.di.GetRenting
+import es.joshluq.kmsafe.domain.usecase.GetRentingContractUseCase
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
+import javax.inject.Inject
+
+/**
+ * ViewModel for managing the state of the DashboardScreen using the MVI pattern.
+ */
+@HiltViewModel
+class DashboardViewModel @Inject constructor(
+    @GetRenting private val getRentingContractUseCase:
+    @JvmSuppressWildcards FlowUseCase<GetRentingContractUseCase.Input, GetRentingContractUseCase.Output>,
+    private val logger: LoggerKit
+) : ScreenViewModel<State, Event, Effect>() {
+
+    override fun createInitialState(): State = State.Empty
+
+    init {
+        observeRentingContract()
+    }
+
+    override fun handleEvent(event: Event) {
+        logger.d("DashboardViewModel", "Event received: $event")
+        when (event) {
+            is Event.OnTabSelected -> handleTabSelected(event.tab)
+            is Event.OnTabSynced -> handleTabSynced(event.tab)
+            Event.OnOdometerClicked -> {
+                updateState { copy(showUpdateDialog = true, currentMileageInput = "") }
+            }
+            Event.OnDismissOdometerDialog -> {
+                updateState { copy(showUpdateDialog = false) }
+            }
+            is Event.OnOdometerChanged -> {
+                updateState { copy(currentMileageInput = event.mileage) }
+            }
+        }
+    }
+
+    private fun observeRentingContract() {
+        getRentingContractUseCase(GetRentingContractUseCase.Input)
+            .onEach { output ->
+                when (output) {
+                    is GetRentingContractUseCase.Output.Success -> {
+                        updateState { copy(hasRentingContract = true) }
+                    }
+                    is GetRentingContractUseCase.Output.Failure -> {
+                        updateState { copy(hasRentingContract = false) }
+                        logger.w("DashboardViewModel", "No active renting contract found")
+                    }
+                    else -> Unit
+                }
+            }.launchIn(viewModelScope)
+    }
+
+    private fun handleTabSelected(tab: DashboardTab) {
+        if (state.value.selectedTab != tab) {
+            updateState { copy(selectedTab = tab) }
+            logger.d("DashboardViewModel", "Navigating to tab $tab")
+            launchEffect(Effect.NavigateToTab(tab))
+        }
+    }
+
+    private fun handleTabSynced(tab: DashboardTab) {
+        if (state.value.selectedTab != tab) {
+            updateState { copy(selectedTab = tab) }
+        }
+    }
+}

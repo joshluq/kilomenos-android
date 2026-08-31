@@ -1,4 +1,4 @@
-package es.joshluq.kmsafe.ui.dashboard
+package es.joshluq.kmsafe.feature.dashboard
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
@@ -25,7 +25,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
@@ -35,9 +34,8 @@ import es.joshluq.canvaskit.components.navigation.CanvasKitBottomBar
 import es.joshluq.canvaskit.components.navigation.CanvasKitBottomBarItem
 import es.joshluq.canvaskit.foundations.theme.CanvasKitTheme
 import es.joshluq.foundationkit.text.TextProvider
+import es.joshluq.kmsafe.core.navigation.Destination
 import es.joshluq.kmsafe.core.ui.R as CoreR
-import es.joshluq.kmsafe.ui.navigation.DashboardNavigation
-import es.joshluq.kmsafe.ui.navigation.Destination
 import es.joshluq.kmsafe.core.ui.util.safeClick
 import kotlinx.coroutines.flow.Flow
 
@@ -46,19 +44,7 @@ import kotlinx.coroutines.flow.Flow
  */
 @Composable
 fun DashboardRoute(
-    onNavigateToOnboarding: (String?, Boolean) -> Unit,
-    onNavigateToVehicles: () -> Unit,
-    onNavigateToDataManagement: () -> Unit,
-    onNavigateToPreferences: () -> Unit,
-    onNavigateToRecordDetail: (String) -> Unit,
-    onNavigateToStations: () -> Unit,
-    onNavigateToStationDetail: (String) -> Unit,
-    onNavigateToLogin: () -> Unit,
-    onNavigateToPremiumPaywall: () -> Unit,
-    onNavigateToPermissions: () -> Unit,
-    onNavigateToWelcomeDiscovery: () -> Unit,
-    onNavigateToVehicleDetail: (String) -> Unit,
-    backStackEntry: NavBackStackEntry
+    navigationContent: @Composable (NavHostController) -> Unit
 ) {
     val viewModel: DashboardViewModel = hiltViewModel()
     val state = viewModel.state.collectAsStateWithLifecycle()
@@ -66,19 +52,7 @@ fun DashboardRoute(
         state = state.value,
         effects = viewModel.effects,
         onEvent = viewModel::sendEvent,
-        onNavigateToOnboarding = onNavigateToOnboarding,
-        onNavigateToVehicles = onNavigateToVehicles,
-        onNavigateToDataManagement = onNavigateToDataManagement,
-        onNavigateToPreferences = onNavigateToPreferences,
-        onNavigateToRecordDetail = onNavigateToRecordDetail,
-        onNavigateToStations = onNavigateToStations,
-        onNavigateToStationDetail = onNavigateToStationDetail,
-        onNavigateToLogin = onNavigateToLogin,
-        onNavigateToPremiumPaywall = onNavigateToPremiumPaywall,
-        onNavigateToPermissions = onNavigateToPermissions,
-        onNavigateToWelcomeDiscovery = onNavigateToWelcomeDiscovery,
-        onNavigateToVehicleDetail = onNavigateToVehicleDetail,
-        backStackEntry = backStackEntry
+        navigationContent = navigationContent
     )
 }
 
@@ -91,19 +65,7 @@ fun DashboardScreen(
     state: State,
     effects: Flow<Effect>? = null,
     onEvent: (Event) -> Unit,
-    onNavigateToOnboarding: (String?, Boolean) -> Unit,
-    onNavigateToVehicles: () -> Unit,
-    onNavigateToDataManagement: () -> Unit,
-    onNavigateToPreferences: () -> Unit,
-    onNavigateToRecordDetail: (String) -> Unit,
-    onNavigateToStations: () -> Unit,
-    onNavigateToStationDetail: (String) -> Unit,
-    onNavigateToLogin: () -> Unit,
-    onNavigateToPremiumPaywall: () -> Unit,
-    onNavigateToPermissions: () -> Unit,
-    onNavigateToWelcomeDiscovery: () -> Unit,
-    onNavigateToVehicleDetail: (String) -> Unit,
-    backStackEntry: NavBackStackEntry
+    navigationContent: @Composable (NavHostController) -> Unit
 ) {
     val navController = rememberNavController()
     val navBackStackEntry = navController.currentBackStackEntryAsState()
@@ -138,22 +100,7 @@ fun DashboardScreen(
         contentAlignment = Alignment.BottomCenter
     ) {
         Column(modifier = Modifier.padding(bottom = 104.dp)) {
-            DashboardNavigation(
-                navController = navController,
-                onNavigateToOnboarding = onNavigateToOnboarding,
-                onNavigateToVehicles = onNavigateToVehicles,
-                onNavigateToDataManagement = onNavigateToDataManagement,
-                onNavigateToPreferences = onNavigateToPreferences,
-                onNavigateToRecordDetail = onNavigateToRecordDetail,
-                onNavigateToStations = onNavigateToStations,
-                onNavigateToStationDetail = onNavigateToStationDetail,
-                onNavigateToLogin = onNavigateToLogin,
-                onNavigateToPremiumPaywall = onNavigateToPremiumPaywall,
-                onNavigateToPermissions = onNavigateToPermissions,
-                onNavigateToWelcomeDiscovery = onNavigateToWelcomeDiscovery,
-                onNavigateToVehicleDetail = onNavigateToVehicleDetail,
-                backStackEntry = backStackEntry
-            )
+            navigationContent(navController)
         }
 
         Spacer(
