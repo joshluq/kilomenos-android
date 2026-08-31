@@ -114,7 +114,7 @@ fun HistoryScreen(
             Column(modifier = Modifier.fillMaxSize()) {
                 if (!state.isPremium) {
                     AdMobBanner(
-                        adUnitId = BuildConfig.ADMOB_BANNER_ID
+                        adUnitId = state.adUnitId
                     )
                 }
                 Spacer(modifier = Modifier.height(2.dp))

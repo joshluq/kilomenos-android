@@ -60,7 +60,6 @@ import es.joshluq.canvaskit.components.layout.CanvasKitLoadingStrategy
 import es.joshluq.canvaskit.components.navigation.CanvasKitTopBar
 import es.joshluq.canvaskit.components.text.CanvasKitRichText
 import es.joshluq.canvaskit.foundations.theme.CanvasKitTheme
-import es.joshluq.kmsafe.feature.auth.BuildConfig
 import es.joshluq.kmsafe.feature.auth.R
 import es.joshluq.kmsafe.core.ui.R as CoreR
 import es.joshluq.kmsafe.feature.auth.login.components.BrandingSection
@@ -263,8 +262,8 @@ fun SignupScreen(
                                 )
 
                                 PrivacyPolicyLink(
-                                    onTermsClick = { uriHandler.openUri(BuildConfig.TERMS_URL) },
-                                    onPrivacyClick = { uriHandler.openUri(BuildConfig.PRIVACY_URL) }
+                                    onTermsClick = { uriHandler.openUri(state.termsUrl) },
+                                    onPrivacyClick = { uriHandler.openUri(state.privacyUrl) }
                                 )
                             }
 

@@ -37,6 +37,7 @@ data class State(
     val newRecordLabel: String = "",
     val newRecordFuel: String = "",
     val isSyncPending: Boolean = false,
+    val adUnitId: String = "",
     val isTracking: Boolean = false,
     val autoTrackingEnabled: Boolean = false,
     val isAutoTrackingTrialable: Boolean = false,

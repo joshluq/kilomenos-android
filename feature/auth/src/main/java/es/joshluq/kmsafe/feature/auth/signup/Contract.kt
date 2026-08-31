@@ -18,6 +18,8 @@ data class State(
     val isLoading: Boolean = false,
     val isSignupEnabled: Boolean = false,
     val showUserConflictWarning: Boolean = false,
+    val termsUrl: String = "",
+    val privacyUrl: String = "",
     val error: TextProvider? = null
 ) : UiState {
     companion object {

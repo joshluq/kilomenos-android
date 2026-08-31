@@ -10,22 +10,6 @@ plugins {
 
 configure<LibraryExtension> {
     namespace = "es.joshluq.kmsafe.feature.auth"
-
-    buildFeatures {
-        buildConfig = true
-    }
-
-    flavorDimensions.add("environment")
-
-    productFlavors {
-        AppConfig.Environments.availableEnvironments.forEach { env ->
-            create(env.name) {
-                dimension = "environment"
-                buildConfigField("String", "TERMS_URL", "\"${env.termsUrl}\"")
-                buildConfigField("String", "PRIVACY_URL", "\"${env.privacyUrl}\"")
-            }
-        }
-    }
 }
 
 dependencies {

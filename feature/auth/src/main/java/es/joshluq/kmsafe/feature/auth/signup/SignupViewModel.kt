@@ -27,6 +27,8 @@ import es.joshluq.kmsafe.domain.usecase.UpdatePreferencesUseCase
 import es.joshluq.kmsafe.domain.usecase.ValidateCredentialsUseCase
 import es.joshluq.kmsafe.core.ui.util.toText
 import kotlinx.coroutines.flow.launchIn
+import es.joshluq.kmsafe.feature.auth.domain.AuthConfig
+import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -47,6 +49,7 @@ class SignupViewModel @Inject constructor(
     @JvmSuppressWildcards FlowUseCase<GetEntitlementsUseCase.Input, GetEntitlementsUseCase.Output>,
     @param:SyncContracts private val syncContractsUseCase:
     @JvmSuppressWildcards FlowUseCase<SyncContractsUseCase.Input, SyncContractsUseCase.Output>,
+    private val authConfig: AuthConfig,
     private val analytics: AnalyticskitManager,
     private val logger: LoggerKit
 ) : ScreenViewModel<State, Event, Effect>() {
@@ -55,6 +58,12 @@ class SignupViewModel @Inject constructor(
 
     init {
         analytics.track(AnalyticsEvent.FunnelStep("signup", "started"))
+        updateState { 
+            copy(
+                termsUrl = authConfig.getTermsUrl(),
+                privacyUrl = authConfig.getPrivacyUrl()
+            )
+        }
     }
 
     override fun createInitialState(): State = State.Empty

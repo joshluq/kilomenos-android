@@ -24,6 +24,7 @@ import es.joshluq.kmsafe.domain.di.StopAutoTracking
 import es.joshluq.kmsafe.domain.di.StopTracking
 import es.joshluq.kmsafe.domain.di.SyncStationGeofences
 import es.joshluq.kmsafe.domain.di.UpdatePreferences
+import es.joshluq.kmsafe.core.monetization.domain.MonetizationConfig
 import es.joshluq.kmsafe.domain.model.Feature
 import es.joshluq.kmsafe.domain.model.RentingContract
 import es.joshluq.kmsafe.domain.model.SubscriptionLevel
@@ -87,6 +88,7 @@ class OverviewViewModel @Inject constructor(
     @JvmSuppressWildcards FlowUseCase<StopAutoTrackingUseCase.Input, StopAutoTrackingUseCase.Output>,
     @param:SyncStationGeofences private val syncStationGeofencesUseCase:
     @JvmSuppressWildcards FlowUseCase<SyncStationGeofencesUseCase.Input, SyncStationGeofencesUseCase.Output>,
+    private val monetizationConfig: MonetizationConfig,
     private val analytics: AnalyticskitManager,
     private val logger: LoggerKit
 ) : ScreenViewModel<State, Event, Effect>() {
@@ -102,6 +104,7 @@ class OverviewViewModel @Inject constructor(
         consolidatedInitialLoad()
         observeTracking()
         startGeofenceSync()
+        updateState { copy(adUnitId = monetizationConfig.getBannerAdUnitId()) }
     }
 
     private fun startGeofenceSync() {

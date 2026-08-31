@@ -18,6 +18,8 @@ data class State(
     val isLoading: Boolean = false,
     val showUserConflictWarning: Boolean = false,
     val pendingUser: User? = null,
+    val termsUrl: String = "",
+    val privacyUrl: String = "",
     val error: TextProvider? = null
 ) : UiState {
 

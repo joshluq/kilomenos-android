@@ -37,6 +37,7 @@ import es.joshluq.kmsafe.core.ui.util.toText
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
+import es.joshluq.kmsafe.feature.auth.domain.AuthConfig
 import javax.inject.Inject
 
 /**
@@ -64,6 +65,7 @@ class LoginViewModel @Inject constructor(
     @JvmSuppressWildcards FlowUseCase<GetEntitlementsUseCase.Input, GetEntitlementsUseCase.Output>,
     private val fingerprintProvider: FingerprintProvider,
     private val socialAuthService: SocialAuthService,
+    private val authConfig: AuthConfig,
     private val analytics: AnalyticskitManager,
     private val logger: LoggerKit
 ) : ScreenViewModel<State, Event, Effect>() {
@@ -74,6 +76,12 @@ class LoginViewModel @Inject constructor(
     init {
         analytics.track(AnalyticsEvent.Custom("login_started"))
         loadPreferences()
+        updateState { 
+            copy(
+                termsUrl = authConfig.getTermsUrl(),
+                privacyUrl = authConfig.getPrivacyUrl()
+            )
+        }
     }
 
     override fun createInitialState(): State = State.Empty

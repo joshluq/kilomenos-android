@@ -7,6 +7,7 @@ import es.joshluq.foundationkit.log.LoggerKit
 import es.joshluq.foundationkit.text.TextProvider
 import es.joshluq.foundationkit.usecase.FlowUseCase
 import es.joshluq.foundationkit.viewmodel.ScreenViewModel
+import es.joshluq.kmsafe.core.monetization.domain.MonetizationConfig
 import es.joshluq.kmsafe.core.ui.R as CoreR
 import es.joshluq.kmsafe.domain.di.CheckFeatureAccess
 import es.joshluq.kmsafe.domain.di.DeleteOdometerRecord
@@ -33,6 +34,7 @@ class HistoryViewModel @Inject constructor(
     @JvmSuppressWildcards FlowUseCase<DeleteOdometerRecordUseCase.Input, DeleteOdometerRecordUseCase.Output>,
     @param:CheckFeatureAccess private val checkFeatureAccessUseCase:
     @JvmSuppressWildcards FlowUseCase<CheckFeatureAccessUseCase.Input, CheckFeatureAccessUseCase.Output>,
+    private val monetizationConfig: MonetizationConfig,
     private val dispatchers: DispatcherProvider,
     private val logger: LoggerKit
 ) : ScreenViewModel<HistoryState, HistoryEvent, HistoryEffect>() {
@@ -40,6 +42,7 @@ class HistoryViewModel @Inject constructor(
     init {
         checkSubscription()
         loadHistory(forceRefresh = false)
+        updateState { copy(adUnitId = monetizationConfig.getBannerAdUnitId()) }
     }
 
     override fun createInitialState(): HistoryState = HistoryState.Empty

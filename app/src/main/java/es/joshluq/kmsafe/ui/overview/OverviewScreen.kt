@@ -438,7 +438,7 @@ private fun RentingState(
     ) {
         if (state.isPremium == false) {
             AdMobBanner(
-                adUnitId = BuildConfig.ADMOB_BANNER_ID
+                adUnitId = state.adUnitId
             )
         }
         Spacer(modifier = Modifier.height(2.dp))
@@ -1256,7 +1256,7 @@ private fun EmptyState(
     Column {
         if (state.isPremium == false) {
             AdMobBanner(
-                adUnitId = BuildConfig.ADMOB_BANNER_ID
+                adUnitId = state.adUnitId
             )
         }
         CanvasKitStateView(

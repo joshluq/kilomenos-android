@@ -28,6 +28,7 @@ data class HistoryState(
     val totalRecordsCount: Int = 0,
     val selectedDailyRecords: List<RecordWithIndicator>? = null,
     val isPremium: Boolean = false,
+    val adUnitId: String = "",
     val searchQuery: String = "",
     val groupingMode: HistoryGroupingMode = HistoryGroupingMode.MONTH,
     val error: TextProvider? = null
