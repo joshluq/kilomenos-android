@@ -1,6 +1,11 @@
 package es.joshluq.kmsafe.ui.renting.detail
 
+import android.Manifest
+import android.content.pm.PackageManager
 import android.content.res.Configuration
+import android.os.Build
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -44,6 +49,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import es.joshluq.canvaskit.components.buttons.CanvasKitButton
+import es.joshluq.canvaskit.components.buttons.CanvasKitButtonSize
 import es.joshluq.canvaskit.components.buttons.CanvasKitButtonVariant
 import es.joshluq.canvaskit.components.feedback.CanvasKitAlertVariant
 import es.joshluq.canvaskit.components.feedback.CanvasKitBanner
@@ -58,9 +64,6 @@ import es.joshluq.kmsafe.ui.renting.components.ContractMetricCard
 import es.joshluq.kmsafe.ui.renting.components.VehiclePhotoSelector
 import es.joshluq.kmsafe.core.ui.util.safeClick
 import es.joshluq.kmsafe.ui.util.DateUtils
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
 
 @Composable
 fun VehicleDetailRoute(
@@ -92,6 +95,23 @@ fun VehicleDetailScreen(
     onEvent: (Event) -> Unit
 ) {
     var showDeleteDialog by remember { mutableStateOf(false) }
+
+    val bluetoothPermissionGranted = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+        androidx.core.content.ContextCompat.checkSelfPermission(
+            androidx.compose.ui.platform.LocalContext.current,
+            Manifest.permission.BLUETOOTH_CONNECT
+        ) == PackageManager.PERMISSION_GRANTED
+    } else {
+        true
+    }
+
+    val bluetoothPermissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        // No action needed, recomposition will hide the banner if granted
+    }
+
+    val showBluetoothWarning = state.renting?.bluetoothDeviceAddress != null && !bluetoothPermissionGranted
 
     CanvasKitLoadingScaffold(
         isLoading = state.isLoading,
@@ -193,6 +213,41 @@ fun VehicleDetailScreen(
                         value = contract.bluetoothDeviceName ?: contract.bluetoothDeviceAddress ?: stringResource(R.string.vehicle_detail_no_bluetooth),
                         modifier = Modifier.fillMaxWidth()
                     )
+
+                    if (showBluetoothWarning) {
+                        Spacer(modifier = Modifier.height(12.dp))
+                        CanvasKitBanner(
+                            variant = CanvasKitAlertVariant.Warning,
+                            message = {
+                                Column {
+                                    Text(
+                                        text = stringResource(R.string.vehicle_detail_bt_permission_warning_title),
+                                        style = CanvasKitTheme.typography.bodyLarge,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                    Text(
+                                        text = stringResource(R.string.vehicle_detail_bt_permission_warning_desc),
+                                        style = CanvasKitTheme.typography.labelSmall
+                                    )
+                                }
+                            },
+                            action = {
+                                CanvasKitButton(
+                                    text = stringResource(R.string.vehicle_detail_bt_permission_warning_action),
+                                    onClick = safeClick {
+                                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                                            bluetoothPermissionLauncher.launch(Manifest.permission.BLUETOOTH_CONNECT)
+                                        }
+                                    },
+                                    variant = CanvasKitButtonVariant.Primary,
+                                    size = CanvasKitButtonSize.Small
+                                )
+                            },
+                            visible = true,
+                            onDismiss = null, // Non-dismissible until granted
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
 
                     Spacer(modifier = Modifier.height(24.dp))
 

@@ -318,8 +318,15 @@
     <string name="overview_permissions_step_location_desc">Permite registrar el recorrido aunque la app esté cerrada. Debes seleccionar \"Permitir todo el tiempo\" en los ajustes.</string>
     <string name="overview_permissions_step_notifications_title">3. Notificaciones</string>
     <string name="overview_permissions_step_notifications_desc">Permite mostrar el estado del seguimiento en tiempo real en tu barra de estado.</string>
+    <string name="overview_permissions_step_bluetooth_title">4. Conectividad Bluetooth</string>
+    <string name="overview_permissions_step_bluetooth_desc">Permite validar que estás en tu vehículo vinculado para mayor precisión.</string>
     <string name="overview_permissions_button_continue">Continuar</string>
     <string name="overview_permissions_button_settings">Ir a Ajustes</string>
+
+    <!-- Bluetooth Validation Warning -->
+    <string name="vehicle_detail_bt_permission_warning_title">Permiso de Bluetooth necesario</string>
+    <string name="vehicle_detail_bt_permission_warning_desc">Has vinculado este vehículo por Bluetooth, pero no tenemos permiso para validar la conexión. El Auto-Tracking podría ser menos preciso.</string>
+    <string name="vehicle_detail_bt_permission_warning_action">Conceder Permiso</string>
 
     <!-- Auto-Tracking Promotion -->
     <string name="overview_promotion_autotracking_title">¡Simplifica tus viajes! 🚗</string>

@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Bluetooth
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.DirectionsCar
 import androidx.compose.material.icons.filled.LocationOn
@@ -67,12 +68,19 @@ fun AutoTrackingPermissionsScreen(
         null
     }
 
+    val bluetoothPermissionState = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+        rememberPermissionState(Manifest.permission.BLUETOOTH_CONNECT)
+    } else {
+        null
+    }
+
     val isActivityGranted = activityRecognitionState?.status?.isGranted ?: true
     val isBackgroundLocationGranted = backgroundLocationState?.status?.isGranted ?: true
     val isNotificationsGranted = notificationsPermissionState?.status?.isGranted ?: true
+    val isBluetoothGranted = bluetoothPermissionState?.status?.isGranted ?: true
     val isFineLocationGranted = fineLocationState.status.isGranted
 
-    val isAllGranted = isActivityGranted && isBackgroundLocationGranted && isNotificationsGranted && isFineLocationGranted
+    val isAllGranted = isActivityGranted && isBackgroundLocationGranted && isNotificationsGranted && isFineLocationGranted && isBluetoothGranted
 
     LaunchedEffect(isAllGranted) {
         if (isAllGranted) {
@@ -138,6 +146,15 @@ fun AutoTrackingPermissionsScreen(
                 icon = Icons.Default.Notifications
             )
 
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                PermissionStepItem(
+                    title = stringResource(R.string.overview_permissions_step_bluetooth_title),
+                    description = stringResource(R.string.overview_permissions_step_bluetooth_desc),
+                    isGranted = isBluetoothGranted,
+                    icon = Icons.Default.Bluetooth
+                )
+            }
+
             Spacer(modifier = Modifier.weight(1f))
 
             CanvasKitButton(
@@ -148,7 +165,12 @@ fun AutoTrackingPermissionsScreen(
                         backgroundLocationState != null && !isBackgroundLocationGranted -> {
                             backgroundLocationState.launchPermissionRequest()
                         }
-                        !isNotificationsGranted -> notificationsPermissionState.launchPermissionRequest()
+                        notificationsPermissionState != null && !isNotificationsGranted -> {
+                            notificationsPermissionState.launchPermissionRequest()
+                        }
+                        bluetoothPermissionState != null && !isBluetoothGranted -> {
+                            bluetoothPermissionState.launchPermissionRequest()
+                        }
                         else -> onAllPermissionsGranted()
                     }
                 },
