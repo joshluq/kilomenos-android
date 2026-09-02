@@ -15,8 +15,10 @@
     <string name="onboarding_km_suffix">Km</string>
     <string name="onboarding_start_odometer_label">Odómetro inicial al firmar</string>
     <string name="onboarding_start_odometer_placeholder">Ej. 0 (si era nuevo)</string>
+    <string name="onboarding_start_odometer_support">Los km que tenía el coche al recogerlo o firmar el contrato.</string>
     <string name="onboarding_current_odometer_label">Odómetro a día de hoy</string>
     <string name="onboarding_current_odometer_placeholder">Ej. 15000</string>
+    <string name="onboarding_current_odometer_support">Los km que tiene el coche ahora mismo.</string>
     <string name="onboarding_bluetooth_label">Coche vinculado (Bluetooth)</string>
     <string name="onboarding_bluetooth_placeholder">Opcional: Selecciona tu coche</string>
     <string name="onboarding_bluetooth_picker_title">Seleccionar Dispositivo</string>
@@ -33,6 +35,7 @@
     <string name="onboarding_vehicle_name_feedback">El nombre es obligatorio</string>
     <string name="onboarding_number_feedback">Debe ser mayor a 0</string>
     <string name="onboarding_current_odometer_feedback">El odómetro actual debe ser igual o mayor al inicial</string>
+    <string name="onboarding_mileage_warning">¡Atención! Los kilómetros recorridos hoy (%1$s km) ya superan el límite total de tu contrato (%2$s km).</string>
     <string name="onboarding_date_feedback">Fecha requerida</string>
     <string name="onboarding_change_photo">Cambiar foto</string>
     <string name="onboarding_change_bluetooth">Cambiar dispositivo Bluetooth</string>
@@ -83,6 +86,7 @@
     <string name="setup_wizard_step_bluetooth_desc_free">Vincular tu coche ahora te permitirá activar el seguimiento automático si en el futuro decides pasar a Premium.</string>
     <string name="setup_wizard_step_bluetooth_action">Buscar mi coche</string>
     <string name="setup_wizard_step_bluetooth_linked">¡Coche vinculado con éxito!</string>
+    <string name="setup_wizard_error_bluetooth_required">Por favor, selecciona un dispositivo Bluetooth o pulsa Omitir.</string>
     <string name="setup_wizard_step_advanced_title">Protección económica</string>
     <string name="setup_wizard_step_advanced_desc">Configura el coste extra y tu margen de cortesía para que nuestra previsión sea exacta.</string>
     <string name="setup_wizard_step_advanced_price_label">Coste por KM excedido</string>

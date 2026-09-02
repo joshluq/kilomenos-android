@@ -15,6 +15,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import es.joshluq.canvaskit.components.buttons.CanvasKitButton
 import es.joshluq.canvaskit.foundations.theme.CanvasKitTheme
@@ -52,7 +53,8 @@ fun RentingStepLayout(
             Text(
                 text = description,
                 style = CanvasKitTheme.typography.bodyLarge,
-                color = CanvasKitTheme.colors.textSecondary
+                color = CanvasKitTheme.colors.textSecondary,
+                textAlign = TextAlign.Justify
             )
             Spacer(modifier = Modifier.height(32.dp))
 

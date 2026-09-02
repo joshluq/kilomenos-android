@@ -19,6 +19,7 @@ import es.joshluq.kmsafe.domain.usecase.GetEntitlementsUseCase
 import es.joshluq.kmsafe.domain.usecase.GetImageBytesUseCase
 import es.joshluq.kmsafe.domain.usecase.SaveInitialContractUseCase
 import es.joshluq.kmsafe.domain.usecase.UploadVehicleImageUseCase
+import es.joshluq.kmsafe.core.ui.util.toText
 import es.joshluq.kmsafe.feature.fleet.R
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.catch
@@ -75,11 +76,19 @@ class SetupWizardViewModel @Inject constructor(
                     durationMonthsError = null
                 )
             }
-            is Event.OnTotalKmsChanged -> updateState { copy(totalKms = event.value, totalKmsError = null) }
+            is Event.OnTotalKmsChanged -> updateState { copy(totalKms = event.value, totalKmsError = null, showMileageWarning = false) }
             is Event.OnStartOdometerChanged -> updateState {
                 copy(
                     startOdometer = event.value,
-                    startOdometerError = null
+                    startOdometerError = null,
+                    showMileageWarning = false
+                )
+            }
+            is Event.OnCurrentOdometerChanged -> updateState {
+                copy(
+                    currentOdometer = event.value,
+                    currentOdometerError = null,
+                    showMileageWarning = false
                 )
             }
             is Event.OnBluetoothDeviceSelected -> updateState {
@@ -128,10 +137,14 @@ class SetupWizardViewModel @Inject constructor(
                 }
             }
             SetupStep.SMART_ACTIVATION -> {
-                updateState { copy(currentStep = SetupStep.ADVANCED_PROTECTION) }
+                if (validateBluetooth()) {
+                    updateState { copy(currentStep = SetupStep.ADVANCED_PROTECTION) }
+                }
             }
             SetupStep.ADVANCED_PROTECTION -> {
-                saveContract()
+                if (validateAdvanced()) {
+                    saveContract()
+                }
             }
         }
     }
@@ -170,12 +183,14 @@ class SetupWizardViewModel @Inject constructor(
     }
 
     private fun validateTimeframe(): Boolean {
+        val s = state.value
         var isValid = true
-        if (state.value.startDate.isBlank()) {
+        if (s.startDate.isBlank()) {
             updateState { copy(startDateError = TextProvider.Resource(R.string.onboarding_date_feedback)) }
             isValid = false
         }
-        if (state.value.durationMonths.toIntOrNull() == null) {
+        val duration = s.durationMonths.toIntOrNull()
+        if (duration == null || duration <= 0) {
             updateState { copy(durationMonthsError = TextProvider.Resource(R.string.onboarding_number_feedback)) }
             isValid = false
         }
@@ -183,15 +198,77 @@ class SetupWizardViewModel @Inject constructor(
     }
 
     private fun validateMileage(): Boolean {
+        val s = state.value
         var isValid = true
-        if (state.value.totalKms.replace(',', '.').toDoubleOrNull() == null) {
+        
+        val totalKms = s.totalKms.replace(',', '.').toDoubleOrNull()
+        if (totalKms == null || totalKms <= 0) {
             updateState { copy(totalKmsError = TextProvider.Resource(R.string.onboarding_number_feedback)) }
             isValid = false
         }
-        if (state.value.startOdometer.replace(',', '.').toDoubleOrNull() == null) {
+        
+        val startOdo = s.startOdometer.replace(',', '.').toDoubleOrNull()
+        if (startOdo == null || startOdo < 0) {
             updateState { copy(startOdometerError = TextProvider.Resource(R.string.onboarding_number_feedback)) }
             isValid = false
         }
+        
+        val currentOdo = s.currentOdometer.replace(',', '.').toDoubleOrNull()
+        if (currentOdo == null || currentOdo < 0) {
+            updateState { copy(currentOdometerError = TextProvider.Resource(R.string.onboarding_number_feedback)) }
+            isValid = false
+        } else if (startOdo != null && currentOdo < startOdo) {
+            updateState { copy(currentOdometerError = TextProvider.Resource(R.string.onboarding_current_odometer_feedback)) }
+            isValid = false
+        }
+
+        // Additional check: driven distance > total contract mileage
+        if (isValid) {
+            val driven = currentOdo!! - startOdo!!
+            val limit = totalKms!!
+            if (driven > limit && !s.showMileageWarning) {
+                updateState {
+                    copy(
+                        showMileageWarning = true,
+                        mileageWarningMessage = TextProvider.Resource(
+                            R.string.onboarding_mileage_warning,
+                            driven.toString(),
+                            limit.toString()
+                        )
+                    )
+                }
+                return false // Stop and show warning
+            }
+        }
+        
+        return isValid
+    }
+
+    private fun validateBluetooth(): Boolean {
+        return if (state.value.bluetoothDeviceAddress == null) {
+            updateState { copy(error = TextProvider.Resource(R.string.setup_wizard_error_bluetooth_required)) }
+            false
+        } else {
+            true
+        }
+    }
+
+    private fun validateAdvanced(): Boolean {
+        val s = state.value
+        var isValid = true
+        
+        val price = s.excessDistancePrice.replace(',', '.').toDoubleOrNull()
+        if (price == null || price < 0) {
+            updateState { copy(excessDistancePriceError = TextProvider.Resource(R.string.onboarding_number_feedback)) }
+            isValid = false
+        }
+        
+        val margin = s.courtesyMarginKms.replace(',', '.').toDoubleOrNull()
+        if (margin == null || margin < 0) {
+            updateState { copy(courtesyMarginError = TextProvider.Resource(R.string.onboarding_number_feedback)) }
+            isValid = false
+        }
+        
         return isValid
     }
 
@@ -215,6 +292,7 @@ class SetupWizardViewModel @Inject constructor(
         }.getOrDefault(0L)
 
         val startOdo = s.startOdometer.replace(',', '.').toDoubleOrNull() ?: 0.0
+        val currentOdo = s.currentOdometer.replace(',', '.').toDoubleOrNull() ?: startOdo
 
         val initialContract = RentingContract(
             id = temporaryContractId,
@@ -223,7 +301,7 @@ class SetupWizardViewModel @Inject constructor(
             durationMonths = s.durationMonths.toIntOrNull() ?: 0,
             totalKms = s.totalKms.replace(',', '.').toDoubleOrNull() ?: 0.0,
             startOdometer = startOdo,
-            currentOdometer = startOdo,
+            currentOdometer = currentOdo,
             bluetoothDeviceAddress = s.bluetoothDeviceAddress,
             bluetoothDeviceName = s.bluetoothDeviceName,
             excessDistancePrice = s.excessDistancePrice.replace(',', '.').toDoubleOrNull(),
@@ -292,7 +370,7 @@ class SetupWizardViewModel @Inject constructor(
                             updateState {
                                 copy(
                                     isLoading = false,
-                                    error = TextProvider.Resource(R.string.onboarding_register_error)
+                                    error = output.error.toText()
                                 )
                             }
                         }

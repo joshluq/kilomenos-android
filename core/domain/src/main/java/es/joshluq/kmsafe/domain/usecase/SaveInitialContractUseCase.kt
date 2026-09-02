@@ -4,6 +4,7 @@ import es.joshluq.foundationkit.log.LoggerKit
 import es.joshluq.foundationkit.usecase.FlowUseCase
 import es.joshluq.foundationkit.usecase.UseCaseInput
 import es.joshluq.foundationkit.usecase.UseCaseOutput
+import es.joshluq.kmsafe.domain.model.KmError
 import es.joshluq.kmsafe.domain.model.OdometerRecord
 import es.joshluq.kmsafe.domain.model.RentingContract
 import es.joshluq.kmsafe.domain.repository.AuthRepository
@@ -12,10 +13,7 @@ import es.joshluq.kmsafe.domain.repository.RentingRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.onStart
 import java.util.UUID
 import javax.inject.Inject
 
@@ -29,11 +27,29 @@ class SaveInitialContractUseCase @Inject constructor(
     override fun invoke(input: Input): Flow<Output> = flow {
         emit(Output.Progress)
         
-        // 1. Get current user once. We don't want to restart if the user flow emits again.
+        // 1. Authenticated User Check
         val user = authRepository.getCurrentUser().first()
-        val userId = user?.id ?: ""
+        val userId = user?.id
+        if (userId.isNullOrBlank()) {
+            logger.w("SaveInitialContractUseCase", "Aborting: No authenticated user found")
+            emit(Output.Failure(KmError.Unauthenticated))
+            return@flow
+        }
+
+        // 2. Domain Validation
+        val contract = input.contract
+        if (contract.vehicleName.isBlank()) {
+            logger.w("SaveInitialContractUseCase", "Aborting: Vehicle name is blank")
+            emit(Output.Failure(KmError.InvalidVehicleName))
+            return@flow
+        }
+
+        if (contract.totalKms <= 0 || contract.durationMonths <= 0) {
+            logger.w("SaveInitialContractUseCase", "Aborting: Invalid contract metrics (kms: ${contract.totalKms}, months: ${contract.durationMonths})")
+            emit(Output.Failure(KmError.InvalidContractMetrics))
+            return@flow
+        }
         
-        // 2. Generate a fixed ID for this operation to avoid multiple vehicles if retried/restarted
         val contractId = input.contract.id.ifBlank { UUID.randomUUID().toString() }
         logger.d("SaveInitialContractUseCase", "Executing save for contract ID: $contractId")
 
@@ -51,41 +67,46 @@ class SaveInitialContractUseCase @Inject constructor(
             isSelected = true
         )
 
-        // 3. Save Records Locally FIRST (Crucial for reconciliation in saveContract sync)
+        // 3. Persist Initial History
         historyRepository.saveRecord(initialRecord)
         logger.i("SaveInitialContractUseCase", "Initial record saved locally")
 
-        if (input.contract.currentOdometer > input.contract.startOdometer) {
+        val currentOdo = input.contract.currentOdometer
+        val startOdo = input.contract.startOdometer
+
+        if (currentOdo > startOdo) {
+            val drivenOffset = currentOdo - startOdo
+            logger.d("SaveInitialContractUseCase", "Creating first delta record: $drivenOffset km (from $currentOdo - $startOdo)")
+            
             val currentRecord = OdometerRecord(
                 id = UUID.randomUUID().toString(),
                 contractId = contractId,
                 timestamp = System.currentTimeMillis(),
-                odometerValue = input.contract.currentOdometer,
+                odometerValue = drivenOffset,
                 isInitialRecord = false
             )
             historyRepository.saveRecord(currentRecord)
-            logger.i("SaveInitialContractUseCase", "Current odometer record saved locally")
+            logger.i("SaveInitialContractUseCase", "Current odometer offset record saved locally")
         }
 
-        // 4. Save Contract (Triggers remote sync)
-        // We collect the flow from repository and wait for the final ID (could be remote ID)
+        // 4. Save Contract & Remote Sync
         val finalId = rentingRepository.saveContract(contractToSave).first()
         logger.i("SaveInitialContractUseCase", "Contract saved/synced with ID: $finalId")
 
-        // 5. Ensure it's selected and emit success
+        // 5. Activation
         rentingRepository.selectContract(finalId).first()
         emit(Output.Success(finalId))
         
     }.catch { e ->
         logger.e("SaveInitialContractUseCase", "Failed to save contract", e)
-        emit(Output.Failure)
+        emit(Output.Failure(KmError.UnknownError))
     }
 
     data class Input(val contract: RentingContract) : UseCaseInput
 
     sealed interface Output : UseCaseOutput {
         data object Progress : Output
-        data object Failure : Output
+        data class Failure(val error: KmError) : Output
         data class Success(val contractId: String) : Output
     }
 }

@@ -6,7 +6,6 @@ import es.joshluq.foundationkit.log.LoggerKit
 import es.joshluq.foundationkit.text.TextProvider
 import es.joshluq.foundationkit.usecase.FlowUseCase
 import es.joshluq.foundationkit.viewmodel.ScreenViewModel
-import es.joshluq.kmsafe.feature.profile.R
 import es.joshluq.kmsafe.domain.di.DeleteAccount
 import es.joshluq.kmsafe.domain.di.GetCurrentUser
 import es.joshluq.kmsafe.domain.di.GetEntitlements

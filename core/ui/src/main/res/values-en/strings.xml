@@ -43,6 +43,9 @@
     <string name="error_premium_only_feature">This feature is exclusive for PREMIUM users.</string>
     <string name="error_trial_already_used">The trial period has already been used on this device.</string>
     <string name="error_expense_not_found">The expense record was not found.</string>
+    <string name="error_unauthenticated">Your session has expired. Please log in again.</string>
+    <string name="error_invalid_vehicle_name">The vehicle name is required.</string>
+    <string name="error_invalid_metrics">Kilometers and duration values must be greater than 0.</string>
 
     <!-- Accessibility -->
     <string name="acc_back">Back</string>

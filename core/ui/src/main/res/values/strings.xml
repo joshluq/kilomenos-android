@@ -43,6 +43,9 @@
     <string name="error_premium_only_feature">Esta función es exclusiva para usuarios PREMIUM.</string>
     <string name="error_trial_already_used">El periodo de prueba ya ha sido utilizado en este dispositivo.</string>
     <string name="error_expense_not_found">El registro de gasto no se ha encontrado.</string>
+    <string name="error_unauthenticated">Tu sesión ha expirado. Por favor, inicia sesión de nuevo.</string>
+    <string name="error_invalid_vehicle_name">El nombre del vehículo es obligatorio.</string>
+    <string name="error_invalid_metrics">Los valores de kilómetros y duración deben ser mayores a 0.</string>
 
     <!-- Accessibility -->
     <string name="acc_back">Volver</string>

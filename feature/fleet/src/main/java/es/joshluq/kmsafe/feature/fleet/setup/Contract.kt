@@ -42,8 +42,12 @@ data class State(
     // Step 3: Mileage
     val totalKms: String = "",
     val startOdometer: String = "",
+    val currentOdometer: String = "",
     val totalKmsError: TextProvider? = null,
     val startOdometerError: TextProvider? = null,
+    val currentOdometerError: TextProvider? = null,
+    val showMileageWarning: Boolean = false,
+    val mileageWarningMessage: TextProvider? = null,
 
     // Step 4: Bluetooth
     val bluetoothDeviceName: String? = null,
@@ -73,6 +77,7 @@ sealed interface Event : UiEvent {
     data class OnDurationMonthsChanged(val value: String) : Event
     data class OnTotalKmsChanged(val value: String) : Event
     data class OnStartOdometerChanged(val value: String) : Event
+    data class OnCurrentOdometerChanged(val value: String) : Event
     data class OnBluetoothDeviceSelected(val name: String?, val address: String) : Event
     data class OnExcessDistancePriceChanged(val value: String) : Event
     data class OnCourtesyMarginKmsChanged(val value: String) : Event

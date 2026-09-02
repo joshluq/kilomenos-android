@@ -252,19 +252,34 @@ class EditContractViewModel @Inject constructor(
     }
 
     private fun validate(): Boolean {
+        val s = state.value
         var isValid = true
-        if (state.value.vehicleName.isBlank()) {
+        if (s.vehicleName.isBlank()) {
             updateState { copy(vehicleNameError = TextProvider.Resource(R.string.onboarding_vehicle_name_feedback)) }
             isValid = false
         }
-        if (state.value.durationMonths.toIntOrNull() == null) {
+        val duration = s.durationMonths.toIntOrNull()
+        if (duration == null || duration <= 0) {
             updateState { copy(durationMonthsError = TextProvider.Resource(R.string.onboarding_number_feedback)) }
             isValid = false
         }
-        if (state.value.totalKms.replace(',', '.').toDoubleOrNull() == null) {
+        val kms = s.totalKms.replace(',', '.').toDoubleOrNull()
+        if (kms == null || kms <= 0) {
             updateState { copy(totalKmsError = TextProvider.Resource(R.string.onboarding_number_feedback)) }
             isValid = false
         }
+        
+        val price = s.excessDistancePrice.replace(',', '.').toDoubleOrNull()
+        if (s.excessDistancePrice.isNotBlank() && (price == null || price < 0)) {
+            // We could add excessDistancePriceError to the state if needed, for now using a generic banner error or just invalidating
+            isValid = false
+        }
+        
+        val margin = s.courtesyMarginKms.replace(',', '.').toDoubleOrNull()
+        if (s.courtesyMarginKms.isNotBlank() && (margin == null || margin < 0)) {
+            isValid = false
+        }
+        
         return isValid
     }
 }

@@ -19,11 +19,14 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Bluetooth
@@ -40,23 +43,23 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusDirection
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavBackStackEntry
-import com.google.accompanist.permissions.ExperimentalPermissionsApi
-import com.google.accompanist.permissions.isGranted
-import com.google.accompanist.permissions.rememberPermissionState
 import es.joshluq.canvaskit.components.buttons.CanvasKitButton
 import es.joshluq.canvaskit.components.buttons.CanvasKitButtonVariant
 import es.joshluq.canvaskit.components.chips.CanvasKitChip
@@ -81,6 +84,7 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 import java.util.TimeZone
+import android.content.pm.PackageManager
 import es.joshluq.kmsafe.core.ui.R as CoreR
 
 @Composable
@@ -206,11 +210,13 @@ fun SetupWizardScreen(
                     sheetState = bottomSheetState,
                     containerColor = CanvasKitTheme.colors.backgroundPrimary
                 ) {
-                    BluetoothDevicePicker(
-                        onDeviceSelected = { name, address ->
-                            onEvent(Event.OnBluetoothDeviceSelected(name, address))
-                        }
-                    )
+                    Box(modifier = Modifier.fillMaxWidth().navigationBarsPadding()) {
+                        BluetoothDevicePicker(
+                            onDeviceSelected = { name, address ->
+                                onEvent(Event.OnBluetoothDeviceSelected(name, address))
+                            }
+                        )
+                    }
                 }
             }
         }
@@ -320,7 +326,9 @@ private fun ContractTimeframeStep(state: State, onEvent: (Event) -> Unit) {
         CanvasKitTextField(
             label = stringResource(R.string.onboarding_duration_months_label),
             value = state.durationMonths,
-            onValueChange = { onEvent(Event.OnDurationMonthsChanged(it)) },
+            onValueChange = { newValue -> 
+                onEvent(Event.OnDurationMonthsChanged(newValue.filter { it.isDigit() })) 
+            },
             errorText = state.durationMonthsError?.asString(),
             isError = state.durationMonthsError != null,
             suffix = stringResource(R.string.onboarding_months_suffix),
@@ -344,7 +352,9 @@ private fun MileageBudgetStep(state: State, onEvent: (Event) -> Unit) {
         CanvasKitTextField(
             label = stringResource(R.string.onboarding_total_kms_label),
             value = state.totalKms,
-            onValueChange = { onEvent(Event.OnTotalKmsChanged(it)) },
+            onValueChange = { newValue -> 
+                onEvent(Event.OnTotalKmsChanged(newValue.filter { it.isDigit() || it == '.' || it == ',' })) 
+            },
             errorText = state.totalKmsError?.asString(),
             isError = state.totalKmsError != null,
             suffix = stringResource(CoreR.string.onboarding_km_suffix),
@@ -354,27 +364,60 @@ private fun MileageBudgetStep(state: State, onEvent: (Event) -> Unit) {
             modifier = Modifier.padding(bottom = CanvasKitTheme.spacing.md)
         )
 
+        Spacer(modifier = Modifier.height(12.dp))
+
         CanvasKitTextField(
             label = stringResource(R.string.onboarding_start_odometer_label),
             value = state.startOdometer,
-            onValueChange = { onEvent(Event.OnStartOdometerChanged(it)) },
+            onValueChange = { newValue -> 
+                onEvent(Event.OnStartOdometerChanged(newValue.filter { it.isDigit() || it == '.' || it == ',' })) 
+            },
             errorText = state.startOdometerError?.asString(),
             isError = state.startOdometerError != null,
             suffix = stringResource(CoreR.string.onboarding_km_suffix),
             placeholder = stringResource(R.string.onboarding_start_odometer_placeholder),
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal, imeAction = ImeAction.Done),
-            keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() })
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal, imeAction = ImeAction.Next),
+            keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) }),
+            helperText = stringResource(R.string.onboarding_start_odometer_support)
         )
+        Spacer(modifier = Modifier.height(12.dp))
+
+        CanvasKitTextField(
+            label = stringResource(R.string.onboarding_current_odometer_label),
+            value = state.currentOdometer,
+            onValueChange = { newValue -> 
+                onEvent(Event.OnCurrentOdometerChanged(newValue.filter { it.isDigit() || it == '.' || it == ',' })) 
+            },
+            errorText = state.currentOdometerError?.asString(),
+            isError = state.currentOdometerError != null,
+            suffix = stringResource(CoreR.string.onboarding_km_suffix),
+            placeholder = stringResource(R.string.onboarding_current_odometer_placeholder),
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal, imeAction = ImeAction.Done),
+            keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() }),
+            helperText = stringResource(R.string.onboarding_current_odometer_support)
+        )
+
+        if (state.showMileageWarning) {
+            Spacer(modifier = Modifier.height(16.dp))
+            CanvasKitBanner(
+                variant = CanvasKitAlertVariant.Warning,
+                message = { Text(state.mileageWarningMessage?.asString() ?: "") },
+                visible = true,
+                onDismiss = null // Handled by input change in VM
+            )
+        }
     }
 }
 
-@OptIn(ExperimentalPermissionsApi::class)
 @Composable
 private fun SmartActivationStep(state: State, onEvent: (Event) -> Unit) {
-    val bluetoothPermissionState = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-        rememberPermissionState(Manifest.permission.BLUETOOTH_CONNECT)
-    } else {
-        null
+    val context = LocalContext.current
+    val permissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) {
+            onEvent(Event.OnToggleBluetoothPicker)
+        }
     }
 
     val isPremium = state.subscriptionLevel == SubscriptionLevel.PREMIUM
@@ -419,10 +462,14 @@ private fun SmartActivationStep(state: State, onEvent: (Event) -> Unit) {
                 CanvasKitButton(
                     variant = CanvasKitButtonVariant.Secondary,
                     onClick = safeClick {
-                        if (bluetoothPermissionState?.status?.isGranted != false) {
+                        val hasPermission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                            ContextCompat.checkSelfPermission(context, Manifest.permission.BLUETOOTH_CONNECT) == PackageManager.PERMISSION_GRANTED
+                        } else true
+
+                        if (hasPermission) {
                             onEvent(Event.OnToggleBluetoothPicker)
-                        } else {
-                            bluetoothPermissionState.launchPermissionRequest()
+                        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                            permissionLauncher.launch(Manifest.permission.BLUETOOTH_CONNECT)
                         }
                     }
                 ) {
@@ -486,7 +533,9 @@ private fun AdvancedProtectionStep(state: State, onEvent: (Event) -> Unit) {
         CanvasKitTextField(
             label = stringResource(R.string.setup_wizard_step_advanced_price_label),
             value = state.excessDistancePrice,
-            onValueChange = { onEvent(Event.OnExcessDistancePriceChanged(it)) },
+            onValueChange = { newValue -> 
+                onEvent(Event.OnExcessDistancePriceChanged(newValue.filter { it.isDigit() || it == '.' || it == ',' })) 
+            },
             errorText = state.excessDistancePriceError?.asString(),
             isError = state.excessDistancePriceError != null,
             placeholder = stringResource(R.string.setup_wizard_step_advanced_price_placeholder),
@@ -499,7 +548,9 @@ private fun AdvancedProtectionStep(state: State, onEvent: (Event) -> Unit) {
         CanvasKitTextField(
             label = stringResource(R.string.setup_wizard_step_advanced_margin_label),
             value = state.courtesyMarginKms,
-            onValueChange = { onEvent(Event.OnCourtesyMarginKmsChanged(it)) },
+            onValueChange = { newValue -> 
+                onEvent(Event.OnCourtesyMarginKmsChanged(newValue.filter { it.isDigit() || it == '.' || it == ',' })) 
+            },
             errorText = state.courtesyMarginError?.asString(),
             isError = state.courtesyMarginError != null,
             placeholder = stringResource(R.string.setup_wizard_step_advanced_margin_placeholder),
@@ -507,6 +558,16 @@ private fun AdvancedProtectionStep(state: State, onEvent: (Event) -> Unit) {
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal, imeAction = ImeAction.Done),
             keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() })
         )
+
+        if (state.showMileageWarning) {
+            Spacer(modifier = Modifier.height(16.dp))
+            CanvasKitBanner(
+                variant = CanvasKitAlertVariant.Warning,
+                message = { Text(state.mileageWarningMessage?.asString() ?: "") },
+                visible = true,
+                onDismiss = null // Handled by input change in VM
+            )
+        }
     }
 }
 

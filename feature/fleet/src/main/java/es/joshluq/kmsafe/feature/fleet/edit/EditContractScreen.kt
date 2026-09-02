@@ -1,6 +1,7 @@
 package es.joshluq.kmsafe.feature.fleet.edit
 
 import android.Manifest
+import android.content.pm.PackageManager
 import android.content.res.Configuration
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -16,6 +17,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -40,6 +42,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
@@ -48,13 +51,11 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavBackStackEntry
-import com.google.accompanist.permissions.ExperimentalPermissionsApi
-import com.google.accompanist.permissions.isGranted
-import com.google.accompanist.permissions.rememberPermissionState
 import es.joshluq.canvaskit.components.buttons.CanvasKitButton
 import es.joshluq.canvaskit.components.cards.CanvasKitCard
 import es.joshluq.canvaskit.components.chips.CanvasKitChip
@@ -111,18 +112,21 @@ fun EditContractRoute(
     )
 }
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalPermissionsApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EditContractScreen(
     state: State,
     onEvent: (Event) -> Unit
 ) {
+    val context = LocalContext.current
     val keyboardController = LocalSoftwareKeyboardController.current
 
-    val bluetoothPermissionState = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-        rememberPermissionState(Manifest.permission.BLUETOOTH_CONNECT)
-    } else {
-        null
+    val permissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) {
+            onEvent(Event.OnToggleBluetoothPicker)
+        }
     }
 
     val photoPickerLauncher = rememberLauncherForActivityResult(
@@ -227,7 +231,9 @@ fun EditContractScreen(
                         CanvasKitTextField(
                             label = stringResource(R.string.onboarding_duration_months_label),
                             value = state.durationMonths,
-                            onValueChange = { onEvent(Event.OnDurationMonthsChanged(it)) },
+                            onValueChange = { newValue -> 
+                                onEvent(Event.OnDurationMonthsChanged(newValue.filter { it.isDigit() })) 
+                            },
                             errorText = state.durationMonthsError?.asString(),
                             isError = state.durationMonthsError != null,
                             suffix = stringResource(R.string.onboarding_months_suffix),
@@ -241,7 +247,9 @@ fun EditContractScreen(
                         CanvasKitTextField(
                             label = stringResource(R.string.onboarding_total_kms_label),
                             value = state.totalKms,
-                            onValueChange = { onEvent(Event.OnTotalKmsChanged(it)) },
+                            onValueChange = { newValue -> 
+                                onEvent(Event.OnTotalKmsChanged(newValue.filter { it.isDigit() || it == '.' || it == ',' })) 
+                            },
                             errorText = state.totalKmsError?.asString(),
                             isError = state.totalKmsError != null,
                             suffix = stringResource(CoreR.string.onboarding_km_suffix),
@@ -282,10 +290,15 @@ fun EditContractScreen(
                                     .matchParentSize()
                                     .safeClickable {
                                         keyboardController?.hide()
-                                        if (bluetoothPermissionState?.status?.isGranted != false) {
+                                        
+                                        val hasPermission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                                            ContextCompat.checkSelfPermission(context, Manifest.permission.BLUETOOTH_CONNECT) == PackageManager.PERMISSION_GRANTED
+                                        } else true
+
+                                        if (hasPermission) {
                                             onEvent(Event.OnToggleBluetoothPicker)
-                                        } else {
-                                            bluetoothPermissionState.launchPermissionRequest()
+                                        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                                            permissionLauncher.launch(Manifest.permission.BLUETOOTH_CONNECT)
                                         }
                                     }
                             )
@@ -294,7 +307,9 @@ fun EditContractScreen(
                         CanvasKitTextField(
                             label = stringResource(R.string.setup_wizard_step_advanced_price_label),
                             value = state.excessDistancePrice,
-                            onValueChange = { onEvent(Event.OnExcessDistancePriceChanged(it)) },
+                            onValueChange = { newValue -> 
+                                onEvent(Event.OnExcessDistancePriceChanged(newValue.filter { it.isDigit() || it == '.' || it == ',' })) 
+                            },
                             placeholder = stringResource(R.string.setup_wizard_step_advanced_price_placeholder),
                             suffix = "€/km",
                             keyboardOptions = KeyboardOptions(
@@ -307,7 +322,9 @@ fun EditContractScreen(
                         CanvasKitTextField(
                             label = stringResource(R.string.setup_wizard_step_advanced_margin_label),
                             value = state.courtesyMarginKms,
-                            onValueChange = { onEvent(Event.OnCourtesyMarginKmsChanged(it)) },
+                            onValueChange = { newValue -> 
+                                onEvent(Event.OnCourtesyMarginKmsChanged(newValue.filter { it.isDigit() || it == '.' || it == ',' })) 
+                            },
                             placeholder = stringResource(R.string.setup_wizard_step_advanced_margin_placeholder),
                             suffix = "km",
                             keyboardOptions = KeyboardOptions(
@@ -353,11 +370,13 @@ fun EditContractScreen(
                     sheetState = bottomSheetState,
                     containerColor = CanvasKitTheme.colors.backgroundPrimary
                 ) {
-                    BluetoothDevicePicker(
-                        onDeviceSelected = { name, address ->
-                            onEvent(Event.OnBluetoothDeviceSelected(name ?: address, address))
-                        }
-                    )
+                    Box(modifier = Modifier.fillMaxWidth().navigationBarsPadding()) {
+                        BluetoothDevicePicker(
+                            onDeviceSelected = { name, address ->
+                                onEvent(Event.OnBluetoothDeviceSelected(name ?: address, address))
+                            }
+                        )
+                    }
                 }
             }
         }

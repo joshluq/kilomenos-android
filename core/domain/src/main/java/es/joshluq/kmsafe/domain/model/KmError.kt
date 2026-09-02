@@ -35,6 +35,15 @@ sealed interface KmError {
     /** The requested fuel expense entry was not found. */
     data object ExpenseNotFound : KmError
 
+    /** User is not logged in or session has expired. */
+    data object Unauthenticated : KmError
+
+    /** The vehicle name provided is invalid or blank. */
+    data object InvalidVehicleName : KmError
+
+    /** The contract metrics (kms or months) are invalid. */
+    data object InvalidContractMetrics : KmError
+
     /** An unexpected or unhandled error occurred. */
     data object UnknownError : KmError
 }

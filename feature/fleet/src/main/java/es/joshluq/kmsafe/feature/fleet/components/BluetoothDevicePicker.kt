@@ -8,8 +8,6 @@ import android.bluetooth.BluetoothManager
 import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -24,11 +22,7 @@ import androidx.compose.material.icons.filled.Bluetooth
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -43,35 +37,28 @@ import es.joshluq.kmsafe.feature.fleet.R
 
 /**
  * Content for the Bluetooth Device Picker.
- * This component handles permission requesting and device listing.
+ * Displays a list of paired devices. Validates permission before accessing Bluetooth API.
  */
 @Composable
 fun BluetoothDevicePicker(
     onDeviceSelected: (name: String?, address: String) -> Unit
 ) {
     val context = LocalContext.current
-    var pairedDevices by remember { mutableStateOf<List<BluetoothDevice>>(emptyList()) }
-    var hasPermission by remember {
-        mutableStateOf(
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                ContextCompat.checkSelfPermission(context, Manifest.permission.BLUETOOTH_CONNECT) == PackageManager.PERMISSION_GRANTED
-            } else {
-                true
-            }
-        )
+    
+    // Safety check: Don't call Bluetooth APIs without permission check
+    val hasPermission = remember {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            ContextCompat.checkSelfPermission(context, Manifest.permission.BLUETOOTH_CONNECT) == PackageManager.PERMISSION_GRANTED
+        } else {
+            true
+        }
     }
 
-    val permissionLauncher = rememberLauncherForActivityResult(
-        ActivityResultContracts.RequestPermission()
-    ) { isGranted ->
-        hasPermission = isGranted
-    }
-
-    LaunchedEffect(hasPermission) {
+    val pairedDevices = remember(hasPermission) {
         if (hasPermission) {
-            pairedDevices = getPairedDevices(context)
-        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            permissionLauncher.launch(Manifest.permission.BLUETOOTH_CONNECT)
+            getPairedDevices(context)
+        } else {
+            emptyList()
         }
     }
 

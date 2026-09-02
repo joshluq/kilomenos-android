@@ -15,8 +15,10 @@
     <string name="onboarding_km_suffix">Km</string>
     <string name="onboarding_start_odometer_label">Initial odometer at signing</string>
     <string name="onboarding_start_odometer_placeholder">e.g. 0 (if new)</string>
+    <string name="onboarding_start_odometer_support">The mileage the car had when you picked it up or signed the contract.</string>
     <string name="onboarding_current_odometer_label">Current odometer today</string>
     <string name="onboarding_current_odometer_placeholder">e.g. 15000</string>
+    <string name="onboarding_current_odometer_support">The mileage your car shows at this exact moment.</string>
     <string name="onboarding_bluetooth_label">Linked car (Bluetooth)</string>
     <string name="onboarding_bluetooth_placeholder">Optional: Select your car</string>
     <string name="onboarding_bluetooth_picker_title">Select Device</string>
@@ -33,6 +35,7 @@
     <string name="onboarding_vehicle_name_feedback">Name is required</string>
     <string name="onboarding_number_feedback">Must be greater than 0</string>
     <string name="onboarding_current_odometer_feedback">Current odometer must be equal or greater than initial</string>
+    <string name="onboarding_mileage_warning">Warning! The kilometers driven today (%1$s km) already exceed your total contract limit (%2$s km).</string>
     <string name="onboarding_date_feedback">Date required</string>
     <string name="onboarding_change_photo">Change photo</string>
     <string name="onboarding_change_bluetooth">Change Bluetooth device</string>
@@ -83,6 +86,7 @@
     <string name="setup_wizard_step_bluetooth_desc_free">Linking your car now will allow you to activate automatic tracking if you decide to upgrade to Premium in the future.</string>
     <string name="setup_wizard_step_bluetooth_action">Search for my car</string>
     <string name="setup_wizard_step_bluetooth_linked">Car linked successfully!</string>
+    <string name="setup_wizard_error_bluetooth_required">Please select a Bluetooth device or press Skip.</string>
     <string name="setup_wizard_step_advanced_title">Economic protection</string>
     <string name="setup_wizard_step_advanced_desc">Set the extra cost and your courtesy margin so our forecast is exact.</string>
     <string name="setup_wizard_step_advanced_price_label">Cost per exceeded KM</string>
