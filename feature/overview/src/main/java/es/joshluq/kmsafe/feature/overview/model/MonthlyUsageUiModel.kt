@@ -1,4 +1,4 @@
-package es.joshluq.kmsafe.ui.overview.model
+package es.joshluq.kmsafe.feature.overview.model
 
 /**
  * UI representation model for monthly odometer usage.

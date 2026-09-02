@@ -4,8 +4,8 @@ import es.joshluq.foundationkit.log.LoggerKit
 import es.joshluq.foundationkit.usecase.FlowUseCase
 import es.joshluq.foundationkit.usecase.UseCaseInput
 import es.joshluq.foundationkit.usecase.UseCaseOutput
+import es.joshluq.kmsafe.domain.model.ContractMetrics
 import es.joshluq.kmsafe.domain.model.RentingContract
-import es.joshluq.kmsafe.domain.model.SyncStatus
 import es.joshluq.kmsafe.domain.repository.HistoryRepository
 import es.joshluq.kmsafe.domain.repository.RentingRepository
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -21,6 +21,7 @@ import javax.inject.Inject
 class GetOverviewDataUseCase @Inject constructor(
     private val rentingRepository: RentingRepository,
     private val historyRepository: HistoryRepository,
+    private val calculateContractMetricsUseCase: CalculateContractMetricsUseCase,
     private val logger: LoggerKit
 ) : FlowUseCase<GetOverviewDataUseCase.Input, GetOverviewDataUseCase.Output> {
 
@@ -34,25 +35,23 @@ class GetOverviewDataUseCase @Inject constructor(
             }
 
             historyRepository.getHistory(contract.id).distinctUntilChanged().map { records ->
-                val totalKmsDriven = records.filter { !it.isInitialRecord }
-                    .sumOf { it.odometerValue }
-                    .toDouble()
+                val metrics = calculateContractMetricsUseCase.calculate(contract, records)
 
-                val pendingRecords = records.filter { it.syncStatus == SyncStatus.PENDING }
-                val hasPendingRecords = pendingRecords.isNotEmpty()
-                val isSyncPending = hasPendingRecords || contract.syncStatus == SyncStatus.PENDING
-
-                if (isSyncPending) {
+                if (metrics.isSyncPending) {
                     logger.i(
                         "GetOverviewDataUseCase",
-                        "Sync Pending for ${contract.vehicleName}. " +
-                            "Pending Records: ${pendingRecords.size}, Contract Pending: ${contract.syncStatus == SyncStatus.PENDING}"
+                        "Sync Pending for ${contract.vehicleName}."
                     )
                 } else {
                     logger.d("GetOverviewDataUseCase", "Overview data synced for ${contract.vehicleName}")
                 }
-                
-                Output.Success(contract, totalKmsDriven.coerceAtLeast(0.0), isSyncPending) as Output
+
+                Output.Success(
+                    contract = contract,
+                    actualKmsDrivenSinceStart = metrics.actualKmsDriven,
+                    isSyncPending = metrics.isSyncPending,
+                    metrics = metrics
+                ) as Output
             }
         }
             .distinctUntilChanged()
@@ -71,7 +70,8 @@ class GetOverviewDataUseCase @Inject constructor(
         data class Success(
             val contract: RentingContract?,
             val actualKmsDrivenSinceStart: Double,
-            val isSyncPending: Boolean = false
+            val isSyncPending: Boolean = false,
+            val metrics: ContractMetrics? = null
         ) : Output
     }
 }

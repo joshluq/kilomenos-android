@@ -2,6 +2,7 @@ import com.android.build.api.dsl.LibraryExtension
 
 plugins {
     alias(libs.plugins.pluginkit.android.library)
+    alias(libs.plugins.pluginkit.android.testing)
     alias(libs.plugins.kotlin.serialization)
 }
 

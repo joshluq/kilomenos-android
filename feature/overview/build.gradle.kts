@@ -5,21 +5,28 @@ plugins {
     alias(libs.plugins.pluginkit.android.compose)
     alias(libs.plugins.pluginkit.android.hilt)
     alias(libs.plugins.pluginkit.android.navigation)
+    alias(libs.plugins.pluginkit.quality)
+    alias(libs.plugins.pluginkit.android.testing)
     alias(libs.plugins.kotlin.serialization)
 }
 
 configure<LibraryExtension> {
-    namespace = "es.joshluq.kmsafe.feature.auth"
+    namespace = "es.joshluq.kmsafe.feature.overview"
 }
 
 dependencies {
     implementation(project(":core:domain"))
     implementation(project(":core:ui"))
+    implementation(project(":core:navigation"))
+    implementation(project(":core:monetization"))
+    implementation(project(":feature:fleet"))
+    implementation(project(":feature:profile"))
 
     implementation(deps.canvaskit)
     implementation(deps.foundationkit)
     implementation(deps.analyticskit)
     implementation(deps.javax.inject)
-    implementation(deps.googleid)
+    implementation(deps.coil.compose)
+    implementation(deps.accompanist.permissions)
     implementation(libs.kotlinx.serialization.json)
 }

@@ -1,4 +1,4 @@
-package es.joshluq.kmsafe.ui.overview.model
+package es.joshluq.kmsafe.feature.overview.model
 
 import es.joshluq.kmsafe.domain.model.MonthlyOdometerAggregation
 import java.text.SimpleDateFormat

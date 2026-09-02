@@ -1,4 +1,4 @@
-package es.joshluq.kmsafe.ui.overview
+package es.joshluq.kmsafe.feature.overview
 
 import es.joshluq.foundationkit.text.TextProvider
 import es.joshluq.foundationkit.viewmodel.UiEffect
@@ -7,7 +7,7 @@ import es.joshluq.foundationkit.viewmodel.UiState
 import es.joshluq.kmsafe.domain.model.RentingContract
 import es.joshluq.kmsafe.domain.model.SubscriptionLevel
 import es.joshluq.kmsafe.domain.model.TripProjection
-import es.joshluq.kmsafe.ui.overview.model.MonthlyUsageUiModel
+import es.joshluq.kmsafe.feature.overview.model.MonthlyUsageUiModel
 
 /**
  * Represents the UI state for the Overview screen.

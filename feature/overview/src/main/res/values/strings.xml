@@ -1,0 +1,56 @@
+<resources>
+    <!-- Overview -->
+    <string name="overview_empty_state_title">Tu control de kilometraje empieza aquí</string>
+    <string name="overview_empty_state_description">Para empezar, registra tu contrato de renting. Esto nos permitirá calcular tu balance diario y avisarte si te excedes de kilómetros antes del final de tu contrato.</string>
+    <string name="overview_kilometer_balance">Saldo de Kilómetros</string>
+    <string name="overview_daily_limit">Límite diario ideal</string>
+    <string name="overview_monthly_limit">Límite mensual ideal</string>
+    <string name="overview_total_kms_driven">Total recorrido</string>
+    <string name="overview_ideal_limits_title">LÍMITES IDEALES (CONTRATO)</string>
+    <string name="overview_usage_comparison_title">COMPARATIVA USO</string>
+    <string name="overview_monthly_usage_title">USO MENSUAL</string>
+    <string name="overview_no_data_available">No hay datos suficientes</string>
+    <string name="overview_difference_label">Diferencia</string>
+    <string name="overview_time_used_label">Tiempo\nUsado</string>
+    <string name="overview_kms_used_label">Kms\nUsados</string>
+    <string name="overview_update_odometer_title">Registrar Kilómetros</string>
+    <string name="overview_save_record_button">Guardar Registro</string>
+    <string name="overview_register_renting_button">Registrar mi Renting</string>
+    <string name="overview_chart_info_title">Ayuda del Gráfico</string>
+    <string name="overview_chart_comparison_info">Este gráfico compara el tiempo que ha pasado de tu contrato frente a los kilómetros que ya has consumido.\n\n• Si el círculo azul es mayor que el gris, has gastado más porcentaje de kilómetros que de tiempo (¡Cuidado!).\n\n• La diferencia (%) te indica cuánto margen tienes respecto a tu presupuesto temporal.</string>
+    <string name="overview_chart_monthly_info">Muestra tu consumo de kilómetros real frente al presupuesto ideal de cada mes.\n\n• Barra Azul: Tus kilómetros reales.\n\n• Barra Gris: El presupuesto teórico del mes.\n\n• Línea Horizontal: El límite máximo para no excederte.</string>
+    <string name="overview_chart_legend_kms">Kms usados</string>
+    <string name="overview_chart_legend_time">Tiempo transcurrido</string>
+    <string name="overview_chart_legend_actual">Consumo Real</string>
+    <string name="overview_chart_legend_budget">Presupuesto</string>
+    <string name="overview_error_date_outside_contract">La fecha debe estar dentro del periodo de vigencia del contrato.</string>
+
+    <!-- Projection Card -->
+    <string name="projection_card_title">TU FUTURO AL VOLANTE</string>
+    <string name="projection_card_expected_balance">Estado final previsto</string>
+    <string name="projection_card_projected_total">Lectura al entregar</string>
+    <string name="projection_card_daily_average">Tu ritmo actual</string>
+    <string name="projection_card_not_enough_data">Dibujando tu futuro (faltan %1$d días de datos)&#8230;</string>
+    <string name="projection_card_status_safe">¡Todo bajo control! Te sobrarían %1$s km.</string>
+    <string name="projection_card_status_over">⚠️ Atención: superarás tu límite por %1$s km.</string>
+
+    <!-- Auto-Tracking Promotion -->
+    <string name="overview_promotion_autotracking_title">Auto-Tracking</string>
+    <string name="overview_promotion_autotracking_desc">Registra tus viajes automáticamente sin pulsar ningún botón.\n\n*Este aviso no volverá a aparecer.</string>
+    <string name="overview_promotion_autotracking_confirm">Activar</string>
+    <string name="overview_promotion_autotracking_dismiss">Omitir</string>
+    <!-- Tracking Card -->
+    <string name="tracking_card_status_pending">Detectando conducción…</string>
+    <string name="tracking_card_status_recording">Viaje activo</string>
+    <string name="tracking_card_distance_label">Distancia</string>
+    <string name="tracking_card_time_label">Tiempo</string>
+    <string name="tracking_card_stop_button">Detener</string>
+    <string name="tracking_card_start_button">Confirmar Inicio</string>
+    <string name="tracking_card_active_mode">MODO CO-PILOTO</string>
+    <string name="tracking_card_idle_mode">ASISTENTE DE VIAJE</string>
+    <string name="tracking_card_kms_label">KILÓMETROS RECORRIDOS</string>
+    <string name="tracking_card_save_action">Guardar</string>
+    <string name="tracking_card_cancel_action">Cancelar</string>
+    <string name="tracking_card_start_action">START</string>
+    <string name="tracking_card_stop_action">STOP TRIP</string>
+</resources>

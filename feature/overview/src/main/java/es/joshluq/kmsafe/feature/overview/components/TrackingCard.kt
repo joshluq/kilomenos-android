@@ -1,4 +1,4 @@
-package es.joshluq.kmsafe.ui.overview.components
+package es.joshluq.kmsafe.feature.overview.components
 
 import android.content.res.Configuration
 import androidx.compose.animation.animateColor
@@ -39,8 +39,8 @@ import es.joshluq.canvaskit.components.buttons.CanvasKitButtonVariant
 import es.joshluq.canvaskit.components.cards.CanvasKitCard
 import es.joshluq.canvaskit.components.cards.CanvasKitCardVariant
 import es.joshluq.canvaskit.foundations.theme.CanvasKitTheme
-import es.joshluq.kmsafe.R
 import es.joshluq.kmsafe.core.ui.util.safeClick
+import es.joshluq.kmsafe.feature.overview.R
 
 @Composable
 fun TrackingCard(

@@ -1,4 +1,4 @@
-package es.joshluq.kmsafe.ui.overview
+package es.joshluq.kmsafe.feature.overview
 
 import android.Manifest
 import android.content.Intent
@@ -113,19 +113,17 @@ import es.joshluq.canvaskit.components.layout.CanvasKitLoadingStrategy
 import es.joshluq.canvaskit.components.navigation.CanvasKitTopBar
 import es.joshluq.canvaskit.components.sheets.CanvasKitBottomSheet
 import es.joshluq.canvaskit.foundations.theme.CanvasKitTheme
-import es.joshluq.kmsafe.R
 import es.joshluq.kmsafe.core.monetization.components.AdMobBanner
 import es.joshluq.kmsafe.core.ui.components.BrandingLogo
 import es.joshluq.kmsafe.core.ui.util.DateUtils
 import es.joshluq.kmsafe.core.ui.util.NumberFormatter
 import es.joshluq.kmsafe.core.ui.util.safeClick
 import es.joshluq.kmsafe.core.ui.util.safeClickable
-import es.joshluq.kmsafe.data.location.LocationTrackingService
 import es.joshluq.kmsafe.domain.model.RentingContract
 import es.joshluq.kmsafe.domain.model.SubscriptionLevel
 import es.joshluq.kmsafe.domain.model.TripProjection
-import es.joshluq.kmsafe.ui.overview.components.TrackingCard
-import es.joshluq.kmsafe.ui.overview.model.MonthlyUsageUiModel
+import es.joshluq.kmsafe.feature.overview.components.TrackingCard
+import es.joshluq.kmsafe.feature.overview.model.MonthlyUsageUiModel
 import kotlin.math.absoluteValue
 import es.joshluq.kmsafe.core.ui.R as CoreR
 import es.joshluq.kmsafe.feature.fleet.R as FleetR
@@ -177,8 +175,9 @@ fun OverviewRoute(
                 Effect.NavigateToPremiumPaywall -> onNavigateToPremiumPaywall()
                 Effect.NavigateToPreferences -> onNavigateToPreferences()
                 Effect.StartTrackingService -> {
-                    val intent = Intent(context, LocationTrackingService::class.java).apply {
-                        action = LocationTrackingService.ACTION_START
+                    val intent = Intent().apply {
+                        setClassName(context.packageName, "es.joshluq.kmsafe.data.location.LocationTrackingService")
+                        action = "ACTION_START"
                     }
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                         context.startForegroundService(intent)
@@ -187,8 +186,9 @@ fun OverviewRoute(
                     }
                 }
                 Effect.StopTrackingService -> {
-                    val intent = Intent(context, LocationTrackingService::class.java).apply {
-                        action = LocationTrackingService.ACTION_STOP
+                    val intent = Intent().apply {
+                        setClassName(context.packageName, "es.joshluq.kmsafe.data.location.LocationTrackingService")
+                        action = "ACTION_STOP"
                     }
                     context.startService(intent)
                 }

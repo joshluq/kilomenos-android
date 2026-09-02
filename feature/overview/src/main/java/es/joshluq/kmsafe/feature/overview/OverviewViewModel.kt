@@ -1,4 +1,4 @@
-package es.joshluq.kmsafe.ui.overview
+package es.joshluq.kmsafe.feature.overview
 
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -8,7 +8,6 @@ import es.joshluq.foundationkit.log.LoggerKit
 import es.joshluq.foundationkit.text.TextProvider
 import es.joshluq.foundationkit.usecase.FlowUseCase
 import es.joshluq.foundationkit.viewmodel.ScreenViewModel
-import es.joshluq.kmsafe.R
 import es.joshluq.kmsafe.core.domain.usecase.SyncStationGeofencesUseCase
 import es.joshluq.kmsafe.core.monetization.domain.MonetizationConfig
 import es.joshluq.kmsafe.core.ui.util.DateUtils.getContractEndDate
@@ -29,7 +28,6 @@ import es.joshluq.kmsafe.domain.di.StopTracking
 import es.joshluq.kmsafe.domain.di.SyncStationGeofences
 import es.joshluq.kmsafe.domain.di.UpdatePreferences
 import es.joshluq.kmsafe.domain.model.Feature
-import es.joshluq.kmsafe.domain.model.RentingContract
 import es.joshluq.kmsafe.domain.model.SubscriptionLevel
 import es.joshluq.kmsafe.domain.usecase.AddOdometerRecordUseCase
 import es.joshluq.kmsafe.domain.usecase.ClearTrackingUseCase
@@ -45,7 +43,7 @@ import es.joshluq.kmsafe.domain.usecase.StartAutoTrackingUseCase
 import es.joshluq.kmsafe.domain.usecase.StopAutoTrackingUseCase
 import es.joshluq.kmsafe.domain.usecase.StopTrackingUseCase
 import es.joshluq.kmsafe.domain.usecase.UpdatePreferencesUseCase
-import es.joshluq.kmsafe.ui.overview.model.toUiModel
+import es.joshluq.kmsafe.feature.overview.model.toUiModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -92,11 +90,6 @@ class OverviewViewModel @Inject constructor(
     private val analytics: AnalyticskitManager,
     private val logger: LoggerKit
 ) : ScreenViewModel<State, Event, Effect>() {
-
-    companion object {
-        private const val DAYS_IN_MONTH = 30.4375
-        private const val MILLIS_IN_DAY = 1000L * 60 * 60 * 24
-    }
 
     private var bannerAlertJob: Job? = null
 
@@ -162,10 +155,27 @@ class OverviewViewModel @Inject constructor(
             // 2. Process Contract Data
             if (overviewOutput is GetOverviewDataUseCase.Output.Success) {
                 val contract = overviewOutput.contract
-                if (contract != null) {
-                    newState = applyMetricsToState(newState, contract, overviewOutput.actualKmsDrivenSinceStart)
-                    // We only clear isLoading if we have data or if it's an explicit Success state
-                    newState = newState.copy(isSyncPending = overviewOutput.isSyncPending, isLoading = false)
+                val metrics = overviewOutput.metrics
+                if (contract != null && metrics != null) {
+                    val isPremium = newState.isPremium ?: false
+                    val isAutoTrackingEnabled = newState.autoTrackingEnabled
+                    val hasBluetooth = contract.bluetoothDeviceAddress != null
+                    val showBluetoothSuggestion = isPremium && isAutoTrackingEnabled && !hasBluetooth
+
+                    newState = newState.copy(
+                        renting = contract,
+                        balance = metrics.balance,
+                        dailyLimit = metrics.dailyBudget,
+                        monthlyLimit = metrics.monthlyBudget,
+                        totalKmsDriven = metrics.currentOdometer,
+                        actualKmsDriven = metrics.actualKmsDriven,
+                        timePercentage = metrics.timePercentage,
+                        kmsPercentage = metrics.kmsPercentage,
+                        differencePercentage = metrics.differencePercentage,
+                        showBluetoothSuggestionBanner = showBluetoothSuggestion,
+                        isSyncPending = metrics.isSyncPending,
+                        isLoading = false
+                    )
                 } else {
                     newState = newState.copy(isLoading = false, renting = null)
                 }
@@ -196,40 +206,6 @@ class OverviewViewModel @Inject constructor(
                 }
             }
         }.launchIn(viewModelScope)
-    }
-
-    private fun applyMetricsToState(currentState: State, renting: RentingContract, actualKms: Double): State {
-        val currentTime = System.currentTimeMillis()
-        val totalDays = renting.durationMonths * DAYS_IN_MONTH
-        val daysPassed = ((currentTime - renting.startDate) / MILLIS_IN_DAY.toDouble()).coerceAtLeast(0.0)
-        val baseDailyBudget = renting.totalKms / totalDays
-        val monthlyBudget = renting.totalKms / renting.durationMonths
-        val theoreticalKms = daysPassed * baseDailyBudget
-        val balance = theoreticalKms - actualKms
-
-        val timeUsedPercentage = (daysPassed / totalDays).coerceIn(0.0, 1.0).toFloat()
-        val kmsUsedPercentage = (actualKms / renting.totalKms).coerceIn(0.0, 1.0).toFloat()
-        val differencePercentage = ((timeUsedPercentage - kmsUsedPercentage) * 100)
-        val currentOdometer = renting.startOdometer + actualKms
-
-        // Bluetooth Suggestion Evaluation
-        val isPremium = currentState.isPremium ?: false
-        val isAutoTrackingEnabled = currentState.autoTrackingEnabled
-        val hasBluetooth = renting.bluetoothDeviceAddress != null
-        val showBluetoothSuggestion = isPremium && isAutoTrackingEnabled && !hasBluetooth
-
-        return currentState.copy(
-            renting = renting,
-            balance = balance,
-            dailyLimit = baseDailyBudget,
-            monthlyLimit = monthlyBudget,
-            totalKmsDriven = currentOdometer,
-            actualKmsDriven = actualKms,
-            timePercentage = timeUsedPercentage,
-            kmsPercentage = kmsUsedPercentage,
-            differencePercentage = differencePercentage,
-            showBluetoothSuggestionBanner = showBluetoothSuggestion
-        )
     }
 
     override fun createInitialState(): State = State.Empty
@@ -520,9 +496,10 @@ class OverviewViewModel @Inject constructor(
                     }
 
                     // Re-trigger evaluation of the banner after toggle
-                    state.value.renting?.let {
-                        updateState { applyMetricsToState(this, it, actualKmsDriven) }
-                    }
+                    val isPremium = state.value.isPremium ?: false
+                    val hasBluetooth = state.value.renting?.bluetoothDeviceAddress != null
+                    val showBluetooth = isPremium && enabled && !hasBluetooth
+                    updateState { copy(showBluetoothSuggestionBanner = showBluetooth) }
                 }
             }.launchIn(viewModelScope)
     }
