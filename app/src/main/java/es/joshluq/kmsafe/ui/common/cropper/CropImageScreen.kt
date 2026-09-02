@@ -44,11 +44,11 @@ import com.smarttoolfactory.cropper.settings.CropOutlineProperty
 import es.joshluq.canvaskit.components.buttons.CanvasKitButton
 import es.joshluq.canvaskit.components.navigation.CanvasKitTopBar
 import es.joshluq.canvaskit.foundations.theme.CanvasKitTheme
-import es.joshluq.kmsafe.R
-import es.joshluq.kmsafe.core.ui.R as CoreR
 import es.joshluq.kmsafe.core.ui.util.safeClick
 import java.io.File
 import java.io.FileOutputStream
+import es.joshluq.kmsafe.core.ui.R as CoreR
+import es.joshluq.kmsafe.feature.fleet.R as FleetR
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -151,7 +151,7 @@ fun CropImageScreen(
                             enabled = !isSaving && !triggerCrop,
                             loading = isSaving
                         ) { contentColor ->
-                            Text(stringResource(R.string.onboarding_crop_button), color = contentColor)
+                            Text(stringResource(FleetR.string.onboarding_crop_button), color = contentColor)
                         }
                     }
                 }

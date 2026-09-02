@@ -113,7 +113,13 @@ class RentingRepositoryImpl @Inject constructor(
                             }
                         }
                     } else {
-                        syncManager.scheduleSync()
+                        val errorBody = response.errorBody()?.string() ?: ""
+                        if (errorBody.contains("duplicate key", ignoreCase = true)) {
+                            logger.w("RentingRepository", "Remote sync conflict: Duplicate key. Marking as SYNCED.")
+                            rentingDao.updateSyncStatus(contract.id, SyncStatus.SYNCED.name)
+                        } else {
+                            syncManager.scheduleSync()
+                        }
                     }
                 }
             }.onFailure {
@@ -284,14 +290,24 @@ class RentingRepositoryImpl @Inject constructor(
         logger.d("RentingRepository", "Uploading image: $fileName")
         val requestBody = imageBytes.toRequestBody("image/jpeg".toMediaTypeOrNull())
 
-        val response = storageApiService.uploadVehicleImage(fileName, requestBody)
-        if (response.isSuccessful) {
-            // Use config.storageUrl instead of BuildConfig.STORAGE_URL for module isolation
+        // Use x-upsert header to overwrite existing image if needed
+        val response = storageApiService.uploadVehicleImage(fileName, requestBody, upsert = "true")
+        
+        val code = response.code()
+        val isSuccessful = response.isSuccessful
+        val errorBody = if (!isSuccessful) response.errorBody()?.string() ?: "" else ""
+
+        if (isSuccessful || errorBody.contains("KeyAlreadyExists", ignoreCase = true) || code == 409) {
+            if (!isSuccessful) {
+                logger.w("RentingRepository", "Remote sync conflict (Image): Duplicate key or KeyAlreadyExists. Proceeding.")
+            } else {
+                logger.i("RentingRepository", "Image uploaded successfully.")
+            }
+            
             val publicUrl = "${config.storageUrl}$fileName"
-            logger.i("RentingRepository", "Image uploaded successfully. URL: $publicUrl")
             emit(publicUrl)
         } else {
-            logger.e("RentingRepository", "Image upload failed with code: ${response.code()}")
+            logger.e("RentingRepository", "Image upload failed with code: $code and body: $errorBody")
             throw KmException(KmError.NetworkError)
         }
     }.flowOn(dispatchers.io)

@@ -6,6 +6,8 @@ import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import es.joshluq.foundationkit.usecase.FlowUseCase
 import es.joshluq.foundationkit.usecase.UseCase
+import es.joshluq.kmsafe.core.domain.usecase.HandleGeofenceTransitionUseCase
+import es.joshluq.kmsafe.core.domain.usecase.SyncStationGeofencesUseCase
 import es.joshluq.kmsafe.domain.di.*
 import es.joshluq.kmsafe.domain.usecase.AddOdometerRecordUseCase
 import es.joshluq.kmsafe.domain.usecase.CheckDatabaseOwnerUseCase
@@ -18,7 +20,6 @@ import es.joshluq.kmsafe.domain.usecase.DeleteContractUseCase
 import es.joshluq.kmsafe.domain.usecase.DeleteOdometerRecordUseCase
 import es.joshluq.kmsafe.domain.usecase.DeleteServiceStationUseCase
 import es.joshluq.kmsafe.domain.usecase.EvaluateIdentityConflictUseCase
-import es.joshluq.kmsafe.domain.usecase.GetServiceStationDetailUseCase
 import es.joshluq.kmsafe.domain.usecase.ExportDataUseCase
 import es.joshluq.kmsafe.domain.usecase.GetAllContractsUseCase
 import es.joshluq.kmsafe.domain.usecase.GetAllServiceStationsUseCase
@@ -33,9 +34,9 @@ import es.joshluq.kmsafe.domain.usecase.GetOverviewDataUseCase
 import es.joshluq.kmsafe.domain.usecase.GetPreferencesUseCase
 import es.joshluq.kmsafe.domain.usecase.GetRentingContractUseCase
 import es.joshluq.kmsafe.domain.usecase.GetRouteUseCase
+import es.joshluq.kmsafe.domain.usecase.GetServiceStationDetailUseCase
 import es.joshluq.kmsafe.domain.usecase.GetTripProjectionUseCase
 import es.joshluq.kmsafe.domain.usecase.GetVehicleByIdUseCase
-import es.joshluq.kmsafe.core.domain.usecase.HandleGeofenceTransitionUseCase
 import es.joshluq.kmsafe.domain.usecase.ImportDataUseCase
 import es.joshluq.kmsafe.domain.usecase.MigrateLocalDataToRemoteUseCase
 import es.joshluq.kmsafe.domain.usecase.ObserveTrackingStateUseCase
@@ -43,18 +44,17 @@ import es.joshluq.kmsafe.domain.usecase.SaveInitialContractUseCase
 import es.joshluq.kmsafe.domain.usecase.SaveServiceStationUseCase
 import es.joshluq.kmsafe.domain.usecase.SelectContractUseCase
 import es.joshluq.kmsafe.domain.usecase.SetFavoriteStationUseCase
-import es.joshluq.kmsafe.core.domain.usecase.SyncStationGeofencesUseCase
 import es.joshluq.kmsafe.domain.usecase.SignInUseCase
 import es.joshluq.kmsafe.domain.usecase.SignInWithGoogleUseCase
 import es.joshluq.kmsafe.domain.usecase.SignOutUseCase
 import es.joshluq.kmsafe.domain.usecase.SignUpUseCase
-import es.joshluq.kmsafe.domain.usecase.SyncStationsUseCase
 import es.joshluq.kmsafe.domain.usecase.StartAutoTrackingUseCase
 import es.joshluq.kmsafe.domain.usecase.StartTrialUseCase
 import es.joshluq.kmsafe.domain.usecase.StopAutoTrackingUseCase
 import es.joshluq.kmsafe.domain.usecase.StopTrackingUseCase
 import es.joshluq.kmsafe.domain.usecase.SyncContractsUseCase
 import es.joshluq.kmsafe.domain.usecase.SyncHistoryUseCase
+import es.joshluq.kmsafe.domain.usecase.SyncStationsUseCase
 import es.joshluq.kmsafe.domain.usecase.UpdateContractUseCase
 import es.joshluq.kmsafe.domain.usecase.UpdateOdometerRecordUseCase
 import es.joshluq.kmsafe.domain.usecase.UpdatePreferencesUseCase

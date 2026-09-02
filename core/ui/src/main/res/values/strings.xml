@@ -19,6 +19,7 @@
     <string name="overview_record_label_placeholder">Opcional</string>
     <string name="overview_record_fuel_label">Combustible consumido (L)</string>
     <string name="overview_record_fuel_placeholder">Opcional</string>
+    <string name="onboarding_photo_label">Foto del vehículo</string>
     <string name="onboarding_km_suffix">Km</string>
     <string name="premium_upgrade_confirm">Saber más</string>
 

@@ -9,6 +9,10 @@ import es.joshluq.foundationkit.text.TextProvider
 import es.joshluq.foundationkit.usecase.FlowUseCase
 import es.joshluq.foundationkit.viewmodel.ScreenViewModel
 import es.joshluq.kmsafe.R
+import es.joshluq.kmsafe.core.domain.usecase.SyncStationGeofencesUseCase
+import es.joshluq.kmsafe.core.monetization.domain.MonetizationConfig
+import es.joshluq.kmsafe.core.ui.util.DateUtils.getContractEndDate
+import es.joshluq.kmsafe.core.ui.util.DateUtils.normalizeToUtc00
 import es.joshluq.kmsafe.domain.di.AddOdometerRecord
 import es.joshluq.kmsafe.domain.di.ClearTracking
 import es.joshluq.kmsafe.domain.di.GetAllContracts
@@ -24,11 +28,9 @@ import es.joshluq.kmsafe.domain.di.StopAutoTracking
 import es.joshluq.kmsafe.domain.di.StopTracking
 import es.joshluq.kmsafe.domain.di.SyncStationGeofences
 import es.joshluq.kmsafe.domain.di.UpdatePreferences
-import es.joshluq.kmsafe.core.monetization.domain.MonetizationConfig
 import es.joshluq.kmsafe.domain.model.Feature
 import es.joshluq.kmsafe.domain.model.RentingContract
 import es.joshluq.kmsafe.domain.model.SubscriptionLevel
-import es.joshluq.kmsafe.core.domain.usecase.SyncStationGeofencesUseCase
 import es.joshluq.kmsafe.domain.usecase.AddOdometerRecordUseCase
 import es.joshluq.kmsafe.domain.usecase.ClearTrackingUseCase
 import es.joshluq.kmsafe.domain.usecase.GetAllContractsUseCase
@@ -44,8 +46,6 @@ import es.joshluq.kmsafe.domain.usecase.StopAutoTrackingUseCase
 import es.joshluq.kmsafe.domain.usecase.StopTrackingUseCase
 import es.joshluq.kmsafe.domain.usecase.UpdatePreferencesUseCase
 import es.joshluq.kmsafe.ui.overview.model.toUiModel
-import es.joshluq.kmsafe.ui.util.DateUtils.getContractEndDate
-import es.joshluq.kmsafe.ui.util.DateUtils.normalizeToUtc00
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -255,7 +255,13 @@ class OverviewViewModel @Inject constructor(
                         newRecordLabel = "",
                         newRecordFuel = "",
                         newRecordDate = initialDate,
-                        newRecordDateError = if (isValid) null else TextProvider.Resource(R.string.overview_error_date_outside_contract),
+                        newRecordDateError = if (isValid) {
+                            null
+                        } else {
+                            TextProvider.Resource(
+                                R.string.overview_error_date_outside_contract
+                            )
+                        },
                         currentRoutePolyline = null,
                         currentPointCount = 0
                     )
@@ -429,7 +435,13 @@ class OverviewViewModel @Inject constructor(
         updateState {
             copy(
                 newRecordDate = timestamp,
-                newRecordDateError = if (isValid) null else TextProvider.Resource(R.string.overview_error_date_outside_contract)
+                newRecordDateError = if (isValid) {
+                    null
+                } else {
+                    TextProvider.Resource(
+                        R.string.overview_error_date_outside_contract
+                    )
+                }
             )
         }
     }

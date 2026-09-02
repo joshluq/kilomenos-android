@@ -1,0 +1,57 @@
+<resources>
+    <!-- Profile -->
+    <string name="profile_title">Perfil</string>
+    <string name="profile_renting_option">Mi Renting</string>
+    <string name="profile_vehicles_option">Mis Vehículos</string>
+    <string name="profile_preferences_option">Preferencias</string>
+    <string name="profile_logout_button">Cerrar Sesión</string>
+    <string name="profile_logout_confirmation_title">Cerrar sesión</string>
+    <string name="profile_logout_confirmation_message_free">Tus datos se mantendrán en este dispositivo al cerrar la sesión. Sin embargo, si otro conductor inicia sesión en este móvil, se le pedirá eliminar tu información local para evitar conflictos.</string>
+    <string name="profile_logout_confirmation_message_premium">¿Estás seguro de que deseas cerrar la sesión? Tus datos están a salvo en la nube.</string>
+    <string name="profile_logout_confirm">Cerrar sesión</string>
+    <string name="profile_logout_cancel">Cancelar</string>
+    <string name="profile_subscription_free">Cuenta Gratuita</string>
+    <string name="profile_subscription_premium">Cuenta Premium</string>
+    <string name="profile_sync_disabled">Sincronización: Solo Local</string>
+    <string name="profile_sync_enabled">Sincronización: Activa</string>
+    <string name="profile_upgrade_button">Pasar a\nPremium</string>
+    <string name="profile_upgrade_benefit">Tus datos están seguros en la nube.</string>
+    <string name="profile_upgrade_coming_soon">¡Próximamente!</string>
+    <string name="profile_welcome_guide_option">Cómo funciona KiloMenos</string>
+    <string name="profile_privacy_section">PRIVACIDAD Y DATOS</string>
+    <string name="profile_privacy_policy">Política de privacidad</string>
+    <string name="profile_terms_conditions">Términos y condiciones</string>
+    <string name="profile_delete_account">Eliminar mi cuenta</string>
+    <string name="profile_delete_account_confirmation_title">¿Eliminar cuenta permanentemente?</string>
+    <string name="profile_delete_account_confirmation_message">Esta acción no se puede deshacer. Se borrarán todos tus vehículos, registros de kilometraje y datos de perfil tanto de este dispositivo como de la nube.</string>
+    <string name="profile_delete_account_confirm">Eliminar para siempre</string>
+    <string name="profile_delete_account_error">No se pudo eliminar la cuenta. Por favor, inténtalo de nuevo.</string>
+    <string name="profile_delete_account_step_cleaning">Borrando tus vehículos y configuraciones…</string>
+    <string name="profile_delete_account_step_cloud">Eliminando rastro de la nube…</string>
+    <string name="profile_delete_account_step_farewell">Es una lástima que te vayas, pero respetamos tu decisión.</string>
+    <string name="profile_delete_account_step_final">Toda tu información ha sido eliminada permanentemente.</string>
+    <string name="profile_delete_account_step_welcome_back">¡Vuelve cuando quieras! Siempre habrá un sitio para ti en KiloMenos.</string>
+    <string name="profile_data_management_title">GESTIÓN DE DATOS</string>
+    <string name="profile_data_management_option">Gestión de datos</string>
+
+    <!-- Preferences -->
+    <string name="preferences_account_settings_title">AJUSTES DE CUENTA</string>
+    <string name="preferences_remember_email_label">Recordar email</string>
+    <string name="preferences_remember_email_desc">Muestra automáticamente tu email en la pantalla de inicio de sesión.</string>
+    <string name="preferences_projection_banner_label">Alertas de proyección</string>
+    <string name="preferences_projection_banner_desc">Muestra un aviso en el inicio sobre el estado final estimado de tu contrato.</string>
+    <string name="preferences_oss_licenses_label">Créditos de software</string>
+    <string name="preferences_oss_licenses_desc">Licencias de las librerías de código abierto utilizadas.</string>
+    <string name="preferences_about_header">ACERCA DE</string>
+    <string name="preferences_manage_consent_label">Gestionar preferencias de anuncios</string>
+    <string name="preferences_oss_description">KiloMenos se construye gracias al increíble trabajo de la comunidad de código abierto. A continuación, se detallan las principales librerías utilizadas:</string>
+    <string name="preferences_oss_license_generic">Licencia: Apache 2.0 / MIT</string>
+    <string name="preferences_oss_license_label">Licencia: %1$s</string>
+    <string name="preferences_auto_tracking_label">Auto-Tracking</string>
+    <string name="preferences_auto_tracking_desc">Registra tus viajes automáticamente sin pulsar ningún botón.</string>
+    <string name="preferences_auto_tracking_locked_desc">Registra tus viajes automáticamente sin pulsar ningún botón.</string>
+    <string name="preferences_autotracking_trial_title">Probar Auto-Tracking ⚡</string>
+    <string name="preferences_autotracking_trial_message">Activa el registro automático de viajes gratis durante 7 días. Podrás probar la precisión del GPS inteligente sin compromiso.</string>
+    <string name="preferences_autotracking_trial_confirm">Empezar prueba gratuita</string>
+    <string name="preferences_autotracking_trial_cancel">Ahora no</string>
+</resources>

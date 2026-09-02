@@ -8,8 +8,6 @@ import es.joshluq.foundationkit.log.LoggerKit
 import es.joshluq.foundationkit.text.TextProvider
 import es.joshluq.foundationkit.usecase.FlowUseCase
 import es.joshluq.foundationkit.viewmodel.ScreenViewModel
-import es.joshluq.kmsafe.R
-import es.joshluq.kmsafe.infrastructure.remote.billing.BillingManager
 import es.joshluq.kmsafe.domain.di.MigrateLocalDataToRemote
 import es.joshluq.kmsafe.domain.di.SyncContracts
 import es.joshluq.kmsafe.domain.di.UpdateSubscription
@@ -17,9 +15,11 @@ import es.joshluq.kmsafe.domain.model.SubscriptionLevel
 import es.joshluq.kmsafe.domain.usecase.MigrateLocalDataToRemoteUseCase
 import es.joshluq.kmsafe.domain.usecase.SyncContractsUseCase
 import es.joshluq.kmsafe.domain.usecase.UpdateSubscriptionUseCase
+import es.joshluq.kmsafe.infrastructure.remote.billing.BillingManager
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import javax.inject.Inject
+import es.joshluq.kmsafe.feature.fleet.R as FleetR
 
 @HiltViewModel
 class PremiumPaywallViewModel @Inject constructor(
@@ -81,7 +81,7 @@ class PremiumPaywallViewModel @Inject constructor(
                         updateState {
                             copy(
                                 isLoading = false,
-                                error = TextProvider.Resource(R.string.onboarding_register_error)
+                                error = TextProvider.Resource(FleetR.string.onboarding_register_error)
                             )
                         }
                     }

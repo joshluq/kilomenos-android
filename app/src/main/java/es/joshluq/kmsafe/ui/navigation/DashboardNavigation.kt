@@ -5,11 +5,11 @@ import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import es.joshluq.kmsafe.feature.history.HistoryRoute
 import es.joshluq.kmsafe.core.navigation.Destination
 import es.joshluq.kmsafe.feature.expenses.ExpensesRoute
+import es.joshluq.kmsafe.feature.history.HistoryRoute
+import es.joshluq.kmsafe.feature.profile.ProfileRoute
 import es.joshluq.kmsafe.ui.overview.OverviewRoute
-import es.joshluq.kmsafe.ui.profile.ProfileRoute
 import es.joshluq.kmsafe.ui.projection.ProjectionAnalysisRoute
 
 @Composable

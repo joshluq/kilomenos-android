@@ -1,28 +1,6 @@
 <resources>
     <string name="app_name">KiloMenos</string>
 
-    <!-- Dashboard -->
-
-    <!-- Profile -->
-    <string name="profile_title">Perfil</string>
-    <string name="profile_renting_option">Mi Renting</string>
-    <string name="profile_vehicles_option">Mis Vehículos</string>
-    <string name="profile_preferences_option">Preferencias</string>
-    <string name="profile_logout_button">Cerrar Sesión</string>
-    <string name="profile_logout_confirmation_title">Cerrar sesión</string>
-    <string name="profile_logout_confirmation_message_free">Tus datos se mantendrán en este dispositivo al cerrar la sesión. Sin embargo, si otro conductor inicia sesión en este móvil, se le pedirá eliminar tu información local para evitar conflictos.</string>
-    <string name="profile_logout_confirmation_message_premium">¿Estás seguro de que deseas cerrar la sesión? Tus datos están a salvo en la nube.</string>
-    <string name="profile_logout_confirm">Cerrar sesión</string>
-    <string name="profile_logout_cancel">Cancelar</string>
-    <string name="profile_subscription_free">Cuenta Gratuita</string>
-    <string name="profile_subscription_premium">Cuenta Premium</string>
-    <string name="profile_sync_disabled">Sincronización: Solo Local</string>
-    <string name="profile_sync_enabled">Sincronización: Activa</string>
-    <string name="profile_upgrade_button">Pasar a\nPremium</string>
-    <string name="profile_upgrade_benefit">Tus datos están seguros en la nube.</string>
-    <string name="profile_upgrade_coming_soon">¡Próximamente!</string>
-    <string name="profile_welcome_guide_option">Cómo funciona KiloMenos</string>
-
     <!-- Premium -->
     <string name="premium_paywall_title">KiloMenos Premium</string>
     <string name="premium_paywall_subtitle">Optimiza tu inversión con herramientas avanzadas de gestión</string>
@@ -44,11 +22,6 @@
     <string name="premium_trial_offer_message">Empieza hoy mismo tu periodo de prueba de 7 días y desbloquea funciones avanzadas diseñadas para ahorrarte tiempo y dinero. Sin compromisos.</string>
     <string name="premium_trial_offer_confirm">Empezar prueba de 7 días</string>
     <string name="premium_trial_offer_cancel">Ahora no</string>
-
-    <!-- Preferences Auto-Tracking Trial -->
-    <string name="preferences_autotracking_trial_title">Probar Auto-Tracking ⚡</string>
-    <string name="preferences_autotracking_trial_message">Activa el registro automático de viajes gratis durante 7 días. Podrás probar la precisión del GPS inteligente sin compromiso.</string>
-    <string name="preferences_autotracking_trial_confirm">Empezar prueba gratuita</string>
     <string name="premium_paywall_migrating_msg">Asegurando tus datos en la nube…</string>
     <string name="premium_continue_free">Continuar con la versión gratuita</string>
     <string name="premium_limit_vehicle_title">Límite de vehículos</string>
@@ -56,22 +29,9 @@
     <string name="premium_limit_data_title">Función Premium</string>
     <string name="premium_limit_data_message">El backup completo y la restauración de datos son funciones exclusivas de KiloMenos Premium.</string>
     <string name="premium_upgrade_cancel">Ahora no</string>
-
-    <!-- Vehicles -->
-    <string name="vehicles_title">Mis Vehículos</string>
-    <string name="vehicles_add_button">Añadir Vehículo</string>
-    <string name="vehicles_selected_tag">ACTIVO</string>
-    <string name="vehicles_delete_confirmation_title">Eliminar Vehículo</string>
-    <string name="vehicles_delete_confirmation_message">Se borrarán todos los registros asociados a este vehículo. ¿Deseas continuar?</string>
-    <string name="vehicles_delete_confirm">Eliminar</string>
-    <string name="vehicles_delete_cancel">Cancelar</string>
-    <string name="vehicles_empty_title">Tu flota empieza aquí</string>
-    <string name="vehicles_empty_description">Aún no has registrado ningún vehículo. Configura tu primer contrato para empezar a tomar el control de tus kilómetros.</string>
-    <string name="vehicle_list_item_summary">%1$s Km · %2$d meses</string>
+    <string name="premium_upgrade_confirm">Subir a Premium</string>
 
     <!-- Data Management -->
-    <string name="profile_data_management_title">GESTIÓN DE DATOS</string>
-    <string name="profile_data_management_option">Gestión de datos</string>
     <string name="profile_export_data_option">Exportar datos</string>
     <string name="profile_data_management_export_json_title">Exportar Backup (JSON)</string>
     <string name="profile_data_management_export_csv_title">Exportar para Excel (CSV)</string>
@@ -109,6 +69,7 @@
     <string name="overview_chart_legend_time">Tiempo transcurrido</string>
     <string name="overview_chart_legend_actual">Consumo Real</string>
     <string name="overview_chart_legend_budget">Presupuesto</string>
+    <string name="overview_error_date_outside_contract">La fecha debe estar dentro del periodo de vigencia del contrato.</string>
 
     <!-- Projection -->
     <string name="projection_card_title">TU FUTURO AL VOLANTE</string>
@@ -139,82 +100,6 @@
     <string name="projection_planner_impact_warning">⚠️ Este viaje te acerca al límite de tu contrato.</string>
     <string name="projection_planner_impact_safe">Viaje totalmente asumible. ¡A disfrutar!</string>
 
-    <!-- Onboarding -->
-    <string name="onboarding_title">Configura tu Renting</string>
-    <string name="onboarding_title_alternative">Información de tu Renting</string>
-    <string name="onboarding_vehicle_name_label">Nombre del vehículo</string>
-    <string name="onboarding_vehicle_name_placeholder">Ej. Mi Toyota Corolla</string>
-    <string name="onboarding_fuel_type_label">Tipo de propulsión</string>
-    <string name="onboarding_start_date_label">Fecha de inicio</string>
-    <string name="onboarding_start_date_placeholder">Ej. 12/05/2023</string>
-    <string name="onboarding_duration_months_label">Duración en meses</string>
-    <string name="onboarding_duration_months_placeholder">Ej. 6</string>
-    <string name="onboarding_months_suffix">meses</string>
-    <string name="onboarding_total_kms_label">Total de incluidos</string>
-    <string name="onboarding_total_kms_placeholder">Ej. 45000</string>
-    <string name="onboarding_km_suffix">Km</string>
-    <string name="onboarding_start_odometer_label">Odómetro inicial al firmar</string>
-    <string name="onboarding_start_odometer_placeholder">Ej. 0 (si era nuevo)</string>
-    <string name="onboarding_current_odometer_label">Odómetro a día de hoy</string>
-    <string name="onboarding_current_odometer_placeholder">Ej. 15000</string>
-    <string name="onboarding_bluetooth_label">Coche vinculado (Bluetooth)</string>
-    <string name="onboarding_bluetooth_placeholder">Opcional: Selecciona tu coche</string>
-    <string name="onboarding_bluetooth_picker_title">Seleccionar Dispositivo</string>
-    <string name="onboarding_bluetooth_permission_denied">Se requiere permiso de Bluetooth para listar dispositivos.</string>
-    <string name="onboarding_bluetooth_suggestion_title">Configuración inteligente 🚗</string>
-    <string name="onboarding_bluetooth_suggestion_desc">Hemos detectado una conexión Bluetooth. ¿Es este tu coche? Vincúlalo para que el seguimiento sea 100% preciso.</string>
-    <string name="onboarding_bluetooth_suggestion_button">Vincular ahora</string>
-    <string name="onboarding_bluetooth_suggestion_banner">Optimiza el auto-tracking vinculando el Bluetooth de tu vehículo.</string>
-    <string name="onboarding_save_button">Guardar Configuración</string>
-    <string name="onboarding_date_picker_confirm">Aceptar</string>
-    <string name="onboarding_date_picker_cancel">Cancelar</string>
-    <string name="onboarding_vehicle_name_feedback">El nombre es obligatorio</string>
-    <string name="onboarding_number_feedback">Debe ser mayor a 0</string>
-    <string name="onboarding_current_odometer_feedback">El odómetro actual debe ser igual o mayor al inicial</string>
-    <string name="onboarding_date_feedback">Fecha requerida</string>
-    <string name="onboarding_change_photo">Cambiar foto</string>
-    <string name="onboarding_change_bluetooth">Cambiar dispositivo Bluetooth</string>
-    <string name="onboarding_photo_label">Foto del vehículo</string>
-    <string name="onboarding_crop_title">Ajustar Foto</string>
-    <string name="onboarding_crop_button">Aplicar Recorte</string>
-    <string name="onboarding_register_error">Ha ocurrido un error al registrar el renting. Por favor, inténtalo de nuevo.</string>
-    <string name="onboarding_saving_button">Guardando…</string>
-    <string name="onboarding_error_delete_selected">No se puede eliminar el vehículo seleccionado. Por favor, selecciona otro vehículo antes de intentar eliminar este.</string>
-
-    <!-- Vehicle Detail -->
-    <string name="vehicle_detail_title">Detalle del Vehículo</string>
-    <string name="vehicle_detail_contract_section">DATOS DEL CONTRATO</string>
-    <string name="vehicle_detail_odometer_section">ESTADO DEL CUENTAKILÓMETROS</string>
-    <string name="vehicle_detail_smart_section">VINCULACIÓN INTELIGENTE</string>
-    <string name="vehicle_detail_advanced_section">PROTECCIÓN ECONÓMICA</string>
-    <string name="vehicle_detail_no_bluetooth">Sin dispositivo vinculado</string>
-    <string name="vehicle_detail_no_advanced_data">Sin configurar</string>
-    <string name="vehicle_detail_delete_msg">¿Estás seguro de que quieres eliminar este vehículo? Se perderá todo su historial.</string>
-
-    <!-- Setup Wizard -->
-    <string name="setup_wizard_step_identity_title">¿Qué vehículo vamos a proteger?</string>
-    <string name="setup_wizard_step_identity_desc">Dinos cómo llamas a tu coche y sube una foto para que el control de tus kilómetros sea más personal.</string>
-    <string name="setup_wizard_step_timeframe_title">Tu horizonte temporal</string>
-    <string name="setup_wizard_step_timeframe_desc">¿Cuándo empezó esta aventura y por cuántos meses estaremos juntos?</string>
-    <string name="setup_wizard_step_mileage_title">Tus kilómetros de libertad</string>
-    <string name="setup_wizard_step_mileage_desc">Dinos el límite de tu contrato; nosotros nos encargaremos de que no te lleves sorpresas.</string>
-    <string name="setup_wizard_step_bluetooth_title">⚡ Activación inteligente</string>
-    <string name="setup_wizard_step_bluetooth_desc_premium">Vincular el Bluetooth de tu coche permite que detectemos automáticamente tus viajes con total precisión.</string>
-    <string name="setup_wizard_step_bluetooth_desc_free">Vincular tu coche ahora te permitirá activar el seguimiento automático si en el futuro decides pasar a Premium.</string>
-    <string name="setup_wizard_step_bluetooth_action">Buscar mi coche</string>
-    <string name="setup_wizard_step_bluetooth_linked">¡Coche vinculado con éxito!</string>
-    <string name="setup_wizard_step_advanced_title">Protección económica</string>
-    <string name="setup_wizard_step_advanced_desc">Configura el coste extra y tu margen de cortesía para que nuestra previsión sea exacta.</string>
-    <string name="setup_wizard_step_advanced_price_label">Coste por KM excedido</string>
-    <string name="setup_wizard_step_advanced_price_placeholder">Ej. 0.05</string>
-    <string name="setup_wizard_step_advanced_margin_label">Margen de cortesía (KM)</string>
-    <string name="setup_wizard_step_advanced_margin_placeholder">Ej. 500</string>
-    <string name="setup_wizard_action_next">Continuar</string>
-    <string name="setup_wizard_action_finish">Finalizar Configuración</string>
-    <string name="setup_wizard_action_skip">Configurar más tarde</string>
-
-    <!-- History -->
-
     <!-- Tracking -->
     <string name="tracking_card_status_pending">Detectando conducción…</string>
     <string name="tracking_card_status_recording">Viaje activo</string>
@@ -234,68 +119,6 @@
     <string name="tracking_notification_title">KiloMenos Tracking</string>
     <string name="tracking_notification_content">Viaje en curso: %1$.2f km</string>
     <string name="tracking_validation_content">Detectando conexión con vehículo…</string>
-
-    <!-- Common -->
-
-    <!-- Login -->
-
-    <!-- Error Messages -->
-    <string name="overview_error_date_outside_contract">La fecha debe estar dentro del periodo de vigencia del contrato.</string>
-
-    <!-- Signup -->
-
-    <!-- Preferences UI Strings -->
-    <string name="preferences_account_settings_title">AJUSTES DE CUENTA</string>
-    <string name="preferences_remember_email_label">Recordar email</string>
-    <string name="preferences_remember_email_desc">Muestra automáticamente tu email en la pantalla de inicio de sesión.</string>
-    <string name="preferences_projection_banner_label">Alertas de proyección</string>
-    <string name="preferences_projection_banner_desc">Muestra un aviso en el inicio sobre el estado final estimado de tu contrato.</string>
-    <string name="preferences_oss_licenses_label">Créditos de software</string>
-    <string name="preferences_oss_licenses_desc">Licencias de las librerías de código abierto utilizadas.</string>
-    <string name="preferences_about_header">ACERCA DE</string>
-    <string name="preferences_manage_consent_label">Gestionar preferencias de anuncios</string>
-    <string name="preferences_oss_description">KiloMenos se construye gracias al increíble trabajo de la comunidad de código abierto. A continuación, se detallan las principales librerías utilizadas:</string>
-    <string name="preferences_oss_license_generic">Licencia: Apache 2.0 / MIT</string>
-    <string name="preferences_oss_license_label">Licencia: %1$s</string>
-    <string name="preferences_auto_tracking_label">Auto-Tracking</string>
-    <string name="preferences_auto_tracking_desc">Registra tus viajes automáticamente sin pulsar ningún botón.</string>
-    <string name="preferences_auto_tracking_locked_desc">Registra tus viajes automáticamente sin pulsar ningún botón.</string>
-
-    <!-- Privacy & Legal (GDPR) -->
-    <string name="profile_privacy_section">PRIVACIDAD Y DATOS</string>
-    <string name="profile_privacy_policy">Política de privacidad</string>
-    <string name="profile_terms_conditions">Términos y condiciones</string>
-    <string name="profile_delete_account">Eliminar mi cuenta</string>
-    <string name="profile_delete_account_confirmation_title">¿Eliminar cuenta permanentemente?</string>
-    <string name="profile_delete_account_confirmation_message">Esta acción no se puede deshacer. Se borrarán todos tus vehículos, registros de kilometraje y datos de perfil tanto de este dispositivo como de la nube.</string>
-    <string name="profile_delete_account_confirm">Eliminar para siempre</string>
-    <string name="profile_delete_account_error">No se pudo eliminar la cuenta. Por favor, inténtalo de nuevo.</string>
-    <string name="profile_delete_account_step_cleaning">Borrando tus vehículos y configuraciones…</string>
-    <string name="profile_delete_account_step_cloud">Eliminando rastro de la nube…</string>
-    <string name="profile_delete_account_step_farewell">Es una lástima que te vayas, pero respetamos tu decisión.</string>
-    <string name="profile_delete_account_step_final">Toda tu información ha sido eliminada permanentemente.</string>
-    <string name="profile_delete_account_step_welcome_back">¡Vuelve cuando quieras! Siempre habrá un sitio para ti en KiloMenos.</string>
-
-    <!-- Accessibility (EAA) -->
-    <string name="acc_back">Volver</string>
-    <string name="acc_add_vehicle">Añadir vehículo</string>
-    <string name="acc_edit_contract">Editar contrato</string>
-    <string name="acc_delete_vehicle">Eliminar vehículo</string>
-    <string name="acc_vehicle_info">Información del vehículo</string>
-    <string name="acc_upgrade_premium">Hacerse Premium</string>
-    <string name="acc_open_menu">Abrir menú</string>
-    <string name="acc_chart_help">Ayuda sobre el gráfico</string>
-    <string name="acc_sync_pending">Sincronización pendiente</string>
-    <string name="acc_locked">Bloqueado</string>
-    <string name="acc_crop_image">Recortar imagen</string>
-    <string name="acc_close">Cerrar</string>
-    <string name="acc_scan_odometer">Escanear odómetro</string>
-
-    <!-- Feature Labels -->
-    <string name="feature_auto_tracking">Seguimiento Automático (GPS)</string>
-    <string name="feature_advanced_projections">IA de Proyección de Gastos</string>
-    <string name="feature_multi_vehicle">Gestión de Flota (Multi-vehículo)</string>
-    <string name="feature_cloud_sync">Sincronización en la Nube</string>
 
     <!-- OCR Scanner -->
     <string name="scanner_permission_button">Conceder Permiso</string>
@@ -328,26 +151,9 @@
     <string name="overview_permissions_button_continue">Continuar</string>
     <string name="overview_permissions_button_settings">Ir a Ajustes</string>
 
-    <!-- Bluetooth Validation Warning -->
-    <string name="vehicle_detail_bt_permission_warning_title">Permiso de Bluetooth necesario</string>
-    <string name="vehicle_detail_bt_permission_warning_desc">Has vinculado este vehículo por Bluetooth, pero no tenemos permiso para validar la conexión. El Auto-Tracking podría ser menos preciso.</string>
-    <string name="vehicle_detail_bt_permission_warning_action">Conceder Permiso</string>
-
     <!-- Auto-Tracking Promotion -->
     <string name="overview_promotion_autotracking_title">Auto-Tracking</string>
     <string name="overview_promotion_autotracking_desc">Registra tus viajes automáticamente sin pulsar ningún botón.\n\n*Este aviso no volverá a aparecer.</string>
     <string name="overview_promotion_autotracking_confirm">Activar</string>
     <string name="overview_promotion_autotracking_dismiss">Omitir</string>
-
-    <!-- Welcome Discovery -->
-    <string name="welcome_discovery_title">Bienvenido a KiloMenos</string>
-    <string name="welcome_discovery_slide1_title">Controla tu Balance</string>
-    <string name="welcome_discovery_slide1_desc">Calculamos la diferencia entre los km que deberías llevar según tu contrato y los que realmente has recorrido.</string>
-    <string name="welcome_discovery_slide2_title">Configura tu Contrato</string>
-    <string name="welcome_discovery_slide2_desc">Dinos cuánto dura tu renting y cuántos km tienes incluidos. Nosotros nos encargamos del resto.</string>
-    <string name="welcome_discovery_slide3_title">Primer Registro</string>
-    <string name="welcome_discovery_slide3_desc">Solo necesitas registrar tu odómetro actual para empezar a ver tu ahorro en tiempo real.</string>
-    <string name="welcome_discovery_action_next">Siguiente</string>
-    <string name="welcome_discovery_action_start">Configurar mi vehículo</string>
-    <string name="welcome_discovery_action_skip">Omitir</string>
 </resources>

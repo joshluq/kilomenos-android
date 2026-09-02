@@ -33,7 +33,7 @@ class ActivityTransitionReceiver : BroadcastReceiver() {
 
         if (isTransitionAction && ActivityTransitionResult.hasResult(intent)) {
             logger.i("ActivityReceiver", "Transition result received. Forwarding to Service...")
-            
+
             val result = ActivityTransitionResult.extractResult(intent)
             val serviceIntent = Intent(context, LocationTrackingService::class.java).apply {
                 putExtra("EXTRA_TRANSITION_RESULT", result)
@@ -41,7 +41,7 @@ class ActivityTransitionReceiver : BroadcastReceiver() {
 
             startTrackingService(context, serviceIntent)
         }
-        
+
         pendingResult.finish()
     }
 

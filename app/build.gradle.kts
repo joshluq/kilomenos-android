@@ -98,6 +98,8 @@ dependencies {
     implementation(project(":feature:auth"))
     implementation(project(":feature:history"))
     implementation(project(":feature:dashboard"))
+    implementation(project(":feature:profile"))
+    implementation(project(":feature:fleet"))
     implementation(project(":core:ui"))
     implementation(project(":core:infrastructure"))
     implementation(project(":core:domain"))

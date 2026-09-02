@@ -26,6 +26,7 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import es.joshluq.kmsafe.feature.fleet.R as FleetR
 
 /**
  * Receiver that listens for Bluetooth connection events.
@@ -120,14 +121,14 @@ class BluetoothConnectionReceiver : BroadcastReceiver() {
 
         val notification = NotificationCompat.Builder(context, channelId)
             .setSmallIcon(R.drawable.ic_launcher_foreground)
-            .setContentTitle(context.getString(R.string.onboarding_bluetooth_suggestion_title))
-            .setContentText(context.getString(R.string.onboarding_bluetooth_suggestion_desc))
+            .setContentTitle(context.getString(FleetR.string.onboarding_bluetooth_suggestion_title))
+            .setContentText(context.getString(FleetR.string.onboarding_bluetooth_suggestion_desc))
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
             .setAutoCancel(true)
             .setContentIntent(pendingIntent)
             .addAction(
                 0,
-                context.getString(R.string.onboarding_bluetooth_suggestion_button),
+                context.getString(FleetR.string.onboarding_bluetooth_suggestion_button),
                 pendingIntent
             )
             .build()

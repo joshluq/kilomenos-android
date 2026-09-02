@@ -7,6 +7,8 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navDeepLink
 import androidx.navigation.toRoute
+import es.joshluq.kmsafe.core.navigation.DeepLinkConfig
+import es.joshluq.kmsafe.core.navigation.Destination
 import es.joshluq.kmsafe.feature.auth.launch.LaunchRoute
 import es.joshluq.kmsafe.feature.auth.login.LoginRoute
 import es.joshluq.kmsafe.feature.auth.signup.SignupRoute
@@ -14,19 +16,17 @@ import es.joshluq.kmsafe.feature.dashboard.DashboardRoute
 import es.joshluq.kmsafe.feature.expenses.ExpensesRoute
 import es.joshluq.kmsafe.feature.expenses.stations.StationManagementRoute
 import es.joshluq.kmsafe.feature.expenses.stations.detail.StationDetailRoute
-import es.joshluq.kmsafe.core.navigation.DeepLinkConfig
-import es.joshluq.kmsafe.core.navigation.Destination
+import es.joshluq.kmsafe.feature.fleet.detail.VehicleDetailRoute
+import es.joshluq.kmsafe.feature.fleet.edit.EditContractRoute
+import es.joshluq.kmsafe.feature.fleet.setup.SetupWizardRoute
+import es.joshluq.kmsafe.feature.fleet.setup.WelcomeDiscoveryScreen
+import es.joshluq.kmsafe.feature.fleet.vehicles.VehicleListRoute
+import es.joshluq.kmsafe.feature.history.detail.RecordDetailRoute
+import es.joshluq.kmsafe.feature.profile.preferences.PreferencesRoute
 import es.joshluq.kmsafe.ui.common.cropper.CropImageScreen
 import es.joshluq.kmsafe.ui.common.permissions.AutoTrackingPermissionsScreen
 import es.joshluq.kmsafe.ui.datamanagement.DataManagementRoute
-import es.joshluq.kmsafe.feature.history.detail.RecordDetailRoute
 import es.joshluq.kmsafe.ui.premium.PremiumPaywallRoute
-import es.joshluq.kmsafe.ui.profile.preferences.PreferencesRoute
-import es.joshluq.kmsafe.ui.profile.vehicles.VehicleListRoute
-import es.joshluq.kmsafe.ui.renting.detail.VehicleDetailRoute
-import es.joshluq.kmsafe.ui.renting.edit.EditContractRoute
-import es.joshluq.kmsafe.ui.renting.setup.SetupWizardRoute
-import es.joshluq.kmsafe.ui.renting.setup.WelcomeDiscoveryScreen
 
 @Composable
 fun AppNavigation(
@@ -61,11 +61,9 @@ fun AppNavigation(
                     }
                 },
                 onNavigateToPremiumPaywall = {
-                    // Navigate to Dashboard as base and clear auth stack
                     navController.navigate(Destination.Dashboard) {
                         popUpTo(Destination.Login) { inclusive = true }
                     }
-                    // Then show paywall on top
                     navController.navigate(Destination.PremiumPaywall)
                 },
                 onNavigateToSignup = {
@@ -90,11 +88,9 @@ fun AppNavigation(
                     }
                 },
                 onNavigateToPremiumPaywall = {
-                    // Navigate to Dashboard as base and clear auth stack
                     navController.navigate(Destination.Dashboard) {
                         popUpTo(Destination.Login) { inclusive = true }
                     }
-                    // Then show paywall on top
                     navController.navigate(Destination.PremiumPaywall)
                 }
             )
@@ -103,11 +99,9 @@ fun AppNavigation(
         composable<Destination.WelcomeDiscovery> {
             WelcomeDiscoveryScreen(
                 onNavigateToRentingSetup = {
-                    // Pattern: Seed Dashboard as base first
                     navController.navigate(Destination.Dashboard) {
                         popUpTo(Destination.WelcomeDiscovery) { inclusive = true }
                     }
-                    // Then show SetupWizard on top
                     navController.navigate(Destination.SetupWizard)
                 },
                 onSkip = {

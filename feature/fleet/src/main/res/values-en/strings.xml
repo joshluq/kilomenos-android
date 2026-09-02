@@ -1,0 +1,107 @@
+<resources>
+    <!-- Onboarding -->
+    <string name="onboarding_title">Configure your Renting</string>
+    <string name="onboarding_title_alternative">Your Renting Information</string>
+    <string name="onboarding_vehicle_name_label">Vehicle name</string>
+    <string name="onboarding_vehicle_name_placeholder">e.g. My Toyota Corolla</string>
+    <string name="onboarding_fuel_type_label">Propulsion type</string>
+    <string name="onboarding_start_date_label">Start date</string>
+    <string name="onboarding_start_date_placeholder">e.g. 05/12/2023</string>
+    <string name="onboarding_duration_months_label">Duration in months</string>
+    <string name="onboarding_duration_months_placeholder">e.g. 6</string>
+    <string name="onboarding_months_suffix">months</string>
+    <string name="onboarding_total_kms_label">Total included</string>
+    <string name="onboarding_total_kms_placeholder">e.g. 45000</string>
+    <string name="onboarding_km_suffix">Km</string>
+    <string name="onboarding_start_odometer_label">Initial odometer at signing</string>
+    <string name="onboarding_start_odometer_placeholder">e.g. 0 (if new)</string>
+    <string name="onboarding_current_odometer_label">Current odometer today</string>
+    <string name="onboarding_current_odometer_placeholder">e.g. 15000</string>
+    <string name="onboarding_bluetooth_label">Linked car (Bluetooth)</string>
+    <string name="onboarding_bluetooth_placeholder">Optional: Select your car</string>
+    <string name="onboarding_bluetooth_picker_title">Select Device</string>
+    <string name="onboarding_bluetooth_permission_denied">Bluetooth permission is required to list devices.</string>
+    <string name="onboarding_bluetooth_empty_list">No paired devices found. Pair your car in Android settings first.</string>
+    <string name="onboarding_bluetooth_unknown_device">Unknown device</string>
+    <string name="onboarding_bluetooth_suggestion_title">Smart Configuration 🚗</string>
+    <string name="onboarding_bluetooth_suggestion_desc">We have detected a Bluetooth connection. Is this your car? Link it for 100% accurate tracking.</string>
+    <string name="onboarding_bluetooth_suggestion_button">Link now</string>
+    <string name="onboarding_bluetooth_suggestion_banner">Optimize auto-tracking by linking your vehicle\'s Bluetooth.</string>
+    <string name="onboarding_save_button">Save Configuration</string>
+    <string name="onboarding_date_picker_confirm">OK</string>
+    <string name="onboarding_date_picker_cancel">Cancel</string>
+    <string name="onboarding_vehicle_name_feedback">Name is required</string>
+    <string name="onboarding_number_feedback">Must be greater than 0</string>
+    <string name="onboarding_current_odometer_feedback">Current odometer must be equal or greater than initial</string>
+    <string name="onboarding_date_feedback">Date required</string>
+    <string name="onboarding_change_photo">Change photo</string>
+    <string name="onboarding_change_bluetooth">Change Bluetooth device</string>
+    <string name="onboarding_photo_label">Vehicle photo</string>
+    <string name="onboarding_crop_title">Crop Photo</string>
+    <string name="onboarding_crop_button">Apply Crop</string>
+    <string name="onboarding_register_error">An error occurred while registering renting. Please try again.</string>
+    <string name="onboarding_saving_button">Saving…</string>
+    <string name="onboarding_error_delete_selected">Cannot delete the selected vehicle. Please select another vehicle before attempting to delete this one.</string>
+
+    <!-- Vehicles -->
+    <string name="vehicles_title">My Vehicles</string>
+    <string name="vehicles_add_button">Add Vehicle</string>
+    <string name="vehicles_selected_tag">ACTIVE</string>
+    <string name="vehicles_delete_confirmation_title">Delete Vehicle</string>
+    <string name="vehicles_delete_confirmation_message">All records associated with this vehicle will be deleted. Do you want to continue?</string>
+    <string name="vehicles_delete_confirm">Delete</string>
+    <string name="vehicles_delete_cancel">Cancel</string>
+    <string name="vehicles_empty_title">Your fleet starts here</string>
+    <string name="vehicles_empty_description">You haven\'t registered any vehicles yet. Set up your first contract to start taking control of your kilometers.</string>
+    <string name="vehicle_list_item_summary">%1$s Km · %2$d months</string>
+    <string name="premium_limit_vehicle_title">Vehicle limit</string>
+    <string name="premium_limit_vehicle_message">You have reached the vehicle limit for the free account. Go Premium to manage your entire fleet without limits.</string>
+    <string name="premium_upgrade_cancel">Not now</string>
+
+    <!-- Vehicle Detail -->
+    <string name="vehicle_detail_title">Vehicle Detail</string>
+    <string name="vehicle_detail_contract_section">CONTRACT DATA</string>
+    <string name="vehicle_detail_odometer_section">ODOMETER STATUS</string>
+    <string name="vehicle_detail_smart_section">SMART LINKING</string>
+    <string name="vehicle_detail_advanced_section">ECONOMIC PROTECTION</string>
+    <string name="vehicle_detail_no_bluetooth">No linked device</string>
+    <string name="vehicle_detail_no_advanced_data">Not configured</string>
+    <string name="vehicle_detail_delete_msg">Are you sure you want to delete this vehicle? All its history will be lost.</string>
+    <string name="vehicle_detail_bt_permission_warning_title">Bluetooth permission needed</string>
+    <string name="vehicle_detail_bt_permission_warning_desc">You have linked this vehicle via Bluetooth, but we don\'t have permission to validate the connection. Auto-Tracking might be less accurate.</string>
+    <string name="vehicle_detail_bt_permission_warning_action">Grant Permission</string>
+
+    <!-- Setup Wizard -->
+    <string name="setup_wizard_step_identity_title">Which vehicle are we going to protect?</string>
+    <string name="setup_wizard_step_identity_desc">Tell us how you call your car and upload a photo to make your kilometer control more personal.</string>
+    <string name="setup_wizard_step_timeframe_title">Your time horizon</string>
+    <string name="setup_wizard_step_timeframe_desc">When did this adventure start and for how many months will we be together?</string>
+    <string name="setup_wizard_step_mileage_title">Your kilometers of freedom</string>
+    <string name="setup_wizard_step_mileage_desc">Tell us your contract limit; we will make sure you don\'t get any surprises.</string>
+    <string name="setup_wizard_step_bluetooth_title">⚡ Smart activation</string>
+    <string name="setup_wizard_step_bluetooth_desc_premium">Linking your car\'s Bluetooth allows us to automatically detect your trips with total precision.</string>
+    <string name="setup_wizard_step_bluetooth_desc_free">Linking your car now will allow you to activate automatic tracking if you decide to upgrade to Premium in the future.</string>
+    <string name="setup_wizard_step_bluetooth_action">Search for my car</string>
+    <string name="setup_wizard_step_bluetooth_linked">Car linked successfully!</string>
+    <string name="setup_wizard_step_advanced_title">Economic protection</string>
+    <string name="setup_wizard_step_advanced_desc">Set the extra cost and your courtesy margin so our forecast is exact.</string>
+    <string name="setup_wizard_step_advanced_price_label">Cost per exceeded KM</string>
+    <string name="setup_wizard_step_advanced_price_placeholder">e.g. 0.05</string>
+    <string name="setup_wizard_step_advanced_margin_label">Courtesy margin (KM)</string>
+    <string name="setup_wizard_step_advanced_margin_placeholder">e.g. 500</string>
+    <string name="setup_wizard_action_next">Continue</string>
+    <string name="setup_wizard_action_finish">Finish Setup</string>
+    <string name="setup_wizard_action_skip">Setup later</string>
+
+    <!-- Welcome Discovery -->
+    <string name="welcome_discovery_title">Welcome to KiloMenos</string>
+    <string name="welcome_discovery_slide1_title">Control your Balance</string>
+    <string name="welcome_discovery_slide1_desc">We calculate the difference between the km you should have according to your contract and those you have actually traveled.</string>
+    <string name="welcome_discovery_slide2_title">Configure your Contract</string>
+    <string name="welcome_discovery_slide2_desc">Tell us how long your renting lasts and how many km you have included. We take care of the rest.</string>
+    <string name="welcome_discovery_slide3_title">First Registration</string>
+    <string name="welcome_discovery_slide3_desc">You only need to register your current odometer to start seeing your savings in real time.</string>
+    <string name="welcome_discovery_action_next">Next</string>
+    <string name="welcome_discovery_action_start">Setup my vehicle</string>
+    <string name="welcome_discovery_action_skip">Skip</string>
+</resources>

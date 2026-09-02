@@ -70,7 +70,13 @@ Este documento detalla la hoja de ruta técnica y el estado de ejecución para t
 
 4. **`:feature:reporting` (Motor de Reportes & Exportación PDF) 📅 Planificado**:
 
-4. **`:feature:history` (Histórico de odómetro y filtros) ✅ COMPLETADO**:
+4. **`:feature:profile` (Gestión de Flota y Ajustes) ✅ COMPLETADO**:
+   - **Propósito**: Gestión de vehículos, preferencias de usuario y perfil.
+   - **Componentes**: `ProfileRoute`, `VehicleListRoute`, `VehicleDetailRoute`, `PreferencesRoute`.
+   - **Homologación**: Utiliza `MonetizationConfig` y `AuthConfig` para inyectar configuraciones de entorno desde el Shell.
+   - **UI Shared**: Migración de componentes como `VehiclePhotoSelector` y `ContractMetricCard` a `:core:ui` para su reutilización.
+
+5. **`:feature:history` (Histórico de odómetro y filtros) ✅ COMPLETADO**:
    - **Propósito**: Consulta, edición y visualización de rutas GPS en un mapa.
    - **Componentes**: `HistoryRoute`, `RecordDetailRoute`.
    - **Aislamiento**: Encapsula dependencias de Google Maps y lógica de filtrado temporal.
@@ -93,11 +99,13 @@ graph TD
     FeatureDashboard[":feature:dashboard"]
     FeatureHistory[":feature:history"]
     FeatureExpenses[":feature:expenses"]
+    FeatureProfile[":feature:profile"]
 
     App --> FeatureAuth
     App --> FeatureDashboard
     App --> FeatureHistory
     App --> FeatureExpenses
+    App --> FeatureProfile
     App --> Infra
     App --> Domain
     App --> Nav
@@ -112,6 +120,9 @@ graph TD
     FeatureExpenses --> DesignSystem
     FeatureHistory --> Domain
     FeatureHistory --> DesignSystem
+    FeatureProfile --> Domain
+    FeatureProfile --> DesignSystem
+    FeatureProfile --> Nav
 
     Infra --> Domain
 ```

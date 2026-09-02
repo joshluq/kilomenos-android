@@ -108,7 +108,13 @@ class HistoryRepositoryImpl @Inject constructor(
                             }
                         }
                     } else {
-                        syncManager.scheduleSync()
+                        val errorBody = response.errorBody()?.string() ?: ""
+                        if (errorBody.contains("duplicate key", ignoreCase = true)) {
+                            logger.w("HistoryRepository", "Remote sync conflict: Duplicate key. Marking as SYNCED.")
+                            dao.insertRecord(record.copy(syncStatus = SyncStatus.SYNCED).toEntity())
+                        } else {
+                            syncManager.scheduleSync()
+                        }
                     }
                 }
             }.onFailure {

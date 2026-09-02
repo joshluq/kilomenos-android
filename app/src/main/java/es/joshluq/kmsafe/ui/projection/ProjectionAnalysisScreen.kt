@@ -44,11 +44,11 @@ import es.joshluq.canvaskit.components.layout.CanvasKitLoadingScaffold
 import es.joshluq.canvaskit.components.navigation.CanvasKitTopBar
 import es.joshluq.canvaskit.foundations.theme.CanvasKitTheme
 import es.joshluq.kmsafe.R
-import es.joshluq.kmsafe.core.ui.R as CoreR
+import es.joshluq.kmsafe.core.ui.util.NumberFormatter
 import es.joshluq.kmsafe.domain.model.TripProjection
 import es.joshluq.kmsafe.ui.projection.components.ProjectionGauge
 import kotlin.math.absoluteValue
-import es.joshluq.kmsafe.core.ui.util.NumberFormatter
+import es.joshluq.kmsafe.core.ui.R as CoreR
 
 @Composable
 fun ProjectionAnalysisRoute() {
@@ -182,14 +182,20 @@ private fun SimulationSection(
                             color = CanvasKitTheme.colors.textSecondary
                         )
                         Text(
-                            text = stringResource(R.string.projection_analysis_actual_average, NumberFormatter.formatRate(currentRealKm.toDouble())),
+                            text = stringResource(
+                                R.string.projection_analysis_actual_average,
+                                NumberFormatter.formatRate(currentRealKm.toDouble())
+                            ),
                             style = CanvasKitTheme.typography.labelSmall,
                             color = CanvasKitTheme.colors.brandAccent.copy(alpha = 0.6f)
                         )
                     }
                     Text(
                         modifier = Modifier.weight(1f),
-                        text = stringResource(R.string.projection_analysis_daily_km_slider, NumberFormatter.formatRate(currentSimulatedKm.toDouble())),
+                        text = stringResource(
+                            R.string.projection_analysis_daily_km_slider,
+                            NumberFormatter.formatRate(currentSimulatedKm.toDouble())
+                        ),
                         style = CanvasKitTheme.typography.bodyLarge,
                         color = CanvasKitTheme.colors.brandAccent,
                         textAlign = TextAlign.End,
@@ -364,7 +370,10 @@ private fun FinancialImpactCard(
                     )
                     Text(
                         text = if (recommendedKm != null) {
-                            stringResource(R.string.projection_advisory_action, NumberFormatter.formatRate(recommendedKm))
+                            stringResource(
+                                R.string.projection_advisory_action,
+                                NumberFormatter.formatRate(recommendedKm)
+                            )
                         } else {
                             stringResource(R.string.projection_advisory_safe)
                         },
@@ -403,4 +412,3 @@ fun ProjectionAnalysisScreenPreview() {
         )
     }
 }
-

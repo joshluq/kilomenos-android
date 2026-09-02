@@ -67,7 +67,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
@@ -77,6 +76,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
@@ -113,22 +113,23 @@ import es.joshluq.canvaskit.components.layout.CanvasKitLoadingStrategy
 import es.joshluq.canvaskit.components.navigation.CanvasKitTopBar
 import es.joshluq.canvaskit.components.sheets.CanvasKitBottomSheet
 import es.joshluq.canvaskit.foundations.theme.CanvasKitTheme
-import es.joshluq.kmsafe.BuildConfig
 import es.joshluq.kmsafe.R
+import es.joshluq.kmsafe.core.monetization.components.AdMobBanner
+import es.joshluq.kmsafe.core.ui.components.BrandingLogo
+import es.joshluq.kmsafe.core.ui.util.DateUtils
+import es.joshluq.kmsafe.core.ui.util.NumberFormatter
+import es.joshluq.kmsafe.core.ui.util.safeClick
+import es.joshluq.kmsafe.core.ui.util.safeClickable
 import es.joshluq.kmsafe.data.location.LocationTrackingService
 import es.joshluq.kmsafe.domain.model.RentingContract
 import es.joshluq.kmsafe.domain.model.SubscriptionLevel
 import es.joshluq.kmsafe.domain.model.TripProjection
-import es.joshluq.kmsafe.core.monetization.components.AdMobBanner
-import es.joshluq.kmsafe.core.ui.components.BrandingLogo
-import es.joshluq.kmsafe.core.ui.R as CoreR
 import es.joshluq.kmsafe.ui.overview.components.TrackingCard
 import es.joshluq.kmsafe.ui.overview.model.MonthlyUsageUiModel
-import es.joshluq.kmsafe.ui.util.DateUtils
-import es.joshluq.kmsafe.core.ui.util.safeClick
-import es.joshluq.kmsafe.core.ui.util.safeClickable
 import kotlin.math.absoluteValue
-import es.joshluq.kmsafe.core.ui.util.NumberFormatter
+import es.joshluq.kmsafe.core.ui.R as CoreR
+import es.joshluq.kmsafe.feature.fleet.R as FleetR
+import es.joshluq.kmsafe.feature.profile.R as ProfileR
 
 /**
  * Navigation entry point for the Overview screen.
@@ -368,7 +369,10 @@ fun OverviewScreen(
                                     NumberFormatter.formatDistance(projection.expectedFinalBalance.absoluteValue)
                                 )
                             } else {
-                                stringResource(R.string.projection_card_status_safe, NumberFormatter.formatDistance(projection.expectedFinalBalance))
+                                stringResource(
+                                    R.string.projection_card_status_safe,
+                                    NumberFormatter.formatDistance(projection.expectedFinalBalance)
+                                )
                             },
                             style = CanvasKitTheme.typography.bodyMedium
                         )
@@ -389,7 +393,7 @@ fun OverviewScreen(
                 onDismiss = { onEvent(Event.OnDismissBluetoothSuggestionBanner) },
                 message = {
                     Text(
-                        text = stringResource(R.string.onboarding_bluetooth_suggestion_banner),
+                        text = stringResource(FleetR.string.onboarding_bluetooth_suggestion_banner),
                         style = CanvasKitTheme.typography.bodyMedium
                     )
                 }
@@ -1054,7 +1058,7 @@ private fun UpdateOdometerContent(
             onDateSelected = { millis ->
                 millis?.let { onEvent(Event.OnNewRecordDateChanged(it)) }
             },
-            placeholder = stringResource(R.string.onboarding_start_date_placeholder),
+            placeholder = stringResource(FleetR.string.onboarding_start_date_placeholder),
             isError = state.newRecordDateError != null,
             errorText = state.newRecordDateError?.asString()
         )
@@ -1069,8 +1073,8 @@ private fun UpdateOdometerContent(
                 onEvent(Event.OnSaveRecordClicked(preciseTimestamp))
             },
             enabled = !state.isSaving &&
-                    state.newOdometerValue.isNotBlank() &&
-                    state.newRecordDateError == null,
+                state.newOdometerValue.isNotBlank() &&
+                state.newRecordDateError == null,
             loading = state.isSaving
         )
         Spacer(modifier = Modifier.height(24.dp))
@@ -1287,7 +1291,7 @@ private fun EmptyState(
                         modifier = Modifier.fillMaxWidth()
                     ) { _ ->
                         Text(
-                            stringResource(R.string.profile_welcome_guide_option),
+                            stringResource(ProfileR.string.profile_welcome_guide_option),
                             color = CanvasKitTheme.colors.brandAccent,
                             style = CanvasKitTheme.typography.labelLarge
                         )

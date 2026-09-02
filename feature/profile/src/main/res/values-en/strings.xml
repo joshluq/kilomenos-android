@@ -1,0 +1,57 @@
+<resources>
+    <!-- Profile -->
+    <string name="profile_title">Profile</string>
+    <string name="profile_renting_option">My Renting</string>
+    <string name="profile_vehicles_option">My Vehicles</string>
+    <string name="profile_preferences_option">Preferences</string>
+    <string name="profile_logout_button">Log Out</string>
+    <string name="profile_logout_confirmation_title">Log Out</string>
+    <string name="profile_logout_confirmation_message_free">Your data will remain on this device after logging out. However, if another driver logs in on this phone, they will be asked to delete your local information to avoid conflicts.</string>
+    <string name="profile_logout_confirmation_message_premium">Are you sure you want to log out? Your data is safe in the cloud.</string>
+    <string name="profile_logout_confirm">Log Out</string>
+    <string name="profile_logout_cancel">Cancel</string>
+    <string name="profile_subscription_free">Free Account</string>
+    <string name="profile_subscription_premium">Premium Account</string>
+    <string name="profile_sync_disabled">Sync: Local Only</string>
+    <string name="profile_sync_enabled">Sync: Active</string>
+    <string name="profile_upgrade_button">Go\nPremium</string>
+    <string name="profile_upgrade_benefit">Your data is safe in the cloud.</string>
+    <string name="profile_upgrade_coming_soon">Coming Soon!</string>
+    <string name="profile_welcome_guide_option">How KiloMenos works</string>
+    <string name="profile_privacy_section">PRIVACY AND DATA</string>
+    <string name="profile_privacy_policy">Privacy Policy</string>
+    <string name="profile_terms_conditions">Terms and Conditions</string>
+    <string name="profile_delete_account">Delete my account</string>
+    <string name="profile_delete_account_confirmation_title">Delete account permanently?</string>
+    <string name="profile_delete_account_confirmation_message">This action cannot be undone. All your vehicles, mileage records, and profile data will be deleted from both this device and the cloud.</string>
+    <string name="profile_delete_account_confirm">Delete Forever</string>
+    <string name="profile_delete_account_error">Could not delete account. Please try again.</string>
+    <string name="profile_delete_account_step_cleaning">Deleting your vehicles and settings…</string>
+    <string name="profile_delete_account_step_cloud">Removing cloud trace…</string>
+    <string name="profile_delete_account_step_farewell">It\'s a shame you\'re leaving, but we respect your decision.</string>
+    <string name="profile_delete_account_step_final">All your information has been permanently deleted.</string>
+    <string name="profile_delete_account_step_welcome_back">Come back anytime! There will always be a place for you in KiloMenos.</string>
+    <string name="profile_data_management_title">DATA MANAGEMENT</string>
+    <string name="profile_data_management_option">Data management</string>
+
+    <!-- Preferences -->
+    <string name="preferences_account_settings_title">ACCOUNT SETTINGS</string>
+    <string name="preferences_remember_email_label">Remember email</string>
+    <string name="preferences_remember_email_desc">Automatically shows your email on the login screen.</string>
+    <string name="preferences_projection_banner_label">Projection alerts</string>
+    <string name="preferences_projection_banner_desc">Shows a notice on the start about the estimated final status of your contract.</string>
+    <string name="preferences_oss_licenses_label">Software credits</string>
+    <string name="preferences_oss_licenses_desc">Licenses of the open source libraries used.</string>
+    <string name="preferences_about_header">ABOUT</string>
+    <string name="preferences_manage_consent_label">Manage ad preferences</string>
+    <string name="preferences_oss_description">KiloMenos is built thanks to the incredible work of the open source community. Below are the main libraries used:</string>
+    <string name="preferences_oss_license_generic">License: Apache 2.0 / MIT</string>
+    <string name="preferences_oss_license_label">License: %1$s</string>
+    <string name="preferences_auto_tracking_label">Auto-Tracking</string>
+    <string name="preferences_auto_tracking_desc">Registers your trips automatically without pressing any buttons.</string>
+    <string name="preferences_auto_tracking_locked_desc">Registers your trips automatically without pressing any buttons.</string>
+    <string name="preferences_autotracking_trial_title">Try Auto-Tracking ⚡</string>
+    <string name="preferences_autotracking_trial_message">Activate free automatic trip logging for 7 days. You can test the accuracy of the smart GPS without obligation.</string>
+    <string name="preferences_autotracking_trial_confirm">Start Free Trial</string>
+    <string name="preferences_autotracking_trial_cancel">Not now</string>
+</resources>

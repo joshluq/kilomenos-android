@@ -26,9 +26,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import es.joshluq.canvaskit.foundations.theme.CanvasKitTheme
 import es.joshluq.kmsafe.R
-import es.joshluq.kmsafe.core.ui.R as CoreR
-import kotlin.math.absoluteValue
 import es.joshluq.kmsafe.core.ui.util.NumberFormatter
+import kotlin.math.absoluteValue
+import es.joshluq.kmsafe.core.ui.R as CoreR
 
 /**
  * A visual gauge representing the projected mileage versus the contract limit.

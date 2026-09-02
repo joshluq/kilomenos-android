@@ -172,7 +172,7 @@ class LocationTrackingService : Service() {
             try {
                 // B. Run business validations
                 logger.d("LocationService", "Starting autostart validation flow...")
-                
+
                 // 1. Check Access
                 val access = checkFeatureAccessUseCase(CheckFeatureAccessUseCase.Input(Feature.AUTO_TRACKING)).first()
                 if (access !is CheckFeatureAccessUseCase.Output.Success || !access.isGranted) {
@@ -188,7 +188,9 @@ class LocationTrackingService : Service() {
                 }
 
                 // 3. Check Bluetooth if linked
-                val contractOutput = getRentingContractUseCase(GetRentingContractUseCase.Input).first { it !is GetRentingContractUseCase.Output.Progress }
+                val contractOutput = getRentingContractUseCase(GetRentingContractUseCase.Input).first {
+                    it !is GetRentingContractUseCase.Output.Progress
+                }
                 if (contractOutput is GetRentingContractUseCase.Output.Success) {
                     val mac = contractOutput.contract.bluetoothDeviceAddress
                     if (mac != null) {
@@ -207,7 +209,6 @@ class LocationTrackingService : Service() {
                 // C. Validations passed! Start GPS capture
                 logger.i("LocationService", "VALIDATIONS PASSED. Switching to active tracking.")
                 startTracking()
-
             } catch (e: Exception) {
                 logger.e("LocationService", "Error during autostart validation", e)
                 stopSelf()
@@ -223,7 +224,7 @@ class LocationTrackingService : Service() {
             .setOngoing(true)
             .setPriority(NotificationCompat.PRIORITY_LOW)
             .build()
-        
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             startForeground(NOTIFICATION_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION)
         } else {

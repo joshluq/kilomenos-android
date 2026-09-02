@@ -47,9 +47,10 @@ import es.joshluq.canvaskit.components.layout.CanvasKitLoadingScaffold
 import es.joshluq.canvaskit.components.navigation.CanvasKitTopBar
 import es.joshluq.canvaskit.foundations.theme.CanvasKitTheme
 import es.joshluq.kmsafe.R
-import es.joshluq.kmsafe.core.ui.R as CoreR
-import es.joshluq.kmsafe.domain.usecase.ExportDataUseCase
 import es.joshluq.kmsafe.core.ui.util.safeClick
+import es.joshluq.kmsafe.domain.usecase.ExportDataUseCase
+import es.joshluq.kmsafe.core.ui.R as CoreR
+import es.joshluq.kmsafe.feature.profile.R as ProfileR
 
 @Composable
 fun DataManagementRoute(
@@ -118,7 +119,7 @@ fun DataManagementScreen(
             CanvasKitTopBar(
                 title = {
                     Text(
-                        text = stringResource(R.string.profile_data_management_title),
+                        text = stringResource(ProfileR.string.profile_data_management_title),
                         style = CanvasKitTheme.typography.headingMedium
                     )
                 },

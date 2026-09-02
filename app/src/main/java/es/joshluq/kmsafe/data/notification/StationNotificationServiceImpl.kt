@@ -50,7 +50,7 @@ class StationNotificationServiceImpl @Inject constructor(
     @SuppressLint("MissingPermission")
     override fun showStationProximityPrompt(station: ServiceStation) {
         val baseUri = "${DeepLinkConfig.BASE_URL}/expenses"
-        
+
         val fullRefuelUri = "$baseUri?stationId=${station.id}&autoOpenAdd=true&priceReportMode=false".toUri()
         val priceUpdateUri = "$baseUri?stationId=${station.id}&autoOpenAdd=true&priceReportMode=true".toUri()
 

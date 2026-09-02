@@ -93,7 +93,13 @@ class FuelExpenseRepositoryImpl @Inject constructor(
                             finalId = remoteExpense.id
                         }
                     } else {
-                        syncManager.scheduleSync()
+                        val errorBody = response.errorBody()?.string() ?: ""
+                        if (errorBody.contains("duplicate key", ignoreCase = true)) {
+                            logger.w("FuelExpenseRepository", "Remote sync conflict: Duplicate key. Marking as SYNCED.")
+                            dao.insertExpense(expense.copy(syncStatus = SyncStatus.SYNCED).toEntity())
+                        } else {
+                            syncManager.scheduleSync()
+                        }
                     }
                 }
             }.onFailure { e ->

@@ -7,7 +7,9 @@ import dagger.hilt.components.SingletonComponent
 import es.joshluq.kmsafe.auth.AuthConfigImpl
 import es.joshluq.kmsafe.core.monetization.domain.MonetizationConfig
 import es.joshluq.kmsafe.feature.auth.domain.AuthConfig
+import es.joshluq.kmsafe.feature.profile.domain.ProfileConfig
 import es.joshluq.kmsafe.monetization.MonetizationConfigImpl
+import es.joshluq.kmsafe.profile.ProfileConfigImpl
 import javax.inject.Singleton
 
 /**
@@ -29,4 +31,10 @@ abstract class FeatureConfigModule {
     abstract fun bindAuthConfig(
         impl: AuthConfigImpl
     ): AuthConfig
+
+    @Binds
+    @Singleton
+    abstract fun bindProfileConfig(
+        impl: ProfileConfigImpl
+    ): ProfileConfig
 }
