@@ -1,0 +1,30 @@
+<resources>
+    <!-- Projection -->
+    <string name="projection_card_title">TU FUTURO AL VOLANTE</string>
+    <string name="projection_card_expected_balance">Estado final previsto</string>
+    <string name="projection_card_projected_total">Lectura al entregar</string>
+    <string name="projection_card_daily_average">Tu ritmo actual</string>
+    <string name="projection_card_not_enough_data">Dibujando tu futuro (faltan %1$d días de datos)&#8230;</string>
+    <string name="projection_card_status_safe">¡Todo bajo control! Te sobrarían %1$s km.</string>
+    <string name="projection_card_status_over">⚠️ Atención: superarás tu límite por %1$s km.</string>
+    <string name="projection_analysis_financial_impact_title">PROTECCIÓN DE TU BOLSILLO</string>
+    <string name="projection_analysis_penalty_price_label">Coste pactado por KM extra</string>
+    <string name="projection_analysis_estimated_penalty">Gasto evitable estimado</string>
+    <string name="projection_analysis_simulator_title">SIMULADOR DE RITMO</string>
+    <string name="projection_analysis_simulator_desc">Ajusta tu conducción futura para ver el cambio:</string>
+    <string name="projection_analysis_simulated_balance">Nuevo saldo previsto</string>
+    <string name="projection_analysis_daily_km_slider">%1$s km/día</string>
+    <string name="projection_analysis_actual_average">Actual: %1$s km/día</string>
+    <string name="projection_analysis_planned_trip_increment">+ %1$s km</string>
+    <string name="projection_analysis_budget_protected">Presupuesto protegido</string>
+    <string name="projection_analysis_timeline_exhaustion">Agotarás tus KM el:</string>
+    <string name="projection_analysis_timeline_safe">Contrato cubierto hasta el final.</string>
+    <string name="projection_advisory_title">CONSEJO DE TU CO-PILOTO</string>
+    <string name="projection_advisory_safe">Vas perfecto. Sigue disfrutando del camino sin preocupaciones.</string>
+    <string name="projection_advisory_action">Para evitar gastos extra, ajusta tu ritmo a %1$s km/día.</string>
+    <string name="projection_planner_title">PLANIFICA TUS ESCAPADAS</string>
+    <string name="projection_planner_desc">Simula un viaje largo y mira si encaja:</string>
+    <string name="projection_planner_add_trip">Añadir viaje (+%1$s km)</string>
+    <string name="projection_planner_impact_warning">⚠️ Este viaje te acerca al límite de tu contrato.</string>
+    <string name="projection_planner_impact_safe">Viaje totalmente asumible. ¡A disfrutar!</string>
+</resources>

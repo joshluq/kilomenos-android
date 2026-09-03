@@ -57,6 +57,7 @@ import es.joshluq.canvaskit.components.layout.CanvasKitAccordion
 import es.joshluq.canvaskit.components.layout.CanvasKitLoadingScaffold
 import es.joshluq.canvaskit.components.navigation.CanvasKitTopBar
 import es.joshluq.canvaskit.foundations.theme.CanvasKitTheme
+import es.joshluq.foundationkit.text.asString
 import es.joshluq.kmsafe.core.ui.R as CoreR
 import es.joshluq.kmsafe.core.ui.util.NumberFormatter
 import es.joshluq.kmsafe.domain.model.OdometerRecord

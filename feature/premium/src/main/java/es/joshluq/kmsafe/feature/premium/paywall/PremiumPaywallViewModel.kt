@@ -1,4 +1,4 @@
-package es.joshluq.kmsafe.ui.premium
+package es.joshluq.kmsafe.feature.premium.paywall
 
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -12,10 +12,10 @@ import es.joshluq.kmsafe.domain.di.MigrateLocalDataToRemote
 import es.joshluq.kmsafe.domain.di.SyncContracts
 import es.joshluq.kmsafe.domain.di.UpdateSubscription
 import es.joshluq.kmsafe.domain.model.SubscriptionLevel
+import es.joshluq.kmsafe.domain.service.BillingService
 import es.joshluq.kmsafe.domain.usecase.MigrateLocalDataToRemoteUseCase
 import es.joshluq.kmsafe.domain.usecase.SyncContractsUseCase
 import es.joshluq.kmsafe.domain.usecase.UpdateSubscriptionUseCase
-import es.joshluq.kmsafe.infrastructure.remote.billing.BillingManager
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import javax.inject.Inject
@@ -23,7 +23,7 @@ import es.joshluq.kmsafe.feature.fleet.R as FleetR
 
 @HiltViewModel
 class PremiumPaywallViewModel @Inject constructor(
-    private val billingManager: BillingManager,
+    private val billingService: BillingService,
     @param:UpdateSubscription private val updateSubscriptionUseCase:
     @JvmSuppressWildcards FlowUseCase<UpdateSubscriptionUseCase.Input, UpdateSubscriptionUseCase.Output>,
     @param:MigrateLocalDataToRemote private val migrateLocalDataUseCase:
@@ -58,14 +58,14 @@ class PremiumPaywallViewModel @Inject constructor(
     }
 
     private fun observeBilling() {
-        billingManager.purchaseSuccessFlow
-            .onEach { purchase ->
-                logger.i("PremiumPaywallViewModel", "Purchase detected: ${purchase.orderId}")
+        billingService.purchaseSuccessFlow
+            .onEach { orderId ->
+                logger.i("PremiumPaywallViewModel", "Purchase detected: $orderId")
                 handleUpgrade()
             }
             .launchIn(viewModelScope)
 
-        billingManager.errorFlow
+        billingService.errorFlow
             .onEach { error ->
                 updateState { copy(error = TextProvider.Dynamic(error), isLoading = false) }
             }

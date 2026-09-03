@@ -1,0 +1,30 @@
+<resources>
+    <!-- Projection -->
+    <string name="projection_card_title">YOUR FUTURE BEHIND THE WHEEL</string>
+    <string name="projection_card_expected_balance">Expected final balance</string>
+    <string name="projection_card_projected_total">Reading upon delivery</string>
+    <string name="projection_card_daily_average">Your current pace</string>
+    <string name="projection_card_not_enough_data">Drawing your future (%1$d days of data needed)&#8230;</string>
+    <string name="projection_card_status_safe">Everything under control! You would have %1$s km left over.</string>
+    <string name="projection_card_status_over">⚠️ Attention: you will exceed your limit by %1$s km.</string>
+    <string name="projection_analysis_financial_impact_title">PROTECT YOUR WALLET</string>
+    <string name="projection_analysis_penalty_price_label">Agreed cost per extra KM</string>
+    <string name="projection_analysis_estimated_penalty">Estimated avoidable expense</string>
+    <string name="projection_analysis_simulator_title">PACE SIMULATOR</string>
+    <string name="projection_analysis_simulator_desc">Adjust your future driving to see the change:</string>
+    <string name="projection_analysis_simulated_balance">New projected balance</string>
+    <string name="projection_analysis_daily_km_slider">%1$s km/day</string>
+    <string name="projection_analysis_actual_average">Actual: %1$s km/day</string>
+    <string name="projection_analysis_planned_trip_increment">+ %1$s km</string>
+    <string name="projection_analysis_budget_protected">Protected budget</string>
+    <string name="projection_analysis_timeline_exhaustion">You will exhaust your KM on:</string>
+    <string name="projection_analysis_timeline_safe">Contract covered until the end.</string>
+    <string name="projection_advisory_title">CO-PILOT ADVICE</string>
+    <string name="projection_advisory_safe">You are doing great. Keep enjoying the road worry-free.</string>
+    <string name="projection_advisory_action">To avoid extra expenses, adjust your pace to %1$s km/day.</string>
+    <string name="projection_planner_title">PLAN YOUR GETAWAYS</string>
+    <string name="projection_planner_desc">Simulate a long trip and see if it fits:</string>
+    <string name="projection_planner_add_trip">Add trip (+%1$s km)</string>
+    <string name="projection_planner_impact_warning">⚠️ This trip brings you closer to your contract limit.</string>
+    <string name="projection_planner_impact_safe">Completely affordable trip. Enjoy!</string>
+</resources>

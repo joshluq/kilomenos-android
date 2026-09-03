@@ -12,6 +12,9 @@ import es.joshluq.kmsafe.infrastructure.remote.auth.GoogleAuthManager
 import es.joshluq.kmsafe.infrastructure.util.DeviceFingerprintProvider
 import javax.inject.Singleton
 
+import es.joshluq.kmsafe.domain.service.BillingService
+import es.joshluq.kmsafe.infrastructure.remote.billing.BillingManager
+
 /**
  * Hilt module for binding infrastructure services.
  */
@@ -36,4 +39,10 @@ abstract class ServiceModule {
     abstract fun bindSocialAuthService(
         service: GoogleAuthManager
     ): SocialAuthService
+
+    @Binds
+    @Singleton
+    abstract fun bindBillingService(
+        manager: BillingManager
+    ): BillingService
 }

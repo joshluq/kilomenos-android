@@ -1,4 +1,4 @@
-package es.joshluq.kmsafe.ui.projection
+package es.joshluq.kmsafe.feature.projection
 
 import es.joshluq.foundationkit.text.TextProvider
 import es.joshluq.foundationkit.viewmodel.UiEffect

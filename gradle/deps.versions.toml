@@ -1,6 +1,6 @@
 [versions]
 # kits
-foundationkit = "1.4.0"
+foundationkit = "1.5.0"
 canvaskit = "1.1.0"
 encryptionkit  = "1.4.1"
 authkit = "1.3.0"
@@ -20,7 +20,7 @@ googleid = "1.2.0"
 billing = "9.1.0"
 
 # Maps Utils
-maps-utils = "5.1.1"
+maps-utils = "5.2.0"
 maps-compose = "8.5.0"
 
 # Third Party
@@ -37,6 +37,7 @@ crashlytics = "3.0.8"
 [libraries]
 # kits
 foundationkit = { group = "es.joshluq.kit", name = "foundationkit", version.ref = "foundationkit" }
+foundationkit-core = { group = "es.joshluq.kit", name = "foundationkit-core", version.ref = "foundationkit" }
 canvaskit = { group = "es.joshluq.kit", name = "canvaskit", version.ref = "canvaskit" }
 encryptionkit = { group = "es.joshluq.kit", name = "encryptionkit", version.ref = "encryptionkit" }
 authkit = { group = "es.joshluq.kit", name = "authkit", version.ref = "authkit" }

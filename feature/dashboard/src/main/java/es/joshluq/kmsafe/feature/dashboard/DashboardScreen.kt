@@ -34,6 +34,7 @@ import es.joshluq.canvaskit.components.navigation.CanvasKitBottomBar
 import es.joshluq.canvaskit.components.navigation.CanvasKitBottomBarItem
 import es.joshluq.canvaskit.foundations.theme.CanvasKitTheme
 import es.joshluq.foundationkit.text.TextProvider
+import es.joshluq.foundationkit.text.asString
 import es.joshluq.kmsafe.core.navigation.Destination
 import es.joshluq.kmsafe.core.ui.R as CoreR
 import es.joshluq.kmsafe.core.ui.util.safeClick

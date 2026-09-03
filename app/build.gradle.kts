@@ -101,6 +101,8 @@ dependencies {
     implementation(project(":feature:profile"))
     implementation(project(":feature:fleet"))
     implementation(project(":feature:overview"))
+    implementation(project(":feature:projection"))
+    implementation(project(":feature:premium"))
     implementation(project(":core:ui"))
     implementation(project(":core:infrastructure"))
     implementation(project(":core:domain"))

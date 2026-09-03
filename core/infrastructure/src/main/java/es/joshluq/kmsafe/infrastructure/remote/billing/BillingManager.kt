@@ -13,6 +13,7 @@ import com.android.billingclient.api.PurchasesUpdatedListener
 import com.android.billingclient.api.QueryProductDetailsParams
 import dagger.hilt.android.qualifiers.ApplicationContext
 import es.joshluq.foundationkit.log.LoggerKit
+import es.joshluq.kmsafe.domain.service.BillingService
 import es.joshluq.kmsafe.infrastructure.InfrastructureConfig
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -31,7 +32,7 @@ class BillingManager @Inject constructor(
     @ApplicationContext private val context: Context,
     private val config: InfrastructureConfig,
     private val logger: LoggerKit
-) : PurchasesUpdatedListener {
+) : PurchasesUpdatedListener, BillingService {
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
     private var billingClient: BillingClient = BillingClient.newBuilder(context)
@@ -45,11 +46,11 @@ class BillingManager @Inject constructor(
         .enableAutoServiceReconnection()
         .build()
 
-    private val _purchaseSuccessFlow = MutableSharedFlow<Purchase>()
-    val purchaseSuccessFlow: SharedFlow<Purchase> = _purchaseSuccessFlow
+    private val _purchaseSuccessFlow = MutableSharedFlow<String>()
+    override val purchaseSuccessFlow: SharedFlow<String> = _purchaseSuccessFlow
 
     private val _errorFlow = MutableSharedFlow<String>()
-    val errorFlow: SharedFlow<String> = _errorFlow
+    override val errorFlow: SharedFlow<String> = _errorFlow
 
     init {
         startConnection()
@@ -81,9 +82,7 @@ class BillingManager @Inject constructor(
             // To test real Google Play flow, use License Testers in Play Console.
             logger.i("BillingManager", "DEBUG MODE: Simulating purchase success")
             scope.launch {
-                _purchaseSuccessFlow.emit(
-                    Purchase("{}", "simulated_signature")
-                )
+                _purchaseSuccessFlow.emit("simulated_order_id")
             }
             return
         }
@@ -146,11 +145,13 @@ class BillingManager @Inject constructor(
                 billingClient.acknowledgePurchase(acknowledgePurchaseParams) { billingResult ->
                     if (billingResult.responseCode == BillingClient.BillingResponseCode.OK) {
                         logger.i("BillingManager", "Purchase acknowledged")
-                        scope.launch { _purchaseSuccessFlow.emit(purchase) }
+                        val token = purchase.orderId ?: purchase.purchaseToken
+                        scope.launch { _purchaseSuccessFlow.emit(token) }
                     }
                 }
             } else {
-                scope.launch { _purchaseSuccessFlow.emit(purchase) }
+                val token = purchase.orderId ?: purchase.purchaseToken
+                scope.launch { _purchaseSuccessFlow.emit(token) }
             }
         }
     }

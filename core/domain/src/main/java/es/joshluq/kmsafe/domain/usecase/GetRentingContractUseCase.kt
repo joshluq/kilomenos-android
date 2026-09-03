@@ -12,29 +12,10 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onStart
 import javax.inject.Inject
 
-class GetRentingContractUseCase @Inject constructor(
-    private val repository: RentingRepository,
-    private val logger: LoggerKit
-) : FlowUseCase<GetRentingContractUseCase.Input, GetRentingContractUseCase.Output> {
-
-    override fun invoke(input: Input): Flow<Output> {
-        logger.d("GetRentingContractUseCase", "Fetching active contract")
-        return repository.getContract()
-            .map { contract ->
-                if (contract == null) {
-                    logger.w("GetRentingContractUseCase", "No contract found")
-                    Output.Failure
-                } else {
-                    logger.i("GetRentingContractUseCase", "Contract found: ${contract.vehicleName}")
-                    Output.Success(contract)
-                }
-            }
-            .onStart { emit(Output.Progress) }
-            .catch {
-                logger.e("GetRentingContractUseCase", "Error fetching contract", it)
-                emit(Output.Failure)
-            }
-    }
+/**
+ * Domain interface for fetching the active renting contract.
+ */
+interface GetRentingContractUseCase : FlowUseCase<GetRentingContractUseCase.Input, GetRentingContractUseCase.Output> {
 
     object Input : UseCaseInput
 
@@ -42,5 +23,30 @@ class GetRentingContractUseCase @Inject constructor(
         object Progress : Output
         object Failure : Output
         data class Success(val contract: RentingContract) : Output
+    }
+}
+
+class GetRentingContractUseCaseImpl @Inject constructor(
+    private val repository: RentingRepository,
+    private val logger: LoggerKit
+) : GetRentingContractUseCase {
+
+    override fun invoke(input: GetRentingContractUseCase.Input): Flow<GetRentingContractUseCase.Output> {
+        logger.d("GetRentingContractUseCase", "Fetching active contract")
+        return repository.getContract()
+            .map { contract ->
+                if (contract == null) {
+                    logger.w("GetRentingContractUseCase", "No contract found")
+                    GetRentingContractUseCase.Output.Failure
+                } else {
+                    logger.i("GetRentingContractUseCase", "Contract found: ${contract.vehicleName}")
+                    GetRentingContractUseCase.Output.Success(contract)
+                }
+            }
+            .onStart { emit(GetRentingContractUseCase.Output.Progress) }
+            .catch {
+                logger.e("GetRentingContractUseCase", "Error fetching contract", it)
+                emit(GetRentingContractUseCase.Output.Failure)
+            }
     }
 }

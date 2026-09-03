@@ -2,6 +2,7 @@
 plugins {
     alias(libs.plugins.pluginkit.android.application) apply false
     alias(libs.plugins.pluginkit.android.library) apply false
+    alias(libs.plugins.pluginkit.jvm.library) apply false
     alias(libs.plugins.pluginkit.android.compose) apply false
     alias(libs.plugins.pluginkit.android.network) apply false
     alias(libs.plugins.pluginkit.android.hilt) apply false

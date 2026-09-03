@@ -29,6 +29,7 @@ import es.joshluq.kmsafe.domain.model.StationPriceVolatility
 import es.joshluq.kmsafe.feature.expenses.R
 import androidx.compose.ui.platform.LocalLocale
 import es.joshluq.canvaskit.components.buttons.CanvasKitButton
+import es.joshluq.foundationkit.text.asString
 
 @Composable
 fun StationVolatilityCard(

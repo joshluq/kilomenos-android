@@ -1,4 +1,4 @@
-package es.joshluq.kmsafe.ui.projection
+package es.joshluq.kmsafe.feature.projection
 
 import android.content.res.Configuration
 import androidx.compose.foundation.background
@@ -43,10 +43,11 @@ import es.joshluq.canvaskit.components.feedback.CanvasKitBanner
 import es.joshluq.canvaskit.components.layout.CanvasKitLoadingScaffold
 import es.joshluq.canvaskit.components.navigation.CanvasKitTopBar
 import es.joshluq.canvaskit.foundations.theme.CanvasKitTheme
-import es.joshluq.kmsafe.R
+import es.joshluq.foundationkit.text.asString
 import es.joshluq.kmsafe.core.ui.util.NumberFormatter
 import es.joshluq.kmsafe.domain.model.TripProjection
-import es.joshluq.kmsafe.ui.projection.components.ProjectionGauge
+import es.joshluq.kmsafe.feature.projection.R
+import es.joshluq.kmsafe.feature.projection.components.ProjectionGauge
 import kotlin.math.absoluteValue
 import es.joshluq.kmsafe.core.ui.R as CoreR
 

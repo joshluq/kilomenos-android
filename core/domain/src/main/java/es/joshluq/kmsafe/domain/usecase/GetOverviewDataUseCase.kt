@@ -18,20 +18,39 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onStart
 import javax.inject.Inject
 
-class GetOverviewDataUseCase @Inject constructor(
+/**
+ * Domain interface for retrieving aggregated overview data for the active contract.
+ */
+interface GetOverviewDataUseCase : FlowUseCase<GetOverviewDataUseCase.Input, GetOverviewDataUseCase.Output> {
+
+    object Input : UseCaseInput
+
+    sealed interface Output : UseCaseOutput {
+        object Progress : Output
+        object Failure : Output
+        data class Success(
+            val contract: RentingContract?,
+            val actualKmsDrivenSinceStart: Double,
+            val isSyncPending: Boolean = false,
+            val metrics: ContractMetrics? = null
+        ) : Output
+    }
+}
+
+class GetOverviewDataUseCaseImpl @Inject constructor(
     private val rentingRepository: RentingRepository,
     private val historyRepository: HistoryRepository,
     private val calculateContractMetricsUseCase: CalculateContractMetricsUseCase,
     private val logger: LoggerKit
-) : FlowUseCase<GetOverviewDataUseCase.Input, GetOverviewDataUseCase.Output> {
+) : GetOverviewDataUseCase {
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    override fun invoke(input: Input): Flow<Output> {
+    override fun invoke(input: GetOverviewDataUseCase.Input): Flow<GetOverviewDataUseCase.Output> {
         logger.d("GetOverviewDataUseCase", "Executing")
         return rentingRepository.getContract().distinctUntilChanged().flatMapLatest { contract ->
             if (contract == null) {
                 logger.w("GetOverviewDataUseCase", "No active contract found")
-                return@flatMapLatest flowOf(Output.Success(null, 0.0) as Output)
+                return@flatMapLatest flowOf(GetOverviewDataUseCase.Output.Success(null, 0.0) as GetOverviewDataUseCase.Output)
             }
 
             historyRepository.getHistory(contract.id).distinctUntilChanged().map { records ->
@@ -46,32 +65,19 @@ class GetOverviewDataUseCase @Inject constructor(
                     logger.d("GetOverviewDataUseCase", "Overview data synced for ${contract.vehicleName}")
                 }
 
-                Output.Success(
+                GetOverviewDataUseCase.Output.Success(
                     contract = contract,
                     actualKmsDrivenSinceStart = metrics.actualKmsDriven,
                     isSyncPending = metrics.isSyncPending,
                     metrics = metrics
-                ) as Output
+                ) as GetOverviewDataUseCase.Output
             }
         }
             .distinctUntilChanged()
-            .onStart { emit(Output.Progress) }
+            .onStart { emit(GetOverviewDataUseCase.Output.Progress) }
             .catch {
                 logger.e("GetOverviewDataUseCase", "Error fetching overview data", it)
-                emit(Output.Failure)
+                emit(GetOverviewDataUseCase.Output.Failure)
             }
-    }
-
-    object Input : UseCaseInput
-
-    sealed interface Output : UseCaseOutput {
-        object Progress : Output
-        object Failure : Output
-        data class Success(
-            val contract: RentingContract?,
-            val actualKmsDrivenSinceStart: Double,
-            val isSyncPending: Boolean = false,
-            val metrics: ContractMetrics? = null
-        ) : Output
     }
 }

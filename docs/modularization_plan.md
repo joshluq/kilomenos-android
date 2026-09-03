@@ -76,6 +76,7 @@ graph TD
      * Modelos de dominio (`RentingContract`, `OdometerRecord`, `Entitlements`, `User`, `TripRoute`, `FuelExpense`, etc.).
      * Interfaces de repositorio (`AuthRepository`, `RentingRepository`, `HistoryRepository`, `TrackingRepository`, `EntitlementsRepository`, `PreferencesRepository`, `DataManagementRepository`, `FuelExpenseRepository`, `ServiceStationRepository`, `MediaRepository`).
      * Más de 45 casos de uso estandarizados con `FlowUseCase` y `UseCase` de `FoundationKit`.
+     * Biblioteca Kotlin/JVM pura (`pluginkit.jvm.library`), blindada contra APIs de Android y acelerando la ejecución de tests a nivel de milisegundos.
      * Cero dependencias directas con el SDK de Android (`android.*`).
   2. **AC-002: Desacoplamiento de `AuthKit`**:
      * Creación de `AuthSessionState` como sealed interface propia del dominio.
@@ -124,21 +125,31 @@ graph TD
 
 ---
 
+9. **`:feature:overview` (Dashboard de Métricas y Balance Diario) ✅ COMPLETADO**:
+   * **Propósito**: Pantalla principal de control de balance de kilometraje, tarjetas de estado, odómetro y gráficos de consumo mensual.
+   * **Impacto**: Extraído de `:app` a su propio módulo independiente con cero alteraciones de UI.
+
+---
+
+10. **`:feature:premium` (Paywall & Monetización Nativa) ✅ COMPLETADO**:
+    * **Propósito**: Paywall nativo, ofertas de suscripción e integración de compra con Google Play Billing.
+    * **Impacto**: Extraído de `:app` a `:feature:premium`. Desacoplado de `:core:infrastructure` mediante el puerto de dominio `BillingService`.
+
+---
+
+11. **`:feature:projection` (Dashboard Tab 4: Simulación & Proyección de Km) ✅ COMPLETADO**:
+    * **Propósito**: 4ª pestaña del Dashboard (`ProjectionAnalysisScreen`), simulador interactivo de ritmo, planificador de viajes y semáforo de riesgo (`ProjectionGauge`).
+    * **Impacto**: Accesible universalmente (Free y Premium) desde la navegación troncal del Dashboard. Extraído a su propio módulo dedicado para mantener la simetría de las 5 pestañas.
+
+---
+
 ### Módulos Pendientes de Extracción (Aún residentes en `:app`):
 
-9. **`:feature:overview` (Dashboard de Métricas y Balance Diario) 📅 FASE 5**:
-   * **Situación actual**: Reside en `app/src/main/java/es/joshluq/kmsafe/ui/overview/`.
-   * **Objetivo**: Extraer a su propio módulo `:feature:overview` para aislar la pantalla principal del Shell.
-
-10. **`:feature:premium` (Paywall & Monetización Nativa) 📅 FASE 5**:
-    * **Situación actual**: Reside en `app/src/main/java/es/joshluq/kmsafe/ui/premium/` y `ui/projection/`.
-    * **Objetivo**: Extraer a `:feature:premium` la presentación de suscripciones, integración visual con Google Play Billing y análisis predictivo avanzado.
-
-11. **`:core:tracking` (Servicios de Localización & Sensores) 📅 FASE 5**:
+12. **`:core:tracking` (Servicios de Localización & Sensores) 📅 FASE 5**:
     * **Situación actual**: Clases de sistema en `app/src/main/java/es/joshluq/kmsafe/data/location/` (`LocationTrackingService`, `BluetoothConnectionReceiver`, `ActivityTransitionReceiver`).
     * **Objetivo**: Extraer a un módulo core de background tracking para dejar `:app` exclusivamente con el Manifest y Application class.
 
-12. **`:feature:reporting` (Motor de Reportes & Exportación PDF) 📅 PLANIFICADO**:
+13. **`:feature:reporting` (Motor de Reportes & Exportación PDF) 📅 PLANIFICADO**:
     * **Objetivo**: Generación local de informes fiscales y certificados de kilometraje en formato PDF.
 
 ---
@@ -157,11 +168,12 @@ graph TD
     FeatureAuth[":feature:auth"]
     FeatureDashboard[":feature:dashboard"]
     FeatureFleet[":feature:fleet"]
-    FeatureHistory[":feature:history"]
-    FeatureExpenses[":feature:expenses"]
-    FeatureProfile[":feature:profile"]
-    FeatureOverview[":feature:overview (Fase 5)"]
-    FeaturePremium[":feature:premium (Fase 5)"]
+    FeatureHistory[":feature:history (Tab 2)"]
+    FeatureExpenses[":feature:expenses (Tab 3)"]
+    FeatureProfile[":feature:profile (Tab 5)"]
+    FeatureOverview[":feature:overview (Tab 1)"]
+    FeatureProjection[":feature:projection (Tab 4)"]
+    FeaturePremium[":feature:premium (Paywall)"]
     CoreTracking[":core:tracking (Fase 5)"]
 
     App --> FeatureAuth
@@ -171,6 +183,7 @@ graph TD
     App --> FeatureExpenses
     App --> FeatureProfile
     App --> FeatureOverview
+    App --> FeatureProjection
     App --> FeaturePremium
     App --> CoreTracking
     App --> Infra
@@ -180,6 +193,18 @@ graph TD
     FeatureDashboard --> Nav
     FeatureDashboard --> Domain
     FeatureDashboard --> DesignSystem
+
+    FeatureOverview --> Domain
+    FeatureOverview --> DesignSystem
+    FeatureOverview --> Nav
+
+    FeatureProjection --> Domain
+    FeatureProjection --> DesignSystem
+    FeatureProjection --> Nav
+
+    FeaturePremium --> Domain
+    FeaturePremium --> DesignSystem
+    FeaturePremium --> Nav
 
     FeatureFleet --> Domain
     FeatureFleet --> DesignSystem
@@ -227,11 +252,12 @@ Para cerrar la brecha técnica identificada y cumplir al 100% con DDD, Clean Arc
   4. Se saneó `OverviewViewModel` eliminando `applyMetricsToState` y constantes temporales.
   5. Se extrajo con éxito el módulo independiente **`:feature:overview`**, desacoplándolo del Shell `:app`.
 
-### 2. Conversión de `:core:domain` a Módulo Kotlin/JVM Puro
-* **Problema**: `core:domain/build.gradle.kts` utiliza `pluginkit.android.library`, compilando como biblioteca de Android (`.aar`) innecesariamente.
-* **Acción**:
-  * Configurar como módulo Kotlin puro (`java-library` + `kotlin("jvm")`).
-  * Blindar el módulo contra importaciones accidentales del framework Android y acelerar drásticamente los tiempos de compilación y ejecución de tests unitarios.
+### 2. Conversión de `:core:domain` a Módulo Kotlin/JVM Puro ✅ (COMPLETADO)
+* **Resultado**:
+  * Migrado `core:domain/build.gradle.kts` a `pluginkit.jvm.library` + `kotlin.serialization`.
+  * Eliminadas todas las tareas y dependencias de Android (`.aar`), reduciendo los tiempos de compilación y ejecución de tests unitarios en dominio a ~5 segundos (`./gradlew :core:domain:test`).
+  * **Blindaje estricto del dominio**: Regla de Oro cumplida al 100% — cero dependencias del framework de Android (`android.*`) en la capa de negocio.
+  * Verificada la compatibilidad limpia de integración con todos los módulos consumidores (`:core:infrastructure`, `:feature:*`, `:app`) mediante `./gradlew testDebugUnitTest`.
 
 ### 3. Suite de Pruebas Unitarias Mandatorias en Dominio ✅ (EN CURSO - BASE ESTABLECIDA)
 * **Resultado**:
@@ -259,4 +285,4 @@ Para cerrar la brecha técnica identificada y cumplir al 100% con DDD, Clean Arc
    * Inicialización de la aplicación (`KiloMenosApplication`).
    * Configuración de entornos y secretos (`ConfigModule`, `BuildConfig`).
    * Gráfico de navegación raíz (`AppNavigation.kt`).
-4. **Compilación y Validación Aislada**: Cada módulo creado o refactorizado debe validar su compilación independiente y sus tests antes de integrarse al Shell (`./gradlew :core:domain:testDebugUnitTest`, `./gradlew :feature:xxx:assembleDebug`).
+4. **Compilación y Validación Aislada**: Cada módulo creado o refactorizado debe validar su compilación independiente y sus tests antes de integrarse al Shell (`./gradlew :core:domain:test`, `./gradlew :feature:xxx:assembleDebug`).

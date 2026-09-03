@@ -57,6 +57,7 @@ import es.joshluq.canvaskit.components.feedback.CanvasKitConfirmDialog
 import es.joshluq.canvaskit.components.layout.CanvasKitLoadingScaffold
 import es.joshluq.canvaskit.components.navigation.CanvasKitTopBar
 import es.joshluq.canvaskit.foundations.theme.CanvasKitTheme
+import es.joshluq.foundationkit.text.asString
 import es.joshluq.kmsafe.core.ui.components.ContractMetricCard
 import es.joshluq.kmsafe.core.ui.components.VehiclePhotoSelector
 import es.joshluq.kmsafe.core.ui.util.DateUtils

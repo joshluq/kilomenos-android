@@ -31,11 +31,14 @@ import es.joshluq.kmsafe.domain.usecase.GetImageBytesUseCase
 import es.joshluq.kmsafe.domain.usecase.GetMonthlyUsageUseCase
 import es.joshluq.kmsafe.domain.usecase.GetOdometerRecordUseCase
 import es.joshluq.kmsafe.domain.usecase.GetOverviewDataUseCase
+import es.joshluq.kmsafe.domain.usecase.GetOverviewDataUseCaseImpl
 import es.joshluq.kmsafe.domain.usecase.GetPreferencesUseCase
 import es.joshluq.kmsafe.domain.usecase.GetRentingContractUseCase
+import es.joshluq.kmsafe.domain.usecase.GetRentingContractUseCaseImpl
 import es.joshluq.kmsafe.domain.usecase.GetRouteUseCase
 import es.joshluq.kmsafe.domain.usecase.GetServiceStationDetailUseCase
 import es.joshluq.kmsafe.domain.usecase.GetTripProjectionUseCase
+import es.joshluq.kmsafe.domain.usecase.GetTripProjectionUseCaseImpl
 import es.joshluq.kmsafe.domain.usecase.GetVehicleByIdUseCase
 import es.joshluq.kmsafe.domain.usecase.ImportDataUseCase
 import es.joshluq.kmsafe.domain.usecase.MigrateLocalDataToRemoteUseCase
@@ -72,9 +75,14 @@ import es.joshluq.kmsafe.domain.usecase.ValidateCredentialsUseCase
 abstract class UseCaseModule {
 
     @Binds
-    @GetRenting
     abstract fun bindGetRentingContractUseCase(
-        useCase: GetRentingContractUseCase
+        impl: GetRentingContractUseCaseImpl
+    ): GetRentingContractUseCase
+
+    @Binds
+    @GetRenting
+    abstract fun bindGetRentingContractUseCaseLegacy(
+        impl: GetRentingContractUseCaseImpl
     ): FlowUseCase<GetRentingContractUseCase.Input, GetRentingContractUseCase.Output>
 
     @Binds
@@ -144,9 +152,14 @@ abstract class UseCaseModule {
     ): FlowUseCase<GetMonthlyUsageUseCase.Input, GetMonthlyUsageUseCase.Output>
 
     @Binds
-    @GetOverviewData
     abstract fun bindGetOverviewDataUseCase(
-        useCase: GetOverviewDataUseCase
+        impl: GetOverviewDataUseCaseImpl
+    ): GetOverviewDataUseCase
+
+    @Binds
+    @GetOverviewData
+    abstract fun bindGetOverviewDataUseCaseLegacy(
+        impl: GetOverviewDataUseCaseImpl
     ): FlowUseCase<GetOverviewDataUseCase.Input, GetOverviewDataUseCase.Output>
 
     @Binds
@@ -168,9 +181,14 @@ abstract class UseCaseModule {
     ): FlowUseCase<AddOdometerRecordUseCase.Input, AddOdometerRecordUseCase.Output>
 
     @Binds
-    @GetTripProjection
     abstract fun bindGetTripProjectionUseCase(
-        useCase: GetTripProjectionUseCase
+        impl: GetTripProjectionUseCaseImpl
+    ): GetTripProjectionUseCase
+
+    @Binds
+    @GetTripProjection
+    abstract fun bindGetTripProjectionUseCaseLegacy(
+        impl: GetTripProjectionUseCaseImpl
     ): FlowUseCase<GetTripProjectionUseCase.Input, GetTripProjectionUseCase.Output>
 
     @Binds

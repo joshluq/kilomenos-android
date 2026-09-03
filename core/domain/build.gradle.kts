@@ -1,17 +1,11 @@
-import com.android.build.api.dsl.LibraryExtension
-
 plugins {
-    alias(libs.plugins.pluginkit.android.library)
-    alias(libs.plugins.pluginkit.android.testing)
+    alias(libs.plugins.pluginkit.jvm.library)
     alias(libs.plugins.kotlin.serialization)
 }
 
-configure<LibraryExtension> {
-    namespace = "es.joshluq.kmsafe.core.domain"
-}
-
 dependencies {
-    implementation(deps.foundationkit)
+    implementation(deps.foundationkit.core)
     implementation(deps.javax.inject)
     implementation(libs.kotlinx.serialization.json)
+    implementation(libs.bundles.testing.unit)
 }

@@ -54,6 +54,7 @@ import es.joshluq.canvaskit.components.feedback.CanvasKitConfirmDialog
 import es.joshluq.canvaskit.components.layout.CanvasKitLoadingScaffold
 import es.joshluq.canvaskit.components.navigation.CanvasKitTopBar
 import es.joshluq.canvaskit.foundations.theme.CanvasKitTheme
+import es.joshluq.foundationkit.text.asString
 import es.joshluq.kmsafe.feature.profile.R
 import es.joshluq.kmsafe.core.ui.R as CoreR
 import es.joshluq.kmsafe.core.ui.util.safeClick

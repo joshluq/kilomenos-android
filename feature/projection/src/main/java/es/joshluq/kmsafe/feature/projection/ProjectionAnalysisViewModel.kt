@@ -1,15 +1,11 @@
-package es.joshluq.kmsafe.ui.projection
+package es.joshluq.kmsafe.feature.projection
 
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import es.joshluq.analyticskit.domain.model.AnalyticsEvent
 import es.joshluq.analyticskit.sdk.AnalyticskitManager
 import es.joshluq.foundationkit.log.LoggerKit
-import es.joshluq.foundationkit.usecase.FlowUseCase
 import es.joshluq.foundationkit.viewmodel.ScreenViewModel
-import es.joshluq.kmsafe.domain.di.GetOverviewData
-import es.joshluq.kmsafe.domain.di.GetRenting
-import es.joshluq.kmsafe.domain.di.GetTripProjection
 import es.joshluq.kmsafe.domain.model.RentingContract
 import es.joshluq.kmsafe.domain.usecase.GetOverviewDataUseCase
 import es.joshluq.kmsafe.domain.usecase.GetRentingContractUseCase
@@ -20,12 +16,9 @@ import javax.inject.Inject
 
 @HiltViewModel
 class ProjectionAnalysisViewModel @Inject constructor(
-    @param:GetTripProjection private val getTripProjectionUseCase:
-    @JvmSuppressWildcards FlowUseCase<GetTripProjectionUseCase.Input, GetTripProjectionUseCase.Output>,
-    @param:GetOverviewData private val getOverviewDataUseCase:
-    @JvmSuppressWildcards FlowUseCase<GetOverviewDataUseCase.Input, GetOverviewDataUseCase.Output>,
-    @param:GetRenting private val getRentingContractUseCase:
-    @JvmSuppressWildcards FlowUseCase<GetRentingContractUseCase.Input, GetRentingContractUseCase.Output>,
+    private val getTripProjectionUseCase: GetTripProjectionUseCase,
+    private val getOverviewDataUseCase: GetOverviewDataUseCase,
+    private val getRentingContractUseCase: GetRentingContractUseCase,
     private val analytics: AnalyticskitManager,
     private val logger: LoggerKit
 ) : ScreenViewModel<State, Event, Effect>() {

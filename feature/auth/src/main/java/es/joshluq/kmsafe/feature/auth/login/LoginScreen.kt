@@ -62,6 +62,7 @@ import es.joshluq.canvaskit.components.layout.CanvasKitLoadingScaffold
 import es.joshluq.canvaskit.components.layout.CanvasKitLoadingStrategy
 import es.joshluq.canvaskit.components.text.CanvasKitRichText
 import es.joshluq.canvaskit.foundations.theme.CanvasKitTheme
+import es.joshluq.foundationkit.text.asString
 import es.joshluq.kmsafe.feature.auth.R
 import es.joshluq.kmsafe.core.ui.R as CoreR
 import es.joshluq.kmsafe.feature.auth.login.components.BrandingSection

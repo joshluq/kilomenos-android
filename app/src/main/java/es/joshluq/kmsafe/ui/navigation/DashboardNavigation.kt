@@ -10,7 +10,7 @@ import es.joshluq.kmsafe.feature.expenses.ExpensesRoute
 import es.joshluq.kmsafe.feature.history.HistoryRoute
 import es.joshluq.kmsafe.feature.profile.ProfileRoute
 import es.joshluq.kmsafe.feature.overview.OverviewRoute
-import es.joshluq.kmsafe.ui.projection.ProjectionAnalysisRoute
+import es.joshluq.kmsafe.feature.projection.ProjectionAnalysisRoute
 
 @Composable
 fun DashboardNavigation(

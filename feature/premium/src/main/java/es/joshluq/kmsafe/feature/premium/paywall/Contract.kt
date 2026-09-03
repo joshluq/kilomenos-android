@@ -1,4 +1,4 @@
-package es.joshluq.kmsafe.ui.premium
+package es.joshluq.kmsafe.feature.premium.paywall
 
 import es.joshluq.foundationkit.text.TextProvider
 import es.joshluq.foundationkit.viewmodel.UiEffect

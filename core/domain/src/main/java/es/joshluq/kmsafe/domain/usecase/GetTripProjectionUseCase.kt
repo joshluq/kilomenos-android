@@ -17,14 +17,25 @@ import kotlinx.coroutines.flow.onStart
 import javax.inject.Inject
 
 /**
- * Use case to calculate the predictive projection of mileage at the end of the contract.
+ * Domain interface for calculating the predictive projection of mileage at the end of the contract.
  * Follows the linearly weighted projection algorithm.
  */
-class GetTripProjectionUseCase @Inject constructor(
+interface GetTripProjectionUseCase : FlowUseCase<GetTripProjectionUseCase.Input, GetTripProjectionUseCase.Output> {
+
+    object Input : UseCaseInput
+
+    sealed interface Output : UseCaseOutput {
+        data object Progress : Output
+        data class Failure(val message: String) : Output
+        data class Success(val projection: TripProjection?) : Output
+    }
+}
+
+class GetTripProjectionUseCaseImpl @Inject constructor(
     private val rentingRepository: RentingRepository,
     private val historyRepository: HistoryRepository,
     private val logger: LoggerKit
-) : FlowUseCase<GetTripProjectionUseCase.Input, GetTripProjectionUseCase.Output> {
+) : GetTripProjectionUseCase {
 
     companion object {
         private const val DAYS_IN_MONTH = 30.4375
@@ -33,12 +44,12 @@ class GetTripProjectionUseCase @Inject constructor(
     }
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    override fun invoke(input: Input): Flow<Output> {
+    override fun invoke(input: GetTripProjectionUseCase.Input): Flow<GetTripProjectionUseCase.Output> {
         logger.d("GetTripProjectionUseCase", "Calculating projection")
         return rentingRepository.getContract().flatMapLatest { contract ->
             if (contract == null) {
                 logger.w("GetTripProjectionUseCase", "No active contract")
-                return@flatMapLatest flowOf(Output.Success(null) as Output)
+                return@flatMapLatest flowOf(GetTripProjectionUseCase.Output.Success(null) as GetTripProjectionUseCase.Output)
             }
 
             historyRepository.getHistory(contract.id).map { records ->
@@ -68,18 +79,10 @@ class GetTripProjectionUseCase @Inject constructor(
                     hasEnoughData = hasEnoughData
                 )
 
-                Output.Success(projection) as Output
+                GetTripProjectionUseCase.Output.Success(projection) as GetTripProjectionUseCase.Output
             }
         }
-            .onStart { emit(Output.Progress) }
-            .catch { emit(Output.Failure(it.message ?: "Unknown error")) }
-    }
-
-    object Input : UseCaseInput
-
-    sealed interface Output : UseCaseOutput {
-        data object Progress : Output
-        data class Failure(val message: String) : Output
-        data class Success(val projection: TripProjection?) : Output
+            .onStart { emit(GetTripProjectionUseCase.Output.Progress) }
+            .catch { emit(GetTripProjectionUseCase.Output.Failure(it.message ?: "Unknown error")) }
     }
 }

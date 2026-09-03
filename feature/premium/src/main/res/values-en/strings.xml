@@ -1,0 +1,31 @@
+<resources>
+    <!-- Premium Paywall -->
+    <string name="premium_paywall_title">KiloMenos Premium</string>
+    <string name="premium_paywall_subtitle">Optimize your investment with advanced management tools</string>
+    <string name="premium_benefit_sync_title">Total Synchronization</string>
+    <string name="premium_benefit_sync_desc">Automatic cloud backup and access from multiple devices.</string>
+    <string name="premium_benefit_fleet_title">Fleet Mode</string>
+    <string name="premium_benefit_fleet_desc">Manage as many vehicles and contracts as you need without limits.</string>
+    <string name="premium_benefit_reports_title">Professional Reports</string>
+    <string name="premium_benefit_reports_desc">Full export and reports ready for your renting company.</string>
+    <string name="premium_benefit_roadmap_title">Roadmap</string>
+    <string name="premium_benefit_roadmap_desc">Priority access to OCR reading and smart GPS tracking.</string>
+    <string name="premium_benefit_autotracking_title">Smart Auto-Tracking</string>
+    <string name="premium_benefit_autotracking_desc">Forget about pressing the button. The app detects when you drive and activates GPS for you.</string>
+    <string name="premium_benefit_routes_title">Your Route Maps</string>
+    <string name="premium_benefit_routes_desc">Visualize the path of each trip on an interactive map for total control of your activity.</string>
+    <string name="premium_paywall_save_money_highlight">Save on penalties with total and automatic control.</string>
+    <string name="premium_upgrade_button">Upgrade to Premium now</string>
+    <string name="premium_trial_offer_title">Try Premium Free</string>
+    <string name="premium_trial_offer_message">Start your 7-day trial today and unlock advanced features designed to save you time and money. No commitments.</string>
+    <string name="premium_trial_offer_confirm">Start 7-day trial</string>
+    <string name="premium_trial_offer_cancel">Not now</string>
+    <string name="premium_paywall_migrating_msg">Securing your data in the cloud…</string>
+    <string name="premium_continue_free">Continue with free version</string>
+    <string name="premium_limit_vehicle_title">Vehicle limit</string>
+    <string name="premium_limit_vehicle_message">The free version allows managing one vehicle. Go Premium to manage your entire fleet in the cloud.</string>
+    <string name="premium_limit_data_title">Premium Feature</string>
+    <string name="premium_limit_data_message">Full backup and data restoration are exclusive features of KiloMenos Premium.</string>
+    <string name="premium_upgrade_cancel">Not now</string>
+    <string name="premium_upgrade_confirm">Upgrade to Premium</string>
+</resources>

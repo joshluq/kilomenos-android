@@ -1,4 +1,4 @@
-package es.joshluq.kmsafe.ui.projection.components
+package es.joshluq.kmsafe.feature.projection.components
 
 import android.content.res.Configuration
 import androidx.compose.animation.core.animateFloatAsState
@@ -25,7 +25,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import es.joshluq.canvaskit.foundations.theme.CanvasKitTheme
-import es.joshluq.kmsafe.R
+import es.joshluq.kmsafe.feature.projection.R
 import es.joshluq.kmsafe.core.ui.util.NumberFormatter
 import kotlin.math.absoluteValue
 import es.joshluq.kmsafe.core.ui.R as CoreR
