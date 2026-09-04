@@ -57,7 +57,6 @@ class SaveFuelExpenseUseCaseImpl @Inject constructor(
 
     override fun invoke(input: SaveFuelExpenseUseCase.Input): Flow<SaveFuelExpenseUseCase.Output> = flow {
         logger.d("SaveFuelExpenseUseCase", "UseCase invoked for vehicle: ${input.vehicleId}, fullTank: ${input.isFullTank}")
-        emit(SaveFuelExpenseUseCase.Output.Progress)
 
         val isPriceReport = input.volumeQuantity == 0.0 && input.totalCost == 0.0 && input.unitPrice > 0.0
 
