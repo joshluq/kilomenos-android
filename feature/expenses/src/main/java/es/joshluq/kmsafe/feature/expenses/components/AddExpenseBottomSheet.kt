@@ -49,10 +49,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
-import androidx.compose.material.icons.filled.CameraAlt
 import es.joshluq.canvaskit.components.buttons.CanvasKitButton
-import es.joshluq.canvaskit.components.buttons.CanvasKitButtonSize
-import es.joshluq.canvaskit.components.buttons.CanvasKitButtonVariant
 import es.joshluq.canvaskit.components.chips.CanvasKitChip
 import es.joshluq.canvaskit.components.chips.CanvasKitChipVariant
 import es.joshluq.canvaskit.components.feedback.CanvasKitAlertVariant
@@ -104,8 +101,6 @@ fun AddExpenseBottomSheet(
     stations: List<ServiceStation> = emptyList(),
     isLocationCaptured: Boolean = false,
     scannedReceiptResult: ReceiptScanResult? = null,
-    isScanningReceipt: Boolean = false,
-    onScanReceiptClick: () -> Unit = {},
     onDiscardScan: () -> Unit = {},
     onDismiss: () -> Unit,
     onSave: (

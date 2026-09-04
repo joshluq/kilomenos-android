@@ -66,7 +66,7 @@ object ReceiptImageCompressor {
             }
 
             outputStream.toByteArray()
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             null
         }
     }
@@ -92,7 +92,7 @@ object ReceiptImageCompressor {
             }
 
             Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true)
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             bitmap
         }
     }

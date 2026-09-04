@@ -61,7 +61,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.zIndex
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
@@ -337,8 +336,6 @@ fun ExpensesScreen(
                     stations = state.stations,
                     isLocationCaptured = state.currentLat != null,
                     scannedReceiptResult = state.scannedReceiptResult,
-                    isScanningReceipt = state.isScanningReceipt,
-                    onScanReceiptClick = { showReceiptSourcePicker = true },
                     onDiscardScan = { onEvent(ExpensesEvent.OnDiscardReceiptScan) },
                     onDismiss = { onEvent(ExpensesEvent.OnDismissAddExpense) },
                     onSave = { fuelType, unitPrice, volume, total, stationId, stationName, odo, isFull, notes, _, receiptPath ->
@@ -432,7 +429,7 @@ fun ExpensesScreen(
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
                     .padding(CanvasKitTheme.spacing.md)
-                    .navigationBarsPadding().zIndex(1f),
+                    .navigationBarsPadding(),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 CanvasKitBanner(
