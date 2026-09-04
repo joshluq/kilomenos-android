@@ -2,6 +2,7 @@ package es.joshluq.kmsafe.config
 
 import es.joshluq.kmsafe.BuildConfig
 import es.joshluq.kmsafe.core.monetization.domain.MonetizationConfig
+import javax.inject.Inject
 
 /**
  * Implementation of [es.joshluq.kmsafe.core.monetization.domain.MonetizationConfig] using the Shell module's BuildConfig.
