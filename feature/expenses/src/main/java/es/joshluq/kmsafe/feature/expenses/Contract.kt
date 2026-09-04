@@ -7,8 +7,10 @@ import es.joshluq.foundationkit.viewmodel.UiState
 import es.joshluq.kmsafe.domain.model.FuelExpense
 import es.joshluq.kmsafe.domain.model.FuelType
 import es.joshluq.kmsafe.domain.model.OdometerRecord
+import es.joshluq.kmsafe.domain.model.ReceiptScanResult
 import es.joshluq.kmsafe.domain.model.ServiceStation
 import es.joshluq.kmsafe.domain.model.StationPriceVolatility
+import es.joshluq.kmsafe.domain.model.StationRadarItem
 
 /**
  * Filter mode for expenses.
@@ -32,6 +34,18 @@ data class ExpensesState(
     val currentMonthTotalVolume: Double = 0.0,
     val allTimeTotalCost: Double = 0.0,
     val electrificationSavingsEuros: Double = 0.0,
+    /** Dynamic €/100 km cost metric computed from full-tank refuels. */
+    val costPer100km: Double? = null,
+    /** Consumption in L or kWh per 100 km from the most recent full refuel cycle. */
+    val lastCycleConsumption: Double? = null,
+    /** User's overall historical average consumption. */
+    val averageConsumption: Double? = null,
+    /** Delta between last cycle consumption and historical average (negative = efficiency gain). */
+    val consumptionDeltaVsAverage: Double? = null,
+    /** Habitual service stations displayed in the Layer 2 price radar. */
+    val radarItems: List<StationRadarItem> = emptyList(),
+    /** True if the station price radar is locked (Core free tier). */
+    val isRadarLocked: Boolean = true,
     val isAddExpenseSheetOpen: Boolean = false,
     val selectedVolatility: StationPriceVolatility? = null,
     val isPremium: Boolean = false,
@@ -66,7 +80,13 @@ data class ExpensesState(
     /** Consumption result to display in the post-save banner. Null when not yet available. */
     val consumptionBannerData: ConsumptionBannerData? = null,
     val showDeleteConfirmation: Boolean = false,
-    val deleteTargetId: String? = null
+    val deleteTargetId: String? = null,
+    /** Whether Gemini 2.5 Flash is currently analyzing a receipt image. */
+    val isScanningReceipt: Boolean = false,
+    /** Extracted receipt data pending user review/confirmation. */
+    val scannedReceiptResult: ReceiptScanResult? = null,
+    /** Local cached path of the captured/selected receipt image. */
+    val receiptImagePath: String? = null
 ) : UiState {
     companion object {
         val Empty = ExpensesState()
@@ -110,7 +130,8 @@ sealed interface ExpensesEvent : UiEvent {
         val isFullTank: Boolean,
         val notes: String?,
         /** Forwarded from [ExpensesState.lastRefuelTimestamp] to bound the A+C km window. */
-        val lastRefuelTimestamp: Long?
+        val lastRefuelTimestamp: Long?,
+        val receiptImagePath: String? = null
     ) : ExpensesEvent
     data class OnViewStationVolatility(val stationId: String, val fuelType: FuelType) : ExpensesEvent
     data class OnViewStationDetail(val stationId: String) : ExpensesEvent
@@ -119,6 +140,10 @@ sealed interface ExpensesEvent : UiEvent {
     data object OnDismissSuccess : ExpensesEvent
     data object OnToggleTripsVisibility : ExpensesEvent
     data object OnDismissConsumptionBanner : ExpensesEvent
+    data class OnStationRadarSelected(val stationId: String) : ExpensesEvent
+    data object OnUpgradeToUnlockRadarClicked : ExpensesEvent
+    data class OnReceiptImageCaptured(val imagePath: String) : ExpensesEvent
+    data object OnDiscardReceiptScan : ExpensesEvent
 }
 
 /**

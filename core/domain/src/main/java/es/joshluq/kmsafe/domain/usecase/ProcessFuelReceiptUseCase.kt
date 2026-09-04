@@ -22,7 +22,7 @@ import java.util.UUID
 import javax.inject.Inject
 
 /**
- * Domain interface to process a fuel receipt using Supabase Storage and Gemini AI OCR.
+ * Domain interface to process a fuel receipt using AI OCR.
  */
 interface ProcessFuelReceiptUseCase : FlowUseCase<ProcessFuelReceiptUseCase.Input, ProcessFuelReceiptUseCase.Output> {
 
@@ -30,7 +30,28 @@ interface ProcessFuelReceiptUseCase : FlowUseCase<ProcessFuelReceiptUseCase.Inpu
         val imageBytes: ByteArray,
         val mimeType: String = "image/jpeg",
         val vehicleId: String
-    ) : UseCaseInput
+    ) : UseCaseInput {
+
+        override fun equals(other: Any?): Boolean {
+            if (this === other) return true
+            if (javaClass != other?.javaClass) return false
+
+            other as Input
+
+            if (!imageBytes.contentEquals(other.imageBytes)) return false
+            if (mimeType != other.mimeType) return false
+            if (vehicleId != other.vehicleId) return false
+
+            return true
+        }
+
+        override fun hashCode(): Int {
+            var result = imageBytes.contentHashCode()
+            result = 31 * result + mimeType.hashCode()
+            result = 31 * result + vehicleId.hashCode()
+            return result
+        }
+    }
 
     sealed interface Output : UseCaseOutput {
         data object Progress : Output

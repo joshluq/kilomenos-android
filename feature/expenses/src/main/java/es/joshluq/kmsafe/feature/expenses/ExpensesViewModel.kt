@@ -10,12 +10,16 @@ import es.joshluq.kmsafe.domain.model.EnergyCategory
 import es.joshluq.kmsafe.domain.model.Feature
 import es.joshluq.kmsafe.domain.model.FuelExpense
 import es.joshluq.kmsafe.domain.model.FuelType
+import es.joshluq.kmsafe.domain.usecase.CalculateCostPerHundredKmUseCase
 import es.joshluq.kmsafe.domain.usecase.CheckFeatureAccessUseCase
 import es.joshluq.kmsafe.domain.usecase.DeleteFuelExpenseUseCase
+import es.joshluq.kmsafe.domain.usecase.DiscardReceiptScanUseCase
 import es.joshluq.kmsafe.domain.usecase.GetAllServiceStationsUseCase
 import es.joshluq.kmsafe.domain.usecase.GetElectrificationSavingsUseCase
 import es.joshluq.kmsafe.domain.usecase.GetExpensesByVehicleUseCase
 import es.joshluq.kmsafe.domain.usecase.GetStationVolatilityUseCase
+import es.joshluq.kmsafe.domain.usecase.ObserveStationRadarUseCase
+import es.joshluq.kmsafe.domain.usecase.ProcessFuelReceiptUseCase
 import es.joshluq.kmsafe.domain.usecase.SaveFuelExpenseUseCase
 import es.joshluq.kmsafe.domain.usecase.SaveServiceStationUseCase
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -40,6 +44,10 @@ class ExpensesViewModel @Inject constructor(
     private val checkFeatureAccessUseCase: CheckFeatureAccessUseCase,
     private val getAllServiceStationsUseCase: GetAllServiceStationsUseCase,
     private val saveServiceStationUseCase: SaveServiceStationUseCase,
+    private val calculateCostPerHundredKmUseCase: CalculateCostPerHundredKmUseCase,
+    private val observeStationRadarUseCase: ObserveStationRadarUseCase,
+    private val processFuelReceiptUseCase: ProcessFuelReceiptUseCase,
+    private val discardReceiptScanUseCase: DiscardReceiptScanUseCase,
     private val logger: LoggerKit
 ) : ScreenViewModel<ExpensesState, ExpensesEvent, ExpensesEffect>() {
 
@@ -74,7 +82,18 @@ class ExpensesViewModel @Inject constructor(
             ExpensesEvent.OnRefresh -> loadExpenses()
             is ExpensesEvent.OnFilterChanged -> handleFilterChanged(event.mode)
             ExpensesEvent.OnOpenAddExpense -> updateState { copy(isAddExpenseSheetOpen = true) }
-            ExpensesEvent.OnDismissAddExpense -> updateState { copy(isAddExpenseSheetOpen = false, currentLat = null, currentLng = null) }
+            ExpensesEvent.OnDismissAddExpense -> {
+                handleDiscardReceiptScan()
+                updateState {
+                    copy(
+                        isAddExpenseSheetOpen = false,
+                        currentLat = null,
+                        currentLng = null,
+                        initialStationId = null,
+                        priceReportMode = false
+                    )
+                }
+            }
             is ExpensesEvent.OnLocationCaptured -> updateState { copy(currentLat = event.latitude, currentLng = event.longitude) }
             ExpensesEvent.OnManageStationsClicked -> launchEffect(ExpensesEffect.NavigateToStations)
             is ExpensesEvent.OnDeleteExpense -> updateState { copy(showDeleteConfirmation = true, deleteTargetId = event.expenseId) }
@@ -92,6 +111,17 @@ class ExpensesViewModel @Inject constructor(
             ExpensesEvent.OnDismissSuccess -> updateState { copy(successMessage = null) }
             ExpensesEvent.OnDismissConsumptionBanner -> updateState { copy(consumptionBannerData = null) }
             ExpensesEvent.OnToggleTripsVisibility -> updateState { copy(showTripsSinceLastRefuel = !showTripsSinceLastRefuel) }
+            is ExpensesEvent.OnStationRadarSelected -> {
+                updateState {
+                    copy(
+                        isAddExpenseSheetOpen = true,
+                        initialStationId = event.stationId
+                    )
+                }
+            }
+            ExpensesEvent.OnUpgradeToUnlockRadarClicked -> launchEffect(ExpensesEffect.NavigateToUpgrade)
+            is ExpensesEvent.OnReceiptImageCaptured -> handleReceiptImageCaptured(event.imagePath)
+            ExpensesEvent.OnDiscardReceiptScan -> handleDiscardReceiptScan()
         }
     }
 
@@ -131,6 +161,8 @@ class ExpensesViewModel @Inject constructor(
                                 lastUsedFuelType = output.defaultFuelType
                             )
                         }
+                        loadCostPerHundredKm(output.vehicleId)
+                        loadStationRadar(output.vehicleId)
                     }
                     is GetExpensesByVehicleUseCase.Output.Success -> {
                         updateState {
@@ -176,14 +208,11 @@ class ExpensesViewModel @Inject constructor(
                             )
                         }
                         loadElectrificationSavings(output.vehicleId)
+                        loadCostPerHundredKm(output.vehicleId)
+                        loadStationRadar(output.vehicleId)
                     }
                     is GetExpensesByVehicleUseCase.Output.Failure -> {
-                        updateState {
-                            copy(
-                                isLoading = false,
-                                error = output.error.toText()
-                            )
-                        }
+                        updateState { copy(isLoading = false, error = output.error.toText()) }
                     }
                 }
             }
@@ -205,6 +234,42 @@ class ExpensesViewModel @Inject constructor(
             .onEach { output ->
                 if (output is GetElectrificationSavingsUseCase.Output.Success) {
                     updateState { copy(electrificationSavingsEuros = output.totalSavedEuros) }
+                }
+            }
+            .launchIn(viewModelScope)
+    }
+
+    private fun loadCostPerHundredKm(vehicleId: String) {
+        calculateCostPerHundredKmUseCase(es.joshluq.kmsafe.domain.usecase.CalculateCostPerHundredKmUseCase.Input(vehicleId))
+            .onEach { output ->
+                when (output) {
+                    is es.joshluq.kmsafe.domain.usecase.CalculateCostPerHundredKmUseCase.Output.Success -> {
+                        updateState {
+                            copy(
+                                costPer100km = output.costPer100km,
+                                lastCycleConsumption = output.lastCycleConsumption,
+                                averageConsumption = output.averageConsumption,
+                                consumptionDeltaVsAverage = output.consumptionDeltaVsAverage
+                            )
+                        }
+                    }
+                }
+            }
+            .launchIn(viewModelScope)
+    }
+
+    private fun loadStationRadar(vehicleId: String) {
+        observeStationRadarUseCase(es.joshluq.kmsafe.domain.usecase.ObserveStationRadarUseCase.Input(vehicleId))
+            .onEach { output ->
+                when (output) {
+                    is es.joshluq.kmsafe.domain.usecase.ObserveStationRadarUseCase.Output.Success -> {
+                        updateState {
+                            copy(
+                                radarItems = output.items,
+                                isRadarLocked = output.isLocked
+                            )
+                        }
+                    }
                 }
             }
             .launchIn(viewModelScope)
@@ -296,7 +361,8 @@ class ExpensesViewModel @Inject constructor(
                 odometerAtExpense = event.odometerAtExpense,
                 isFullTank = event.isFullTank,
                 notes = event.notes,
-                lastRefuelTimestamp = event.lastRefuelTimestamp
+                lastRefuelTimestamp = event.lastRefuelTimestamp,
+                receiptImagePath = event.receiptImagePath ?: state.value.receiptImagePath
             )
             saveFuelExpenseUseCase(input)
         }.onEach { output ->
@@ -304,7 +370,15 @@ class ExpensesViewModel @Inject constructor(
             when (output) {
                 is SaveFuelExpenseUseCase.Output.Success -> {
                     logger.i("ExpensesViewModel", "Expense saved successfully: ${output.expenseId}")
-                    updateState { copy(isAddExpenseSheetOpen = false, isSaving = false) }
+                    updateState {
+                        copy(
+                            isAddExpenseSheetOpen = false,
+                            isSaving = false,
+                            isScanningReceipt = false,
+                            scannedReceiptResult = null,
+                            receiptImagePath = null
+                        )
+                    }
                     // Reload stations to include the new one if created
                     loadStations()
                     
@@ -339,6 +413,77 @@ class ExpensesViewModel @Inject constructor(
                 }
             }
         }.launchIn(viewModelScope)
+    }
+
+    private fun handleReceiptImageCaptured(imagePath: String) {
+        val vehicleId = state.value.vehicleId
+        if (vehicleId == null) {
+            updateState { copy(error = TextProvider.Resource(R.string.expenses_error_no_active_vehicle)) }
+            return
+        }
+
+        updateState {
+            copy(
+                isScanningReceipt = true,
+                receiptImagePath = imagePath
+            )
+        }
+
+        val imageFile = java.io.File(imagePath)
+        val imageBytes = if (imageFile.exists()) {
+            try {
+                imageFile.readBytes()
+            } catch (e: Exception) {
+                ByteArray(0)
+            }
+        } else {
+            ByteArray(0)
+        }
+
+        processFuelReceiptUseCase(
+            ProcessFuelReceiptUseCase.Input(
+                imageBytes = imageBytes,
+                vehicleId = vehicleId
+            )
+        ).onEach { output ->
+            when (output) {
+                ProcessFuelReceiptUseCase.Output.Progress -> {
+                    updateState { copy(isScanningReceipt = true) }
+                }
+                is ProcessFuelReceiptUseCase.Output.Success -> {
+                    updateState {
+                        copy(
+                            isScanningReceipt = false,
+                            scannedReceiptResult = output.result,
+                            isAddExpenseSheetOpen = true
+                        )
+                    }
+                }
+                is ProcessFuelReceiptUseCase.Output.Failure -> {
+                    updateState {
+                        copy(
+                            isScanningReceipt = false,
+                            error = output.error.toText()
+                        )
+                    }
+                }
+            }
+        }.launchIn(viewModelScope)
+    }
+
+    private fun handleDiscardReceiptScan() {
+        val path = state.value.receiptImagePath
+        if (path != null) {
+            discardReceiptScanUseCase(DiscardReceiptScanUseCase.Input(filePath = path))
+                .launchIn(viewModelScope)
+        }
+        updateState {
+            copy(
+                scannedReceiptResult = null,
+                receiptImagePath = null,
+                isScanningReceipt = false
+            )
+        }
     }
 
     private fun handleDeleteExpense(expenseId: String) {

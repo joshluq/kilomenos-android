@@ -46,6 +46,8 @@
     <string name="error_unauthenticated">Tu sesión ha expirado. Por favor, inicia sesión de nuevo.</string>
     <string name="error_invalid_vehicle_name">El nombre del vehículo es obligatorio.</string>
     <string name="error_invalid_metrics">Los valores de kilómetros y duración deben ser mayores a 0.</string>
+    <string name="error_invalid_receipt_image">La imagen del ticket no es válida o no se pudo procesar.</string>
+    <string name="error_receipt_scan_quota_exceeded">Has alcanzado el límite mensual de escaneos de tickets con IA.</string>
 
     <!-- Accessibility -->
     <string name="acc_back">Volver</string>

@@ -2,6 +2,8 @@ package es.joshluq.kmsafe.feature.expenses
 
 import android.Manifest
 import android.annotation.SuppressLint
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -25,6 +27,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.ElectricBolt
 import androidx.compose.material.icons.filled.LocalGasStation
 import androidx.compose.material.icons.filled.Savings
@@ -41,8 +44,12 @@ import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import es.joshluq.kmsafe.feature.expenses.util.ReceiptImageCompressor
+import kotlinx.coroutines.launch
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLocale
 import androidx.compose.ui.res.stringResource
@@ -73,6 +80,7 @@ import es.joshluq.kmsafe.domain.model.FuelExpense
 import es.joshluq.kmsafe.domain.model.FuelType
 import es.joshluq.kmsafe.domain.model.OdometerRecord
 import es.joshluq.kmsafe.feature.expenses.components.AddExpenseBottomSheet
+import es.joshluq.kmsafe.feature.expenses.components.StationRadarCarousel
 import es.joshluq.kmsafe.feature.expenses.components.StationVolatilityCard
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -89,6 +97,20 @@ fun ExpensesScreen(
     val locationPermissionState = rememberPermissionState(Manifest.permission.ACCESS_COARSE_LOCATION)
     val fusedLocationClient = remember { LocationServices.getFusedLocationProviderClient(context) }
     val listState = rememberLazyListState()
+    val coroutineScope = rememberCoroutineScope()
+
+    val receiptPickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri ->
+        if (uri != null) {
+            coroutineScope.launch {
+                val compressedPath = ReceiptImageCompressor.compress(context, uri)
+                if (compressedPath != null) {
+                    onEvent(ExpensesEvent.OnReceiptImageCaptured(compressedPath))
+                }
+            }
+        }
+    }
 
     // Auto-scroll to top when a new expense is added
     LaunchedEffect(state.expenses.size) {
@@ -175,6 +197,15 @@ fun ExpensesScreen(
                 Spacer(modifier = Modifier.height(CanvasKitTheme.spacing.sm))
 
                 KpiHeaderSection(state = state, onEvent = onEvent)
+
+                Spacer(modifier = Modifier.height(CanvasKitTheme.spacing.md))
+
+                StationRadarCarousel(
+                    items = state.radarItems,
+                    isLocked = state.isRadarLocked,
+                    onStationSelected = { onEvent(ExpensesEvent.OnStationRadarSelected(it)) },
+                    onUpgradeClick = { onEvent(ExpensesEvent.OnUpgradeToUnlockRadarClicked) }
+                )
 
                 if (state.vehicleFuelType.category == EnergyCategory.HYBRID) {
                     Spacer(modifier = Modifier.height(CanvasKitTheme.spacing.md))
@@ -266,8 +297,12 @@ fun ExpensesScreen(
                     isSaving = state.isSaving,
                     stations = state.stations,
                     isLocationCaptured = state.currentLat != null,
+                    scannedReceiptResult = state.scannedReceiptResult,
+                    isScanningReceipt = state.isScanningReceipt,
+                    onScanReceiptClick = { receiptPickerLauncher.launch("image/*") },
+                    onDiscardScan = { onEvent(ExpensesEvent.OnDiscardReceiptScan) },
                     onDismiss = { onEvent(ExpensesEvent.OnDismissAddExpense) },
-                    onSave = { fuelType, unitPrice, volume, total, stationId, stationName, odo, isFull, notes, _ ->
+                    onSave = { fuelType, unitPrice, volume, total, stationId, stationName, odo, isFull, notes, _, receiptPath ->
                         onEvent(
                             ExpensesEvent.OnSaveExpense(
                                 fuelType = fuelType,
@@ -279,7 +314,8 @@ fun ExpensesScreen(
                                 odometerAtExpense = odo,
                                 isFullTank = isFull,
                                 notes = notes,
-                                lastRefuelTimestamp = state.lastRefuelTimestamp
+                                lastRefuelTimestamp = state.lastRefuelTimestamp,
+                                receiptImagePath = receiptPath ?: state.receiptImagePath
                             )
                         )
                     }
@@ -370,8 +406,14 @@ private fun KpiHeaderSection(
             modifier = Modifier
                 .fillMaxWidth()
         ) {
+            val hasCostPer100km = state.costPer100km != null && state.costPer100km > 0.0
+
             Text(
-                text = stringResource(R.string.expenses_kpi_month_spent),
+                text = if (hasCostPer100km) {
+                    stringResource(R.string.expenses_hero_cost_per_hundred_km)
+                } else {
+                    stringResource(R.string.expenses_kpi_month_spent)
+                },
                 style = CanvasKitTheme.typography.labelSmall,
                 color = CanvasKitTheme.colors.textSecondary
             )
@@ -381,16 +423,48 @@ private fun KpiHeaderSection(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.Bottom
             ) {
+                if (hasCostPer100km) {
+                    Text(
+                        text = stringResource(R.string.expenses_hero_cost_per_hundred_km_value, state.costPer100km),
+                        style = CanvasKitTheme.typography.headingLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = CanvasKitTheme.colors.brandAccent
+                    )
+                    Text(
+                        text = stringResource(R.string.expenses_kpi_total_spent, state.allTimeTotalCost),
+                        style = CanvasKitTheme.typography.bodyMedium,
+                        color = CanvasKitTheme.colors.textSecondary
+                    )
+                } else {
+                    Text(
+                        text = NumberFormatter.formatCurrency(state.currentMonthTotalCost),
+                        style = CanvasKitTheme.typography.headingLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = CanvasKitTheme.colors.brandAccent
+                    )
+                    Text(
+                        text = stringResource(R.string.expenses_kpi_total_spent, state.allTimeTotalCost),
+                        style = CanvasKitTheme.typography.bodyMedium,
+                        color = CanvasKitTheme.colors.textSecondary
+                    )
+                }
+            }
+
+            if (state.consumptionDeltaVsAverage != null) {
+                Spacer(modifier = Modifier.height(CanvasKitTheme.spacing.xs))
+                val isBetter = state.consumptionDeltaVsAverage < 0.0
+                val deltaText = if (isBetter) {
+                    stringResource(R.string.expenses_hero_delta_better, kotlin.math.abs(state.consumptionDeltaVsAverage))
+                } else {
+                    stringResource(R.string.expenses_hero_delta_worse, state.consumptionDeltaVsAverage)
+                }
+                val deltaColor = if (isBetter) CanvasKitTheme.colors.success else CanvasKitTheme.colors.warning
+
                 Text(
-                    text = NumberFormatter.formatCurrency(state.currentMonthTotalCost),
-                    style = CanvasKitTheme.typography.headingLarge,
-                    fontWeight = FontWeight.Bold,
-                    color = CanvasKitTheme.colors.brandAccent
-                )
-                Text(
-                    text = stringResource(R.string.expenses_kpi_total_spent, state.allTimeTotalCost),
-                    style = CanvasKitTheme.typography.bodyMedium,
-                    color = CanvasKitTheme.colors.textSecondary
+                    text = deltaText,
+                    style = CanvasKitTheme.typography.labelSmall,
+                    fontWeight = FontWeight.SemiBold,
+                    color = deltaColor
                 )
             }
 
@@ -553,13 +627,31 @@ private fun ExpenseItemCard(
                 }
             }
 
-            // Consumption badges
+            // Diagnostic & Consumption badges
             val consumption = expense.consumptionPer100km
             val kmSince = expense.kmSinceLastRefuel
+            val hasBadges = consumption != null || kmSince != null || expense.isFullTank || expense.receiptImagePath != null
 
-            if (consumption != null || kmSince != null) {
+            if (hasBadges) {
                 Spacer(modifier = Modifier.height(8.dp))
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    if (expense.isFullTank) {
+                        ConsumptionBadge(
+                            text = stringResource(R.string.expenses_badge_full_tank),
+                            isSecondary = false
+                        )
+                    }
+                    if (expense.receiptImagePath != null) {
+                        ConsumptionBadge(
+                            text = stringResource(R.string.expenses_badge_audited_receipt),
+                            icon = Icons.Default.Description,
+                            isSecondary = true
+                        )
+                    }
                     if (consumption != null && expense.isFullTank) {
                         ConsumptionBadge(
                             text = stringResource(R.string.expenses_consumption_badge, consumption, unit)
@@ -629,7 +721,8 @@ private fun TripsSinceRefuelList(records: List<OdometerRecord>) {
 @Composable
 private fun ConsumptionBadge(
     text: String,
-    isSecondary: Boolean = false
+    isSecondary: Boolean = false,
+    icon: ImageVector? = null
 ) {
     Surface(
         shape = RoundedCornerShape(20.dp),
@@ -639,17 +732,34 @@ private fun ConsumptionBadge(
             CanvasKitTheme.colors.brandAccent.copy(alpha = 0.12f)
         }
     ) {
-        Text(
-            text = text,
-            modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
-            style = CanvasKitTheme.typography.labelSmall,
-            fontWeight = FontWeight.SemiBold,
-            color = if (isSecondary) {
-                CanvasKitTheme.colors.textSecondary
-            } else {
-                CanvasKitTheme.colors.brandAccent
+        Row(
+            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+            horizontalArrangement = Arrangement.spacedBy(4.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            if (icon != null) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    modifier = Modifier.size(12.dp),
+                    tint = if (isSecondary) {
+                        CanvasKitTheme.colors.textSecondary
+                    } else {
+                        CanvasKitTheme.colors.brandAccent
+                    }
+                )
             }
-        )
+            Text(
+                text = text,
+                style = CanvasKitTheme.typography.labelSmall,
+                fontWeight = FontWeight.SemiBold,
+                color = if (isSecondary) {
+                    CanvasKitTheme.colors.textSecondary
+                } else {
+                    CanvasKitTheme.colors.brandAccent
+                }
+            )
+        }
     }
 }
 

@@ -21,6 +21,8 @@ fun KmError.toText(): TextProvider {
         KmError.Unauthenticated -> TextProvider.Resource(R.string.error_unauthenticated)
         KmError.InvalidVehicleName -> TextProvider.Resource(R.string.error_invalid_vehicle_name)
         KmError.InvalidContractMetrics -> TextProvider.Resource(R.string.error_invalid_metrics)
+        KmError.InvalidReceiptImage -> TextProvider.Resource(R.string.error_invalid_receipt_image)
+        KmError.ReceiptScanQuotaExceeded -> TextProvider.Resource(R.string.error_receipt_scan_quota_exceeded)
         is KmError.ServerError -> TextProvider.Resource(R.string.error_server, this.code)
         KmError.UnknownError -> TextProvider.Resource(R.string.error_unknown)
     }

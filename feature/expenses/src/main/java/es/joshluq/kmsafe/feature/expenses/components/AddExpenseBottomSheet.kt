@@ -3,6 +3,7 @@ package es.joshluq.kmsafe.feature.expenses.components
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
@@ -48,9 +49,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
+import androidx.compose.material.icons.filled.CameraAlt
 import es.joshluq.canvaskit.components.buttons.CanvasKitButton
+import es.joshluq.canvaskit.components.buttons.CanvasKitButtonSize
+import es.joshluq.canvaskit.components.buttons.CanvasKitButtonVariant
 import es.joshluq.canvaskit.components.chips.CanvasKitChip
 import es.joshluq.canvaskit.components.chips.CanvasKitChipVariant
+import es.joshluq.canvaskit.components.feedback.CanvasKitAlertVariant
+import es.joshluq.canvaskit.components.feedback.CanvasKitBanner
 import es.joshluq.canvaskit.components.inputs.CanvasKitSwitch
 import es.joshluq.canvaskit.components.inputs.CanvasKitTextField
 import es.joshluq.canvaskit.foundations.theme.CanvasKitTheme
@@ -58,6 +64,7 @@ import es.joshluq.foundationkit.text.asString
 import es.joshluq.kmsafe.core.ui.util.safeClick
 import es.joshluq.kmsafe.domain.model.EnergyCategory
 import es.joshluq.kmsafe.domain.model.FuelType
+import es.joshluq.kmsafe.domain.model.ReceiptScanResult
 import es.joshluq.kmsafe.core.ui.util.toTextProvider
 import es.joshluq.kmsafe.core.ui.util.NumberFormatter
 import es.joshluq.kmsafe.domain.model.ServiceStation
@@ -96,6 +103,10 @@ fun AddExpenseBottomSheet(
     isSaving: Boolean = false,
     stations: List<ServiceStation> = emptyList(),
     isLocationCaptured: Boolean = false,
+    scannedReceiptResult: ReceiptScanResult? = null,
+    isScanningReceipt: Boolean = false,
+    onScanReceiptClick: () -> Unit = {},
+    onDiscardScan: () -> Unit = {},
     onDismiss: () -> Unit,
     onSave: (
         fuelType: FuelType,
@@ -107,7 +118,8 @@ fun AddExpenseBottomSheet(
         odometerAtExpense: Double?,
         isFullTank: Boolean,
         notes: String?,
-        lastRefuelTimestamp: Long?
+        lastRefuelTimestamp: Long?,
+        receiptImagePath: String?
     ) -> Unit
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
@@ -174,6 +186,19 @@ fun AddExpenseBottomSheet(
         if (priceReportMode) priceFocusRequester.requestFocus()
         else focusRequester.requestFocus() 
     }
+
+    LaunchedEffect(scannedReceiptResult) {
+        if (scannedReceiptResult != null) {
+            stationNameInput = scannedReceiptResult.stationName
+            if (scannedReceiptResult.pricePerLiter > 0.0) {
+                unitPriceText = String.format(Locale.getDefault(), "%.3f", scannedReceiptResult.pricePerLiter)
+            }
+            if (scannedReceiptResult.liters > 0.0) {
+                volumeText = String.format(Locale.getDefault(), "%.2f", scannedReceiptResult.liters)
+            }
+        }
+    }
+
     val locale = LocalLocale.current.platformLocale
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -250,6 +275,57 @@ fun AddExpenseBottomSheet(
                         } else {
                             CanvasKitTheme.colors.textSecondary
                         }
+                    )
+                }
+            }
+
+            // Layer 3 Zero-Friction: AI Receipt Scanner Action / Banner
+            if (!priceReportMode && !isElectric) {
+                if (scannedReceiptResult != null) {
+                    CanvasKitBanner(
+                        message = {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(stringResource(R.string.expenses_scan_badge))
+                                Text(
+                                    text = stringResource(R.string.expenses_scan_discard),
+                                    style = CanvasKitTheme.typography.labelSmall,
+                                    color = CanvasKitTheme.colors.brandAccent,
+                                    fontWeight = FontWeight.Bold,
+                                    modifier = Modifier.clickable(onClick = safeClick { onDiscardScan() })
+                                )
+                            }
+                        },
+                        variant = CanvasKitAlertVariant.Info
+                    )
+
+                    if (!scannedReceiptResult.arithmeticCheck.valid) {
+                        CanvasKitBanner(
+                            message = {
+                                Text(
+                                    stringResource(
+                                        R.string.expenses_scan_discrepancy_alert,
+                                        scannedReceiptResult.arithmeticCheck.calculatedAmount,
+                                        scannedReceiptResult.totalAmount
+                                    )
+                                )
+                            },
+                            variant = CanvasKitAlertVariant.Warning
+                        )
+                    }
+                } else {
+                    CanvasKitButton(
+                        text = stringResource(R.string.expenses_action_scan_receipt),
+                        variant = CanvasKitButtonVariant.Secondary,
+                        size = CanvasKitButtonSize.Small,
+                        icon = Icons.Default.CameraAlt,
+                        loading = isScanningReceipt,
+                        enabled = !isScanningReceipt,
+                        onClick = safeClick { onScanReceiptClick() },
+                        modifier = Modifier.fillMaxWidth()
                     )
                 }
             }
@@ -331,6 +407,42 @@ fun AddExpenseBottomSheet(
                             stringResource(R.string.expenses_sheet_station_fuel)
                         },
                         keyboardOptions = KeyboardOptions(imeAction = androidx.compose.ui.text.input.ImeAction.Next),
+                    )
+                }
+            }
+
+            // Layer 3 Zero-Friction: Quick Presets (20€, 30€, 50€, Lleno)
+            if (!priceReportMode && !isElectric) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(CanvasKitTheme.spacing.xs)
+                ) {
+                    listOf(20.0, 30.0, 50.0).forEach { presetAmount ->
+                        val presetLabel = when (presetAmount) {
+                            20.0 -> stringResource(R.string.expenses_preset_20)
+                            30.0 -> stringResource(R.string.expenses_preset_30)
+                            else -> stringResource(R.string.expenses_preset_50)
+                        }
+                        CanvasKitChip(
+                            selected = false,
+                            label = { Text(presetLabel) },
+                            onClick = safeClick {
+                                val price = unitPriceText.normalizeDecimal().toDoubleOrNull() ?: 0.0
+                                if (price > 0.0) {
+                                    val computedVol = presetAmount / price
+                                    volumeText = String.format(locale, "%.2f", computedVol)
+                                } else {
+                                    priceFocusRequester.requestFocus()
+                                }
+                            },
+                            variant = CanvasKitChipVariant.Outlined
+                        )
+                    }
+                    CanvasKitChip(
+                        selected = isFullTank,
+                        label = { Text(stringResource(R.string.expenses_preset_full_tank)) },
+                        onClick = safeClick { isFullTank = !isFullTank },
+                        variant = CanvasKitChipVariant.Outlined
                     )
                 }
             }
@@ -487,7 +599,8 @@ fun AddExpenseBottomSheet(
                             if (priceReportMode) null else odometerText.normalizeDecimal().toDoubleOrNull(),
                             if (priceReportMode) false else isFullTank,
                             null, // notes: removed from this version
-                            null  // lastRefuelTimestamp injected via state in ExpensesScreen
+                            null, // lastRefuelTimestamp injected via state in ExpensesScreen
+                            null  // receiptImagePath injected via screen / state
                         )
                     }
                 }

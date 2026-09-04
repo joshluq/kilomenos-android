@@ -2,15 +2,24 @@ package es.joshluq.kmsafe.feature.expenses
 
 import androidx.lifecycle.SavedStateHandle
 import es.joshluq.foundationkit.log.LoggerKit
+import es.joshluq.kmsafe.domain.model.ArithmeticCheck
 import es.joshluq.kmsafe.domain.model.Feature
 import es.joshluq.kmsafe.domain.model.FuelExpense
 import es.joshluq.kmsafe.domain.model.FuelType
+import es.joshluq.kmsafe.domain.model.KmError
+import es.joshluq.kmsafe.domain.model.ReceiptScanResult
+import es.joshluq.kmsafe.domain.model.ServiceStation
+import es.joshluq.kmsafe.domain.model.StationRadarItem
+import es.joshluq.kmsafe.domain.usecase.CalculateCostPerHundredKmUseCase
 import es.joshluq.kmsafe.domain.usecase.CheckFeatureAccessUseCase
 import es.joshluq.kmsafe.domain.usecase.DeleteFuelExpenseUseCase
+import es.joshluq.kmsafe.domain.usecase.DiscardReceiptScanUseCase
 import es.joshluq.kmsafe.domain.usecase.GetAllServiceStationsUseCase
 import es.joshluq.kmsafe.domain.usecase.GetElectrificationSavingsUseCase
 import es.joshluq.kmsafe.domain.usecase.GetExpensesByVehicleUseCase
 import es.joshluq.kmsafe.domain.usecase.GetStationVolatilityUseCase
+import es.joshluq.kmsafe.domain.usecase.ObserveStationRadarUseCase
+import es.joshluq.kmsafe.domain.usecase.ProcessFuelReceiptUseCase
 import es.joshluq.kmsafe.domain.usecase.SaveFuelExpenseUseCase
 import es.joshluq.kmsafe.domain.usecase.SaveServiceStationUseCase
 import io.mockk.clearAllMocks
@@ -36,6 +45,7 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
+import java.time.DayOfWeek
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class ExpensesViewModelTest {
@@ -50,6 +60,10 @@ class ExpensesViewModelTest {
     private val checkFeatureAccessUseCase: CheckFeatureAccessUseCase = mockk()
     private val getAllServiceStationsUseCase: GetAllServiceStationsUseCase = mockk()
     private val saveServiceStationUseCase: SaveServiceStationUseCase = mockk()
+    private val calculateCostPerHundredKmUseCase: CalculateCostPerHundredKmUseCase = mockk()
+    private val observeStationRadarUseCase: ObserveStationRadarUseCase = mockk()
+    private val processFuelReceiptUseCase: ProcessFuelReceiptUseCase = mockk()
+    private val discardReceiptScanUseCase: DiscardReceiptScanUseCase = mockk()
     private val logger: LoggerKit = mockk(relaxed = true)
 
     private val sampleExpense = FuelExpense(
@@ -99,6 +113,40 @@ class ExpensesViewModelTest {
         every { getAllServiceStationsUseCase(any()) } returns flowOf(
             GetAllServiceStationsUseCase.Output.Empty
         )
+        every { calculateCostPerHundredKmUseCase(any()) } returns flowOf(
+            CalculateCostPerHundredKmUseCase.Output.Success(
+                costPer100km = 8.50,
+                lastCycleConsumption = 5.5,
+                averageConsumption = 6.0,
+                consumptionDeltaVsAverage = -8.33,
+                totalFullTankKms = 500.0,
+                totalFullTankCost = 42.50
+            )
+        )
+        every { observeStationRadarUseCase(any()) } returns flowOf(
+            ObserveStationRadarUseCase.Output.Success(
+                items = listOf(
+                    StationRadarItem(
+                        station = ServiceStation(
+                            id = "st-1",
+                            name = "Repsol Center",
+                            brand = "Repsol",
+                            latitude = 41.3851,
+                            longitude = 2.1734,
+                            address = "Av. Diagonal 123"
+                        ),
+                        fuelType = FuelType.GASOLINE_95,
+                        lastRecordedPrice = 1.65,
+                        userAveragePrice = 1.70,
+                        priceDelta = -0.05,
+                        isOpportunity = true,
+                        bestDayPrediction = "Lunes"
+                    )
+                ),
+                isLocked = false
+            )
+        )
+        every { discardReceiptScanUseCase(any()) } returns flowOf(DiscardReceiptScanUseCase.Output.Success)
     }
 
     @After
@@ -119,6 +167,10 @@ class ExpensesViewModelTest {
             checkFeatureAccessUseCase = checkFeatureAccessUseCase,
             getAllServiceStationsUseCase = getAllServiceStationsUseCase,
             saveServiceStationUseCase = saveServiceStationUseCase,
+            calculateCostPerHundredKmUseCase = calculateCostPerHundredKmUseCase,
+            observeStationRadarUseCase = observeStationRadarUseCase,
+            processFuelReceiptUseCase = processFuelReceiptUseCase,
+            discardReceiptScanUseCase = discardReceiptScanUseCase,
             logger = logger
         )
     }
@@ -203,5 +255,174 @@ class ExpensesViewModelTest {
         assertFalse(viewModel.state.value.showDeleteConfirmation)
         assertNull(viewModel.state.value.deleteTargetId)
         coVerify { deleteFuelExpenseUseCase(DeleteFuelExpenseUseCase.Input("exp-1")) }
+    }
+
+    @Test
+    fun `given metrics and radar loaded then state contains costPer100km and radar items`() = runTest(testDispatcher) {
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        assertEquals(8.50, viewModel.state.value.costPer100km ?: 0.0, 0.01)
+        assertEquals(5.5, viewModel.state.value.lastCycleConsumption ?: 0.0, 0.01)
+        assertEquals(-8.33, viewModel.state.value.consumptionDeltaVsAverage ?: 0.0, 0.01)
+        assertEquals(1, viewModel.state.value.radarItems.size)
+        assertEquals("st-1", viewModel.state.value.radarItems.first().station.id)
+        assertFalse(viewModel.state.value.isRadarLocked)
+    }
+
+    @Test
+    fun `given station radar selected then opens add expense sheet with initial station selected`() = runTest(testDispatcher) {
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        viewModel.sendEvent(ExpensesEvent.OnStationRadarSelected("st-1"))
+        advanceUntilIdle()
+
+        assertTrue(viewModel.state.value.isAddExpenseSheetOpen)
+        assertEquals("st-1", viewModel.state.value.initialStationId)
+    }
+
+    @Test
+    fun `given upgrade to unlock radar clicked then emits NavigateToUpgrade effect`() = runTest(testDispatcher) {
+        val effects = mutableListOf<ExpensesEffect>()
+        val viewModel = createViewModel()
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
+            viewModel.effects.collect { effects.add(it) }
+        }
+        advanceUntilIdle()
+
+        viewModel.sendEvent(ExpensesEvent.OnUpgradeToUnlockRadarClicked)
+        advanceUntilIdle()
+
+        assertEquals(1, effects.size)
+        assertEquals(ExpensesEffect.NavigateToUpgrade, effects.first())
+    }
+
+    @Test
+    fun `given receipt image captured when scanning succeeds then state contains scannedReceiptResult and opens sheet`() = runTest(testDispatcher) {
+        val mockResult = ReceiptScanResult(
+            stationName = "Shell Express",
+            purchaseDate = "2026-09-04T20:00:00Z",
+            fuelType = FuelType.GASOLINE_95,
+            liters = 45.0,
+            pricePerLiter = 1.55,
+            totalAmount = 69.75,
+            currency = "EUR",
+            confidenceScore = 0.95,
+            isFuelReceipt = true,
+            arithmeticCheck = ArithmeticCheck(
+                valid = true,
+                calculatedAmount = 69.75,
+                discrepancy = 0.0
+            ),
+            storageFilePath = "receipts/receipt_1.jpg"
+        )
+        every { processFuelReceiptUseCase(any()) } returns flowOf(
+            ProcessFuelReceiptUseCase.Output.Success(mockResult)
+        )
+
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        viewModel.sendEvent(ExpensesEvent.OnReceiptImageCaptured("/cache/receipt_1.jpg"))
+        advanceUntilIdle()
+
+        assertFalse(viewModel.state.value.isScanningReceipt)
+        assertTrue(viewModel.state.value.isAddExpenseSheetOpen)
+        assertEquals("Shell Express", viewModel.state.value.scannedReceiptResult?.stationName)
+        assertEquals("/cache/receipt_1.jpg", viewModel.state.value.receiptImagePath)
+    }
+
+    @Test
+    fun `given receipt image captured when quota exceeded then state has error and isScanningReceipt false`() = runTest(testDispatcher) {
+        every { processFuelReceiptUseCase(any()) } returns flowOf(
+            ProcessFuelReceiptUseCase.Output.Failure(KmError.ReceiptScanQuotaExceeded)
+        )
+
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        viewModel.sendEvent(ExpensesEvent.OnReceiptImageCaptured("/cache/receipt_2.jpg"))
+        advanceUntilIdle()
+
+        assertFalse(viewModel.state.value.isScanningReceipt)
+        assertNotNull(viewModel.state.value.error)
+    }
+
+    @Test
+    fun `given discard receipt scan clicked then calls discardReceiptScanUseCase and clears scanned state`() = runTest(testDispatcher) {
+        val mockResult = ReceiptScanResult(
+            stationName = "BP",
+            purchaseDate = "2026-09-04T20:00:00Z",
+            fuelType = FuelType.GASOLINE_95,
+            liters = 30.0,
+            pricePerLiter = 1.60,
+            totalAmount = 48.0,
+            currency = "EUR",
+            confidenceScore = 0.92,
+            isFuelReceipt = true,
+            arithmeticCheck = ArithmeticCheck(
+                valid = true,
+                calculatedAmount = 48.0,
+                discrepancy = 0.0
+            ),
+            storageFilePath = "receipts/receipt_3.jpg"
+        )
+        every { processFuelReceiptUseCase(any()) } returns flowOf(
+            ProcessFuelReceiptUseCase.Output.Success(mockResult)
+        )
+
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        viewModel.sendEvent(ExpensesEvent.OnReceiptImageCaptured("/cache/receipt_3.jpg"))
+        advanceUntilIdle()
+
+        assertNotNull(viewModel.state.value.scannedReceiptResult)
+
+        viewModel.sendEvent(ExpensesEvent.OnDiscardReceiptScan)
+        advanceUntilIdle()
+
+        assertNull(viewModel.state.value.scannedReceiptResult)
+        assertNull(viewModel.state.value.receiptImagePath)
+        coVerify { discardReceiptScanUseCase(DiscardReceiptScanUseCase.Input("/cache/receipt_3.jpg")) }
+    }
+
+    @Test
+    fun `given save expense with receiptImagePath then passes receiptImagePath to SaveFuelExpenseUseCase`() = runTest(testDispatcher) {
+        every { saveFuelExpenseUseCase(any()) } returns flowOf(
+            SaveFuelExpenseUseCase.Output.Success("exp-new")
+        )
+
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        viewModel.sendEvent(
+            ExpensesEvent.OnSaveExpense(
+                fuelType = FuelType.GASOLINE_95,
+                unitPrice = 1.65,
+                volumeQuantity = 40.0,
+                totalCost = 66.0,
+                stationId = "st-1",
+                stationName = "Repsol Center",
+                odometerAtExpense = 15500.0,
+                isFullTank = true,
+                notes = null,
+                lastRefuelTimestamp = null,
+                receiptImagePath = "/cache/receipt_saved.jpg"
+            )
+        )
+        advanceUntilIdle()
+
+        coVerify {
+            saveFuelExpenseUseCase(
+                match { input ->
+                    input.receiptImagePath == "/cache/receipt_saved.jpg" &&
+                            input.totalCost == 66.0
+                }
+            )
+        }
+        assertFalse(viewModel.state.value.isAddExpenseSheetOpen)
+        assertNull(viewModel.state.value.receiptImagePath)
     }
 }
