@@ -129,7 +129,7 @@
 
     <!-- Layer 3: Zero-Friction Quick Presets & Gemini 2.5 Flash Scanner -->
     <string name="expenses_action_scan_receipt">Escanear Ticket con IA</string>
-    <string name="expenses_scan_processing">Analizando ticket con Gemini...</string>
+    <string name="expenses_scan_processing">Analizando ticket con Gemini…</string>
     <string name="expenses_scan_badge">✨ Extraído con IA</string>
     <string name="expenses_scan_discrepancy_alert">⚠️ El total calculado (%1$.2f €) difiere del ticket (%2$.2f €). Revisa posibles descuentos o cargos.</string>
     <string name="expenses_scan_discard">Descartar escaneo</string>

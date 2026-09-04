@@ -46,6 +46,8 @@
     <string name="error_unauthenticated">Your session has expired. Please log in again.</string>
     <string name="error_invalid_vehicle_name">The vehicle name is required.</string>
     <string name="error_invalid_metrics">Kilometers and duration values must be greater than 0.</string>
+    <string name="error_invalid_receipt_image">The receipt image is invalid or could not be processed.</string>
+    <string name="error_receipt_scan_quota_exceeded">You have reached the monthly limit for AI receipt scans.</string>
 
     <!-- Accessibility -->
     <string name="acc_back">Back</string>

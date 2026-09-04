@@ -5,7 +5,6 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Matrix
 import android.net.Uri
-import androidx.exifinterface.media.ExifInterface
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
@@ -14,6 +13,7 @@ import java.io.InputStream
 import java.util.UUID
 import kotlin.math.max
 import androidx.core.graphics.scale
+import androidx.exifinterface.media.ExifInterface
 
 /**
  * Utility to downscale, orient, and compress receipt images before sending to Gemini 2.5 Flash API.

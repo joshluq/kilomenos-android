@@ -240,10 +240,10 @@ class ExpensesViewModel @Inject constructor(
     }
 
     private fun loadCostPerHundredKm(vehicleId: String) {
-        calculateCostPerHundredKmUseCase(es.joshluq.kmsafe.domain.usecase.CalculateCostPerHundredKmUseCase.Input(vehicleId))
+        calculateCostPerHundredKmUseCase(CalculateCostPerHundredKmUseCase.Input(vehicleId))
             .onEach { output ->
                 when (output) {
-                    is es.joshluq.kmsafe.domain.usecase.CalculateCostPerHundredKmUseCase.Output.Success -> {
+                    is CalculateCostPerHundredKmUseCase.Output.Success -> {
                         updateState {
                             copy(
                                 costPer100km = output.costPer100km,
@@ -259,10 +259,10 @@ class ExpensesViewModel @Inject constructor(
     }
 
     private fun loadStationRadar(vehicleId: String) {
-        observeStationRadarUseCase(es.joshluq.kmsafe.domain.usecase.ObserveStationRadarUseCase.Input(vehicleId))
+        observeStationRadarUseCase(ObserveStationRadarUseCase.Input(vehicleId))
             .onEach { output ->
                 when (output) {
-                    is es.joshluq.kmsafe.domain.usecase.ObserveStationRadarUseCase.Output.Success -> {
+                    is ObserveStationRadarUseCase.Output.Success -> {
                         updateState {
                             copy(
                                 radarItems = output.items,

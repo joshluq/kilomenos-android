@@ -104,4 +104,41 @@
     <string name="stations_detail_total_spent">Total spent</string>
     <string name="stations_detail_refuel_count">Visits</string>
     <string name="stations_detail_history_title">Expense history</string>
+
+    <!-- Hero & Radar Layers -->
+    <string name="expenses_kpi_real_cost_title">Real cost per 100 km</string>
+    <string name="expenses_hero_cost_per_hundred_km">Real cost per 100 km</string>
+    <string name="expenses_hero_cost_per_hundred_km_value">%.2f €/100 km</string>
+    <string name="expenses_hero_delta_better">🟢 %.1f%% more efficient vs. average</string>
+    <string name="expenses_hero_delta_worse">🔴 +%.1f%% vs. average</string>
+    <string name="expenses_kpi_cost_format">%1$s / 100 km</string>
+    <string name="expenses_kpi_last_cycle_label">Last cycle: %1$.1f %2$s/100km</string>
+    <string name="expenses_kpi_delta_better">🟢 -%1$.1f %2$s vs. average</string>
+    <string name="expenses_kpi_delta_worse">🔴 +%1$.1f %2$s vs. average</string>
+    <string name="expenses_kpi_hero_empty_hint">Log full tank refuels to calculate your real cost per 100 km</string>
+
+    <string name="expenses_radar_title">Price Radar</string>
+    <string name="expenses_radar_subtitle">My Stations</string>
+    <string name="expenses_radar_locked_title">Regular Stations Radar</string>
+    <string name="expenses_radar_locked_desc">Compare prices at your regular stations and spot savings opportunities with KiloMenos Premium.</string>
+    <string name="expenses_radar_unlock_action">Unlock with Premium 💎</string>
+    <string name="expenses_radar_opportunity">🟢 Opportunity (%1$.2f € vs. avg)</string>
+    <string name="expenses_radar_expensive">🔴 High (+%1$.2f € vs. avg)</string>
+    <string name="expenses_radar_average">⚪ On your usual average</string>
+    <string name="expenses_radar_action_here">I\'m here</string>
+
+    <!-- Layer 3: Zero-Friction Quick Presets & Gemini 2.5 Flash Scanner -->
+    <string name="expenses_action_scan_receipt">Scan Receipt with AI</string>
+    <string name="expenses_scan_processing">Analyzing receipt with Gemini…</string>
+    <string name="expenses_scan_badge">✨ Extracted with AI</string>
+    <string name="expenses_scan_discrepancy_alert">⚠️ Calculated total (%1$.2f €) differs from receipt (%2$.2f €). Check for discounts or fees.</string>
+    <string name="expenses_scan_discard">Discard scan</string>
+    <string name="expenses_preset_20">20 €</string>
+    <string name="expenses_preset_30">30 €</string>
+    <string name="expenses_preset_50">50 €</string>
+    <string name="expenses_preset_full_tank">Full</string>
+
+    <!-- Layer 4: Diagnostic Feed Badges -->
+    <string name="expenses_badge_full_tank">Full</string>
+    <string name="expenses_badge_audited_receipt">Audited</string>
 </resources>

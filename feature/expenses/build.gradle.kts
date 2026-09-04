@@ -24,5 +24,6 @@ dependencies {
     implementation(deps.play.services.maps)
     implementation(deps.play.services.location)
     implementation(deps.accompanist.permissions)
+    implementation("androidx.exifinterface:exifinterface:1.4.2")
     implementation(libs.kotlinx.serialization.json)
 }

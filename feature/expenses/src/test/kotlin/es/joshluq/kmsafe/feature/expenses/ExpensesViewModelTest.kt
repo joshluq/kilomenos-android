@@ -45,7 +45,6 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
-import java.time.DayOfWeek
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class ExpensesViewModelTest {
