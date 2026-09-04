@@ -35,6 +35,12 @@ sealed interface KmError {
     /** The requested fuel expense entry was not found. */
     data object ExpenseNotFound : KmError
 
+    /** The monthly quota for AI receipt scanning has been exceeded. */
+    data object ReceiptScanQuotaExceeded : KmError
+
+    /** The uploaded file is not a valid receipt image or document. */
+    data object InvalidReceiptImage : KmError
+
     /** User is not logged in or session has expired. */
     data object Unauthenticated : KmError
 

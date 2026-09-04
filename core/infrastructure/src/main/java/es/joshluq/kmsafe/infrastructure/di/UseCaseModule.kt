@@ -12,6 +12,8 @@ import es.joshluq.kmsafe.domain.usecase.AddOdometerRecordUseCase
 import es.joshluq.kmsafe.domain.usecase.AddOdometerRecordUseCaseImpl
 import es.joshluq.kmsafe.domain.usecase.CalculateContractMetricsUseCase
 import es.joshluq.kmsafe.domain.usecase.CalculateContractMetricsUseCaseImpl
+import es.joshluq.kmsafe.domain.usecase.CalculateCostPerHundredKmUseCase
+import es.joshluq.kmsafe.domain.usecase.CalculateCostPerHundredKmUseCaseImpl
 import es.joshluq.kmsafe.domain.usecase.CheckDatabaseOwnerUseCase
 import es.joshluq.kmsafe.domain.usecase.CheckDatabaseOwnerUseCaseImpl
 import es.joshluq.kmsafe.domain.usecase.CheckFeatureAccessUseCase
@@ -32,6 +34,8 @@ import es.joshluq.kmsafe.domain.usecase.DeleteOdometerRecordUseCase
 import es.joshluq.kmsafe.domain.usecase.DeleteOdometerRecordUseCaseImpl
 import es.joshluq.kmsafe.domain.usecase.DeleteServiceStationUseCase
 import es.joshluq.kmsafe.domain.usecase.DeleteServiceStationUseCaseImpl
+import es.joshluq.kmsafe.domain.usecase.DiscardReceiptScanUseCase
+import es.joshluq.kmsafe.domain.usecase.DiscardReceiptScanUseCaseImpl
 import es.joshluq.kmsafe.domain.usecase.EvaluateIdentityConflictUseCase
 import es.joshluq.kmsafe.domain.usecase.EvaluateIdentityConflictUseCaseImpl
 import es.joshluq.kmsafe.domain.usecase.ExportDataUseCase
@@ -78,8 +82,16 @@ import es.joshluq.kmsafe.domain.usecase.ImportDataUseCase
 import es.joshluq.kmsafe.domain.usecase.ImportDataUseCaseImpl
 import es.joshluq.kmsafe.domain.usecase.MigrateLocalDataToRemoteUseCase
 import es.joshluq.kmsafe.domain.usecase.MigrateLocalDataToRemoteUseCaseImpl
+import es.joshluq.kmsafe.domain.usecase.ObserveStationRadarUseCase
+import es.joshluq.kmsafe.domain.usecase.ObserveStationRadarUseCaseImpl
 import es.joshluq.kmsafe.domain.usecase.ObserveTrackingStateUseCase
 import es.joshluq.kmsafe.domain.usecase.ObserveTrackingStateUseCaseImpl
+import es.joshluq.kmsafe.domain.usecase.ObserveVehicleBluetoothConnectionUseCase
+import es.joshluq.kmsafe.domain.usecase.ObserveVehicleBluetoothConnectionUseCaseImpl
+import es.joshluq.kmsafe.domain.usecase.PredictBestRefuelDayUseCase
+import es.joshluq.kmsafe.domain.usecase.PredictBestRefuelDayUseCaseImpl
+import es.joshluq.kmsafe.domain.usecase.ProcessFuelReceiptUseCase
+import es.joshluq.kmsafe.domain.usecase.ProcessFuelReceiptUseCaseImpl
 import es.joshluq.kmsafe.domain.usecase.SaveFuelExpenseUseCase
 import es.joshluq.kmsafe.domain.usecase.SaveFuelExpenseUseCaseImpl
 import es.joshluq.kmsafe.domain.usecase.SaveInitialContractUseCase
@@ -316,7 +328,20 @@ abstract class UseCaseModule {
     abstract fun bindSyncStationsUseCase(impl: SyncStationsUseCaseImpl): SyncStationsUseCase
 
     @Binds
-    abstract fun bindObserveVehicleBluetoothConnectionUseCase(
-        impl: es.joshluq.kmsafe.domain.usecase.ObserveVehicleBluetoothConnectionUseCaseImpl
-    ): es.joshluq.kmsafe.domain.usecase.ObserveVehicleBluetoothConnectionUseCase
+    abstract fun bindObserveVehicleBluetoothConnectionUseCase(impl: ObserveVehicleBluetoothConnectionUseCaseImpl): ObserveVehicleBluetoothConnectionUseCase
+
+    @Binds
+    abstract fun bindProcessFuelReceiptUseCase(impl: ProcessFuelReceiptUseCaseImpl): ProcessFuelReceiptUseCase
+
+    @Binds
+    abstract fun bindDiscardReceiptScanUseCase(impl: DiscardReceiptScanUseCaseImpl): DiscardReceiptScanUseCase
+
+    @Binds
+    abstract fun bindCalculateCostPerHundredKmUseCase(impl: CalculateCostPerHundredKmUseCaseImpl): CalculateCostPerHundredKmUseCase
+
+    @Binds
+    abstract fun bindObserveStationRadarUseCase(impl: ObserveStationRadarUseCaseImpl): ObserveStationRadarUseCase
+
+    @Binds
+    abstract fun bindPredictBestRefuelDayUseCase(impl: PredictBestRefuelDayUseCaseImpl): PredictBestRefuelDayUseCase
 }

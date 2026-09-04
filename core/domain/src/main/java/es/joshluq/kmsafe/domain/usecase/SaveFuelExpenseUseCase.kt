@@ -36,6 +36,7 @@ interface SaveFuelExpenseUseCase : FlowUseCase<SaveFuelExpenseUseCase.Input, Sav
         val odometerAtExpense: Double? = null,
         val isFullTank: Boolean = true,
         val notes: String? = null,
+        val receiptImagePath: String? = null,
         /** Timestamp (epoch ms) of the previous [FuelExpense] where [isFullTank] was true.
          * Used to delimit the OdometerRecord window for the Hybrid A+C algorithm. */
         val lastRefuelTimestamp: Long? = null
@@ -84,6 +85,7 @@ class SaveFuelExpenseUseCaseImpl @Inject constructor(
             isFullTank = input.isFullTank,
             kmSinceLastRefuel = kmSinceLastRefuel,
             consumptionPer100km = consumptionPer100km,
+            receiptImagePath = input.receiptImagePath,
             notes = input.notes
         )
 
