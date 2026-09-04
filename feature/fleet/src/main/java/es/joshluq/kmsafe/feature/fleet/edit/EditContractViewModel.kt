@@ -256,18 +256,18 @@ class EditContractViewModel @Inject constructor(
             updateState { copy(totalKmsError = TextProvider.Resource(R.string.onboarding_number_feedback)) }
             isValid = false
         }
-        
+
         val price = s.excessDistancePrice.replace(',', '.').toDoubleOrNull()
         if (s.excessDistancePrice.isNotBlank() && (price == null || price < 0)) {
             // We could add excessDistancePriceError to the state if needed, for now using a generic banner error or just invalidating
             isValid = false
         }
-        
+
         val margin = s.courtesyMarginKms.replace(',', '.').toDoubleOrNull()
         if (s.courtesyMarginKms.isNotBlank() && (margin == null || margin < 0)) {
             isValid = false
         }
-        
+
         return isValid
     }
 }

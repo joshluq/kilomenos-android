@@ -25,8 +25,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import es.joshluq.canvaskit.foundations.theme.CanvasKitTheme
-import es.joshluq.kmsafe.feature.projection.R
 import es.joshluq.kmsafe.core.ui.util.NumberFormatter
+import es.joshluq.kmsafe.feature.projection.R
 import kotlin.math.absoluteValue
 import es.joshluq.kmsafe.core.ui.R as CoreR
 

@@ -2,7 +2,6 @@ package es.joshluq.kmsafe.feature.projection
 
 import es.joshluq.analyticskit.sdk.AnalyticskitManager
 import es.joshluq.foundationkit.log.LoggerKit
-import es.joshluq.kmsafe.domain.model.ContractMetrics
 import es.joshluq.kmsafe.domain.model.RentingContract
 import es.joshluq.kmsafe.domain.model.TripProjection
 import es.joshluq.kmsafe.domain.usecase.GetOverviewDataUseCase

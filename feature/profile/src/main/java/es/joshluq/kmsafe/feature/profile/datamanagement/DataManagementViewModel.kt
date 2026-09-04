@@ -1,4 +1,4 @@
-package es.joshluq.kmsafe.ui.datamanagement
+package es.joshluq.kmsafe.feature.profile.datamanagement
 
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -7,11 +7,11 @@ import es.joshluq.analyticskit.sdk.AnalyticskitManager
 import es.joshluq.foundationkit.log.LoggerKit
 import es.joshluq.foundationkit.text.TextProvider
 import es.joshluq.foundationkit.viewmodel.ScreenViewModel
-import es.joshluq.kmsafe.R
 import es.joshluq.kmsafe.domain.model.Feature
 import es.joshluq.kmsafe.domain.usecase.CheckFeatureAccessUseCase
 import es.joshluq.kmsafe.domain.usecase.ExportDataUseCase
 import es.joshluq.kmsafe.domain.usecase.ImportDataUseCase
+import es.joshluq.kmsafe.feature.profile.R
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import javax.inject.Inject

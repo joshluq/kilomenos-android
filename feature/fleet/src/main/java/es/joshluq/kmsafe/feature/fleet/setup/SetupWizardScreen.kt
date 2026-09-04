@@ -1,6 +1,7 @@
 package es.joshluq.kmsafe.feature.fleet.setup
 
 import android.Manifest
+import android.content.pm.PackageManager
 import android.content.res.Configuration
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -44,8 +45,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
@@ -68,6 +69,7 @@ import es.joshluq.canvaskit.components.inputs.CanvasKitTextField
 import es.joshluq.canvaskit.components.layout.CanvasKitLoadingScaffold
 import es.joshluq.canvaskit.components.navigation.CanvasKitTopBar
 import es.joshluq.canvaskit.foundations.theme.CanvasKitTheme
+import es.joshluq.foundationkit.text.asString
 import es.joshluq.kmsafe.core.ui.components.VehiclePhotoSelector
 import es.joshluq.kmsafe.core.ui.util.safeClick
 import es.joshluq.kmsafe.core.ui.util.toTextProvider
@@ -81,8 +83,6 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 import java.util.TimeZone
-import android.content.pm.PackageManager
-import es.joshluq.foundationkit.text.asString
 import es.joshluq.kmsafe.core.ui.R as CoreR
 
 @Composable
@@ -324,8 +324,8 @@ private fun ContractTimeframeStep(state: State, onEvent: (Event) -> Unit) {
         CanvasKitTextField(
             label = stringResource(R.string.onboarding_duration_months_label),
             value = state.durationMonths,
-            onValueChange = { newValue -> 
-                onEvent(Event.OnDurationMonthsChanged(newValue.filter { it.isDigit() })) 
+            onValueChange = { newValue ->
+                onEvent(Event.OnDurationMonthsChanged(newValue.filter { it.isDigit() }))
             },
             errorText = state.durationMonthsError?.asString(),
             isError = state.durationMonthsError != null,
@@ -350,8 +350,8 @@ private fun MileageBudgetStep(state: State, onEvent: (Event) -> Unit) {
         CanvasKitTextField(
             label = stringResource(R.string.onboarding_total_kms_label),
             value = state.totalKms,
-            onValueChange = { newValue -> 
-                onEvent(Event.OnTotalKmsChanged(newValue.filter { it.isDigit() || it == '.' || it == ',' })) 
+            onValueChange = { newValue ->
+                onEvent(Event.OnTotalKmsChanged(newValue.filter { it.isDigit() || it == '.' || it == ',' }))
             },
             errorText = state.totalKmsError?.asString(),
             isError = state.totalKmsError != null,
@@ -367,8 +367,8 @@ private fun MileageBudgetStep(state: State, onEvent: (Event) -> Unit) {
         CanvasKitTextField(
             label = stringResource(R.string.onboarding_start_odometer_label),
             value = state.startOdometer,
-            onValueChange = { newValue -> 
-                onEvent(Event.OnStartOdometerChanged(newValue.filter { it.isDigit() || it == '.' || it == ',' })) 
+            onValueChange = { newValue ->
+                onEvent(Event.OnStartOdometerChanged(newValue.filter { it.isDigit() || it == '.' || it == ',' }))
             },
             errorText = state.startOdometerError?.asString(),
             isError = state.startOdometerError != null,
@@ -383,8 +383,8 @@ private fun MileageBudgetStep(state: State, onEvent: (Event) -> Unit) {
         CanvasKitTextField(
             label = stringResource(R.string.onboarding_current_odometer_label),
             value = state.currentOdometer,
-            onValueChange = { newValue -> 
-                onEvent(Event.OnCurrentOdometerChanged(newValue.filter { it.isDigit() || it == '.' || it == ',' })) 
+            onValueChange = { newValue ->
+                onEvent(Event.OnCurrentOdometerChanged(newValue.filter { it.isDigit() || it == '.' || it == ',' }))
             },
             errorText = state.currentOdometerError?.asString(),
             isError = state.currentOdometerError != null,
@@ -462,7 +462,9 @@ private fun SmartActivationStep(state: State, onEvent: (Event) -> Unit) {
                     onClick = safeClick {
                         val hasPermission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                             ContextCompat.checkSelfPermission(context, Manifest.permission.BLUETOOTH_CONNECT) == PackageManager.PERMISSION_GRANTED
-                        } else true
+                        } else {
+                            true
+                        }
 
                         if (hasPermission) {
                             onEvent(Event.OnToggleBluetoothPicker)
@@ -531,8 +533,8 @@ private fun AdvancedProtectionStep(state: State, onEvent: (Event) -> Unit) {
         CanvasKitTextField(
             label = stringResource(R.string.setup_wizard_step_advanced_price_label),
             value = state.excessDistancePrice,
-            onValueChange = { newValue -> 
-                onEvent(Event.OnExcessDistancePriceChanged(newValue.filter { it.isDigit() || it == '.' || it == ',' })) 
+            onValueChange = { newValue ->
+                onEvent(Event.OnExcessDistancePriceChanged(newValue.filter { it.isDigit() || it == '.' || it == ',' }))
             },
             errorText = state.excessDistancePriceError?.asString(),
             isError = state.excessDistancePriceError != null,
@@ -546,8 +548,8 @@ private fun AdvancedProtectionStep(state: State, onEvent: (Event) -> Unit) {
         CanvasKitTextField(
             label = stringResource(R.string.setup_wizard_step_advanced_margin_label),
             value = state.courtesyMarginKms,
-            onValueChange = { newValue -> 
-                onEvent(Event.OnCourtesyMarginKmsChanged(newValue.filter { it.isDigit() || it == '.' || it == ',' })) 
+            onValueChange = { newValue ->
+                onEvent(Event.OnCourtesyMarginKmsChanged(newValue.filter { it.isDigit() || it == '.' || it == ',' }))
             },
             errorText = state.courtesyMarginError?.asString(),
             isError = state.courtesyMarginError != null,

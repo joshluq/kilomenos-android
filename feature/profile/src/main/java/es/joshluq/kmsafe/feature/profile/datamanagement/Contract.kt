@@ -1,4 +1,4 @@
-package es.joshluq.kmsafe.ui.datamanagement
+package es.joshluq.kmsafe.feature.profile.datamanagement
 
 import es.joshluq.foundationkit.text.TextProvider
 import es.joshluq.foundationkit.viewmodel.UiEffect
@@ -21,16 +21,16 @@ data class State(
 
 sealed interface Event : UiEvent {
     data class OnExportClicked(val format: ExportDataUseCase.Format) : Event
-    object OnImportRequested : Event
+    data object OnImportRequested : Event
     data class OnImportClicked(val content: String) : Event
-    object OnDismissError : Event
-    object OnUpgradeClicked : Event
-    object OnDismissPremiumLimit : Event
+    data object OnDismissError : Event
+    data object OnUpgradeClicked : Event
+    data object OnDismissPremiumLimit : Event
 }
 
 sealed interface Effect : UiEffect {
     data class CreateFile(val filename: String) : Effect
-    object LaunchImportPicker : Effect
-    object NavigateBack : Effect
-    object NavigateToPremiumPaywall : Effect
+    data object LaunchImportPicker : Effect
+    data object NavigateBack : Effect
+    data object NavigateToPremiumPaywall : Effect
 }

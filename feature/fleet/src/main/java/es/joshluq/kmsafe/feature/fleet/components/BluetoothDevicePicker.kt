@@ -44,7 +44,7 @@ fun BluetoothDevicePicker(
     onDeviceSelected: (name: String?, address: String) -> Unit
 ) {
     val context = LocalContext.current
-    
+
     // Safety check: Don't call Bluetooth APIs without permission check
     val hasPermission = remember {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {

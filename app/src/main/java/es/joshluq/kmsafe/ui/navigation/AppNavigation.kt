@@ -22,11 +22,11 @@ import es.joshluq.kmsafe.feature.fleet.setup.SetupWizardRoute
 import es.joshluq.kmsafe.feature.fleet.setup.WelcomeDiscoveryScreen
 import es.joshluq.kmsafe.feature.fleet.vehicles.VehicleListRoute
 import es.joshluq.kmsafe.feature.history.detail.RecordDetailRoute
+import es.joshluq.kmsafe.feature.premium.paywall.PremiumPaywallRoute
 import es.joshluq.kmsafe.feature.profile.preferences.PreferencesRoute
 import es.joshluq.kmsafe.ui.common.cropper.CropImageScreen
 import es.joshluq.kmsafe.ui.common.permissions.AutoTrackingPermissionsScreen
-import es.joshluq.kmsafe.ui.datamanagement.DataManagementRoute
-import es.joshluq.kmsafe.feature.premium.paywall.PremiumPaywallRoute
+import es.joshluq.kmsafe.feature.profile.datamanagement.DataManagementRoute
 
 @Composable
 fun AppNavigation(

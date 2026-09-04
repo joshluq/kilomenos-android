@@ -33,6 +33,17 @@
     <string name="profile_delete_account_step_welcome_back">Come back anytime! There will always be a place for you in KiloMenos.</string>
     <string name="profile_data_management_title">DATA MANAGEMENT</string>
     <string name="profile_data_management_option">Data management</string>
+    <string name="profile_data_management_export_json_title">Full Backup (JSON)</string>
+    <string name="profile_export_json_desc">Exports all your vehicles, odometer history, and expenses in a JSON file.</string>
+    <string name="profile_data_management_export_csv_title">Export History (CSV)</string>
+    <string name="profile_export_csv_desc">Downloads a spreadsheet with all mileage records for the active vehicle.</string>
+    <string name="profile_import_data_option">Restore Backup</string>
+    <string name="profile_import_json_desc">Restores your data from a previously exported JSON backup file.</string>
+    <string name="profile_data_error">An error occurred while processing data. Please try again.</string>
+    <string name="profile_import_success">Data restored successfully!</string>
+    <string name="premium_limit_data_title">Premium Feature</string>
+    <string name="premium_limit_data_message">Full JSON backup and data restore are exclusive to Premium users.</string>
+    <string name="premium_upgrade_cancel">Maybe later</string>
 
     <!-- Preferences -->
     <string name="preferences_account_settings_title">ACCOUNT SETTINGS</string>

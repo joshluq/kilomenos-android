@@ -232,8 +232,8 @@ fun EditContractScreen(
                         CanvasKitTextField(
                             label = stringResource(R.string.onboarding_duration_months_label),
                             value = state.durationMonths,
-                            onValueChange = { newValue -> 
-                                onEvent(Event.OnDurationMonthsChanged(newValue.filter { it.isDigit() })) 
+                            onValueChange = { newValue ->
+                                onEvent(Event.OnDurationMonthsChanged(newValue.filter { it.isDigit() }))
                             },
                             errorText = state.durationMonthsError?.asString(),
                             isError = state.durationMonthsError != null,
@@ -248,8 +248,10 @@ fun EditContractScreen(
                         CanvasKitTextField(
                             label = stringResource(R.string.onboarding_total_kms_label),
                             value = state.totalKms,
-                            onValueChange = { newValue -> 
-                                onEvent(Event.OnTotalKmsChanged(newValue.filter { it.isDigit() || it == '.' || it == ',' })) 
+                            onValueChange = { newValue ->
+                                onEvent(
+                                    Event.OnTotalKmsChanged(newValue.filter { it.isDigit() || it == '.' || it == ',' })
+                                )
                             },
                             errorText = state.totalKmsError?.asString(),
                             isError = state.totalKmsError != null,
@@ -291,10 +293,12 @@ fun EditContractScreen(
                                     .matchParentSize()
                                     .safeClickable {
                                         keyboardController?.hide()
-                                        
+
                                         val hasPermission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                                             ContextCompat.checkSelfPermission(context, Manifest.permission.BLUETOOTH_CONNECT) == PackageManager.PERMISSION_GRANTED
-                                        } else true
+                                        } else {
+                                            true
+                                        }
 
                                         if (hasPermission) {
                                             onEvent(Event.OnToggleBluetoothPicker)
@@ -308,8 +312,12 @@ fun EditContractScreen(
                         CanvasKitTextField(
                             label = stringResource(R.string.setup_wizard_step_advanced_price_label),
                             value = state.excessDistancePrice,
-                            onValueChange = { newValue -> 
-                                onEvent(Event.OnExcessDistancePriceChanged(newValue.filter { it.isDigit() || it == '.' || it == ',' })) 
+                            onValueChange = { newValue ->
+                                onEvent(
+                                    Event.OnExcessDistancePriceChanged(
+                                        newValue.filter { it.isDigit() || it == '.' || it == ',' }
+                                    )
+                                )
                             },
                             placeholder = stringResource(R.string.setup_wizard_step_advanced_price_placeholder),
                             suffix = "€/km",
@@ -323,8 +331,12 @@ fun EditContractScreen(
                         CanvasKitTextField(
                             label = stringResource(R.string.setup_wizard_step_advanced_margin_label),
                             value = state.courtesyMarginKms,
-                            onValueChange = { newValue -> 
-                                onEvent(Event.OnCourtesyMarginKmsChanged(newValue.filter { it.isDigit() || it == '.' || it == ',' })) 
+                            onValueChange = { newValue ->
+                                onEvent(
+                                    Event.OnCourtesyMarginKmsChanged(
+                                        newValue.filter { it.isDigit() || it == '.' || it == ',' }
+                                    )
+                                )
                             },
                             placeholder = stringResource(R.string.setup_wizard_step_advanced_margin_placeholder),
                             suffix = "km",

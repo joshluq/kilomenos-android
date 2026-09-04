@@ -46,7 +46,7 @@ graph TD
 | **Fase 2** | Módulo de Infraestructura Centralizada (`:core:infrastructure`) | ✅ **Completado** |
 | **Fase 3** | Vertical Slicing & Dominio Central (`:core:domain`) | ✅ **Completado** |
 | **Fase 4** | Modularización de Features y Satélites Core | ✅ **Completado** |
-| **Fase 5** | Remediación de Dominio (Enriquecimiento del "Ser"), Testing y Desacople del Shell | ⏳ **En Progreso** (95%) |
+| **Fase 5** | Remediación de Dominio (Enriquecimiento del "Ser"), Testing y Desacople del Shell | ✅ **Completado** (100%) |
 
 ---
 
@@ -290,12 +290,16 @@ Para cerrar la brecha técnica identificada y cumplir al 100% con DDD, Clean Arc
     5. `:feature:history` (2): `HistoryViewModelTest`, `RecordDetailViewModelTest`.
     6. `:feature:projection` (1): `ProjectionAnalysisViewModelTest`.
     7. `:feature:expenses` (3): `ExpensesViewModelTest`, `StationManagementViewModelTest`, `StationDetailViewModelTest`.
-    8. `:feature:profile` (2): `ProfileViewModelTest`, `PreferencesViewModelTest`.
+    8. `:feature:profile` (3): `ProfileViewModelTest`, `PreferencesViewModelTest`, `DataManagementViewModelTest`.
     9. `:feature:premium` (1): `PremiumPaywallViewModelTest`.
-    10. `:app` (1): `DataManagementViewModelTest`.
   * Cobertura de todos los estados iniciales, manejo reactivo de eventos (`sendEvent`), efectos de navegación asíncronos (`effects.collect`), flujos de error, validaciones de permisos/features y reconciliación de estado.
   * Se descartó del plan el módulo prescindible `feature:reporting`.
   * Verificación global limpia: `./gradlew testDebugUnitTest testDevDebugUnitTest` con **387 tareas exitosas y 0 fallos**.
+
+### 8. Desacople Final del Shell `:app` (Migración de `DataManagement`) ✅ (COMPLETADO)
+* **Resultado**:
+  * Se migró completamente la funcionalidad de `DataManagement` (`DataManagementRoute`, `DataManagementScreen`, `DataManagementViewModel`, `Contract.kt`, strings y tests unitarios) desde `:app` al módulo independiente [feature:profile:datamanagement](file:///c:/Users/josh_/AndroidStudioProjects/KmSafe/feature/profile/src/main/java/es/joshluq/kmsafe/feature/profile/datamanagement/).
+  * El módulo Shell `:app` queda 100% desacoplado de pantallas y ViewModels de negocio, actuando como contenedor orquestador de navegación, inicialización de Application y configuración de infraestructura.
 ---
 
 ## 🛡️ Salvaguardas y Anti-patrones de Desarrollo

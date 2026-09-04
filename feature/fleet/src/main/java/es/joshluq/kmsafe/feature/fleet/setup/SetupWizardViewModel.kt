@@ -7,13 +7,13 @@ import es.joshluq.analyticskit.sdk.AnalyticskitManager
 import es.joshluq.foundationkit.log.LoggerKit
 import es.joshluq.foundationkit.text.TextProvider
 import es.joshluq.foundationkit.viewmodel.ScreenViewModel
+import es.joshluq.kmsafe.core.ui.util.toText
 import es.joshluq.kmsafe.domain.model.RentingContract
 import es.joshluq.kmsafe.domain.model.SyncStatus
 import es.joshluq.kmsafe.domain.usecase.GetEntitlementsUseCase
 import es.joshluq.kmsafe.domain.usecase.GetImageBytesUseCase
 import es.joshluq.kmsafe.domain.usecase.SaveInitialContractUseCase
 import es.joshluq.kmsafe.domain.usecase.UploadVehicleImageUseCase
-import es.joshluq.kmsafe.core.ui.util.toText
 import es.joshluq.kmsafe.feature.fleet.R
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.catch
@@ -66,7 +66,9 @@ class SetupWizardViewModel @Inject constructor(
                     durationMonthsError = null
                 )
             }
-            is Event.OnTotalKmsChanged -> updateState { copy(totalKms = event.value, totalKmsError = null, showMileageWarning = false) }
+            is Event.OnTotalKmsChanged -> updateState {
+                copy(totalKms = event.value, totalKmsError = null, showMileageWarning = false)
+            }
             is Event.OnStartOdometerChanged -> updateState {
                 copy(
                     startOdometer = event.value,
@@ -190,25 +192,29 @@ class SetupWizardViewModel @Inject constructor(
     private fun validateMileage(): Boolean {
         val s = state.value
         var isValid = true
-        
+
         val totalKms = s.totalKms.replace(',', '.').toDoubleOrNull()
         if (totalKms == null || totalKms <= 0) {
             updateState { copy(totalKmsError = TextProvider.Resource(R.string.onboarding_number_feedback)) }
             isValid = false
         }
-        
+
         val startOdo = s.startOdometer.replace(',', '.').toDoubleOrNull()
         if (startOdo == null || startOdo < 0) {
             updateState { copy(startOdometerError = TextProvider.Resource(R.string.onboarding_number_feedback)) }
             isValid = false
         }
-        
+
         val currentOdo = s.currentOdometer.replace(',', '.').toDoubleOrNull()
         if (currentOdo == null || currentOdo < 0) {
             updateState { copy(currentOdometerError = TextProvider.Resource(R.string.onboarding_number_feedback)) }
             isValid = false
         } else if (startOdo != null && currentOdo < startOdo) {
-            updateState { copy(currentOdometerError = TextProvider.Resource(R.string.onboarding_current_odometer_feedback)) }
+            updateState {
+                copy(
+                    currentOdometerError = TextProvider.Resource(R.string.onboarding_current_odometer_feedback)
+                )
+            }
             isValid = false
         }
 
@@ -230,7 +236,7 @@ class SetupWizardViewModel @Inject constructor(
                 return false // Stop and show warning
             }
         }
-        
+
         return isValid
     }
 
@@ -246,19 +252,19 @@ class SetupWizardViewModel @Inject constructor(
     private fun validateAdvanced(): Boolean {
         val s = state.value
         var isValid = true
-        
+
         val price = s.excessDistancePrice.replace(',', '.').toDoubleOrNull()
         if (price == null || price < 0) {
             updateState { copy(excessDistancePriceError = TextProvider.Resource(R.string.onboarding_number_feedback)) }
             isValid = false
         }
-        
+
         val margin = s.courtesyMarginKms.replace(',', '.').toDoubleOrNull()
         if (margin == null || margin < 0) {
             updateState { copy(courtesyMarginError = TextProvider.Resource(R.string.onboarding_number_feedback)) }
             isValid = false
         }
-        
+
         return isValid
     }
 

@@ -8,8 +8,8 @@ import androidx.navigation.compose.composable
 import es.joshluq.kmsafe.core.navigation.Destination
 import es.joshluq.kmsafe.feature.expenses.ExpensesRoute
 import es.joshluq.kmsafe.feature.history.HistoryRoute
-import es.joshluq.kmsafe.feature.profile.ProfileRoute
 import es.joshluq.kmsafe.feature.overview.OverviewRoute
+import es.joshluq.kmsafe.feature.profile.ProfileRoute
 import es.joshluq.kmsafe.feature.projection.ProjectionAnalysisRoute
 
 @Composable

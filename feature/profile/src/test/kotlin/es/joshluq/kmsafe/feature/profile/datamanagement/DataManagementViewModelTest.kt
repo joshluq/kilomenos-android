@@ -1,4 +1,4 @@
-package es.joshluq.kmsafe.ui.datamanagement
+package es.joshluq.kmsafe.feature.profile.datamanagement
 
 import es.joshluq.analyticskit.sdk.AnalyticskitManager
 import es.joshluq.foundationkit.log.LoggerKit
