@@ -118,4 +118,13 @@ abstract class RepositoryModule {
     abstract fun bindServiceStationRepository(
         repository: ServiceStationRepositoryImpl
     ): ServiceStationRepository
+
+    /**
+     * Binds the [BluetoothRepositoryImpl] to the [BluetoothRepository] interface.
+     */
+    @Singleton
+    @Binds
+    abstract fun bindBluetoothRepository(
+        repository: es.joshluq.kmsafe.infrastructure.repository.BluetoothRepositoryImpl
+    ): es.joshluq.kmsafe.domain.repository.BluetoothRepository
 }

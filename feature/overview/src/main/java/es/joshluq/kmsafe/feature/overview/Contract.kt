@@ -48,6 +48,7 @@ data class State(
     val currentPointCount: Int = 0,
     val tripStartTime: Long? = null,
     val showBluetoothSuggestionBanner: Boolean = false,
+    val isVehicleBluetoothConnected: Boolean = false,
     val error: TextProvider? = null,
     val newRecordDateError: TextProvider? = null
 ) : UiState {

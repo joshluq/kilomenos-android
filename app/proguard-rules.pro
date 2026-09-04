@@ -51,3 +51,7 @@
 # Compose rules are usually handled by the compiler, but we keep our foundations safe.
 -keep class es.joshluq.canvaskit.** { *; }
 -keep class es.joshluq.kmsafe.ui.** { *; }
+
+# --- Testing / JUnit ---
+-dontwarn org.junit.jupiter.api.extension.**
+

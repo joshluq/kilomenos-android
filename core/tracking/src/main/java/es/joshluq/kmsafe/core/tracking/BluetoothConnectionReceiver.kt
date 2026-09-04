@@ -43,12 +43,7 @@ class BluetoothConnectionReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         if (intent.action != BluetoothDevice.ACTION_ACL_CONNECTED) return
 
-        val device = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE, BluetoothDevice::class.java)
-        } else {
-            @Suppress("DEPRECATION")
-            intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE)
-        } ?: return
+        val device = intent.getBluetoothDeviceExtra() ?: return
 
         val pendingResult = goAsync()
 
@@ -123,5 +118,14 @@ class BluetoothConnectionReceiver : BroadcastReceiver() {
             .build()
 
         notificationManager.notify(notificationId, notification)
+    }
+
+    private fun Intent.getBluetoothDeviceExtra(): BluetoothDevice? {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            getParcelableExtra(BluetoothDevice.EXTRA_DEVICE, BluetoothDevice::class.java)
+        } else {
+            @Suppress("DEPRECATION")
+            getParcelableExtra(BluetoothDevice.EXTRA_DEVICE)
+        }
     }
 }

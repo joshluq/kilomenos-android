@@ -22,6 +22,7 @@ import es.joshluq.kmsafe.domain.usecase.GetOverviewDataUseCase
 import es.joshluq.kmsafe.domain.usecase.GetPreferencesUseCase
 import es.joshluq.kmsafe.domain.usecase.GetTripProjectionUseCase
 import es.joshluq.kmsafe.domain.usecase.ObserveTrackingStateUseCase
+import es.joshluq.kmsafe.domain.usecase.ObserveVehicleBluetoothConnectionUseCase
 import es.joshluq.kmsafe.domain.usecase.SelectContractUseCase
 import es.joshluq.kmsafe.domain.usecase.StartAutoTrackingUseCase
 import es.joshluq.kmsafe.domain.usecase.StopAutoTrackingUseCase
@@ -50,6 +51,7 @@ class OverviewViewModel @Inject constructor(
     private val getPreferencesUseCase: GetPreferencesUseCase,
     private val updatePreferencesUseCase: UpdatePreferencesUseCase,
     private val observeTrackingStateUseCase: ObserveTrackingStateUseCase,
+    private val observeVehicleBluetoothConnectionUseCase: ObserveVehicleBluetoothConnectionUseCase,
     private val stopTrackingUseCase: StopTrackingUseCase,
     private val clearTrackingUseCase: ClearTrackingUseCase,
     private val startAutoTrackingUseCase: StartAutoTrackingUseCase,
@@ -61,6 +63,7 @@ class OverviewViewModel @Inject constructor(
 ) : ScreenViewModel<State, Event, Effect>() {
 
     private var bannerAlertJob: Job? = null
+    private var bluetoothJob: Job? = null
 
     init {
         consolidatedInitialLoad()
@@ -165,6 +168,8 @@ class OverviewViewModel @Inject constructor(
             // Atomically update the state once per combine emission
             val oldRentingId = state.value.renting?.id
             val newRentingId = newState.renting?.id
+            val oldMac = state.value.renting?.bluetoothDeviceAddress
+            val newMac = newState.renting?.bluetoothDeviceAddress
 
             if (newState != state.value) {
                 updateState { newState }
@@ -173,6 +178,21 @@ class OverviewViewModel @Inject constructor(
                     loadMonthlyUsage()
                     loadProjection()
                 }
+            }
+
+            if (newMac != oldMac || bluetoothJob == null) {
+                observeBluetoothForVehicle(newMac)
+            }
+        }.launchIn(viewModelScope)
+    }
+
+    private fun observeBluetoothForVehicle(macAddress: String?) {
+        bluetoothJob?.cancel()
+        bluetoothJob = observeVehicleBluetoothConnectionUseCase(
+            ObserveVehicleBluetoothConnectionUseCase.Input(macAddress)
+        ).onEach { output ->
+            if (output is ObserveVehicleBluetoothConnectionUseCase.Output.Success) {
+                updateState { copy(isVehicleBluetoothConnected = output.isConnected) }
             }
         }.launchIn(viewModelScope)
     }
@@ -263,7 +283,9 @@ class OverviewViewModel @Inject constructor(
         selectContractUseCase(SelectContractUseCase.Input(id))
             .onEach { output ->
                 when (output) {
-                    is SelectContractUseCase.Output.Success -> updateState { copy(showVehicleSwitcher = false) }
+                    is SelectContractUseCase.Output.Success -> updateState {
+                        copy(showVehicleSwitcher = false)
+                    }
                     is SelectContractUseCase.Output.Progress -> updateState { copy(isLoading = true) }
                     is SelectContractUseCase.Output.Failure -> updateState { copy(isLoading = false) }
                 }

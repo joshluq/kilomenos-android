@@ -19,6 +19,7 @@ import es.joshluq.kmsafe.domain.usecase.GetOverviewDataUseCase
 import es.joshluq.kmsafe.domain.usecase.GetPreferencesUseCase
 import es.joshluq.kmsafe.domain.usecase.GetTripProjectionUseCase
 import es.joshluq.kmsafe.domain.usecase.ObserveTrackingStateUseCase
+import es.joshluq.kmsafe.domain.usecase.ObserveVehicleBluetoothConnectionUseCase
 import es.joshluq.kmsafe.domain.usecase.SelectContractUseCase
 import es.joshluq.kmsafe.domain.usecase.StartAutoTrackingUseCase
 import es.joshluq.kmsafe.domain.usecase.StopAutoTrackingUseCase
@@ -31,6 +32,7 @@ import io.mockk.mockk
 import io.mockk.unmockkAll
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -63,6 +65,7 @@ class OverviewViewModelTest {
     private val getPreferencesUseCase: GetPreferencesUseCase = mockk(relaxed = true)
     private val updatePreferencesUseCase: UpdatePreferencesUseCase = mockk(relaxed = true)
     private val observeTrackingStateUseCase: ObserveTrackingStateUseCase = mockk(relaxed = true)
+    private val observeVehicleBluetoothConnectionUseCase: ObserveVehicleBluetoothConnectionUseCase = mockk(relaxed = true)
     private val stopTrackingUseCase: StopTrackingUseCase = mockk(relaxed = true)
     private val clearTrackingUseCase: ClearTrackingUseCase = mockk(relaxed = true)
     private val startAutoTrackingUseCase: StartAutoTrackingUseCase = mockk(relaxed = true)
@@ -151,6 +154,9 @@ class OverviewViewModelTest {
         every { stopAutoTrackingUseCase(any()) } returns flowOf(
             StopAutoTrackingUseCase.Output.Success
         )
+        every { observeVehicleBluetoothConnectionUseCase(any()) } returns flowOf(
+            ObserveVehicleBluetoothConnectionUseCase.Output.Success(isConnected = false)
+        )
     }
 
     @After
@@ -172,6 +178,7 @@ class OverviewViewModelTest {
             getPreferencesUseCase = getPreferencesUseCase,
             updatePreferencesUseCase = updatePreferencesUseCase,
             observeTrackingStateUseCase = observeTrackingStateUseCase,
+            observeVehicleBluetoothConnectionUseCase = observeVehicleBluetoothConnectionUseCase,
             stopTrackingUseCase = stopTrackingUseCase,
             clearTrackingUseCase = clearTrackingUseCase,
             startAutoTrackingUseCase = startAutoTrackingUseCase,
@@ -353,5 +360,26 @@ class OverviewViewModelTest {
 
         assertEquals(1, effects.size)
         assertEquals(Effect.NavigateToPremiumPaywall, effects.first())
+    }
+
+    @Test
+    fun `given bluetooth connection stream updates then updates state reactively`() = runTest(testDispatcher) {
+        val bluetoothFlow = MutableSharedFlow<ObserveVehicleBluetoothConnectionUseCase.Output>()
+        every { observeVehicleBluetoothConnectionUseCase(any()) } returns bluetoothFlow
+
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        assertFalse(viewModel.state.value.isVehicleBluetoothConnected)
+
+        bluetoothFlow.emit(ObserveVehicleBluetoothConnectionUseCase.Output.Success(isConnected = true))
+        advanceUntilIdle()
+
+        assertTrue(viewModel.state.value.isVehicleBluetoothConnected)
+
+        bluetoothFlow.emit(ObserveVehicleBluetoothConnectionUseCase.Output.Success(isConnected = false))
+        advanceUntilIdle()
+
+        assertFalse(viewModel.state.value.isVehicleBluetoothConnected)
     }
 }

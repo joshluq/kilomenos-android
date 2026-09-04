@@ -25,6 +25,7 @@
     <string name="onboarding_bluetooth_permission_denied">Bluetooth permission is required to list devices.</string>
     <string name="onboarding_bluetooth_empty_list">No paired devices found. Pair your car in Android settings first.</string>
     <string name="onboarding_bluetooth_unknown_device">Unknown device</string>
+    <string name="onboarding_bluetooth_connected_tag">Connected now</string>
     <string name="onboarding_bluetooth_suggestion_title">Smart Configuration 🚗</string>
     <string name="onboarding_bluetooth_suggestion_desc">We have detected a Bluetooth connection. Is this your car? Link it for 100% accurate tracking.</string>
     <string name="onboarding_bluetooth_suggestion_button">Link now</string>

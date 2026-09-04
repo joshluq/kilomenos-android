@@ -25,6 +25,7 @@
     <string name="onboarding_bluetooth_permission_denied">Se requiere permiso de Bluetooth para listar dispositivos.</string>
     <string name="onboarding_bluetooth_empty_list">No se encontraron dispositivos vinculados. Vincula tu coche en los ajustes de Android primero.</string>
     <string name="onboarding_bluetooth_unknown_device">Dispositivo desconocido</string>
+    <string name="onboarding_bluetooth_connected_tag">Conectado ahora</string>
     <string name="onboarding_bluetooth_suggestion_title">Configuración inteligente 🚗</string>
     <string name="onboarding_bluetooth_suggestion_desc">Hemos detectado una conexión Bluetooth. ¿Es este tu coche? Vincúlalo para que el seguimiento sea 100% preciso.</string>
     <string name="onboarding_bluetooth_suggestion_button">Vincular ahora</string>

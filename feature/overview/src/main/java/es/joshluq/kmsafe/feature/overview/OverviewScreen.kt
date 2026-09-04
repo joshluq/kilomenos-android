@@ -471,6 +471,7 @@ private fun RentingState(
             balance = state.balance,
             totalKms = state.actualKmsDriven,
             imageUrl = state.renting?.vehicleImageUrl,
+            isBluetoothConnected = state.isVehicleBluetoothConnected,
             onEditClick = {
                 keyboardController?.hide()
                 state.renting?.let { onEvent(Event.OnEditContractClicked(it.id)) }
@@ -496,6 +497,7 @@ private fun MainBalanceCard(
     balance: Double,
     totalKms: Double,
     imageUrl: String? = null,
+    isBluetoothConnected: Boolean = false,
     onEditClick: () -> Unit,
     onCardClick: () -> Unit
 ) {
@@ -577,18 +579,51 @@ private fun MainBalanceCard(
                             .background(CanvasKitTheme.colors.borderSubtle.copy(alpha = 0.65f))
                     )
                 }
-                Text(
+                Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(top = 12.dp),
-                    text = vehicleName.uppercase(),
-                    style = CanvasKitTheme.typography.bodyLarge,
-                    color = CanvasKitTheme.colors.brandAccent,
-                    fontWeight = FontWeight.Bold,
-                    textAlign = TextAlign.Center,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
+                        .padding(top = 12.dp, start = 8.dp, end = 8.dp),
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = vehicleName.uppercase(),
+                        style = CanvasKitTheme.typography.bodyLarge,
+                        color = CanvasKitTheme.colors.brandAccent,
+                        fontWeight = FontWeight.Bold,
+                        textAlign = TextAlign.Center,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(1f, fill = false)
+                    )
+
+                    if (isBluetoothConnected) {
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Surface(
+                            color = CanvasKitTheme.colors.brandAccent.copy(alpha = 0.12f),
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(4.dp)
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(6.dp)
+                                        .clip(CircleShape)
+                                        .background(CanvasKitTheme.colors.brandAccent)
+                                )
+                                Text(
+                                    text = stringResource(R.string.overview_vehicle_bluetooth_connected),
+                                    style = CanvasKitTheme.typography.labelSmall,
+                                    color = CanvasKitTheme.colors.brandAccent,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                        }
+                    }
+                }
             }
         },
         footer = {

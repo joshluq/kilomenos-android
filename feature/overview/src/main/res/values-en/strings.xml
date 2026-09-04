@@ -6,6 +6,7 @@
     <string name="overview_daily_limit">Ideal daily limit</string>
     <string name="overview_monthly_limit">Ideal monthly limit</string>
     <string name="overview_total_kms_driven">Total traveled</string>
+    <string name="overview_vehicle_bluetooth_connected">Connected</string>
     <string name="overview_ideal_limits_title">IDEAL LIMITS (CONTRACT)</string>
     <string name="overview_usage_comparison_title">USAGE COMPARISON</string>
     <string name="overview_monthly_usage_title">MONTHLY USAGE</string>

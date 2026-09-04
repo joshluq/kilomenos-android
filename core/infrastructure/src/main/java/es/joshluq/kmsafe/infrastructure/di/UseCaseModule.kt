@@ -314,4 +314,9 @@ abstract class UseCaseModule {
 
     @Binds
     abstract fun bindSyncStationsUseCase(impl: SyncStationsUseCaseImpl): SyncStationsUseCase
+
+    @Binds
+    abstract fun bindObserveVehicleBluetoothConnectionUseCase(
+        impl: es.joshluq.kmsafe.domain.usecase.ObserveVehicleBluetoothConnectionUseCaseImpl
+    ): es.joshluq.kmsafe.domain.usecase.ObserveVehicleBluetoothConnectionUseCase
 }

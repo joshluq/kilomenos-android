@@ -6,6 +6,7 @@
     <string name="overview_daily_limit">Límite diario ideal</string>
     <string name="overview_monthly_limit">Límite mensual ideal</string>
     <string name="overview_total_kms_driven">Total recorrido</string>
+    <string name="overview_vehicle_bluetooth_connected">Conectado</string>
     <string name="overview_ideal_limits_title">LÍMITES IDEALES (CONTRATO)</string>
     <string name="overview_usage_comparison_title">COMPARATIVA USO</string>
     <string name="overview_monthly_usage_title">USO MENSUAL</string>
