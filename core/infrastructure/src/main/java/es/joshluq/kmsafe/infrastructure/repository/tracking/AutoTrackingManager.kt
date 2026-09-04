@@ -27,9 +27,9 @@ class AutoTrackingManager @Inject constructor(
     private val logger: LoggerKit
 ) {
     companion object {
-        // Fully-qualified name of the BroadcastReceiver registered in :app/AndroidManifest.xml
+        // Fully-qualified name of the BroadcastReceiver registered in :core:tracking/AndroidManifest.xml
         private const val ACTIVITY_TRANSITION_RECEIVER =
-            "es.joshluq.kmsafe.data.location.ActivityTransitionReceiver"
+            "es.joshluq.kmsafe.core.tracking.ActivityTransitionReceiver"
     }
 
     private val activityRecognitionClient = ActivityRecognition.getClient(context)

@@ -177,7 +177,7 @@ fun OverviewRoute(
                 Effect.NavigateToPreferences -> onNavigateToPreferences()
                 Effect.StartTrackingService -> {
                     val intent = Intent().apply {
-                        setClassName(context.packageName, "es.joshluq.kmsafe.data.location.LocationTrackingService")
+                        setClassName(context.packageName, "es.joshluq.kmsafe.core.tracking.LocationTrackingService")
                         action = "ACTION_START"
                     }
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -188,7 +188,7 @@ fun OverviewRoute(
                 }
                 Effect.StopTrackingService -> {
                     val intent = Intent().apply {
-                        setClassName(context.packageName, "es.joshluq.kmsafe.data.location.LocationTrackingService")
+                        setClassName(context.packageName, "es.joshluq.kmsafe.core.tracking.LocationTrackingService")
                         action = "ACTION_STOP"
                     }
                     context.startService(intent)

@@ -108,6 +108,7 @@ dependencies {
     implementation(project(":core:domain"))
     implementation(project(":core:navigation"))
     implementation(project(":core:monetization"))
+    implementation(project(":core:tracking"))
 
     implementation(deps.foundationkit)
     implementation(deps.canvaskit)

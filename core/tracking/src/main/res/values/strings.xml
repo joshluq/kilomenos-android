@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="tracking_app_name">KiloMenos</string>
+    <string name="tracking_validation_content">Comprobando conexión con el vehículo...</string>
+    <string name="tracking_notification_title">KiloMenos Tracking</string>
+    <string name="tracking_notification_content">Trayecto activo: %1$.2f km</string>
+    <string name="tracking_action_stop">Finalizar</string>
+    <string name="tracking_bluetooth_suggestion_title">¿Vincular vehículo por Bluetooth?</string>
+    <string name="tracking_bluetooth_suggestion_desc">Se ha detectado un dispositivo Bluetooth. Vincúlalo a tu contrato para inicio automático de trayectos.</string>
+    <string name="tracking_bluetooth_suggestion_button">Configurar</string>
+</resources>

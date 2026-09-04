@@ -1,4 +1,4 @@
-package es.joshluq.kmsafe.data.location
+package es.joshluq.kmsafe.core.tracking
 
 import android.annotation.SuppressLint
 import android.app.NotificationChannel
@@ -30,9 +30,6 @@ import dagger.hilt.android.AndroidEntryPoint
 import es.joshluq.analyticskit.domain.model.AnalyticsEvent
 import es.joshluq.analyticskit.sdk.AnalyticskitManager
 import es.joshluq.foundationkit.log.LoggerKit
-import es.joshluq.kmsafe.BuildConfig
-import es.joshluq.kmsafe.MainActivity
-import es.joshluq.kmsafe.R
 import es.joshluq.kmsafe.domain.model.Feature
 import es.joshluq.kmsafe.domain.repository.TrackingRepository
 import es.joshluq.kmsafe.domain.usecase.CheckFeatureAccessUseCase
@@ -81,7 +78,7 @@ class LocationTrackingService : Service() {
     private var lastLocation: Location? = null
 
     companion object {
-        private const val CHANNEL_ID = "location_tracking_channel_${BuildConfig.FLAVOR}"
+        private const val CHANNEL_ID = "location_tracking_channel"
         private const val NOTIFICATION_ID = 1001
 
         const val ACTION_START = "ACTION_START"
@@ -211,9 +208,9 @@ class LocationTrackingService : Service() {
 
     private fun showValidationNotification() {
         val notification = NotificationCompat.Builder(this, CHANNEL_ID)
-            .setContentTitle(getString(R.string.app_name))
+            .setContentTitle(getString(R.string.tracking_app_name))
             .setContentText(getString(R.string.tracking_validation_content))
-            .setSmallIcon(R.drawable.ic_launcher_foreground)
+            .setSmallIcon(android.R.drawable.ic_menu_mylocation)
             .setOngoing(true)
             .setPriority(NotificationCompat.PRIORITY_LOW)
             .build()
@@ -376,11 +373,11 @@ class LocationTrackingService : Service() {
     }
 
     private fun createNotification(distanceMeters: Double): android.app.Notification {
-        val intent = Intent(this, MainActivity::class.java)
+        val launchIntent = packageManager.getLaunchIntentForPackage(packageName) ?: Intent()
         val pendingIntent = PendingIntent.getActivity(
             this,
             0,
-            intent,
+            launchIntent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
@@ -400,12 +397,12 @@ class LocationTrackingService : Service() {
         return NotificationCompat.Builder(this, CHANNEL_ID)
             .setContentTitle(getString(R.string.tracking_notification_title))
             .setContentText(contentText)
-            .setSmallIcon(R.drawable.ic_launcher_foreground)
+            .setSmallIcon(android.R.drawable.ic_menu_mylocation)
             .setOngoing(true)
             .setContentIntent(pendingIntent)
             .addAction(
-                R.drawable.ic_launcher_foreground,
-                getString(R.string.tracking_card_stop_action),
+                android.R.drawable.ic_menu_close_clear_cancel,
+                getString(R.string.tracking_action_stop),
                 stopPendingIntent
             )
             .build()
@@ -428,7 +425,7 @@ class LocationTrackingService : Service() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(
                 CHANNEL_ID,
-                getString(R.string.tracking_channel_name),
+                getString(R.string.tracking_notification_title),
                 NotificationManager.IMPORTANCE_LOW
             )
             val manager = getSystemService(NotificationManager::class.java)

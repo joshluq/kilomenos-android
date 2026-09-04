@@ -1,4 +1,4 @@
-package es.joshluq.kmsafe.data.location
+package es.joshluq.kmsafe.core.tracking
 
 import android.content.BroadcastReceiver
 import android.content.Context
@@ -29,7 +29,7 @@ class ActivityTransitionReceiver : BroadcastReceiver() {
         logger.d("ActivityReceiver", "onReceive: $action")
 
         // Standard Activity Transition Action (from Google Play Services)
-        val isTransitionAction = action == "es.joshluq.kmsafe.data.location.ActivityTransitionReceiver"
+        val isTransitionAction = action == "es.joshluq.kmsafe.core.tracking.ActivityTransitionReceiver"
 
         if (isTransitionAction && ActivityTransitionResult.hasResult(intent)) {
             logger.i("ActivityReceiver", "Transition result received. Forwarding to Service...")

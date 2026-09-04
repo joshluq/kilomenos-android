@@ -1,4 +1,4 @@
-package es.joshluq.kmsafe.data.location
+package es.joshluq.kmsafe.core.tracking
 
 import android.annotation.SuppressLint
 import android.app.NotificationChannel
@@ -12,8 +12,6 @@ import android.os.Build
 import androidx.core.app.NotificationCompat
 import dagger.hilt.android.AndroidEntryPoint
 import es.joshluq.foundationkit.log.LoggerKit
-import es.joshluq.kmsafe.MainActivity
-import es.joshluq.kmsafe.R
 import es.joshluq.kmsafe.domain.model.Feature
 import es.joshluq.kmsafe.domain.usecase.CheckFeatureAccessUseCase
 import es.joshluq.kmsafe.domain.usecase.GetRentingContractUseCase
@@ -23,7 +21,6 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-import es.joshluq.kmsafe.feature.fleet.R as FleetR
 
 /**
  * Receiver that listens for Bluetooth connection events.
@@ -92,36 +89,35 @@ class BluetoothConnectionReceiver : BroadcastReceiver() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(
                 channelId,
-                "Configuración Bluetooth",
+                context.getString(R.string.tracking_bluetooth_suggestion_title),
                 NotificationManager.IMPORTANCE_DEFAULT
             )
             notificationManager.createNotificationChannel(channel)
         }
 
-        val intent = Intent(context, MainActivity::class.java).apply {
+        val launchIntent = context.packageManager.getLaunchIntentForPackage(context.packageName)?.apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-            // We could pass an argument to open RentingDetails directly
             putExtra("navigate_to", "renting_details")
             putExtra("vehicle_id", "active")
-        }
+        } ?: Intent()
 
         val pendingIntent = PendingIntent.getActivity(
             context,
             0,
-            intent,
+            launchIntent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
         val notification = NotificationCompat.Builder(context, channelId)
-            .setSmallIcon(R.drawable.ic_launcher_foreground)
-            .setContentTitle(context.getString(FleetR.string.onboarding_bluetooth_suggestion_title))
-            .setContentText(context.getString(FleetR.string.onboarding_bluetooth_suggestion_desc))
+            .setSmallIcon(android.R.drawable.stat_sys_data_bluetooth)
+            .setContentTitle(context.getString(R.string.tracking_bluetooth_suggestion_title))
+            .setContentText(context.getString(R.string.tracking_bluetooth_suggestion_desc))
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
             .setAutoCancel(true)
             .setContentIntent(pendingIntent)
             .addAction(
                 0,
-                context.getString(FleetR.string.onboarding_bluetooth_suggestion_button),
+                context.getString(R.string.tracking_bluetooth_suggestion_button),
                 pendingIntent
             )
             .build()

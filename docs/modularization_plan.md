@@ -45,8 +45,8 @@ graph TD
 | **Fase 1** | Estandarización y Version Catalog (`deps.versions.toml`, `libs.versions.toml`) | ✅ **Completado** |
 | **Fase 2** | Módulo de Infraestructura Centralizada (`:core:infrastructure`) | ✅ **Completado** |
 | **Fase 3** | Vertical Slicing & Dominio Central (`:core:domain`) | ✅ **Completado** |
-| **Fase 4** | Modularización de Features y Satélites Core | ⏳ **En Progreso** (85%) |
-| **Fase 5** | Remediación de Dominio (Enriquecimiento del "Ser"), Testing y Desacople del Shell | ⏳ **En Progreso** (90%) |
+| **Fase 4** | Modularización de Features y Satélites Core | ✅ **Completado** |
+| **Fase 5** | Remediación de Dominio (Enriquecimiento del "Ser"), Testing y Desacople del Shell | ⏳ **En Progreso** (95%) |
 
 ---
 
@@ -143,14 +143,9 @@ graph TD
 
 ---
 
-### Módulos Pendientes de Extracción (Aún residentes en `:app`):
-
-12. **`:core:tracking` (Servicios de Localización & Sensores) 📅 FASE 5**:
-    * **Situación actual**: Clases de sistema en `app/src/main/java/es/joshluq/kmsafe/data/location/` (`LocationTrackingService`, `BluetoothConnectionReceiver`, `ActivityTransitionReceiver`).
-    * **Objetivo**: Extraer a un módulo core de background tracking para dejar `:app` exclusivamente con el Manifest y Application class.
-
-13. **`:feature:reporting` (Motor de Reportes & Exportación PDF) 📅 PLANIFICADO**:
-    * **Objetivo**: Generación local de informes fiscales y certificados de kilometraje en formato PDF.
+12. **`:core:tracking` (Servicios de Localización & Sensores) ✅ COMPLETADO**:
+    * **Propósito**: Aislamiento de los servicios de tracking GPS en primer plano (`LocationTrackingService`), receptores de transición de actividad (`ActivityTransitionReceiver`) y detección de Bluetooth del vehículo (`BluetoothConnectionReceiver`).
+    * **Impacto**: Extraído de `:app` a su propio módulo `:core:tracking`, desacoplado de `MainActivity` mediante intents dinámicos del sistema y dejando a `:app` como un Shell puramente orquestador.
 
 ---
 
@@ -277,12 +272,30 @@ Para cerrar la brecha técnica identificada y cumplir al 100% con DDD, Clean Arc
   * Se removió `deps.authkit` de `feature/auth/build.gradle.kts` manteniendo el consumo desacoplado a través de los casos de uso puros.
   * Todas las suites de tests unitarios compilan y pasan limpiamente.
 
-### 6. Extracción de `:core:tracking` del Shell `:app` 📅 SIGUIENTE HITO
-* **Problema**: `LocationTrackingService`, `BluetoothConnectionReceiver` y `ActivityTransitionReceiver` siguen residiendo dentro del paquete `es.joshluq.kmsafe.data.location` de `:app`.
-* **Acción**:
-  * Crear el módulo `:core:tracking` (Android Library).
-  * Mover los servicios de tracking en primer plano, geocercas y receptores de sensores.
-  * Desacoplar `:app` para dejarlo únicamente como contenedor del Application, Root Manifest y DI Root.
+### 6. Extracción de `:core:tracking` del Shell `:app` ✅ (COMPLETADO)
+* **Resultado**:
+  * Se creó el módulo satélite [core:tracking](file:///c:/Users/josh_/AndroidStudioProjects/KmSafe/core/tracking/) (`es.joshluq.kmsafe.core.tracking`).
+  * Se extrajeron `LocationTrackingService`, `BluetoothConnectionReceiver` y `ActivityTransitionReceiver` fuera de `:app`.
+  * Se desacoplaron de `MainActivity` utilizando intents del sistema (`packageManager.getLaunchIntentForPackage(packageName)`).
+  * Se integró en `settings.gradle.kts` y `app/build.gradle.kts`, limpiando el `AndroidManifest.xml` del Shell.
+  * Verificado con compilación y tests al 100%: `./gradlew :core:tracking:assembleDebug :app:testDevDebugUnitTest` (BUILD SUCCESSFUL).
+
+### 7. Suite Completa de Tests Unitarios en ViewModels (MVI) ✅ (COMPLETADO AL 100%)
+* **Resultado**:
+  * Implementadas suites de tests unitarios robustas y exhaustivas para los **19 ViewModels** de la arquitectura modularizada utilizando **JUnit 4**, **MockK** y **Coroutines Test (`runTest` + `StandardTestDispatcher` / `UnconfinedTestDispatcher`)**:
+    1. `:feature:auth` (3): `LaunchViewModelTest`, `LoginViewModelTest`, `SignupViewModelTest`.
+    2. `:feature:dashboard` (1): `DashboardViewModelTest`.
+    3. `:feature:overview` (1): `OverviewViewModelTest`.
+    4. `:feature:fleet` (4): `VehicleListViewModelTest`, `VehicleDetailViewModelTest`, `SetupWizardViewModelTest`, `EditContractViewModelTest`.
+    5. `:feature:history` (2): `HistoryViewModelTest`, `RecordDetailViewModelTest`.
+    6. `:feature:projection` (1): `ProjectionAnalysisViewModelTest`.
+    7. `:feature:expenses` (3): `ExpensesViewModelTest`, `StationManagementViewModelTest`, `StationDetailViewModelTest`.
+    8. `:feature:profile` (2): `ProfileViewModelTest`, `PreferencesViewModelTest`.
+    9. `:feature:premium` (1): `PremiumPaywallViewModelTest`.
+    10. `:app` (1): `DataManagementViewModelTest`.
+  * Cobertura de todos los estados iniciales, manejo reactivo de eventos (`sendEvent`), efectos de navegación asíncronos (`effects.collect`), flujos de error, validaciones de permisos/features y reconciliación de estado.
+  * Se descartó del plan el módulo prescindible `feature:reporting`.
+  * Verificación global limpia: `./gradlew testDebugUnitTest testDevDebugUnitTest` con **387 tareas exitosas y 0 fallos**.
 ---
 
 ## 🛡️ Salvaguardas y Anti-patrones de Desarrollo

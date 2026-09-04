@@ -72,28 +72,6 @@
                 android:value="androidx.startup"
                 tools:node="remove" />
         </provider>
-
-        <service
-            android:name=".data.location.LocationTrackingService"
-            android:foregroundServiceType="location"
-            android:exported="false"
-            tools:replace="android:foregroundServiceType" />
-
-        <receiver
-            android:name=".data.location.ActivityTransitionReceiver"
-            android:exported="false">
-            <intent-filter>
-                <action android:name="es.joshluq.kmsafe.data.location.ActivityTransitionReceiver" />
-            </intent-filter>
-        </receiver>
-
-        <receiver
-            android:name=".data.location.BluetoothConnectionReceiver"
-            android:exported="false">
-            <intent-filter>
-                <action android:name="android.bluetooth.device.action.ACL_CONNECTED" />
-            </intent-filter>
-        </receiver>
     </application>
 
 </manifest>
