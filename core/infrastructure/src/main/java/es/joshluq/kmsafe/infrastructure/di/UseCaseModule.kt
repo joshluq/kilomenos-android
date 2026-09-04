@@ -1,4 +1,4 @@
-package es.joshluq.kmsafe.di
+package es.joshluq.kmsafe.infrastructure.di
 
 import dagger.Binds
 import dagger.Module
@@ -128,6 +128,7 @@ import es.joshluq.kmsafe.domain.usecase.ValidateCredentialsUseCaseImpl
 /**
  * Dagger module providing domain UseCase dependencies.
  * Follows Option 2: Specific Domain Interfaces without Qualifiers.
+ * Lives in `:core:infrastructure` to keep `:app` as a pure orchestration shell.
  */
 @Suppress("unused")
 @Module

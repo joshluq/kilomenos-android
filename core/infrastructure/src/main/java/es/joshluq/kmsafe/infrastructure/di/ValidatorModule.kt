@@ -1,4 +1,4 @@
-package es.joshluq.kmsafe.di
+package es.joshluq.kmsafe.infrastructure.di
 
 import dagger.Binds
 import dagger.Module
@@ -12,6 +12,7 @@ import es.joshluq.kmsafe.domain.validator.PasswordValidator as PasswordValidator
 
 /**
  * Dagger module for providing Validator dependencies.
+ * Lives in `:core:infrastructure` to keep `:app` as a pure orchestration shell.
  */
 @Module
 @InstallIn(SingletonComponent::class)

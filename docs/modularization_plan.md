@@ -45,8 +45,8 @@ graph TD
 | **Fase 1** | Estandarización y Version Catalog (`deps.versions.toml`, `libs.versions.toml`) | ✅ **Completado** |
 | **Fase 2** | Módulo de Infraestructura Centralizada (`:core:infrastructure`) | ✅ **Completado** |
 | **Fase 3** | Vertical Slicing & Dominio Central (`:core:domain`) | ✅ **Completado** |
-| **Fase 4** | Modularización de Features y Satélites Core | ⏳ **En Progreso** (80%) |
-| **Fase 5** | Remediación de Dominio (Enriquecimiento del "Ser"), Testing y Desacople del Shell | 📅 **Prioridad Actual** |
+| **Fase 4** | Modularización de Features y Satélites Core | ⏳ **En Progreso** (85%) |
+| **Fase 5** | Remediación de Dominio (Enriquecimiento del "Ser"), Testing y Desacople del Shell | ⏳ **En Progreso** (90%) |
 
 ---
 
@@ -259,21 +259,30 @@ Para cerrar la brecha técnica identificada y cumplir al 100% con DDD, Clean Arc
   * **Blindaje estricto del dominio**: Regla de Oro cumplida al 100% — cero dependencias del framework de Android (`android.*`) en la capa de negocio.
   * Verificada la compatibilidad limpia de integración con todos los módulos consumidores (`:core:infrastructure`, `:feature:*`, `:app`) mediante `./gradlew testDebugUnitTest`.
 
-### 3. Suite de Pruebas Unitarias Mandatorias en Dominio ✅ (EN CURSO - BASE ESTABLECIDA)
+### 3. Suite de Pruebas Unitarias Mandatorias en Dominio ✅ (COMPLETADO AL 100%)
 * **Resultado**:
-  * Activado plugin de test en `:core:domain/build.gradle.kts`.
-  * Creado `CalculateContractMetricsUseCaseTest` cubriendo día 0, balance positivo, balance negativo y sincronizaciones pendientes (100% éxito).
+  * Implementada la suite completa de unit testing en `:core:domain` con **JUnit 4**, **MockK** y **Kotlin Coroutines Test (`runTest`)**.
+  * **60 UseCases** testeados individualmente cubriendo 6 fases (Vehicle/Contracts, Odometer/Projections, GPS Tracking/Geofencing, Fuel/Stations, Auth/Identity, Entitlements/Sync/Preferences).
+  * 100% de cobertura de Happy paths, edge cases y error paths validados sin dependencias de Android.
+  * Ejecución limpia: `./gradlew :core:domain:test` con `0` fallos.
 
-### 4. Racionalización de la Inyección de Dependencias (Hilt)
-* **Problema**: [UseCaseModule.kt](file:///c:/Users/josh_/AndroidStudioProjects/KmSafe/app/src/main/java/es/joshluq/kmsafe/di/UseCaseModule.kt) en `:app` contiene 428 líneas de `@Binds` y `@Qualifier` manuales redundantes para clases concretas que ya tienen anotación `@Inject constructor`.
-* **Acción**:
-  * Eliminar el cableado manual innecesario en `:app` permitiendo que Hilt resuelva directamente las instancias de los casos de uso, reduciendo el acoplamiento y acelerando la compilación del Shell.
+### 4. Racionalización de la Inyección de Dependencias (Hilt) ✅ (COMPLETADO)
+* **Resultado**:
+  * Se extrajeron `UseCaseModule.kt` y `ValidatorModule.kt` del módulo `:app` hacia [core/infrastructure/src/main/java/es/joshluq/kmsafe/infrastructure/di/](file:///c:/Users/josh_/AndroidStudioProjects/KmSafe/core/infrastructure/src/main/java/es/joshluq/kmsafe/infrastructure/di/).
+  * Se eliminaron los bindings directos de `:app`, reduciendo el acoplamiento del Shell a la capa de dominio y permitiendo que `:core:infrastructure` provea automáticamente la inyección de los 60 UseCases e interfaces de validación a través del grafo Hilt.
+  * Verificado con compilación y tests al 100%: `./gradlew :core:infrastructure:assembleDebug :app:testDevDebugUnitTest` (BUILD SUCCESSFUL).
 
 ### 5. Higiene de Dependencias en Gradle ✅ (COMPLETADO)
 * **Resultado**:
   * Se removió `deps.authkit` de `feature/auth/build.gradle.kts` manteniendo el consumo desacoplado a través de los casos de uso puros.
   * Todas las suites de tests unitarios compilan y pasan limpiamente.
 
+### 6. Extracción de `:core:tracking` del Shell `:app` 📅 SIGUIENTE HITO
+* **Problema**: `LocationTrackingService`, `BluetoothConnectionReceiver` y `ActivityTransitionReceiver` siguen residiendo dentro del paquete `es.joshluq.kmsafe.data.location` de `:app`.
+* **Acción**:
+  * Crear el módulo `:core:tracking` (Android Library).
+  * Mover los servicios de tracking en primer plano, geocercas y receptores de sensores.
+  * Desacoplar `:app` para dejarlo únicamente como contenedor del Application, Root Manifest y DI Root.
 ---
 
 ## 🛡️ Salvaguardas y Anti-patrones de Desarrollo
