@@ -1,5 +1,6 @@
 package es.joshluq.kmsafe.feature.expenses
 
+import android.net.Uri
 import androidx.lifecycle.SavedStateHandle
 import es.joshluq.foundationkit.log.LoggerKit
 import es.joshluq.kmsafe.domain.model.ArithmeticCheck
@@ -299,19 +300,21 @@ class ExpensesViewModelTest {
 
     @Test
     fun `given receipt image captured when scanning succeeds then state contains scannedReceiptResult and opens sheet`() = runTest(testDispatcher) {
+        val mockUri = mockk<Uri>()
+        every { mockUri.toString() } returns "content://media/receipt_1.jpg"
         val mockResult = ReceiptScanResult(
             stationName = "Shell Express",
-            purchaseDate = "2026-09-04T20:00:00Z",
+            purchaseDate = "2026-09-04T12:00:00Z",
             fuelType = FuelType.GASOLINE_95,
-            liters = 45.0,
-            pricePerLiter = 1.55,
-            totalAmount = 69.75,
+            liters = 40.0,
+            pricePerLiter = 1.65,
+            totalAmount = 66.0,
             currency = "EUR",
             confidenceScore = 0.95,
             isFuelReceipt = true,
             arithmeticCheck = ArithmeticCheck(
                 valid = true,
-                calculatedAmount = 69.75,
+                calculatedAmount = 66.0,
                 discrepancy = 0.0
             ),
             storageFilePath = "receipts/receipt_1.jpg"
@@ -323,17 +326,19 @@ class ExpensesViewModelTest {
         val viewModel = createViewModel()
         advanceUntilIdle()
 
-        viewModel.sendEvent(ExpensesEvent.OnReceiptImageCaptured("/cache/receipt_1.jpg"))
+        viewModel.sendEvent(ExpensesEvent.OnReceiptUriSelected(mockUri))
         advanceUntilIdle()
 
         assertFalse(viewModel.state.value.isScanningReceipt)
         assertTrue(viewModel.state.value.isAddExpenseSheetOpen)
         assertEquals("Shell Express", viewModel.state.value.scannedReceiptResult?.stationName)
-        assertEquals("/cache/receipt_1.jpg", viewModel.state.value.receiptImagePath)
+        assertEquals("receipts/receipt_1.jpg", viewModel.state.value.receiptImagePath)
     }
 
     @Test
     fun `given receipt image captured when quota exceeded then state has error and isScanningReceipt false`() = runTest(testDispatcher) {
+        val mockUri = mockk<Uri>()
+        every { mockUri.toString() } returns "content://media/receipt_2.jpg"
         every { processFuelReceiptUseCase(any()) } returns flowOf(
             ProcessFuelReceiptUseCase.Output.Failure(KmError.ReceiptScanQuotaExceeded)
         )
@@ -341,7 +346,7 @@ class ExpensesViewModelTest {
         val viewModel = createViewModel()
         advanceUntilIdle()
 
-        viewModel.sendEvent(ExpensesEvent.OnReceiptImageCaptured("/cache/receipt_2.jpg"))
+        viewModel.sendEvent(ExpensesEvent.OnReceiptUriSelected(mockUri))
         advanceUntilIdle()
 
         assertFalse(viewModel.state.value.isScanningReceipt)
@@ -350,6 +355,8 @@ class ExpensesViewModelTest {
 
     @Test
     fun `given discard receipt scan clicked then calls discardReceiptScanUseCase and clears scanned state`() = runTest(testDispatcher) {
+        val mockUri = mockk<Uri>()
+        every { mockUri.toString() } returns "content://media/receipt_3.jpg"
         val mockResult = ReceiptScanResult(
             stationName = "BP",
             purchaseDate = "2026-09-04T20:00:00Z",
@@ -374,7 +381,7 @@ class ExpensesViewModelTest {
         val viewModel = createViewModel()
         advanceUntilIdle()
 
-        viewModel.sendEvent(ExpensesEvent.OnReceiptImageCaptured("/cache/receipt_3.jpg"))
+        viewModel.sendEvent(ExpensesEvent.OnReceiptUriSelected(mockUri))
         advanceUntilIdle()
 
         assertNotNull(viewModel.state.value.scannedReceiptResult)
@@ -384,7 +391,7 @@ class ExpensesViewModelTest {
 
         assertNull(viewModel.state.value.scannedReceiptResult)
         assertNull(viewModel.state.value.receiptImagePath)
-        coVerify { discardReceiptScanUseCase(DiscardReceiptScanUseCase.Input("/cache/receipt_3.jpg")) }
+        coVerify { discardReceiptScanUseCase(DiscardReceiptScanUseCase.Input("receipts/receipt_3.jpg")) }
     }
 
     @Test

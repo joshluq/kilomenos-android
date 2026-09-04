@@ -17,7 +17,7 @@ enum class Feature(val id: String) {
     /** Real-time synchronization with cloud storage. */
     CLOUD_SYNC("cloud_sync"),
 
-    /** Smart AI receipt scanning via Gemini 2.5 Flash. */
+    /** Smart AI receipt scanning. */
     SMART_RECEIPT_OCR("smart_receipt_ocr"),
 
     /** Full price radar and station volatility analytics. */

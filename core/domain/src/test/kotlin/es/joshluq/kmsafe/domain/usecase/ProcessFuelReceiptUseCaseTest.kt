@@ -70,7 +70,7 @@ class ProcessFuelReceiptUseCaseTest {
     fun `given unauthenticated user when invoke then emits Failure Unauthenticated`() = runTest {
         every { authRepository.getCurrentUser() } returns flowOf(null)
 
-        val emissions = useCase(ProcessFuelReceiptUseCase.Input(byteArrayOf(1), "image/jpeg", "veh-1")).toList()
+        val emissions = useCase(ProcessFuelReceiptUseCase.Input("content://media/receipt.jpg", "veh-1")).toList()
 
         assertEquals(2, emissions.size)
         assertTrue(emissions[0] is ProcessFuelReceiptUseCase.Output.Progress)
@@ -97,7 +97,7 @@ class ProcessFuelReceiptUseCaseTest {
             )
         )
 
-        val emissions = useCase(ProcessFuelReceiptUseCase.Input(byteArrayOf(1), "image/jpeg", "veh-1")).toList()
+        val emissions = useCase(ProcessFuelReceiptUseCase.Input("content://media/receipt.jpg", "veh-1")).toList()
 
         assertEquals(2, emissions.size)
         val failure = emissions[1] as ProcessFuelReceiptUseCase.Output.Failure
@@ -109,10 +109,10 @@ class ProcessFuelReceiptUseCaseTest {
         val premiumEntitlements = Entitlements.Default.copy(subscriptionLevel = SubscriptionLevel.PREMIUM)
         every { authRepository.getCurrentUser() } returns flowOf(sampleUser)
         every { entitlementsRepository.observeEntitlements() } returns flowOf(premiumEntitlements)
-        every { receiptRepository.uploadReceiptImage(sampleUser.id, any(), any(), any()) } returns flowOf("user-1/receipt.jpg")
+        every { receiptRepository.uploadReceiptFromUri(sampleUser.id, any(), any()) } returns flowOf("user-1/receipt.jpg")
         every { receiptRepository.processReceipt("user-1/receipt.jpg") } returns flowOf(sampleScanResult)
 
-        val emissions = useCase(ProcessFuelReceiptUseCase.Input(byteArrayOf(1, 2), "image/jpeg", "veh-1")).toList()
+        val emissions = useCase(ProcessFuelReceiptUseCase.Input("content://media/receipt.jpg", "veh-1")).toList()
 
         assertEquals(2, emissions.size)
         assertTrue(emissions[0] is ProcessFuelReceiptUseCase.Output.Progress)
@@ -126,11 +126,11 @@ class ProcessFuelReceiptUseCaseTest {
         val nonFuelReceipt = sampleScanResult.copy(isFuelReceipt = false, stationName = "Mercadona")
         every { authRepository.getCurrentUser() } returns flowOf(sampleUser)
         every { entitlementsRepository.observeEntitlements() } returns flowOf(Entitlements.Default.copy(subscriptionLevel = SubscriptionLevel.PREMIUM))
-        every { receiptRepository.uploadReceiptImage(sampleUser.id, any(), any(), any()) } returns flowOf("user-1/receipt.jpg")
+        every { receiptRepository.uploadReceiptFromUri(sampleUser.id, any(), any()) } returns flowOf("user-1/receipt.jpg")
         every { receiptRepository.processReceipt("user-1/receipt.jpg") } returns flowOf(nonFuelReceipt)
         every { receiptRepository.deleteReceiptImage("user-1/receipt.jpg") } returns flowOf(Unit)
 
-        val emissions = useCase(ProcessFuelReceiptUseCase.Input(byteArrayOf(1, 2), "image/jpeg", "veh-1")).toList()
+        val emissions = useCase(ProcessFuelReceiptUseCase.Input("content://media/receipt.jpg", "veh-1")).toList()
 
         assertEquals(2, emissions.size)
         val failure = emissions[1] as ProcessFuelReceiptUseCase.Output.Failure

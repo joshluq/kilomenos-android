@@ -27,31 +27,9 @@ import javax.inject.Inject
 interface ProcessFuelReceiptUseCase : FlowUseCase<ProcessFuelReceiptUseCase.Input, ProcessFuelReceiptUseCase.Output> {
 
     data class Input(
-        val imageBytes: ByteArray,
-        val mimeType: String = "image/jpeg",
+        val uriPath: String,
         val vehicleId: String
-    ) : UseCaseInput {
-
-        override fun equals(other: Any?): Boolean {
-            if (this === other) return true
-            if (javaClass != other?.javaClass) return false
-
-            other as Input
-
-            if (!imageBytes.contentEquals(other.imageBytes)) return false
-            if (mimeType != other.mimeType) return false
-            if (vehicleId != other.vehicleId) return false
-
-            return true
-        }
-
-        override fun hashCode(): Int {
-            var result = imageBytes.contentHashCode()
-            result = 31 * result + mimeType.hashCode()
-            result = 31 * result + vehicleId.hashCode()
-            return result
-        }
-    }
+    ) : UseCaseInput
 
     sealed interface Output : UseCaseOutput {
         data object Progress : Output
@@ -104,12 +82,11 @@ class ProcessFuelReceiptUseCaseImpl @Inject constructor(
         val suffix = UUID.randomUUID().toString().take(8)
         val fileName = "receipt-$timestamp-$suffix.jpg"
 
-        logger.d("ProcessFuelReceiptUseCase", "Uploading image: $fileName")
-        val filePath = receiptRepository.uploadReceiptImage(
+        logger.d("ProcessFuelReceiptUseCase", "Uploading image from URI: ${input.uriPath}")
+        val filePath = receiptRepository.uploadReceiptFromUri(
             userId = user.id,
             fileName = fileName,
-            imageBytes = input.imageBytes,
-            mimeType = input.mimeType
+            uriPath = input.uriPath
         ).first()
 
         logger.d("ProcessFuelReceiptUseCase", "Extracting OCR data from filePath: $filePath")

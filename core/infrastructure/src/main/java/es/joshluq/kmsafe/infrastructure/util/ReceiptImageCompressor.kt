@@ -1,31 +1,29 @@
-package es.joshluq.kmsafe.feature.expenses.util
+package es.joshluq.kmsafe.infrastructure.util
 
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Matrix
 import android.net.Uri
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
-import java.io.File
-import java.io.FileOutputStream
-import java.io.InputStream
-import java.util.UUID
-import kotlin.math.max
 import androidx.core.graphics.scale
 import androidx.exifinterface.media.ExifInterface
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import java.io.ByteArrayOutputStream
+import java.io.InputStream
+import kotlin.math.max
 
 /**
- * Utility to downscale, orient, and compress receipt images before sending to Gemini 2.5 Flash API.
- * Ensures the output image is <= 1920px on the longest side and JPEG compressed (~82%),
- * keeping the payload size well below 500 KB while preserving sharpness for OCR text extraction.
+ * Utility to downscale, orient, and compress receipt images before network upload.
+ * Ensures output is <= 1920px on the longest side and JPEG compressed (~82%),
+ * returning raw bytes below 500 KB while preserving sharpness for OCR text extraction.
  */
 object ReceiptImageCompressor {
 
     private const val MAX_DIMENSION = 1920
     private const val JPEG_QUALITY = 82
 
-    suspend fun compress(context: Context, uri: Uri): String? = withContext(Dispatchers.IO) {
+    suspend fun compress(context: Context, uri: Uri): ByteArray? = withContext(Dispatchers.IO) {
         try {
             // 1. Decode image bounds
             var inputStream: InputStream? = context.contentResolver.openInputStream(uri) ?: return@withContext null
@@ -56,13 +54,9 @@ object ReceiptImageCompressor {
             // 5. Final scale if still exceeds max dimension
             val finalBitmap = scaleIfNeeded(orientedBitmap)
 
-            // 6. Save to cache receipts directory
-            val receiptsDir = File(context.cacheDir, "receipts").apply { if (!exists()) mkdirs() }
-            val outputFile = File(receiptsDir, "receipt_${UUID.randomUUID()}.jpg")
-
-            FileOutputStream(outputFile).use { out ->
-                finalBitmap.compress(Bitmap.CompressFormat.JPEG, JPEG_QUALITY, out)
-            }
+            // 6. Compress to JPEG bytes in memory
+            val outputStream = ByteArrayOutputStream()
+            finalBitmap.compress(Bitmap.CompressFormat.JPEG, JPEG_QUALITY, outputStream)
 
             if (finalBitmap != rawBitmap && !rawBitmap.isRecycled) {
                 rawBitmap.recycle()
@@ -71,7 +65,7 @@ object ReceiptImageCompressor {
                 orientedBitmap.recycle()
             }
 
-            outputFile.absolutePath
+            outputStream.toByteArray()
         } catch (e: Exception) {
             null
         }
@@ -92,8 +86,11 @@ object ReceiptImageCompressor {
                 ExifInterface.ORIENTATION_ROTATE_90 -> matrix.postRotate(90f)
                 ExifInterface.ORIENTATION_ROTATE_180 -> matrix.postRotate(180f)
                 ExifInterface.ORIENTATION_ROTATE_270 -> matrix.postRotate(270f)
+                ExifInterface.ORIENTATION_FLIP_HORIZONTAL -> matrix.postScale(-1f, 1f)
+                ExifInterface.ORIENTATION_FLIP_VERTICAL -> matrix.postScale(1f, -1f)
                 else -> return bitmap
             }
+
             Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true)
         } catch (e: Exception) {
             bitmap
@@ -104,11 +101,13 @@ object ReceiptImageCompressor {
         val width = bitmap.width
         val height = bitmap.height
         val maxSide = max(width, height)
+
         if (maxSide <= MAX_DIMENSION) return bitmap
 
-        val scale = MAX_DIMENSION.toFloat() / maxSide
-        val targetWidth = (width * scale).toInt()
-        val targetHeight = (height * scale).toInt()
-        return bitmap.scale(targetWidth, targetHeight)
+        val scaleRatio = MAX_DIMENSION.toFloat() / maxSide
+        val targetWidth = (width * scaleRatio).toInt()
+        val targetHeight = (height * scaleRatio).toInt()
+
+        return bitmap.scale(targetWidth, targetHeight, filter = true)
     }
 }

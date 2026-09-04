@@ -39,4 +39,5 @@ dependencies {
     implementation(deps.firebase.analytics)
     implementation(deps.firebase.crashlytics)
     implementation(deps.firebase.config)
+    implementation("androidx.exifinterface:exifinterface:1.4.2")
 }

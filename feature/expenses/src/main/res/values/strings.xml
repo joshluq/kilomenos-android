@@ -1,6 +1,6 @@
 <resources>
     <!-- Screen & General -->
-    <string name="expenses_title">Gastos de Combustible</string>
+    <string name="expenses_title">Gastos y Energia</string>
     <string name="expenses_action_add">Añadir gasto</string>
     <string name="expenses_action_delete">Eliminar</string>
     <string name="expenses_action_cancel">Cancelar</string>
@@ -127,9 +127,9 @@
     <string name="expenses_radar_average">⚪ En tu media habitual</string>
     <string name="expenses_radar_action_here">Estoy aquí</string>
 
-    <!-- Layer 3: Zero-Friction Quick Presets & Gemini 2.5 Flash Scanner -->
+    <!-- Layer 3: Zero-Friction Quick Presets & AI Scanner -->
     <string name="expenses_action_scan_receipt">Escanear Ticket con IA</string>
-    <string name="expenses_scan_processing">Analizando ticket con Gemini…</string>
+    <string name="expenses_scan_processing">Analizando ticket con IA…</string>
     <string name="expenses_scan_badge">✨ Extraído con IA</string>
     <string name="expenses_scan_discrepancy_alert">⚠️ El total calculado (%1$.2f €) difiere del ticket (%2$.2f €). Revisa posibles descuentos o cargos.</string>
     <string name="expenses_scan_discard">Descartar escaneo</string>
@@ -141,4 +141,13 @@
     <!-- Layer 4: Diagnostic Feed Badges -->
     <string name="expenses_badge_full_tank">Lleno</string>
     <string name="expenses_badge_audited_receipt">Auditado</string>
+
+    <!-- Receipt Scanner Source Picker & Floating Action Button -->
+    <string name="expenses_fab_scan_content_desc">Escanear ticket con IA</string>
+    <string name="expenses_scan_source_title">Escanear Ticket con IA ✨</string>
+    <string name="expenses_scan_source_desc">La inteligencia artificial extraerá automáticamente los datos de tu repostaje.</string>
+    <string name="expenses_scan_source_camera">Hacer foto con la cámara</string>
+    <string name="expenses_scan_source_gallery">Elegir de la galería</string>
+    <string name="expenses_scanning_banner_title">Analizando ticket con IA…</string>
+    <string name="expenses_scanning_banner_desc">Extrayendo estación, litros, precio e importe con IA</string>
 </resources>

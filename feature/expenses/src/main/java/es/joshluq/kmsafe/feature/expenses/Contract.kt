@@ -81,7 +81,7 @@ data class ExpensesState(
     val consumptionBannerData: ConsumptionBannerData? = null,
     val showDeleteConfirmation: Boolean = false,
     val deleteTargetId: String? = null,
-    /** Whether Gemini 2.5 Flash is currently analyzing a receipt image. */
+    /** Whether AI is currently analyzing a receipt image. */
     val isScanningReceipt: Boolean = false,
     /** Extracted receipt data pending user review/confirmation. */
     val scannedReceiptResult: ReceiptScanResult? = null,
@@ -142,6 +142,7 @@ sealed interface ExpensesEvent : UiEvent {
     data object OnDismissConsumptionBanner : ExpensesEvent
     data class OnStationRadarSelected(val stationId: String) : ExpensesEvent
     data object OnUpgradeToUnlockRadarClicked : ExpensesEvent
+    data class OnReceiptUriSelected(val uri: android.net.Uri) : ExpensesEvent
     data class OnReceiptImageCaptured(val imagePath: String) : ExpensesEvent
     data object OnDiscardReceiptScan : ExpensesEvent
 }

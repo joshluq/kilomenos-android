@@ -1,7 +1,7 @@
 package es.joshluq.kmsafe.domain.model
 
 /**
- * Domain model representing the structured extraction of a fuel receipt processed by Gemini 2.5 Flash.
+ * Domain model representing the structured extraction of a fuel receipt processed by AI.
  *
  * @property stationName Name of the service station detected on the receipt.
  * @property purchaseDate ISO-8601 string of the purchase date.

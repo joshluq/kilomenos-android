@@ -1,5 +1,8 @@
 package es.joshluq.kmsafe.infrastructure.repository
 
+import android.content.Context
+import androidx.core.net.toUri
+import dagger.hilt.android.qualifiers.ApplicationContext
 import es.joshluq.foundationkit.coroutines.DispatcherProvider
 import es.joshluq.foundationkit.log.LoggerKit
 import es.joshluq.kmsafe.domain.model.KmError
@@ -10,6 +13,7 @@ import es.joshluq.kmsafe.infrastructure.mapper.ErrorMapper
 import es.joshluq.kmsafe.infrastructure.remote.api.ReceiptsApiService
 import es.joshluq.kmsafe.infrastructure.remote.api.StorageApiService
 import es.joshluq.kmsafe.infrastructure.remote.dto.ProcessReceiptRequest
+import es.joshluq.kmsafe.infrastructure.util.ReceiptImageCompressor
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
@@ -23,6 +27,7 @@ import javax.inject.Singleton
  */
 @Singleton
 class ReceiptRepositoryImpl @Inject constructor(
+    @ApplicationContext private val context: Context,
     private val storageApiService: StorageApiService,
     private val receiptsApiService: ReceiptsApiService,
     private val errorMapper: ErrorMapper,
@@ -50,6 +55,32 @@ class ReceiptRepositoryImpl @Inject constructor(
             emit(relativePath)
         } else {
             logger.e("ReceiptRepository", "Receipt upload failed with code: $code, body: $errorBody")
+            throw KmException(KmError.NetworkError)
+        }
+    }.flowOn(dispatchers.io)
+
+    override fun uploadReceiptFromUri(
+        userId: String,
+        fileName: String,
+        uriPath: String
+    ): Flow<String> = flow {
+        logger.d("ReceiptRepository", "Compressing and uploading receipt from URI: $uriPath")
+        val uri = uriPath.toUri()
+        val compressedBytes = ReceiptImageCompressor.compress(context, uri)
+            ?: throw KmException(KmError.InvalidReceiptImage)
+
+        val requestBody = compressedBytes.toRequestBody("image/jpeg".toMediaTypeOrNull())
+        val response = storageApiService.uploadReceipt(userId, fileName, requestBody, upsert = "true")
+        val code = response.code()
+        val isSuccessful = response.isSuccessful
+        val errorBody = if (!isSuccessful) response.errorBody()?.string().orEmpty() else ""
+
+        if (isSuccessful || errorBody.contains("KeyAlreadyExists", ignoreCase = true) || code == 409) {
+            val relativePath = "$userId/$fileName"
+            logger.i("ReceiptRepository", "Receipt uploaded successfully from URI: $relativePath")
+            emit(relativePath)
+        } else {
+            logger.e("ReceiptRepository", "Receipt upload from URI failed with code: $code, body: $errorBody")
             throw KmException(KmError.NetworkError)
         }
     }.flowOn(dispatchers.io)

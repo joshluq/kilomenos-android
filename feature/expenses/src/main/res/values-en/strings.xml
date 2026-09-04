@@ -1,6 +1,6 @@
 <resources>
     <!-- Screen & General -->
-    <string name="expenses_title">Fuel &amp; Energy Expenses</string>
+    <string name="expenses_title">Fuel &amp; Energy</string>
     <string name="expenses_action_add">Add expense</string>
     <string name="expenses_action_delete">Delete</string>
     <string name="expenses_action_cancel">Cancel</string>
@@ -127,9 +127,9 @@
     <string name="expenses_radar_average">⚪ On your usual average</string>
     <string name="expenses_radar_action_here">I\'m here</string>
 
-    <!-- Layer 3: Zero-Friction Quick Presets & Gemini 2.5 Flash Scanner -->
+    <!-- Layer 3: Zero-Friction Quick Presets & AI Scanner -->
     <string name="expenses_action_scan_receipt">Scan Receipt with AI</string>
-    <string name="expenses_scan_processing">Analyzing receipt with Gemini…</string>
+    <string name="expenses_scan_processing">Analyzing receipt with AI…</string>
     <string name="expenses_scan_badge">✨ Extracted with AI</string>
     <string name="expenses_scan_discrepancy_alert">⚠️ Calculated total (%1$.2f €) differs from receipt (%2$.2f €). Check for discounts or fees.</string>
     <string name="expenses_scan_discard">Discard scan</string>
@@ -141,4 +141,13 @@
     <!-- Layer 4: Diagnostic Feed Badges -->
     <string name="expenses_badge_full_tank">Full</string>
     <string name="expenses_badge_audited_receipt">Audited</string>
+
+    <!-- Receipt Scanner Source Picker & Floating Action Button -->
+    <string name="expenses_fab_scan_content_desc">Scan receipt with AI</string>
+    <string name="expenses_scan_source_title">Scan Receipt with AI ✨</string>
+    <string name="expenses_scan_source_desc">Artificial intelligence will automatically extract your refuel details.</string>
+    <string name="expenses_scan_source_camera">Take photo with camera</string>
+    <string name="expenses_scan_source_gallery">Choose from gallery</string>
+    <string name="expenses_scanning_banner_title">Analyzing receipt with AI…</string>
+    <string name="expenses_scanning_banner_desc">Extracting station, liters, price, and total with AI</string>
 </resources>

@@ -1,5 +1,7 @@
 package es.joshluq.kmsafe.feature.expenses
 
+import android.net.Uri
+import androidx.core.net.toUri
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -120,7 +122,8 @@ class ExpensesViewModel @Inject constructor(
                 }
             }
             ExpensesEvent.OnUpgradeToUnlockRadarClicked -> launchEffect(ExpensesEffect.NavigateToUpgrade)
-            is ExpensesEvent.OnReceiptImageCaptured -> handleReceiptImageCaptured(event.imagePath)
+            is ExpensesEvent.OnReceiptUriSelected -> handleReceiptUriSelected(event.uri)
+            is ExpensesEvent.OnReceiptImageCaptured -> handleReceiptUriSelected(event.imagePath.toUri())
             ExpensesEvent.OnDiscardReceiptScan -> handleDiscardReceiptScan()
         }
     }
@@ -415,34 +418,18 @@ class ExpensesViewModel @Inject constructor(
         }.launchIn(viewModelScope)
     }
 
-    private fun handleReceiptImageCaptured(imagePath: String) {
+    private fun handleReceiptUriSelected(uri: Uri) {
         val vehicleId = state.value.vehicleId
         if (vehicleId == null) {
             updateState { copy(error = TextProvider.Resource(R.string.expenses_error_no_active_vehicle)) }
             return
         }
 
-        updateState {
-            copy(
-                isScanningReceipt = true,
-                receiptImagePath = imagePath
-            )
-        }
-
-        val imageFile = java.io.File(imagePath)
-        val imageBytes = if (imageFile.exists()) {
-            try {
-                imageFile.readBytes()
-            } catch (e: Exception) {
-                ByteArray(0)
-            }
-        } else {
-            ByteArray(0)
-        }
+        updateState { copy(isScanningReceipt = true) }
 
         processFuelReceiptUseCase(
             ProcessFuelReceiptUseCase.Input(
-                imageBytes = imageBytes,
+                uriPath = uri.toString(),
                 vehicleId = vehicleId
             )
         ).onEach { output ->
@@ -455,6 +442,7 @@ class ExpensesViewModel @Inject constructor(
                         copy(
                             isScanningReceipt = false,
                             scannedReceiptResult = output.result,
+                            receiptImagePath = output.result.storageFilePath,
                             isAddExpenseSheetOpen = true
                         )
                     }

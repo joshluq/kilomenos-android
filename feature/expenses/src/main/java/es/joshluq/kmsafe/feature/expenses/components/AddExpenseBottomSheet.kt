@@ -316,17 +316,6 @@ fun AddExpenseBottomSheet(
                             variant = CanvasKitAlertVariant.Warning
                         )
                     }
-                } else {
-                    CanvasKitButton(
-                        text = stringResource(R.string.expenses_action_scan_receipt),
-                        variant = CanvasKitButtonVariant.Secondary,
-                        size = CanvasKitButtonSize.Small,
-                        icon = Icons.Default.CameraAlt,
-                        loading = isScanningReceipt,
-                        enabled = !isScanningReceipt,
-                        onClick = safeClick { onScanReceiptClick() },
-                        modifier = Modifier.fillMaxWidth()
-                    )
                 }
             }
 

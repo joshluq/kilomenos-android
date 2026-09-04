@@ -1,5 +1,6 @@
 package es.joshluq.kmsafe.infrastructure.repository
 
+import android.content.Context
 import es.joshluq.foundationkit.coroutines.DispatcherProvider
 import es.joshluq.foundationkit.log.LoggerKit
 import es.joshluq.kmsafe.domain.model.FuelType
@@ -32,6 +33,7 @@ import retrofit2.Response
 class ReceiptRepositoryImplTest {
 
     private val testDispatcher = UnconfinedTestDispatcher()
+    private val context: Context = mockk(relaxed = true)
     private val storageApiService: StorageApiService = mockk()
     private val receiptsApiService: ReceiptsApiService = mockk()
     private val errorMapper: ErrorMapper = mockk()
@@ -44,6 +46,7 @@ class ReceiptRepositoryImplTest {
     fun setup() {
         every { dispatchers.io } returns testDispatcher
         repository = ReceiptRepositoryImpl(
+            context = context,
             storageApiService = storageApiService,
             receiptsApiService = receiptsApiService,
             errorMapper = errorMapper,

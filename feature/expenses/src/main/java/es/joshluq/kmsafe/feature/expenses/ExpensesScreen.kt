@@ -44,9 +44,14 @@ import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import es.joshluq.kmsafe.feature.expenses.util.ReceiptImageCompressor
-import kotlinx.coroutines.launch
+import android.net.Uri
+import androidx.compose.material.icons.filled.CameraAlt
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.core.content.FileProvider
+import es.joshluq.kmsafe.feature.expenses.components.ReceiptSourceBottomSheet
+import java.io.File
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -56,6 +61,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.zIndex
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
@@ -71,6 +77,7 @@ import es.joshluq.canvaskit.components.feedback.CanvasKitStateView
 import es.joshluq.canvaskit.components.layout.CanvasKitLoadingScaffold
 import es.joshluq.canvaskit.components.navigation.CanvasKitTopBar
 import es.joshluq.canvaskit.foundations.theme.CanvasKitTheme
+import es.joshluq.foundationkit.text.TextProvider
 import es.joshluq.foundationkit.text.asString
 import es.joshluq.kmsafe.core.ui.util.toTextProvider
 import es.joshluq.kmsafe.core.ui.util.safeClick
@@ -97,18 +104,38 @@ fun ExpensesScreen(
     val locationPermissionState = rememberPermissionState(Manifest.permission.ACCESS_COARSE_LOCATION)
     val fusedLocationClient = remember { LocationServices.getFusedLocationProviderClient(context) }
     val listState = rememberLazyListState()
-    val coroutineScope = rememberCoroutineScope()
 
-    val receiptPickerLauncher = rememberLauncherForActivityResult(
+    var showReceiptSourcePicker by remember { mutableStateOf(false) }
+    var tempCameraUri by remember { mutableStateOf<Uri?>(null) }
+
+    val galleryLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri ->
         if (uri != null) {
-            coroutineScope.launch {
-                val compressedPath = ReceiptImageCompressor.compress(context, uri)
-                if (compressedPath != null) {
-                    onEvent(ExpensesEvent.OnReceiptImageCaptured(compressedPath))
-                }
+            onEvent(ExpensesEvent.OnReceiptUriSelected(uri))
+        }
+    }
+
+    val takePictureLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.TakePicture()
+    ) { isSuccess ->
+        if (isSuccess) {
+            tempCameraUri?.let { uri ->
+                onEvent(ExpensesEvent.OnReceiptUriSelected(uri))
             }
+        }
+    }
+
+    val launchCameraCapture = {
+        try {
+            val file = File.createTempFile("receipt_cam_", ".jpg", context.cacheDir).apply {
+                deleteOnExit()
+            }
+            val uri = FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file)
+            tempCameraUri = uri
+            takePictureLauncher.launch(uri)
+        } catch (_: Exception) {
+            // Error creating temp file fallback
         }
     }
 
@@ -172,16 +199,34 @@ fun ExpensesScreen(
             )
         },
         floatingActionButton = {
-            FloatingActionButton(
-                onClick = safeClick { handleOpenAddExpense() },
-                containerColor = CanvasKitTheme.colors.brandAccent,
-                contentColor = CanvasKitTheme.colors.onBrandAccent,
-                shape = CircleShape
+            Column(
+                horizontalAlignment = Alignment.End,
+                verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                Icon(
-                    imageVector = Icons.Default.Add,
-                    contentDescription = stringResource(R.string.expenses_action_add)
-                )
+                FloatingActionButton(
+                    onClick = safeClick { showReceiptSourcePicker = true },
+                    containerColor = CanvasKitTheme.colors.brandAccent,
+                    contentColor = CanvasKitTheme.colors.onBrandAccent,
+                    shape = CircleShape
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.CameraAlt,
+                        contentDescription = stringResource(R.string.expenses_fab_scan_content_desc),
+                    )
+                }
+
+                // Primary FAB: Manual Add
+                FloatingActionButton(
+                    onClick = safeClick { handleOpenAddExpense() },
+                    containerColor = CanvasKitTheme.colors.brandAccent,
+                    contentColor = CanvasKitTheme.colors.onBrandAccent,
+                    shape = CircleShape
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Add,
+                        contentDescription = stringResource(R.string.expenses_action_add)
+                    )
+                }
             }
         },
         containerColor = CanvasKitTheme.colors.backgroundSecondary,
@@ -203,7 +248,6 @@ fun ExpensesScreen(
                 StationRadarCarousel(
                     items = state.radarItems,
                     isLocked = state.isRadarLocked,
-                    onStationSelected = { onEvent(ExpensesEvent.OnStationRadarSelected(it)) },
                     onUpgradeClick = { onEvent(ExpensesEvent.OnUpgradeToUnlockRadarClicked) }
                 )
 
@@ -255,11 +299,6 @@ fun ExpensesScreen(
                         items(state.filteredExpenses, key = { it.id }) { expense ->
                             ExpenseItemCard(
                                 expense = expense,
-                                onClick = { 
-                                    expense.stationId?.let { 
-                                        onEvent(ExpensesEvent.OnViewStationVolatility(it, expense.fuelType)) 
-                                    } 
-                                },
                                 onDelete = safeClick { onEvent(ExpensesEvent.OnDeleteExpense(expense.id)) }
                             )
                         }
@@ -299,7 +338,7 @@ fun ExpensesScreen(
                     isLocationCaptured = state.currentLat != null,
                     scannedReceiptResult = state.scannedReceiptResult,
                     isScanningReceipt = state.isScanningReceipt,
-                    onScanReceiptClick = { receiptPickerLauncher.launch("image/*") },
+                    onScanReceiptClick = { showReceiptSourcePicker = true },
                     onDiscardScan = { onEvent(ExpensesEvent.OnDiscardReceiptScan) },
                     onDismiss = { onEvent(ExpensesEvent.OnDismissAddExpense) },
                     onSave = { fuelType, unitPrice, volume, total, stationId, stationName, odo, isFull, notes, _, receiptPath ->
@@ -319,6 +358,30 @@ fun ExpensesScreen(
                             )
                         )
                     }
+                )
+            }
+
+            // Receipt Source Picker (Camera vs Gallery)
+            if (showReceiptSourcePicker) {
+                ReceiptSourceBottomSheet(
+                    onDismiss = { showReceiptSourcePicker = false },
+                    onCameraClick = { launchCameraCapture() },
+                    onGalleryClick = { galleryLauncher.launch("image/*") }
+                )
+            }
+
+            // Scanning progress banner overlay
+            if (state.isScanningReceipt) {
+                CanvasKitBanner(
+                    title = { Text(stringResource(R.string.expenses_scanning_banner_title)) },
+                    message = {
+                        Text(stringResource(R.string.expenses_scanning_banner_desc))
+                    },
+                    variant = CanvasKitAlertVariant.Info,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(CanvasKitTheme.spacing.md)
+                        .align(Alignment.TopCenter)
                 )
             }
 
@@ -369,7 +432,7 @@ fun ExpensesScreen(
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
                     .padding(CanvasKitTheme.spacing.md)
-                    .navigationBarsPadding(),
+                    .navigationBarsPadding().zIndex(1f),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 CanvasKitBanner(
@@ -557,7 +620,6 @@ private fun FilterSection(
 @Composable
 private fun ExpenseItemCard(
     expense: FuelExpense,
-    onClick: () -> Unit,
     onDelete: () -> Unit
 ) {
     val isElectric = expense.fuelType.category == EnergyCategory.ELECTRIC
@@ -566,8 +628,7 @@ private fun ExpenseItemCard(
     val dateFormatter = SimpleDateFormat("dd MMM yyyy", locale)
 
     CanvasKitCard(
-        modifier = Modifier.fillMaxWidth(),
-        onClick = onClick
+        modifier = Modifier.fillMaxWidth()
     ) {
         Column(modifier = Modifier.fillMaxWidth()) {
             Row(
@@ -766,6 +827,7 @@ private fun ConsumptionBadge(
 private class ExpensesStateProvider : androidx.compose.ui.tooling.preview.PreviewParameterProvider<ExpensesState> {
     override val values: Sequence<ExpensesState> = sequenceOf(
         ExpensesState(
+            error = TextProvider.Dynamic("Something went wrong"),
             expenses = listOf(
                 FuelExpense(
                     id = "1",
@@ -825,11 +887,6 @@ private class ExpensesStateProvider : androidx.compose.ui.tooling.preview.Previe
             currentMonthTotalCost = 92.85,
             allTimeTotalCost = 1250.40,
             electrificationSavingsEuros = 45.20
-        ),
-        ExpensesState(
-            expenses = emptyList(),
-            filteredExpenses = emptyList(),
-            isLoading = false
         )
     )
 }

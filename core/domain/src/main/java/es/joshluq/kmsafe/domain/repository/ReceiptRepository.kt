@@ -27,6 +27,20 @@ interface ReceiptRepository {
     ): Flow<String>
 
     /**
+     * Reads, compresses and uploads a receipt image from a local media URI path to the private storage bucket.
+     *
+     * @param userId The ID of the authenticated user (for RLS path prefix).
+     * @param fileName Unique file name (e.g. receipt-1725482938102.jpg).
+     * @param uriPath The string representation of the local media URI (e.g. content:// or file://).
+     * @return Flow emitting the relative storage file path (e.g. "userId/receipt-123.jpg").
+     */
+    fun uploadReceiptFromUri(
+        userId: String,
+        fileName: String,
+        uriPath: String
+    ): Flow<String>
+
+    /**
      * Deletes a receipt image from storage.
      *
      * @param filePath The relative storage file path (e.g. "userId/receipt-123.jpg").

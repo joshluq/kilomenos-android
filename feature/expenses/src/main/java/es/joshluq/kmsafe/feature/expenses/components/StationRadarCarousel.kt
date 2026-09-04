@@ -45,7 +45,6 @@ fun StationRadarCarousel(
     modifier: Modifier = Modifier,
     isLocked: Boolean,
     items: List<StationRadarItem>,
-    onStationSelected: (String) -> Unit,
     onUpgradeClick: () -> Unit
 ) {
     if (isLocked) {
@@ -108,16 +107,10 @@ fun StationRadarCarousel(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = stringResource(R.string.expenses_radar_title).uppercase(),
-                style = CanvasKitTheme.typography.labelSmall,
+                text = stringResource(R.string.expenses_radar_subtitle).uppercase(),
+                style = CanvasKitTheme.typography.bodyMedium,
                 fontWeight = FontWeight.Bold,
                 color = CanvasKitTheme.colors.textSecondary
-            )
-            Text(
-                text = stringResource(R.string.expenses_radar_subtitle),
-                style = CanvasKitTheme.typography.bodyMedium,
-                color = CanvasKitTheme.colors.brandAccent,
-                fontWeight = FontWeight.Medium
             )
         }
 
@@ -129,8 +122,7 @@ fun StationRadarCarousel(
             items(items, key = { it.station.id }) { item ->
                 StationRadarCard(
                     item = item,
-                    locale = locale,
-                    onSelect = { onStationSelected(item.station.id) }
+                    locale = locale
                 )
             }
         }
@@ -141,7 +133,6 @@ fun StationRadarCarousel(
 private fun StationRadarCard(
     item: StationRadarItem,
     locale: java.util.Locale,
-    onSelect: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val unit = item.fuelType.unitOfMeasure
@@ -198,17 +189,6 @@ private fun StationRadarCard(
                 style = CanvasKitTheme.typography.labelSmall,
                 fontWeight = FontWeight.SemiBold,
                 color = deltaColor
-            )
-
-            Spacer(modifier = Modifier.height(CanvasKitTheme.spacing.xxs))
-
-            CanvasKitButton(
-                text = stringResource(R.string.expenses_radar_action_here),
-                variant = CanvasKitButtonVariant.Secondary,
-                size = CanvasKitButtonSize.Small,
-                icon = Icons.Default.LocationOn,
-                onClick = safeClick { onSelect() },
-                modifier = Modifier.fillMaxWidth()
             )
         }
     }
