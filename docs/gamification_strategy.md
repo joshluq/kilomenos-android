@@ -1,88 +1,172 @@
-# Estrategia de Gamificación: Eco-Pilot System (KmSafe)
+# Estrategia de Gamificación: Sistema Smart Pilot (KmSafe)
 
-Este documento detalla el sistema de refuerzo de hábitos positivos diseñado para KmSafe, con el objetivo de aumentar la retención (stickiness), mejorar la calidad de los datos y fomentar la conversión a Premium.
+Este documento define el sistema de refuerzo conductual y retención de KiloMenos (KmSafe), diseñado específicamente para conductores de renting, leasing y flotas. Su propósito es optimizar la recurrencia (DAU/MAU), asegurar la captura de telemetría sin fricción y acelerar la conversión al tier Premium mediante valor percibido tangible y rigor financiero.
 
 ---
 
-## 1. El Concepto: Eco-Pilot XP
-KmSafe deja de ser una calculadora pasiva para convertirse en un asistente de conducción proactivo. El usuario gana "XP de Conducción" (Eco-Points) por cada acción que aporte valor a la precisión de su presupuesto de renting.
+## 1. El Concepto: Smart Pilot Telemetry
 
-### 💎 Economía de XP (Eco-Points)
-| Acción | Recompensa | Objetivo de Negocio |
+KiloMenos evoluciona de ser una calculadora pasiva a convertirse en un **Cockpit Ejecutivo de Gestión y Rendimiento Vehicular**. El sistema premia la disciplina telemática, la consistencia en el registro y la eficiencia económica mediante **Smart Pilot Points (SPP)**.
+
+### 💎 Economía de Puntos (Smart Pilot Points)
+
+| Acción del Conductor | Recompensa | Objetivo de Negocio / KPI |
 | :--- | :--- | :--- |
-| **Registro Manual** | +10 XP | Mantener la base de datos actualizada. |
-| **Uso de Auto-tracking** | +50 XP | Fomentar la precisión del GPS y uso de feature Premium. |
-| **Día en "Zona Verde"** | +20 XP | Reforzar el cumplimiento del contrato diario. |
-| **Registro de Gasto** | +40 XP | Completar perfil de ahorro y datos de electrificación. |
-| **Semana Consistente** | +100 XP | Fomentar el uso recurrente de la App (Retención). |
-| **Categorización** | +30 XP | Mejorar la calidad de los datos para la IA. |
+| **Auto-Tracking Confirmado** | +50 SPP | Precisión GPS, fidelización del enlace Bluetooth y adopción Premium. |
+| **Registro de Odómetro Manual** | +15 SPP | Mitigación del abandono y frescura de datos en usuarios Free. |
+| **Cierre Diario en "Zona Verde"** | +25 SPP | Cumplimiento del Daily Base Budget (DBB) del contrato. |
+| **Registro de Combustible / Carga** | +35 SPP | Densidad de datos de estaciones, precios históricos y ahorro EV. |
+| **Racha Semanal en Balance Positivo** | +120 SPP | Retención W1/M1 (Stickiness) y hábito de consulta recurrente. |
+| **Categorización de Trayecto** | +20 SPP | Preparación de datos para deducción fiscal y reportes de empresa. |
 
 ---
 
-## 2. Dinámicas de Progresión
+## 2. Dinámicas de Progresión y Estatus
 
-### Rangos de Conductor
-El XP acumulado desbloquea rangos que se muestran en el Perfil y Dashboard:
-1. **Novato (Lvl 1-3)**: Visualización básica.
-2. **Eco-Driver (Lvl 4-7)**: Desbloquea iconos personalizados para el vehículo.
-3. **Master de Renting (Lvl 8-10)**: Reconocimiento visual "Top Tier".
+### Niveles de Maestría (Fleet Mastery Tiers)
+Los puntos acumulados reflejan el nivel de control y salud financiera del contrato, visibles en el Dashboard y la pantalla de Perfil:
+1. **Conductor en Rodaje (Nivel 1-3):** Visualización básica de métricas e inicio de historial telemático.
+2. **Gestor Eficiente (Nivel 4-7):** Acceso a temas visuales de cuadro de instrumentos y comparativas avanzadas de consumo histórico.
+3. **Master Pilot (Nivel 8-10):** Desbloqueo de widgets de proyección predictiva y reconocimiento de máxima eficiencia en gestión de flota.
 
-### Rachas de Ahorro (Saving Streaks)
-- Un contador de "Fuego" en el Dashboard.
-- Se incrementa cada día que el usuario termina con un **Balance Positivo**.
-- **Bonus**: Multiplicador de XP (x1.2, x1.5) si la racha supera los 7 días.
-
----
-
-## 3. Mecánica de Oposición: "Mr. Penalty"
-En lugar de mostrar solo números rojos, personificamos el riesgo financiero de exceder los Km.
-
-- **Aparición**: Solo si `TripProjection.isOverLimit` es `true`.
-- **Evolución**:
-    - **Sombra (Exceso leve)**: Aparece un aviso sutil.
-    - **Monstruo (Exceso crítico)**: Un avatar rojo que "se come" el saldo visual de la tarjeta principal.
-- **Victoria**: El enemigo solo desaparece si el usuario ajusta su ritmo de conducción en el **IA Simulator** hasta volver a un balance final proyectado positivo.
+### Rachas de Presupuesto (Budget Streaks)
+- **Indicador Dinámico:** Contador sutil de constancia en el Dashboard principal (tacómetro / anillo de progreso).
+- **Condición de Incremento:** Suma días consecutivos en los que el **Real Km Consumed (RKC)** se mantiene dentro del **Theoretical Km (TK)** acumulado.
+- **Multiplicador de Eficiencia:** Bonificación de puntos (x1.2 a x1.5) tras superar rachas de 7 y 30 días en balance positivo.
 
 ---
 
-## 4. Recompensas de Gasto: "The Armory" 🛡️⚔️
-Para incentivar el uso de la funcionalidad de **Fuel Expenses**, hemos introducido el concepto de equipamiento defensivo.
+## 3. Visualización de Riesgo Financiero: "Risk Sentinel"
 
-### 🛡️ Escudo de Gasto (Armor)
-El registro recurrente de gastos de combustible otorga al usuario el "Escudo Financiero".
-- **Efecto**: Bloquea visualmente los ataques de "Mr. Penalty" cuando el exceso es menor al 2%.
-- **Niveles**:
-    - **Armadura de Cuero**: 3 gastos registrados (Protección base).
-    - **Coraza de Carbono**: 10 gastos registrados (Añade aura de éxito en el Dashboard).
+En lugar de representaciones caricaturescas que trivializan el impacto económico, KiloMenos implementa un sistema de **alerta telemática preventiva** para el riesgo de penalización por exceso de kilometraje:
 
-### ⚡ Espada de Electrificación (Weapon)
-Especial para usuarios que registran cargas eléctricas (EV).
-- **Efecto**: "Corta" la incertidumbre financiera mostrando con mayor énfasis el KPI de ahorros acumulados.
-- **Bonus**: Desbloquea un rayo visual sobre el icono del vehículo cuando está cargando.
+- **Activación:** Se activa dinámicamente cuando `TripProjection.isOverLimit` es `true`.
+- **Niveles de Alerta:**
+  - **Alerta Amarilla (Desvío leve < 5%):** Notificación técnica en el Dashboard con el coste proyectado estimado: *"Ritmo de uso elevado: +420 km proyectados (~50€ al vencimiento)"*.
+  - **Alerta Ámbar / Crítica (Desvío severo > 5%):** El indicador de tacómetro en `CanvasKit` resalta el diferencial económico a fin de contrato y sugiere la velocidad de consumo diario corregida en km/día.
+- **Resolución:** La alerta se neutraliza cuando el usuario recalibra sus hábitos o planifica trayectos compensatorios en el **Simulador de Proyecciones**.
 
 ---
 
-## 5. Puntos de Mejora y Refinamiento (V2)
-- **Desafíos Temporales**: *"Este mes recorre menos de 500km y gana el emblema 'Eco-City'"*.
-- **Integración con Partners**: Convertir el XP en descuentos reales para cambio de neumáticos o revisiones en talleres asociados.
-- **Leaderboard Anónimo**: Comparar tu nivel de eficiencia con la media de conductores del mismo modelo de vehículo.
-- **Personalización**: Canjear Eco-Points por skins o temas visuales para la App (Modo Noche exclusivo, colores de marca).
+## 4. Eficiencia Energética y Colchón Financiero
+
+Para impulsar la adopción del módulo de gastos (**Fuel & Energy Expenses**), se aplican dinámicas de optimización patrimonial:
+
+### 🛡️ Colchón de Seguridad (Financial Buffer)
+- Premia el registro continuo de repostajes y odómetros mostrando el margen real de kilómetros de seguridad que protegen al conductor frente a penalizaciones contractuales.
+- **Medalla de Volatilidad Óptima:** Reconocimiento mensual al repostar sistemáticamente en estaciones por debajo de la media histórica provincial.
+
+### ⚡ Índice de Eficiencia de Electrificación (EV Score)
+- Diseñado específicamente para conductores de vehículos PHEV y EV.
+- Visualiza el ratio de kilómetros recorridos en modo 100% eléctrico frente a combustible fósil y el total acumulado de **"Ahorro Neto por Electrificación"**.
+- Desbloquea la insignia ejecutiva de **"Flota Cero Emisiones"** en el perfil del conductor.
 
 ---
 
-## 6. Viabilidad Técnica y Riesgos
+## 5. Bucle de Valor Tangible y Recompensas Reales
 
-### 🛠️ Viabilidad
-- **Arquitectura**: Se puede implementar extendiendo el `UserSessionModel` para incluir `totalXp` y `level`.
-- **Cálculo**: La lógica de XP debe residir en la capa de **Domain (UseCases)** para asegurar que se calcule igual independientemente de la pantalla.
-- **Offline**: Room puede cachear el XP ganado y sincronizarlo mediante `SyncWorker` cuando haya red.
+Para evitar la devaluación de puntos virtuales y garantizar retención a largo plazo (D90+), los SPP se integran en un sistema de recompensas útiles:
 
-### ⚠️ Riesgos
-1. **Fraude (Gaming the system)**: Usuarios introduciendo registros falsos pequeños para farmear XP.
-    *   *Mitigación*: Capar el XP diario máximo ganable por registros manuales.
-2. **Complejidad de UI**: Sobrecargar el Dashboard con demasiados elementos lúdicos.
-    *   *Mitigación*: Usar micro-interacciones sutiles (Lottie animations) en lugar de grandes pop-ups.
-3. **Pérdida de Datos**: Si el XP no se persiste en el Backend, el usuario se frustrará al reinstalar.
-    *   *Mitigación*: Incluir el XP en el flujo de sincronización atómica de `AuthRepository`.
-4. **Frustración por "Mr. Penalty"**: Ver un monstruo rojo puede ser estresante para algunos usuarios.
-    *   *Mitigación*: Permitir desactivar la "visualización lúdica de riesgos" en Preferencias.
+1. **Certificado de Salud del Vehículo (PDF Audit):**
+   - Los usuarios de nivel avanzado pueden generar un informe formal con el histórico de kilometraje verificado por telemetría para entregar a la compañía de renting o comprador particular al finalizar el contrato.
+2. **Desbloqueo de Periodos Premium:**
+   - Canje de puntos por días de prueba de funcionalidades avanzadas (Auto-Tracking continuo, copias de seguridad en la nube).
+3. **Acuerdos de Ecosistema (Roadmap Partner Perks):**
+   - Integración futura con cupones de descuento en redes de carga rápida, talleres oficiales de neumáticos y servicios de mantenimiento.
+
+---
+
+## 6. Viabilidad Técnica y Salvaguardas de Dominio
+
+### 🛠️ Arquitectura Limpia (Clean Architecture)
+- **Aislamiento en `:core:domain`:** La lógica de acumulación de puntos, cálculo de rachas y niveles se implementa mediante UseCases dedicados (`CalculateSmartPointsUseCase`, `EvaluateStreakStatusUseCase`) cumpliendo la regla de cero dependencias de Android (`android.*`).
+- **Persistencia Reactiva:** Estado de puntos y rachas persistido localmente en Room (`smart_pilot_stats`) y sincronizado mediante `SyncWorker`.
+- **Cero Mutación de Métricas Financieras (SSOT Invariant):** Los algoritmos de gamificación operan en paralelo a `CalculateContractMetricsUseCase`. Bajo ninguna circunstancia un elemento visual o recompensa puede alterar el saldo real de kilómetros ni enmascarar penalizaciones contractuales.
+
+### ⚠️ Gestión de Riesgos
+1. **Fraude / Abuso:** Límite diario (*daily cap*) en puntos obtenidos mediante entradas manuales para evitar manipulación de datos.
+2. **Sobrecarga Cognitiva:** Diseño basado en micro-interacciones (`CanvasKit` tokens) y gráficos de instrumentos limpios, evitando pop-ups o modales intrusivos durante la conducción.
+3. **Respeto a la Privacidad (GDPR):** El sistema de scoring y telemetría es 100% privado en el dispositivo, sin leaderboards públicos que expongan ubicaciones, matrículas o rutas de los conductores.
+
+---
+
+## 7. Plan de Implementación Técnico-Estratégico (Roadmap de Fases)
+
+Para garantizar que los insights identificados se traduzcan en una ejecución técnica ordenada y compatible con las directrices de `AGENTS.md`, se establece el siguiente borrador de implementación por fases:
+
+### 7.1 Fases de Despliegue
+
+```mermaid
+graph TD
+    F1[Fase 1: Core de Dominio & Room] --> F2[Fase 2: Orquestación de Eventos & Hooks]
+    F2 --> F3[Fase 3: Componentes UI CanvasKit]
+    F3 --> F4[Fase 4: Bucle de Valor & Certificación PDF]
+```
+
+#### 📦 Fase 1: Dominio Puro y Persistencia Local (The Foundation)
+- **Objetivo:** Modelar la ontología del sistema sin dependencias de Android y habilitar la persistencia local reactiva.
+- **Entregables por Módulo:**
+  - **`:core:domain`:**
+    - Entidad rica `SmartPilotProfile`: encapsula saldo de puntos (`totalSpp`), nivel actual (`MasteryTier`), racha activa (`currentStreakDays`), multiplicador y fecha del último cálculo.
+    - Interfaz `SmartPilotRepository`: contrato reactivo (`fun observeProfile(): Flow<SmartPilotProfile>`, `fun awardPoints(...)`).
+    - UseCases específicos ("UseCase First"):
+      - `ObserveSmartPilotProfileUseCase` (Flow reactivo).
+      - `AwardSmartPilotPointsUseCase` (con validación de límite diario anti-fraude).
+      - `EvaluateBudgetStreakUseCase` (cálculo de racha contrastando `RealKmConsumed` vs `TheoreticalKm`).
+      - `CalculateRiskSentinelUseCase` (cálculo de severidad de riesgo y coste financiero proyectado en €).
+  - **`:core:infrastructure`:**
+    - Entidad Room `SmartPilotEntity` en tabla `smart_pilot_stats` con clave foránea opcional a `vehicles`.
+    - `SmartPilotDao` con consultas reactivas (`Flow`).
+    - Implementación `SmartPilotRepositoryImpl` desacoplada de la UI.
+    - Cobertura de tests unitarios: 100% en UseCases con MockK y Coroutines Test.
+
+#### ⚙️ Fase 2: Orquestación de Eventos e Ingesta Automática (Event Hooks)
+- **Objetivo:** Acoplar la ganancia de puntos a las acciones habituales del usuario de forma desacoplada y transparente.
+- **Puntos de Integración:**
+  - **Registro de Odómetro:** Al completar con éxito `AddOdometerRecordUseCase`, se invoca de forma subordinada `AwardSmartPilotPointsUseCase(Action.MANUAL_RECORD, +15 SPP)`.
+  - **Registro de Repostaje / Carga:** Al ejecutar `RegisterFuelExpenseUseCase`, disparo de `+35 SPP`.
+  - **Auto-Tracking Completado:** En el ciclo de finalización de viaje de `LocationTrackingService` (`StopTrackingTripUseCase` en `:core:tracking`), emisión de `+50 SPP` tras validar que el viaje acumuló distancia real válida (> 500m).
+  - **Cierre Diario de Presupuesto:** Ejecución periódica en `SyncWorker` (o al primer inicio del día) para evaluar si el día anterior cerró en "Zona Verde" y sumar `+25 SPP` más el incremento de racha.
+
+#### 🎨 Fase 3: Integración en UI y Tokens CanvasKit (Presentation Layer)
+- **Objetivo:** Diseñar componentes sutiles y ejecutivos sin sobrecargar la pantalla principal.
+- **Entregables por Módulo:**
+  - **`:core:ui` (CanvasKit):**
+    - `SmartPilotBadge`: Chip compacto de telemetría que muestra el nivel y rango del conductor en la cabecera.
+    - `BudgetStreakIndicator`: Tacómetro / anillo minimalista con contador de días en racha positiva y micro-animación en CanvasKit.
+    - `RiskSentinelBanner`: Card de advertencia preventiva con semáforo técnico (Ámbar / Rojo) que solo se renderiza si `RiskSentinel.isTriggered`.
+  - **`:feature:overview`:**
+    - Integración en `OverviewScreen` dentro del slot de estado de vehículo, sin interferir con la tarjeta principal de balance (`MainBalanceCard`).
+  - **`:feature:profile`:**
+    - Sección **"Maestría de Flota" (Fleet Mastery)**: detalle de nivel actual, desglose de puntos acumulados en el mes y catálogo de insignias técnicas conseguidas.
+
+#### 📄 Fase 4: Bucle de Valor Tangible y Monetización (The Value Loop)
+- **Objetivo:** Conectar el estatus virtual con beneficios reales para maximizar la retención D90 y la conversión a Premium.
+- **Entregables:**
+  - **Certificado de Salud del Vehículo (PDF Export):** UseCase `GenerateContractHealthAuditUseCase` en `:core:domain` que compila el odómetro certificado, desvío medio frente al contrato y resumen de cargas/combustible para exportar un PDF formal listo para enviar a la compañía de renting.
+  - **Días de Prueba Premium:** Integración con `:core:monetization` para canjear 1.000 SPP por 7 días de Auto-Tracking ilimitado y sincronización en la nube, funcionando como palanca de conversión (*try-before-you-buy*).
+  - **Ajustes de Telemetría:** Opción en `:feature:profile` (`PreferencesScreen`) para configurar la sensibilidad de las alertas del *Risk Sentinel*.
+
+---
+
+### 7.2 Matriz de Responsabilidad por Módulo
+
+| Módulo | Responsabilidad Específica | Dependencias Permitidas |
+| :--- | :--- | :--- |
+| **`:core:domain`** | Entidades `SmartPilotProfile`, `RiskSentinel`, UseCases de puntuación, cálculo de rachas y auditoría. | Solo Kotlin puro (`pluginkit.jvm.library`). Cero `android.*`. |
+| **`:core:infrastructure`** | `SmartPilotEntity`, Room DAO, persistencia local, integración en `SyncWorker`. | `:core:domain`, Room, Dagger Hilt. |
+| **`:core:tracking`** | Evento de finalización de viaje automático con enlace Bluetooth validado. | `:core:domain`, Android Services. |
+| **`:core:ui`** | Componentes visuales ejecutivos (`SmartPilotBadge`, `RiskSentinelBanner`) en CanvasKit. | Compose, CanvasKit tokens. |
+| **`:feature:overview`** | Presentación de alertas de riesgo y estado de racha en el Dashboard. | `:core:domain`, `:core:ui`. (Cero acceso a repositorios). |
+| **`:feature:profile`** | Visualización de maestría de flota, histórico de puntos y exportación de certificado PDF. | `:core:domain`, `:core:ui`, `:core:monetization`. |
+
+---
+
+### 7.3 Métricas de Éxito y KPIs de Seguimiento (Telemetry & Analytics)
+
+Para evaluar el impacto de la gamificación tras su lanzamiento:
+1. **Adopción de Auto-Tracking:** % de usuarios que completan la vinculación Bluetooth del vehículo (Objetivo: > 45% de la base activa).
+2. **Frecuencia de Registro de Odómetro:** Incremento en la media de registros semanales por conductor (Objetivo: pasar de 1.2 a > 3.0 registros/semana).
+3. **Retención D30 y D90:** Incremento proyectado de +20% en retención a 90 días frente al baseline sin gamificación.
+4. **Conversión Freemium a Premium:** Tasa de conversión de usuarios que canjean un periodo de prueba mediante SPP y posteriormente adquieren la suscripción de pago (Objetivo: > 12% de conversión post-trial).
+

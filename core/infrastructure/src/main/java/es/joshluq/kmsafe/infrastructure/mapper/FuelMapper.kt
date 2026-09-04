@@ -24,7 +24,8 @@ fun FuelExpense.toRequest(): FuelExpenseRequest {
         stationId = stationId,
         stationName = stationName,
         kmSinceLastRefuel = kmSinceLastRefuel,
-        consumptionPer100km = consumptionPer100km
+        consumptionPer100km = consumptionPer100km,
+        receiptImagePath = receiptImagePath
     )
 }
 
@@ -70,6 +71,7 @@ fun FuelExpenseRemoteModel.toDomain(): FuelExpense {
         isFullTank = isFullTank ?: true,
         notes = null, // Backend doesn't support notes yet according to contract
         kmSinceLastRefuel = kmSinceLastRefuel,
-        consumptionPer100km = consumptionPer100km
+        consumptionPer100km = consumptionPer100km,
+        receiptImagePath = receiptImagePath
     )
 }

@@ -17,5 +17,6 @@ data class FuelExpenseRequest(
     @JsonProperty("station_id") val stationId: String? = null,
     @JsonProperty("station_name") val stationName: String? = null,
     @JsonProperty("km_since_last_refuel") val kmSinceLastRefuel: Double? = null,
-    @JsonProperty("consumption_per_100km") val consumptionPer100km: Double? = null
+    @JsonProperty("consumption_per_100km") val consumptionPer100km: Double? = null,
+    @JsonProperty("receipt_image_path") val receiptImagePath: String? = null
 )

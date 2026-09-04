@@ -26,7 +26,7 @@ import es.joshluq.kmsafe.infrastructure.local.entity.TripRouteEntity
         FuelExpenseEntity::class,
         ServiceStationEntity::class
     ],
-    version = 17,
+    version = 18,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -519,6 +519,16 @@ abstract class AppDatabase : RoomDatabase() {
                 db.execSQL("CREATE INDEX IF NOT EXISTS index_fuel_expenses_vehicleId ON fuel_expenses(vehicleId)")
                 db.execSQL("CREATE INDEX IF NOT EXISTS index_fuel_expenses_stationId ON fuel_expenses(stationId)")
                 db.execSQL("CREATE INDEX IF NOT EXISTS index_fuel_expenses_timestamp ON fuel_expenses(timestamp)")
+            }
+        }
+
+        /**
+         * Migration from version 17 to 18:
+         * - Adds 'receiptImagePath' column to 'fuel_expenses' table.
+         */
+        val MIGRATION_17_18 = object : Migration(17, 18) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE fuel_expenses ADD COLUMN receiptImagePath TEXT DEFAULT NULL")
             }
         }
     }

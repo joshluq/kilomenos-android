@@ -64,4 +64,7 @@ class FuelExpenseRemoteModel {
 
     @JsonProperty("consumption_per_100km")
     val consumptionPer100km: Double? = null
+
+    @JsonProperty("receipt_image_path")
+    val receiptImagePath: String? = null
 }

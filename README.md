@@ -1,83 +1,142 @@
 # KiloMenos 🚗💨
-**"Intelligent Mileage Management for Renting and Leasing"**
+**"Intelligent Mileage & Vehicle Financial Management for Renting, Leasing, and Fleets"**
 
-KiloMenos transforms the complexity of renting contracts into absolute financial control. Forget about excess mileage penalties and optimize your investment with a technical assistant that understands your lifestyle.
-
----
-
-## 📈 Business Value: Control in Your Hands
-
-In the renting ecosystem, lack of information is costly. KiloMenos directly addresses the three pain points of the modern driver:
-
-1.  **Elimination of Penalties:** Through preventive monitoring, we avoid unexpected bills at the end of the contract.
-2.  **Asset Optimization:** Maximize the use of the kilometers you've already paid for. If you don't drive today, your kilometers are saved for your vacation.
-3.  **Fleet Management:** Manage multiple vehicles independently (Premium) or your daily driver (Free).
+KiloMenos transforms the complexity of renting and leasing contracts into absolute financial and operational control. Eliminate uncertainty regarding excess mileage penalties, automate your trip telemetry, and optimize your vehicle energy expenses with an intelligent co-pilot designed for the modern driver.
 
 ---
 
-## 🔄 Functional Flows and User Experience
+## 📈 Business Value: Comprehensive Control in Your Hands
 
-### 1. Multi-Vehicle Configuration
-Define limits for one or several contracts. The app maintains independent histories for each vehicle.
+In modern vehicle leasing and fleet management, lack of real-time visibility is costly. KiloMenos addresses four critical pillars:
 
-### 2. Assisted GPS Tracking 🛰️🕹️
-Register your trips in real-time with high precision. Use the "Co-Pilot" mode to track your kilometers via GPS without manual typing. The app follows an **incremental model**: you only need to register the kilometers of your trip, and KiloMenos automatically updates your total balance.
+1. **Elimination of Mileage Penalties**: Dynamic, additive balance tracking calculates your daily budget and warns you of projected excess penalties before they occur.
+2. **Automated Trip Telemetry**: Seamless hands-free trip logging through car Bluetooth pairing and Activity Recognition.
+3. **Smart Fuel & Energy Management**: Comprehensive tracking of fuel and EV charging expenses, station price volatility analysis ("My Stations"), and electrification savings metrics.
+4. **Fleet & Contract Flexibility**: Multi-contract management for corporate fleets or private multi-vehicle households.
 
-### 3. Resilience and Offline-First 📡
-KiloMenos is designed to work anywhere. Your data is always saved locally first and automatically synchronized with the cloud using **WorkManager** as soon as a network connection is detected.
-*   ✅ **Zero Data Loss**: Trip tracking state persists on disk, ensuring current trips survive system restarts, battery depletion, or low-memory process kills.
-*   ✅ **Dynamic Entitlements**: A granular feature-gating system allows instant access to Premium features or Trial periods without app updates.
+---
 
-### 4. Professional Analytics 📊
-Interactive charts with legends and contextual help to understand your consumption patterns at a glance.
+## 🔄 Core Features & Functional Flows
+
+### 1. Dynamic Mileage Balance & Additive Model 📐
+KiloMenos uses an **Additive Data Model**. Rather than storing disconnected absolute odometer values, each record represents a discrete increment (a trip or daily distance):
+- **Daily Base Budget (DBB)**: `Total Contract Km / Total Contract Days`.
+- **Real Km Consumed (RKC)**: Sum of all incremental records.
+- **Theoretical Km (TK)**: `Days Elapsed * DBB`.
+- **Updated Balance (UB)**: `TK - RKC` (Surplus vs. Penalty Risk).
+- **Current Odometer**: `Initial Setup Odometer + RKC`.
+*All metric evaluations are centralized in `CalculateContractMetricsUseCase` producing rich, immutable `ContractMetrics` domain models.*
+
+### 2. Auto-Tracking & Sensor Telemetry 🛰️🔌
+Powered by the dedicated `:core:tracking` module:
+- **Fast-Path Bluetooth ACL Events**: Car Bluetooth connects within 2–5 seconds of vehicle ignition, triggering a silent local notification (`NotificationManager.IMPORTANCE_LOW`) and activating the live connection badge in the UI without network delays.
+- **Activity Recognition (`IN_VEHICLE`)**: Wakes up `ActivityTransitionReceiver` via the Android 14+ "Foreground Service First" pattern (synchronous service invocation).
+- **The "Triple Check" Validation**: Verifies (1) `AUTO_TRACKING` Premium entitlement, (2) Active contract in Room, and (3) Bluetooth tethering MAC match before recording any GPS telemetry.
+- **Anti-Fraud & Accuracy Filters**: Rejects locations with speed < `1.5 m/s` (~5.4 km/h), accuracy error > `30m`, or `location.isFromMockProvider`.
+
+### 3. Smart Fuel & Energy Expenses ("My Stations") ⛽⚡
+Comprehensive vehicle financial management located in `:feature:expenses`:
+- **Relational Architecture**: 1:N relationship between `ServiceStation` entities and `FuelExpense` records.
+- **Station Price Volatility**: Historical price trend histograms showing whether today's price is above or below the user's personal historical average at that station.
+- **Mixed Energy Modes (ICE vs. PHEV/EV)**: Dynamic forms and theme adaptations (Orange for fuel, Blue for electric).
+- **Electrification Savings KPI**: Calculates the differential financial savings of EV/PHEV kWh consumption against the equivalent fuel cost for the same distance.
+- **Google Places Local Caching**: Aggressive local caching prevents duplicate API costs and requires explicit user confirmation before registering new stations.
+
+### 4. Interactive Projections & Risk Gauge 📊🚦
+Located in `:feature:projection`:
+- **Pacing Simulator**: Simulates contract end dates and mileage forecasts based on actual driving behavior.
+- **Trip Planner**: Evaluate whether an upcoming long trip fits within your contract surplus.
+- **Projection Risk Gauge**: Real-time visual traffic light for contract health.
+
+### 5. Resilient Offline-First Architecture 📡💾
+- **Zero Data Loss**: Stateless repositories delegate persistence to Room and encrypted session storage. Trip tracking state is disk-persisted, surviving process termination.
+- **Intelligent Background Sync**: WorkManager (`SyncWorker`) with atomic ID Swap logic resolves device-generated UUID v4 identities with the remote cloud.
 
 ---
 
 ## 💎 Product Strategy: Freemium Model
 
-KiloMenos follows a **Local-First** priority to ensure maximum privacy and offline reliability.
+Access tiers are strictly governed by session Entitlements:
 
 ### 🌟 Core Experience (Free)
-*   🚗 **Single Vehicle**: Track your main renting contract with full precision.
-*   💾 **Local-Only Storage**: Your mileage data is persisted in a Room database.
-*   🛰️ **Manual GPS Tracking**: High-precision trip logging (Asisted Co-Pilot).
-*   📺 **Discreet Ads**: Non-intrusive banner ads powered by **Google AdMob**.
-*   📊 **Basic Analytics**: Real-time balance and daily limit calculations.
-*   📤 **Fair-Use Export**: Export your data to CSV (Excel) for personal records.
+* 🚗 **Single Vehicle**: Manage your primary renting or leasing contract.
+* 💾 **Local-First Persistence**: Data stored in Room; sync disabled with records tagged as `PENDING`.
+* 🛰️ **Assisted GPS Tracking**: Manual trip start/stop with distance accumulation.
+* 📺 **Non-Intrusive Monetization**: AdMob banners initialized strictly post-GDPR/UMP consent.
+* 📊 **Basic Projections & Balance**: Real-time contract balance and standard consumption charts.
+* 📤 **Fair-Use Export**: Export mileage records to CSV for personal records.
 
-### 👑 Premium Services (Remote)
-*   💳 **Native Subscription**: Seamless upgrade via **Google Play Billing**.
-*   ☁️ **Cloud Sync**: Securely backup and sync your mileage data across multiple devices.
-*   🚜 **Fleet Mode**: Manage an unlimited number of vehicles and contracts simultaneously.
-*   📥 **Data Portability**: Full JSON backup and restoration capabilities.
-*   🤖 **Advanced Projections**: Predictive financial impact analysis based on usage trends.
-
----
-
-## ⚖️ Ethics and Compliance (EU Standards)
-
-KiloMenos is built with the highest European standards:
-*   🛡️ **GDPR Compliant**: Full "Right to be Forgotten" with permanent account and data deletion from the app.
-*   ⚖️ **Transparency**: Integrated privacy policy and terms of service in Login/Signup and Profile.
-*   🛡️ **Consent Management**: Granular privacy controls via UMP SDK.
-*   ♿ **Accessibility (EAA)**: Optimized for TalkBack and inclusive interaction, following the European Accessibility Act standards.
+### 👑 Premium Experience (Paid)
+* 💳 **Native Billing**: Google Play Billing Library v7+ integration with frictionless upgrades.
+* ☁️ **Remote Cloud Sync**: Real-time multi-device sync and automatic batch promotion of local pending records.
+* 🚜 **Fleet Management**: Unlimited vehicles and contracts with instant active switcher.
+* 🛰️ **Auto-Tracking**: Hands-free trip detection via Activity Recognition and car Bluetooth pairing.
+* ⛽ **Advanced Energy Analytics**: Station volatility histograms, refueling insights, and electrification savings KPIs.
+* 📥 **Full Data Portability**: Complete JSON database backup and restoration.
 
 ---
 
-## 🏗️ Reliability Guarantee: Clean Architecture & MVI
+## 🏗️ Multi-Module Architecture & Guidelines
 
-*   **Clean Architecture (Domain-Driven):** Isolated business logic ensures 100% calculation accuracy.
-*   **Relational Persistence (Room v3):** Robust data integrity with versioned migrations and String-based IDs.
-*   **MVI (Model-View-Intent):** Unidirectional data flow for a predictable and synchronized UI.
-*   **Background Sync**: Intelligent background processing with WorkManager and ID consistency logic.
+KiloMenos is structured as a decoupled, multi-module architecture following **Clean Architecture**, **SOLID**, and **Domain-Driven Design (DDD)**.
+
+### Core Principle: Separating the "Being" from the "Doing" ("Separar el 'Hacer' del 'Ser'")
+- **The "Being" (El Ser)**: Rich domain entities with invariants (`RentingContract`, `ContractMetrics`, `FuelExpense`, `ServiceStation`), public contracts, and immutable MVI UI state.
+- **The "Doing" (El Hacer)**: Standardized UseCases (`FlowUseCase` - orchestration only), ViewModels/MVI Reducers (events to immutable state with zero business math), Room DAOs, and network services.
+
+### Module Topology:
+```
+├── :app                         # Thin shell (Application class, Manifest, Root Navigation, DI Root)
+├── :core:domain                 # Pure Kotlin/JVM library (Zero Android dependencies, 60 UseCases)
+├── :core:infrastructure         # Room DAOs/Entities, Retrofit, DataSources, SyncWorker, DI Modules
+├── :core:navigation             # Typed Compose destinations (Destination.kt)
+├── :core:ui                     # Design system, tokens, and CanvasKit components
+├── :core:monetization           # AdMob SDK and GDPR/UMP consent management
+├── :core:tracking               # LocationTrackingService, Bluetooth and Activity Receivers
+└── :feature:*                   # Isolated UI features (MVI + Coordinator Route)
+    ├── :feature:dashboard       # Tab host with CanvasKitBottomBar using slot pattern
+    ├── :feature:overview        # Tab 1: Real-time balance, odometer, consumption charts
+    ├── :feature:history         # Tab 2: Odometer increment logs, GPS trip routes
+    ├── :feature:expenses        # Tab 3: Fuel/EV expenses, My Stations, volatility histograms
+    ├── :feature:projection      # Tab 4: Pacing simulator, trip planner, risk gauge
+    ├── :feature:profile         # Tab 5: Profile, preferences, DataManagement import/export
+    ├── :feature:fleet           # Vehicle setup wizard, list, detail, contract editor
+    ├── :feature:auth            # Launch, Login, Signup, lifecycle session management
+    └── :feature:premium         # Paywall, subscription offers, Google Play Billing
+```
+
+### Architectural Guardrails:
+1. **Feature Isolation**: `:feature:*` modules depend ONLY on `:core:domain`, `:core:ui`, `:core:navigation`, and `:core:monetization`. **Features never depend directly on `:core:infrastructure`**.
+2. **Pure Domain Shield**: `:core:domain` is a Kotlin/JVM module (`pluginkit.jvm.library`) with zero platform types (`android.*`).
+3. **SSOT for Calculations**: ViewModels never perform arithmetic shortcuts on metrics. All calculations originate from Domain UseCases (`CalculateContractMetricsUseCase`).
+4. **"UseCase First" Mandate**: Every single operation or process must be encapsulated in a dedicated UseCase. ViewModels, Workers, and Services never consume Repositories directly.
+
+---
+
+## 🧪 Testing & Quality Assurance
+
+* **100% Domain Coverage**: 60 UseCases tested with JUnit 4, MockK, and Kotlin Coroutines Test (`runTest`).
+* **100% ViewModel Coverage**: 19 Feature ViewModels tested with MockK and `StandardTestDispatcher` / `UnconfinedTestDispatcher`, verifying states, events, and side-effects.
+* **Fast JVM Test Execution**: Domain runs purely on the JVM without Android Robolectric or emulator overhead (~5 seconds execution time).
 
 ---
 
 ## 🛠️ Tech Stack
-*   **UI:** Jetpack Compose (Material 3).
-*   **Maps:** Google Maps SDK for Android & Maps Compose.
-*   **DI:** Dagger Hilt.
-*   **Network:** Retrofit + OkHttp with JWT auth and segregated public/private channels.
-*   **Async:** Kotlin Coroutines & Flow.
-*   **Monetization:** Google Play Billing & AdMob.
-*   **Infrastructure:** buildSrc for environment-based configuration.
+
+* **UI Framework**: Jetpack Compose + Material 3 + CanvasKit Design System.
+* **Architecture**: Multi-Module Clean Architecture + DDD + MVI + Coordinator (Route) pattern.
+* **Dependency Injection**: Dagger Hilt with Convention Plugins (`pluginkit.android.hilt`).
+* **Asynchrony**: Kotlin Coroutines & Flow (structured concurrency via `DispatcherProvider`).
+* **Persistence**: Room v2.6+ with relational 1:N schema and client-side UUID v4 identity.
+* **Telemetry & Sensors**: Fused Location Provider, Android 14+ Foreground Service (`location`), Google Play Activity Recognition API, Bluetooth ACL hardware broadcasts.
+* **Networking & Sync**: Retrofit + OkHttp with JWT auth, WorkManager (`SyncWorker`) with ID swap logic.
+* **Monetization & Privacy**: Google Play Billing Library v7+, Google AdMob, Google UMP (GDPR / EAA).
+* **Build System**: Gradle Version Catalogs (`libs.versions.toml`, `deps.versions.toml`) and Custom Convention Plugins.
+
+---
+
+## ⚖️ Ethics & Compliance (EU Standards)
+
+* 🛡️ **GDPR / RGPD Compliant**: Explicit account deletion wiping Auth, Room, Preferences, and Cloud records ("Right to be Forgotten").
+* 🇪🇺 **European Accessibility Act (EAA)**: Mandatory `contentDescription` on all interactive UI components, optimized for TalkBack.
+* 🔒 **Encrypted Storage Hygiene**: Sensitive session stores excluded from Android Auto Backup to prevent post-reinstall Keystore corruption.

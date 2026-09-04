@@ -42,6 +42,7 @@ data class FuelExpenseEntity(
     val notes: String? = null,
     val kmSinceLastRefuel: Double? = null,
     val consumptionPer100km: Double? = null,
+    val receiptImagePath: String? = null,
     val updatedAt: Long = System.currentTimeMillis(),
     val syncStatus: String = "SYNCED"
 )
@@ -64,6 +65,7 @@ fun FuelExpenseEntity.toDomain(): FuelExpense = FuelExpense(
     notes = notes,
     kmSinceLastRefuel = kmSinceLastRefuel,
     consumptionPer100km = consumptionPer100km,
+    receiptImagePath = receiptImagePath,
     updatedAt = updatedAt,
     syncStatus = SyncStatus.valueOf(syncStatus)
 )
@@ -86,6 +88,7 @@ fun FuelExpense.toEntity(): FuelExpenseEntity = FuelExpenseEntity(
     notes = notes,
     kmSinceLastRefuel = kmSinceLastRefuel,
     consumptionPer100km = consumptionPer100km,
+    receiptImagePath = receiptImagePath,
     updatedAt = updatedAt,
     syncStatus = syncStatus.name
 )

@@ -14,6 +14,7 @@ import es.joshluq.kmsafe.infrastructure.remote.api.EntitlementsApiService
 import es.joshluq.kmsafe.infrastructure.remote.api.FuelApiService
 import es.joshluq.kmsafe.infrastructure.remote.api.RentingApiService
 import es.joshluq.kmsafe.infrastructure.remote.api.StorageApiService
+import es.joshluq.kmsafe.infrastructure.remote.api.ReceiptsApiService
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
@@ -133,5 +134,11 @@ object NetworkModule {
     @Singleton
     fun provideFuelApiService(@Authenticated retrofit: Retrofit): FuelApiService {
         return retrofit.create(FuelApiService::class.java)
+    }
+
+    @Provides
+    @Singleton
+    fun provideReceiptsApiService(@Authenticated retrofit: Retrofit): ReceiptsApiService {
+        return retrofit.create(ReceiptsApiService::class.java)
     }
 }

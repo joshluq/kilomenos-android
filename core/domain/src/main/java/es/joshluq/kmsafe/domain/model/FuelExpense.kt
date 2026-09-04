@@ -20,6 +20,7 @@ package es.joshluq.kmsafe.domain.model
  *   or if insufficient data exists.
  * @property consumptionPer100km Calculated fuel or energy consumption per 100 km (L/100km or kWh/100km).
  *   Only populated when [isFullTank] is true and [kmSinceLastRefuel] is available.
+ * @property receiptImagePath Optional relative path in Supabase Storage pointing to the audited receipt image.
  * @property syncStatus Offline-first synchronization status.
  */
 data class FuelExpense(
@@ -37,6 +38,7 @@ data class FuelExpense(
     val notes: String? = null,
     val kmSinceLastRefuel: Double? = null,
     val consumptionPer100km: Double? = null,
+    val receiptImagePath: String? = null,
     val updatedAt: Long = System.currentTimeMillis(),
     val syncStatus: SyncStatus = SyncStatus.PENDING
 )

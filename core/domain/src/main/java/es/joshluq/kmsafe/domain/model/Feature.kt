@@ -15,7 +15,16 @@ enum class Feature(val id: String) {
     MULTI_VEHICLE("multi_vehicle"),
 
     /** Real-time synchronization with cloud storage. */
-    CLOUD_SYNC("cloud_sync");
+    CLOUD_SYNC("cloud_sync"),
+
+    /** Smart AI receipt scanning via Gemini 2.5 Flash. */
+    SMART_RECEIPT_OCR("smart_receipt_ocr"),
+
+    /** Full price radar and station volatility analytics. */
+    STATION_PRICE_RADAR("station_price_radar"),
+
+    /** Secure audited receipt image cloud retention. */
+    RECEIPT_CLOUD_STORAGE("receipt_cloud_storage");
 
     companion object {
         fun fromId(id: String): Feature? = entries.find { it.id == id }

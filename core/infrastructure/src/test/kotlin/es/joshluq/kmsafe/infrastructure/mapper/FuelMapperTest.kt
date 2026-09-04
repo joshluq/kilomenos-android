@@ -24,6 +24,7 @@ class FuelMapperTest {
             isFullTank = true,
             kmSinceLastRefuel = 500.0,
             consumptionPer100km = 8.0,
+            receiptImagePath = "user-1/receipt-123.jpg",
             syncStatus = SyncStatus.PENDING
         )
 
@@ -41,5 +42,6 @@ class FuelMapperTest {
         assertEquals("Test Station", request.stationName)
         assertEquals(500.0, request.kmSinceLastRefuel!!, 0.001)
         assertEquals(8.0, request.consumptionPer100km ?: 0.0, 0.001)
+        assertEquals("user-1/receipt-123.jpg", request.receiptImagePath)
     }
 }

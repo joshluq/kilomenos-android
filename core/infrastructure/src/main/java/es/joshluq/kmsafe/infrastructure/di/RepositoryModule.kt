@@ -15,15 +15,19 @@ import es.joshluq.kmsafe.infrastructure.repository.RentingRepositoryImpl
 import es.joshluq.kmsafe.infrastructure.repository.ServiceStationRepositoryImpl
 import es.joshluq.kmsafe.infrastructure.repository.tracking.TrackingRepositoryImpl
 import es.joshluq.kmsafe.domain.repository.AuthRepository
+import es.joshluq.kmsafe.domain.repository.BluetoothRepository
 import es.joshluq.kmsafe.domain.repository.DataManagementRepository
 import es.joshluq.kmsafe.domain.repository.EntitlementsRepository
 import es.joshluq.kmsafe.domain.repository.FuelExpenseRepository
 import es.joshluq.kmsafe.domain.repository.HistoryRepository
 import es.joshluq.kmsafe.domain.repository.MediaRepository
 import es.joshluq.kmsafe.domain.repository.PreferencesRepository
+import es.joshluq.kmsafe.domain.repository.ReceiptRepository
 import es.joshluq.kmsafe.domain.repository.RentingRepository
 import es.joshluq.kmsafe.domain.repository.ServiceStationRepository
 import es.joshluq.kmsafe.domain.repository.TrackingRepository
+import es.joshluq.kmsafe.infrastructure.repository.BluetoothRepositoryImpl
+import es.joshluq.kmsafe.infrastructure.repository.ReceiptRepositoryImpl
 import javax.inject.Singleton
 
 /**
@@ -125,6 +129,15 @@ abstract class RepositoryModule {
     @Singleton
     @Binds
     abstract fun bindBluetoothRepository(
-        repository: es.joshluq.kmsafe.infrastructure.repository.BluetoothRepositoryImpl
-    ): es.joshluq.kmsafe.domain.repository.BluetoothRepository
+        repository: BluetoothRepositoryImpl
+    ): BluetoothRepository
+
+    /**
+     * Binds the [ReceiptRepositoryImpl] to the [ReceiptRepository] interface.
+     */
+    @Singleton
+    @Binds
+    abstract fun bindReceiptRepository(
+        repository: ReceiptRepositoryImpl
+    ): ReceiptRepository
 }
