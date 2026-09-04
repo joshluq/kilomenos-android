@@ -8,4 +8,8 @@
     <string name="tracking_bluetooth_suggestion_title">¿Vincular vehículo por Bluetooth?</string>
     <string name="tracking_bluetooth_suggestion_desc">Se ha detectado un dispositivo Bluetooth. Vincúlalo a tu contrato para inicio automático de trayectos.</string>
     <string name="tracking_bluetooth_suggestion_button">Configurar</string>
+    <string name="tracking_bluetooth_connected_channel_name">Conexión con el vehículo</string>
+    <string name="tracking_bluetooth_connected_channel_desc">Notificaciones sobre el estado de conexión del vehículo</string>
+    <string name="tracking_bluetooth_connected_title">Conectado a %1$s</string>
+    <string name="tracking_bluetooth_connected_desc">Seguimiento automático preparado</string>
 </resources>

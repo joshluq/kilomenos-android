@@ -8,4 +8,8 @@
     <string name="tracking_bluetooth_suggestion_title">Link Vehicle via Bluetooth?</string>
     <string name="tracking_bluetooth_suggestion_desc">A Bluetooth device was detected. Link it to your contract for automatic trip tracking.</string>
     <string name="tracking_bluetooth_suggestion_button">Set up</string>
+    <string name="tracking_bluetooth_connected_channel_name">Vehicle Connection</string>
+    <string name="tracking_bluetooth_connected_channel_desc">Notifications about vehicle connection status</string>
+    <string name="tracking_bluetooth_connected_title">Connected to %1$s</string>
+    <string name="tracking_bluetooth_connected_desc">Auto-tracking ready</string>
 </resources>
