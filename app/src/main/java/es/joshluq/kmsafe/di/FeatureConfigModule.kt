@@ -4,12 +4,12 @@ import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
-import es.joshluq.kmsafe.auth.AuthConfigImpl
+import es.joshluq.kmsafe.config.AuthConfigImpl
 import es.joshluq.kmsafe.core.monetization.domain.MonetizationConfig
 import es.joshluq.kmsafe.feature.auth.domain.AuthConfig
 import es.joshluq.kmsafe.feature.profile.domain.ProfileConfig
-import es.joshluq.kmsafe.monetization.MonetizationConfigImpl
-import es.joshluq.kmsafe.profile.ProfileConfigImpl
+import es.joshluq.kmsafe.config.MonetizationConfigImpl
+import es.joshluq.kmsafe.config.ProfileConfigImpl
 import javax.inject.Singleton
 
 /**

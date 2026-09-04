@@ -5,7 +5,7 @@ import dagger.Module
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import es.joshluq.kmsafe.infrastructure.InfrastructureConfig
-import es.joshluq.kmsafe.infrastructure.InfrastructureConfigImpl
+import es.joshluq.kmsafe.config.InfrastructureConfigImpl
 import javax.inject.Singleton
 
 @Module

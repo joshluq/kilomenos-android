@@ -1,7 +1,7 @@
-package es.joshluq.kmsafe.infrastructure
+package es.joshluq.kmsafe.config
 
 import es.joshluq.kmsafe.BuildConfig
-import javax.inject.Inject
+import es.joshluq.kmsafe.infrastructure.InfrastructureConfig
 
 class InfrastructureConfigImpl @Inject constructor() : InfrastructureConfig {
     override val serverUrl: String = BuildConfig.SERVER_URL

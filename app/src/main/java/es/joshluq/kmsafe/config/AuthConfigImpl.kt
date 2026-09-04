@@ -1,8 +1,7 @@
-package es.joshluq.kmsafe.auth
+package es.joshluq.kmsafe.config
 
 import es.joshluq.kmsafe.BuildConfig
 import es.joshluq.kmsafe.feature.auth.domain.AuthConfig
-import javax.inject.Inject
 
 class AuthConfigImpl @Inject constructor() : AuthConfig {
     override fun getTermsUrl(): String = BuildConfig.TERMS_URL
