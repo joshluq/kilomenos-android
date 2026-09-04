@@ -7,19 +7,8 @@ import es.joshluq.analyticskit.domain.model.AnalyticsEvent
 import es.joshluq.analyticskit.sdk.AnalyticskitManager
 import es.joshluq.foundationkit.log.LoggerKit
 import es.joshluq.foundationkit.text.TextProvider
-import es.joshluq.foundationkit.usecase.FlowUseCase
-import es.joshluq.foundationkit.usecase.UseCase
 import es.joshluq.foundationkit.viewmodel.ScreenViewModel
 import es.joshluq.kmsafe.feature.auth.R
-import es.joshluq.kmsafe.domain.di.ClearLocalData
-import es.joshluq.kmsafe.domain.di.EvaluateIdentityConflict
-import es.joshluq.kmsafe.domain.di.GetEntitlements
-import es.joshluq.kmsafe.domain.di.GetPreferences
-import es.joshluq.kmsafe.domain.di.SignIn
-import es.joshluq.kmsafe.domain.di.SignInWithGoogle
-import es.joshluq.kmsafe.domain.di.SyncContracts
-import es.joshluq.kmsafe.domain.di.UpdatePreferences
-import es.joshluq.kmsafe.domain.di.ValidateCredentials
 import es.joshluq.kmsafe.domain.model.SubscriptionLevel
 import es.joshluq.kmsafe.domain.model.User
 import es.joshluq.kmsafe.domain.service.FingerprintProvider
@@ -45,24 +34,15 @@ import javax.inject.Inject
  */
 @HiltViewModel
 class LoginViewModel @Inject constructor(
-    @param:ValidateCredentials private val validateCredentialsUseCase:
-    @JvmSuppressWildcards UseCase<ValidateCredentialsUseCase.Input, ValidateCredentialsUseCase.Output>,
-    @param:SignIn private val signInUseCase:
-    @JvmSuppressWildcards FlowUseCase<SignInUseCase.Input, SignInUseCase.Output>,
-    @param:SignInWithGoogle private val signInWithGoogleUseCase:
-    @JvmSuppressWildcards FlowUseCase<SignInWithGoogleUseCase.Input, SignInWithGoogleUseCase.Output>,
-    @param:SyncContracts private val syncContractsUseCase:
-    @JvmSuppressWildcards FlowUseCase<SyncContractsUseCase.Input, SyncContractsUseCase.Output>,
-    @param:ClearLocalData private val clearLocalDataUseCase:
-    @JvmSuppressWildcards FlowUseCase<ClearLocalDataUseCase.Input, ClearLocalDataUseCase.Output>,
-    @param:EvaluateIdentityConflict private val evaluateIdentityConflictUseCase:
-    @JvmSuppressWildcards FlowUseCase<EvaluateIdentityConflictUseCase.Input, EvaluateIdentityConflictUseCase.Output>,
-    @param:GetPreferences private val getPreferencesUseCase:
-    @JvmSuppressWildcards FlowUseCase<GetPreferencesUseCase.Input, GetPreferencesUseCase.Output>,
-    @param:UpdatePreferences private val updatePreferencesUseCase:
-    @JvmSuppressWildcards FlowUseCase<UpdatePreferencesUseCase.Input, UpdatePreferencesUseCase.Output>,
-    @param:GetEntitlements private val getEntitlementsUseCase:
-    @JvmSuppressWildcards FlowUseCase<GetEntitlementsUseCase.Input, GetEntitlementsUseCase.Output>,
+    private val validateCredentialsUseCase: ValidateCredentialsUseCase,
+    private val signInUseCase: SignInUseCase,
+    private val signInWithGoogleUseCase: SignInWithGoogleUseCase,
+    private val syncContractsUseCase: SyncContractsUseCase,
+    private val clearLocalDataUseCase: ClearLocalDataUseCase,
+    private val evaluateIdentityConflictUseCase: EvaluateIdentityConflictUseCase,
+    private val getPreferencesUseCase: GetPreferencesUseCase,
+    private val updatePreferencesUseCase: UpdatePreferencesUseCase,
+    private val getEntitlementsUseCase: GetEntitlementsUseCase,
     private val fingerprintProvider: FingerprintProvider,
     private val socialAuthService: SocialAuthService,
     private val authConfig: AuthConfig,

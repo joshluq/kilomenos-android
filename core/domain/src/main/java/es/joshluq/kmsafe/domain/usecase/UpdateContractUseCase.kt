@@ -13,26 +13,9 @@ import kotlinx.coroutines.flow.onStart
 import javax.inject.Inject
 
 /**
- * Use case to handle the update of an existing renting contract.
+ * Domain interface to handle the update of an existing renting contract.
  */
-class UpdateContractUseCase @Inject constructor(
-    private val repository: RentingRepository,
-    private val logger: LoggerKit
-) : FlowUseCase<UpdateContractUseCase.Input, UpdateContractUseCase.Output> {
-
-    override fun invoke(input: Input): Flow<Output> {
-        logger.d("UpdateContractUseCase", "Updating contract: ${input.contract.id}")
-        return repository.updateContract(input.contract)
-            .map {
-                logger.i("UpdateContractUseCase", "Contract updated successfully")
-                Output.Success as Output
-            }
-            .onStart { emit(Output.Progress) }
-            .catch {
-                logger.e("UpdateContractUseCase", "Failed to update contract", it)
-                emit(Output.Failure)
-            }
-    }
+interface UpdateContractUseCase : FlowUseCase<UpdateContractUseCase.Input, UpdateContractUseCase.Output> {
 
     data class Input(val contract: RentingContract) : UseCaseInput
 
@@ -40,5 +23,25 @@ class UpdateContractUseCase @Inject constructor(
         object Progress : Output
         object Failure : Output
         object Success : Output
+    }
+}
+
+class UpdateContractUseCaseImpl @Inject constructor(
+    private val repository: RentingRepository,
+    private val logger: LoggerKit
+) : UpdateContractUseCase {
+
+    override fun invoke(input: UpdateContractUseCase.Input): Flow<UpdateContractUseCase.Output> {
+        logger.d("UpdateContractUseCase", "Updating contract: ${input.contract.id}")
+        return repository.updateContract(input.contract)
+            .map {
+                logger.i("UpdateContractUseCase", "Contract updated successfully")
+                UpdateContractUseCase.Output.Success as UpdateContractUseCase.Output
+            }
+            .onStart { emit(UpdateContractUseCase.Output.Progress) }
+            .catch {
+                logger.e("UpdateContractUseCase", "Failed to update contract", it)
+                emit(UpdateContractUseCase.Output.Failure)
+            }
     }
 }

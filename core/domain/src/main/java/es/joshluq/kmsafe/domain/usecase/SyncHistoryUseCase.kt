@@ -12,32 +12,34 @@ import kotlinx.coroutines.flow.onStart
 import javax.inject.Inject
 
 /**
- * Use case to synchronize odometer records for a specific contract.
+ * Domain interface to synchronize odometer records for a specific contract.
  */
-class SyncHistoryUseCase @Inject constructor(
-    private val repository: HistoryRepository,
-    private val logger: LoggerKit
-) : FlowUseCase<SyncHistoryUseCase.Input, SyncHistoryUseCase.Output> {
-
-    override fun invoke(input: Input): Flow<Output> {
-        logger.d("SyncHistoryUseCase", "Executing history sync for contract: ${input.contractId}")
-        return repository.syncHistory(input.contractId)
-            .map {
-                logger.i("SyncHistoryUseCase", "History sync completed")
-                Output.Success as Output
-            }
-            .onStart { emit(Output.Progress) }
-            .catch {
-                logger.e("SyncHistoryUseCase", "History sync failed", it)
-                emit(Output.Failure(it.message ?: "Unknown sync error"))
-            }
-    }
-
+interface SyncHistoryUseCase : FlowUseCase<SyncHistoryUseCase.Input, SyncHistoryUseCase.Output> {
     data class Input(val contractId: String) : UseCaseInput
 
     sealed interface Output : UseCaseOutput {
         data object Progress : Output
         data object Success : Output
         data class Failure(val message: String) : Output
+    }
+}
+
+class SyncHistoryUseCaseImpl @Inject constructor(
+    private val repository: HistoryRepository,
+    private val logger: LoggerKit
+) : SyncHistoryUseCase {
+
+    override fun invoke(input: SyncHistoryUseCase.Input): Flow<SyncHistoryUseCase.Output> {
+        logger.d("SyncHistoryUseCase", "Executing history sync for contract: ${input.contractId}")
+        return repository.syncHistory(input.contractId)
+            .map {
+                logger.i("SyncHistoryUseCase", "History sync completed")
+                SyncHistoryUseCase.Output.Success as SyncHistoryUseCase.Output
+            }
+            .onStart { emit(SyncHistoryUseCase.Output.Progress) }
+            .catch {
+                logger.e("SyncHistoryUseCase", "History sync failed", it)
+                emit(SyncHistoryUseCase.Output.Failure(it.message ?: "Unknown sync error"))
+            }
     }
 }

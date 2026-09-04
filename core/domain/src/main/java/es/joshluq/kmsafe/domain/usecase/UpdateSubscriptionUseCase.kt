@@ -14,26 +14,9 @@ import kotlinx.coroutines.flow.onStart
 import javax.inject.Inject
 
 /**
- * Use case to update the user's subscription level.
+ * Domain interface to update the user's subscription level.
  */
-class UpdateSubscriptionUseCase @Inject constructor(
-    private val authRepository: AuthRepository,
-    private val logger: LoggerKit
-) : FlowUseCase<UpdateSubscriptionUseCase.Input, UpdateSubscriptionUseCase.Output> {
-
-    override fun invoke(input: Input): Flow<Output> {
-        logger.d("UpdateSubscriptionUseCase", "Updating subscription to ${input.level}")
-        return authRepository.updateSubscription(input.level)
-            .map { user ->
-                logger.i("UpdateSubscriptionUseCase", "Subscription updated successfully for user ${user.id}")
-                Output.Success(user) as Output
-            }
-            .onStart { emit(Output.Progress) }
-            .catch { error ->
-                logger.e("UpdateSubscriptionUseCase", "Error updating subscription", error)
-                emit(Output.Failure)
-            }
-    }
+interface UpdateSubscriptionUseCase : FlowUseCase<UpdateSubscriptionUseCase.Input, UpdateSubscriptionUseCase.Output> {
 
     data class Input(val level: SubscriptionLevel) : UseCaseInput
 
@@ -41,5 +24,25 @@ class UpdateSubscriptionUseCase @Inject constructor(
         data object Progress : Output
         data object Failure : Output
         data class Success(val user: User) : Output
+    }
+}
+
+class UpdateSubscriptionUseCaseImpl @Inject constructor(
+    private val authRepository: AuthRepository,
+    private val logger: LoggerKit
+) : UpdateSubscriptionUseCase {
+
+    override fun invoke(input: UpdateSubscriptionUseCase.Input): Flow<UpdateSubscriptionUseCase.Output> {
+        logger.d("UpdateSubscriptionUseCase", "Updating subscription to ${input.level}")
+        return authRepository.updateSubscription(input.level)
+            .map { user ->
+                logger.i("UpdateSubscriptionUseCase", "Subscription updated successfully for user ${user.id}")
+                UpdateSubscriptionUseCase.Output.Success(user) as UpdateSubscriptionUseCase.Output
+            }
+            .onStart { emit(UpdateSubscriptionUseCase.Output.Progress) }
+            .catch { error ->
+                logger.e("UpdateSubscriptionUseCase", "Error updating subscription", error)
+                emit(UpdateSubscriptionUseCase.Output.Failure)
+            }
     }
 }

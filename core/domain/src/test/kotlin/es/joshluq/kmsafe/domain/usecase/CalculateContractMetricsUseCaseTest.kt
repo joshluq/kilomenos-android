@@ -3,6 +3,7 @@ package es.joshluq.kmsafe.domain.usecase
 import es.joshluq.kmsafe.domain.model.OdometerRecord
 import es.joshluq.kmsafe.domain.model.RentingContract
 import es.joshluq.kmsafe.domain.model.SyncStatus
+import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -15,7 +16,7 @@ class CalculateContractMetricsUseCaseTest {
 
     @Before
     fun setUp() {
-        useCase = CalculateContractMetricsUseCase()
+        useCase = CalculateContractMetricsUseCaseImpl()
     }
 
     private fun createContract(
@@ -37,7 +38,7 @@ class CalculateContractMetricsUseCaseTest {
     )
 
     @Test
-    fun `brand new contract on day 0 has zero balance and start odometer`() {
+    fun `brand new contract on day 0 has zero balance and start odometer`() = runTest {
         val startDate = 1_000_000_000L
         val contract = createContract(startDate = startDate, startOdometer = 10_000.0)
         val initialRecord = OdometerRecord(
@@ -49,11 +50,15 @@ class CalculateContractMetricsUseCaseTest {
             syncStatus = SyncStatus.SYNCED
         )
 
-        val metrics = useCase.calculate(
-            contract = contract,
-            records = listOf(initialRecord),
-            currentTime = startDate
+        val result = useCase(
+            CalculateContractMetricsUseCase.Input(
+                contract = contract,
+                records = listOf(initialRecord),
+                currentTime = startDate
+            )
         )
+        val output = result.getOrThrow() as CalculateContractMetricsUseCase.Output.Success
+        val metrics = output.metrics
 
         assertEquals(0.0, metrics.actualKmsDriven, 0.0001)
         assertEquals(10_000.0, metrics.currentOdometer, 0.0001)
@@ -66,7 +71,7 @@ class CalculateContractMetricsUseCaseTest {
     }
 
     @Test
-    fun `positive balance when user drives less than daily budget`() {
+    fun `positive balance when user drives less than daily budget`() = runTest {
         val startDate = 1_000_000_000L
         val tenDaysMillis = 10 * CalculateContractMetricsUseCase.MILLIS_IN_DAY
         val currentTime = startDate + tenDaysMillis
@@ -101,7 +106,15 @@ class CalculateContractMetricsUseCaseTest {
             )
         )
 
-        val metrics = useCase.calculate(contract, records, currentTime)
+        val result = useCase(
+            CalculateContractMetricsUseCase.Input(
+                contract = contract,
+                records = records,
+                currentTime = currentTime
+            )
+        )
+        val output = result.getOrThrow() as CalculateContractMetricsUseCase.Output.Success
+        val metrics = output.metrics
 
         // totalDays = 12 * 30.4375 = 365.25
         val expectedDailyBudget = 12_000.0 / 365.25
@@ -119,7 +132,7 @@ class CalculateContractMetricsUseCaseTest {
     }
 
     @Test
-    fun `negative balance when user drives more than daily budget`() {
+    fun `negative balance when user drives more than daily budget`() = runTest {
         val startDate = 1_000_000_000L
         val tenDaysMillis = 10 * CalculateContractMetricsUseCase.MILLIS_IN_DAY
         val currentTime = startDate + tenDaysMillis
@@ -147,7 +160,15 @@ class CalculateContractMetricsUseCaseTest {
             )
         )
 
-        val metrics = useCase.calculate(contract, records, currentTime)
+        val result = useCase(
+            CalculateContractMetricsUseCase.Input(
+                contract = contract,
+                records = records,
+                currentTime = currentTime
+            )
+        )
+        val output = result.getOrThrow() as CalculateContractMetricsUseCase.Output.Success
+        val metrics = output.metrics
 
         val expectedDailyBudget = 12_000.0 / (12 * 30.4375)
         val expectedTheoretical = 10.0 * expectedDailyBudget
@@ -161,7 +182,7 @@ class CalculateContractMetricsUseCaseTest {
     }
 
     @Test
-    fun `pending sync is detected from records or contract`() {
+    fun `pending sync is detected from records or contract`() = runTest {
         val contract = createContract(syncStatus = SyncStatus.SYNCED)
         val pendingRecord = OdometerRecord(
             id = "r1",
@@ -172,7 +193,14 @@ class CalculateContractMetricsUseCaseTest {
             syncStatus = SyncStatus.PENDING
         )
 
-        val metricsWithPendingRecord = useCase.calculate(contract, listOf(pendingRecord))
+        val resultWithPendingRecord = useCase(
+            CalculateContractMetricsUseCase.Input(
+                contract = contract,
+                records = listOf(pendingRecord)
+            )
+        )
+        val metricsWithPendingRecord =
+            (resultWithPendingRecord.getOrThrow() as CalculateContractMetricsUseCase.Output.Success).metrics
         assertTrue(metricsWithPendingRecord.isSyncPending)
 
         val pendingContract = createContract(syncStatus = SyncStatus.PENDING)
@@ -184,7 +212,14 @@ class CalculateContractMetricsUseCaseTest {
             isInitialRecord = false,
             syncStatus = SyncStatus.SYNCED
         )
-        val metricsWithPendingContract = useCase.calculate(pendingContract, listOf(syncedRecord))
+        val resultWithPendingContract = useCase(
+            CalculateContractMetricsUseCase.Input(
+                contract = pendingContract,
+                records = listOf(syncedRecord)
+            )
+        )
+        val metricsWithPendingContract =
+            (resultWithPendingContract.getOrThrow() as CalculateContractMetricsUseCase.Output.Success).metrics
         assertTrue(metricsWithPendingContract.isSyncPending)
     }
 }

@@ -23,118 +23,9 @@ import java.util.Calendar
 import javax.inject.Inject
 
 /**
- * Use case to retrieve expenses for the active vehicle, calculating monthly totals and KPIs.
- *
- * In addition to expense aggregates, this use case resolves:
- * - [Output.Success.currentOdometer]: the real-time odometer (`startOdometer + ∑ odometerValues`) used to
- *   pre-fill the Add Expense form without requiring user input.
- * - [Output.Success.lastRefuelTimestamp]: timestamp of the last [FuelExpense] where `isFullTank = true`,
- *   used as the start boundary for the Hybrid A+C consumption algorithm in [SaveFuelExpenseUseCase].
+ * Domain interface to retrieve expenses for the active vehicle, calculating monthly totals and KPIs.
  */
-class GetExpensesByVehicleUseCase @Inject constructor(
-    private val expenseRepository: FuelExpenseRepository,
-    private val rentingRepository: RentingRepository,
-    private val historyRepository: HistoryRepository,
-    private val logger: LoggerKit
-) : FlowUseCase<GetExpensesByVehicleUseCase.Input, GetExpensesByVehicleUseCase.Output> {
-
-    @OptIn(ExperimentalCoroutinesApi::class)
-    override fun invoke(input: Input): Flow<Output> {
-        logger.d("GetExpensesByVehicleUseCase", "Invoking for vehicleId: ${input.vehicleId ?: "Active"}")
-
-        val vehicleFlow = if (input.vehicleId != null) {
-            rentingRepository.getContractById(input.vehicleId)
-        } else {
-            rentingRepository.getContract()
-        }
-
-        return vehicleFlow.flatMapLatest { contract ->
-            if (contract == null) {
-                logger.w("GetExpensesByVehicleUseCase", "No vehicle found")
-                return@flatMapLatest flowOf(Output.Failure(KmError.UnknownError))
-            }
-
-            val expensesFlow = expenseRepository.getExpensesByVehicle(contract.id)
-            val historyFlow = historyRepository.getHistory(contract.id)
-
-            combine(expensesFlow, historyFlow) { allExpenses, records ->
-                // Filter out price reports (non-real expenses) for list and totals
-                val realExpenses = allExpenses.filter { it.volumeQuantity > 0.0 }
-                
-                // Compute real-time odometer: startOdometer + sum of all increments
-                val totalKmDriven = records.filter { !it.isInitialRecord }.sumOf { it.odometerValue }
-                val currentOdometer = contract.startOdometer + totalKmDriven
-
-                // Find last full-tank refuel timestamp for the A+C consumption window
-                val lastFullRefuel = realExpenses.filter { it.isFullTank }.maxByOrNull { it.timestamp }
-                val lastRefuelTimestamp = lastFullRefuel?.timestamp
-
-                // Compute km driven since that last full refuel and get associated records
-                val recordsSinceLastRefuel = if (lastRefuelTimestamp != null) {
-                    records.filter { !it.isInitialRecord && it.timestamp > lastRefuelTimestamp }
-                        .sortedByDescending { it.timestamp }
-                } else {
-                    emptyList()
-                }
-
-                val kmSinceLastFullRefuel = if (lastRefuelTimestamp != null) {
-                    recordsSinceLastRefuel.sumOf { it.odometerValue }
-                } else {
-                    null
-                }
-
-                if (realExpenses.isEmpty()) {
-                    Output.Empty(
-                        vehicleId = contract.id,
-                        vehicleName = contract.vehicleName,
-                        currentOdometer = currentOdometer,
-                        lastRefuelTimestamp = lastRefuelTimestamp,
-                        kmSinceLastFullRefuel = kmSinceLastFullRefuel,
-                        recordsSinceLastRefuel = recordsSinceLastRefuel,
-                        defaultFuelType = contract.fuelType
-                    )
-                } else {
-                    val sortedExpenses = realExpenses.sortedByDescending { it.timestamp }
-                    val currentMonthExpenses = filterCurrentMonthExpenses(sortedExpenses)
-
-                    val totalSpentCurrentMonth = currentMonthExpenses.sumOf { it.totalCost }
-                    val totalLitersOrKwhCurrentMonth = currentMonthExpenses.sumOf { it.volumeQuantity }
-                    val totalSpentAllTime = sortedExpenses.sumOf { it.totalCost }
-
-                    Output.Success(
-                        vehicleId = contract.id,
-                        vehicleName = contract.vehicleName,
-                        expenses = sortedExpenses,
-                        currentMonthTotalCost = totalSpentCurrentMonth,
-                        currentMonthTotalVolume = totalLitersOrKwhCurrentMonth,
-                        allTimeTotalCost = totalSpentAllTime,
-                        currentOdometer = currentOdometer,
-                        lastRefuelTimestamp = lastRefuelTimestamp,
-                        kmSinceLastFullRefuel = kmSinceLastFullRefuel,
-                        recordsSinceLastRefuel = recordsSinceLastRefuel,
-                        defaultFuelType = contract.fuelType
-                    )
-                }
-            }
-        }
-            .onStart { emit(Output.Progress) }
-            .catch { e ->
-                logger.e("GetExpensesByVehicleUseCase", "Error loading expenses", e)
-                val error = (e as? KmException)?.error ?: KmError.UnknownError
-                emit(Output.Failure(error))
-            }
-    }
-
-    private fun filterCurrentMonthExpenses(expenses: List<FuelExpense>): List<FuelExpense> {
-        val calendar = Calendar.getInstance()
-        val currentMonth = calendar.get(Calendar.MONTH)
-        val currentYear = calendar.get(Calendar.YEAR)
-
-        return expenses.filter { expense ->
-            val expenseCal = Calendar.getInstance().apply { timeInMillis = expense.timestamp }
-            expenseCal.get(Calendar.MONTH) == currentMonth && expenseCal.get(Calendar.YEAR) == currentYear
-        }
-    }
+interface GetExpensesByVehicleUseCase : FlowUseCase<GetExpensesByVehicleUseCase.Input, GetExpensesByVehicleUseCase.Output> {
 
     data class Input(val vehicleId: String? = null) : UseCaseInput
 
@@ -167,5 +58,127 @@ class GetExpensesByVehicleUseCase @Inject constructor(
             val recordsSinceLastRefuel: List<OdometerRecord>,
             val defaultFuelType: FuelType
         ) : Output
+    }
+}
+
+class GetExpensesByVehicleUseCaseImpl @Inject constructor(
+    private val expenseRepository: FuelExpenseRepository,
+    private val rentingRepository: RentingRepository,
+    private val historyRepository: HistoryRepository,
+    private val logger: LoggerKit
+) : GetExpensesByVehicleUseCase {
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    override fun invoke(input: GetExpensesByVehicleUseCase.Input): Flow<GetExpensesByVehicleUseCase.Output> {
+        logger.d("GetExpensesByVehicleUseCase", "Invoking for vehicleId: ${input.vehicleId ?: "Active"}")
+
+        val vehicleFlow = if (input.vehicleId != null) {
+            rentingRepository.getContractById(input.vehicleId)
+        } else {
+            rentingRepository.getContract()
+        }
+
+        return vehicleFlow.flatMapLatest { contract ->
+            if (contract == null) {
+                logger.w("GetExpensesByVehicleUseCase", "No vehicle found")
+                return@flatMapLatest flowOf(GetExpensesByVehicleUseCase.Output.Failure(KmError.UnknownError))
+            }
+
+            val expensesFlow = expenseRepository.getExpensesByVehicle(contract.id)
+            val historyFlow = historyRepository.getHistory(contract.id)
+
+            combine(expensesFlow, historyFlow) { allExpenses, records ->
+                val (currentOdometer, lastFullRefuelTs, kmSinceLast, recordsSince) =
+                    computeOdometerAndRefuelWindow(contract.startOdometer, records, allExpenses)
+
+                if (allExpenses.isEmpty()) {
+                    logger.d("GetExpensesByVehicleUseCase", "No expenses found for vehicle: ${contract.id}")
+                    return@combine GetExpensesByVehicleUseCase.Output.Empty(
+                        vehicleId = contract.id,
+                        vehicleName = contract.vehicleName,
+                        currentOdometer = currentOdometer,
+                        lastRefuelTimestamp = lastFullRefuelTs,
+                        kmSinceLastFullRefuel = kmSinceLast,
+                        recordsSinceLastRefuel = recordsSince,
+                        defaultFuelType = contract.fuelType
+                    )
+                }
+
+                val currentMonthExpenses = filterCurrentMonthExpenses(allExpenses)
+                val currentMonthTotalCost = currentMonthExpenses.sumOf { it.totalCost }
+                val currentMonthTotalVolume = currentMonthExpenses.sumOf { it.volumeQuantity }
+                val allTimeTotalCost = allExpenses.sumOf { it.totalCost }
+
+                logger.d(
+                    "GetExpensesByVehicleUseCase",
+                    "Expenses calculated: currentMonth=$currentMonthTotalCost, allTime=$allTimeTotalCost, odometer=$currentOdometer"
+                )
+
+                GetExpensesByVehicleUseCase.Output.Success(
+                    vehicleId = contract.id,
+                    vehicleName = contract.vehicleName,
+                    expenses = allExpenses,
+                    currentMonthTotalCost = currentMonthTotalCost,
+                    currentMonthTotalVolume = currentMonthTotalVolume,
+                    allTimeTotalCost = allTimeTotalCost,
+                    currentOdometer = currentOdometer,
+                    lastRefuelTimestamp = lastFullRefuelTs,
+                    kmSinceLastFullRefuel = kmSinceLast,
+                    recordsSinceLastRefuel = recordsSince,
+                    defaultFuelType = contract.fuelType
+                )
+            }
+        }
+            .onStart { emit(GetExpensesByVehicleUseCase.Output.Progress) }
+            .catch { e ->
+                logger.e("GetExpensesByVehicleUseCase", "Error loading expenses", e)
+                val error = (e as? KmException)?.error ?: KmError.UnknownError
+                emit(GetExpensesByVehicleUseCase.Output.Failure(error))
+            }
+    }
+
+    private data class RefuelWindowData(
+        val currentOdometer: Double,
+        val lastRefuelTimestamp: Long?,
+        val kmSinceLastFullRefuel: Double?,
+        val recordsSinceLastRefuel: List<OdometerRecord>
+    )
+
+    private fun computeOdometerAndRefuelWindow(
+        startOdometer: Double,
+        records: List<OdometerRecord>,
+        expenses: List<FuelExpense>
+    ): RefuelWindowData {
+        val totalKilometersDriven = records
+            .filter { !it.isInitialRecord }
+            .sumOf { it.odometerValue }
+        val currentOdometer = startOdometer + totalKilometersDriven
+
+        val lastFullRefuel = expenses
+            .filter { it.isFullTank }
+            .maxByOrNull { it.timestamp }
+
+        val lastFullRefuelTs = lastFullRefuel?.timestamp
+
+        val (kmSince, recordsSince) = if (lastFullRefuelTs != null) {
+            val relevantRecords = records.filter { it.timestamp >= lastFullRefuelTs }
+            val km = relevantRecords.filter { !it.isInitialRecord }.sumOf { it.odometerValue }
+            Pair(km, relevantRecords)
+        } else {
+            Pair(null, emptyList())
+        }
+
+        return RefuelWindowData(currentOdometer, lastFullRefuelTs, kmSince, recordsSince)
+    }
+
+    private fun filterCurrentMonthExpenses(expenses: List<FuelExpense>): List<FuelExpense> {
+        val calendar = Calendar.getInstance()
+        val currentMonth = calendar.get(Calendar.MONTH)
+        val currentYear = calendar.get(Calendar.YEAR)
+
+        return expenses.filter { expense ->
+            val expenseCal = Calendar.getInstance().apply { timeInMillis = expense.timestamp }
+            expenseCal.get(Calendar.MONTH) == currentMonth && expenseCal.get(Calendar.YEAR) == currentYear
+        }
     }
 }

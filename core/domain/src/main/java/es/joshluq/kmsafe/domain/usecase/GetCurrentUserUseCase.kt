@@ -12,25 +12,28 @@ import kotlinx.coroutines.flow.onEach
 import javax.inject.Inject
 
 /**
- * Use case to observe the currently authenticated user.
+ * Domain interface to observe the currently authenticated user.
  */
-class GetCurrentUserUseCase @Inject constructor(
-    private val repository: AuthRepository,
-    private val logger: LoggerKit
-) : FlowUseCase<GetCurrentUserUseCase.Input, GetCurrentUserUseCase.Output> {
-
-    override fun invoke(input: Input): Flow<Output> {
-        logger.d("GetCurrentUserUseCase", "Observing current user")
-        return repository.getCurrentUser().map { user ->
-            Output.Success(user)
-        }.onEach {
-            logger.d("GetCurrentUserUseCase", "User updated: ${it.user?.email ?: "None"}")
-        }
-    }
+interface GetCurrentUserUseCase : FlowUseCase<GetCurrentUserUseCase.Input, GetCurrentUserUseCase.Output> {
 
     object Input : UseCaseInput
 
     sealed interface Output : UseCaseOutput {
         data class Success(val user: User?) : Output
+    }
+}
+
+class GetCurrentUserUseCaseImpl @Inject constructor(
+    private val repository: AuthRepository,
+    private val logger: LoggerKit
+) : GetCurrentUserUseCase {
+
+    override fun invoke(input: GetCurrentUserUseCase.Input): Flow<GetCurrentUserUseCase.Output> {
+        logger.d("GetCurrentUserUseCase", "Observing current user")
+        return repository.getCurrentUser().map { user ->
+            GetCurrentUserUseCase.Output.Success(user)
+        }.onEach {
+            logger.d("GetCurrentUserUseCase", "User updated: ${it.user?.email ?: "None"}")
+        }
     }
 }

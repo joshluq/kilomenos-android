@@ -15,38 +15,9 @@ import java.util.UUID
 import javax.inject.Inject
 
 /**
- * Use case to save or update a service station entity.
+ * Domain interface to save or update a service station entity.
  */
-class SaveServiceStationUseCase @Inject constructor(
-    private val repository: ServiceStationRepository,
-    private val logger: LoggerKit
-) : FlowUseCase<SaveServiceStationUseCase.Input, SaveServiceStationUseCase.Output> {
-
-    override fun invoke(input: Input): Flow<Output> {
-        logger.d("SaveServiceStation", "UseCase invoked for station name: ${input.name}")
-        val station = ServiceStation(
-            id = input.id ?: UUID.randomUUID().toString(),
-            name = input.name,
-            brand = input.brand,
-            latitude = input.latitude,
-            longitude = input.longitude,
-            address = input.address,
-            isFavorite = input.isFavorite,
-            availableEnergies = input.availableEnergies
-        )
-
-        logger.d("SaveServiceStation", "Saving station: ${station.name}")
-
-        return repository.saveStation(station)
-            .map { id ->
-                Output.Success(id) as Output
-            }
-            .onStart { emit(Output.Progress) }
-            .catch { e ->
-                logger.e("SaveServiceStation", "Error saving station", e)
-                emit(Output.Failure)
-            }
-    }
+interface SaveServiceStationUseCase : FlowUseCase<SaveServiceStationUseCase.Input, SaveServiceStationUseCase.Output> {
 
     data class Input(
         val id: String? = null,
@@ -63,5 +34,37 @@ class SaveServiceStationUseCase @Inject constructor(
         data object Progress : Output
         data object Failure : Output
         data class Success(val stationId: String) : Output
+    }
+}
+
+class SaveServiceStationUseCaseImpl @Inject constructor(
+    private val repository: ServiceStationRepository,
+    private val logger: LoggerKit
+) : SaveServiceStationUseCase {
+
+    override fun invoke(input: SaveServiceStationUseCase.Input): Flow<SaveServiceStationUseCase.Output> {
+        logger.d("SaveServiceStation", "UseCase invoked for station name: ${input.name}")
+        val station = ServiceStation(
+            id = input.id ?: UUID.randomUUID().toString(),
+            name = input.name,
+            brand = input.brand,
+            latitude = input.latitude,
+            longitude = input.longitude,
+            address = input.address,
+            isFavorite = input.isFavorite,
+            availableEnergies = input.availableEnergies
+        )
+
+        logger.d("SaveServiceStation", "Saving station: ${station.name}")
+
+        return repository.saveStation(station)
+            .map { id ->
+                SaveServiceStationUseCase.Output.Success(id) as SaveServiceStationUseCase.Output
+            }
+            .onStart { emit(SaveServiceStationUseCase.Output.Progress) }
+            .catch { e ->
+                logger.e("SaveServiceStation", "Error saving station", e)
+                emit(SaveServiceStationUseCase.Output.Failure)
+            }
     }
 }

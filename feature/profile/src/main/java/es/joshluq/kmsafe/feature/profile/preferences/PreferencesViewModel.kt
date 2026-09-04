@@ -5,16 +5,9 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import es.joshluq.analyticskit.domain.model.AnalyticsEvent
 import es.joshluq.analyticskit.sdk.AnalyticskitManager
 import es.joshluq.foundationkit.log.LoggerKit
-import es.joshluq.foundationkit.usecase.FlowUseCase
 import es.joshluq.foundationkit.viewmodel.ScreenViewModel
 import es.joshluq.kmsafe.core.monetization.util.ConsentManager
 import es.joshluq.kmsafe.core.ui.util.toText
-import es.joshluq.kmsafe.domain.di.GetEntitlements
-import es.joshluq.kmsafe.domain.di.GetPreferences
-import es.joshluq.kmsafe.domain.di.StartAutoTracking
-import es.joshluq.kmsafe.domain.di.StartTrial
-import es.joshluq.kmsafe.domain.di.StopAutoTracking
-import es.joshluq.kmsafe.domain.di.UpdatePreferences
 import es.joshluq.kmsafe.domain.model.Feature
 import es.joshluq.kmsafe.domain.service.FingerprintProvider
 import es.joshluq.kmsafe.domain.usecase.GetEntitlementsUseCase
@@ -29,19 +22,13 @@ import javax.inject.Inject
 
 @HiltViewModel
 class PreferencesViewModel @Inject constructor(
-    @param:GetPreferences private val getPreferencesUseCase:
-    @JvmSuppressWildcards FlowUseCase<GetPreferencesUseCase.Input, GetPreferencesUseCase.Output>,
-    @param:UpdatePreferences private val updatePreferencesUseCase:
-    @JvmSuppressWildcards FlowUseCase<UpdatePreferencesUseCase.Input, UpdatePreferencesUseCase.Output>,
-    @param:GetEntitlements private val getEntitlementsUseCase:
-    @JvmSuppressWildcards FlowUseCase<GetEntitlementsUseCase.Input, GetEntitlementsUseCase.Output>,
-    @param:StartTrial private val startTrialUseCase:
-    @JvmSuppressWildcards FlowUseCase<StartTrialUseCase.Input, StartTrialUseCase.Output>,
+    private val getPreferencesUseCase: GetPreferencesUseCase,
+    private val updatePreferencesUseCase: UpdatePreferencesUseCase,
+    private val getEntitlementsUseCase: GetEntitlementsUseCase,
+    private val startTrialUseCase: StartTrialUseCase,
     private val fingerprintProvider: FingerprintProvider,
-    @param:StartAutoTracking private val startAutoTrackingUseCase:
-    @JvmSuppressWildcards FlowUseCase<StartAutoTrackingUseCase.Input, StartAutoTrackingUseCase.Output>,
-    @param:StopAutoTracking private val stopAutoTrackingUseCase:
-    @JvmSuppressWildcards FlowUseCase<StopAutoTrackingUseCase.Input, StopAutoTrackingUseCase.Output>,
+    private val startAutoTrackingUseCase: StartAutoTrackingUseCase,
+    private val stopAutoTrackingUseCase: StopAutoTrackingUseCase,
     private val consentManager: ConsentManager,
     private val analytics: AnalyticskitManager,
     private val logger: LoggerKit

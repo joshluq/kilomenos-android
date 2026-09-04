@@ -8,9 +8,7 @@ import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import dagger.hilt.android.HiltAndroidApp
 import es.joshluq.foundationkit.log.LoggerKit
-import es.joshluq.foundationkit.usecase.FlowUseCase
 import es.joshluq.kmsafe.data.worker.ReminderWorker
-import es.joshluq.kmsafe.domain.di.GetPreferences
 import es.joshluq.kmsafe.domain.usecase.GetPreferencesUseCase
 import es.joshluq.kmsafe.infrastructure.repository.tracking.AutoTrackingManager
 import kotlinx.coroutines.CoroutineScope
@@ -34,9 +32,7 @@ class KiloMenosApplication : Application(), Configuration.Provider {
     lateinit var autoTrackingManager: AutoTrackingManager
 
     @Inject
-    @GetPreferences
-    lateinit var getPreferencesUseCase:
-        @JvmSuppressWildcards FlowUseCase<GetPreferencesUseCase.Input, GetPreferencesUseCase.Output>
+    lateinit var getPreferencesUseCase: GetPreferencesUseCase
 
     private val applicationScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
 

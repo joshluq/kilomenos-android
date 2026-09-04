@@ -10,10 +10,10 @@ import es.joshluq.kmsafe.domain.model.SyncStatus
 import javax.inject.Inject
 
 /**
- * Pure domain use case that executes the KiloMenos algorithm to calculate
+ * Pure domain use case interface that executes the KiloMenos algorithm to calculate
  * the metrics and balance of a renting contract.
  */
-class CalculateContractMetricsUseCase @Inject constructor() :
+interface CalculateContractMetricsUseCase :
     UseCase<CalculateContractMetricsUseCase.Input, CalculateContractMetricsUseCase.Output> {
 
     companion object {
@@ -21,19 +21,29 @@ class CalculateContractMetricsUseCase @Inject constructor() :
         const val MILLIS_IN_DAY = 1000L * 60 * 60 * 24
     }
 
-    override suspend fun invoke(input: Input): Result<Output> {
+    data class Input(
+        val contract: RentingContract,
+        val records: List<OdometerRecord>,
+        val currentTime: Long = System.currentTimeMillis()
+    ) : UseCaseInput
+
+    sealed interface Output : UseCaseOutput {
+        data class Success(val metrics: ContractMetrics) : Output
+    }
+}
+
+class CalculateContractMetricsUseCaseImpl @Inject constructor() : CalculateContractMetricsUseCase {
+
+    override suspend fun invoke(input: CalculateContractMetricsUseCase.Input): Result<CalculateContractMetricsUseCase.Output> {
         val metrics = calculate(
             contract = input.contract,
             records = input.records,
             currentTime = input.currentTime
         )
-        return Result.success(Output.Success(metrics))
+        return Result.success(CalculateContractMetricsUseCase.Output.Success(metrics))
     }
 
-    /**
-     * Synchronously calculates [ContractMetrics] using the KiloMenos algorithm.
-     */
-    fun calculate(
+    private fun calculate(
         contract: RentingContract,
         records: List<OdometerRecord>,
         currentTime: Long = System.currentTimeMillis()
@@ -46,8 +56,8 @@ class CalculateContractMetricsUseCase @Inject constructor() :
         val hasPendingRecords = pendingRecords.isNotEmpty()
         val isSyncPending = hasPendingRecords || contract.syncStatus == SyncStatus.PENDING
 
-        val totalDays = contract.durationMonths * DAYS_IN_MONTH
-        val daysPassed = ((currentTime - contract.startDate) / MILLIS_IN_DAY.toDouble()).coerceAtLeast(0.0)
+        val totalDays = contract.durationMonths * CalculateContractMetricsUseCase.DAYS_IN_MONTH
+        val daysPassed = ((currentTime - contract.startDate) / CalculateContractMetricsUseCase.MILLIS_IN_DAY.toDouble()).coerceAtLeast(0.0)
         val baseDailyBudget = if (totalDays > 0) contract.totalKms / totalDays else 0.0
         val monthlyBudget = if (contract.durationMonths > 0) contract.totalKms / contract.durationMonths else 0.0
         val theoreticalKms = daysPassed * baseDailyBudget
@@ -71,15 +81,5 @@ class CalculateContractMetricsUseCase @Inject constructor() :
             differencePercentage = differencePercentage,
             isSyncPending = isSyncPending
         )
-    }
-
-    data class Input(
-        val contract: RentingContract,
-        val records: List<OdometerRecord>,
-        val currentTime: Long = System.currentTimeMillis()
-    ) : UseCaseInput
-
-    sealed interface Output : UseCaseOutput {
-        data class Success(val metrics: ContractMetrics) : Output
     }
 }

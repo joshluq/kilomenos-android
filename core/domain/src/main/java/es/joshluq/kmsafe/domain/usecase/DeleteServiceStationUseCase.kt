@@ -12,25 +12,9 @@ import kotlinx.coroutines.flow.onStart
 import javax.inject.Inject
 
 /**
- * Use case to permanently delete a service station entry.
+ * Domain interface to permanently delete a service station entry.
  */
-class DeleteServiceStationUseCase @Inject constructor(
-    private val repository: ServiceStationRepository,
-    private val logger: LoggerKit
-) : FlowUseCase<DeleteServiceStationUseCase.Input, DeleteServiceStationUseCase.Output> {
-
-    override fun invoke(input: Input): Flow<Output> {
-        logger.d("DeleteServiceStation", "Deleting station: ${input.stationId}")
-        return repository.deleteStation(input.stationId)
-            .map {
-                Output.Success as Output
-            }
-            .onStart { emit(Output.Progress) }
-            .catch { e ->
-                logger.e("DeleteServiceStation", "Error deleting station", e)
-                emit(Output.Failure)
-            }
-    }
+interface DeleteServiceStationUseCase : FlowUseCase<DeleteServiceStationUseCase.Input, DeleteServiceStationUseCase.Output> {
 
     data class Input(val stationId: String) : UseCaseInput
 
@@ -38,5 +22,24 @@ class DeleteServiceStationUseCase @Inject constructor(
         data object Progress : Output
         data object Failure : Output
         data object Success : Output
+    }
+}
+
+class DeleteServiceStationUseCaseImpl @Inject constructor(
+    private val repository: ServiceStationRepository,
+    private val logger: LoggerKit
+) : DeleteServiceStationUseCase {
+
+    override fun invoke(input: DeleteServiceStationUseCase.Input): Flow<DeleteServiceStationUseCase.Output> {
+        logger.d("DeleteServiceStation", "Deleting station: ${input.stationId}")
+        return repository.deleteStation(input.stationId)
+            .map {
+                DeleteServiceStationUseCase.Output.Success as DeleteServiceStationUseCase.Output
+            }
+            .onStart { emit(DeleteServiceStationUseCase.Output.Progress) }
+            .catch { e ->
+                logger.e("DeleteServiceStation", "Error deleting station", e)
+                emit(DeleteServiceStationUseCase.Output.Failure)
+            }
     }
 }

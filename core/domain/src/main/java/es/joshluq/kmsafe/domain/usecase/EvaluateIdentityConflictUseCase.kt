@@ -13,16 +13,27 @@ import kotlinx.coroutines.flow.onStart
 import javax.inject.Inject
 
 /**
- * Use case to evaluate if there is an identity conflict between the current session
+ * Domain interface to evaluate if there is an identity conflict between the current session
  * and the local data stored on the device.
  */
-class EvaluateIdentityConflictUseCase @Inject constructor(
+interface EvaluateIdentityConflictUseCase : FlowUseCase<EvaluateIdentityConflictUseCase.Input, EvaluateIdentityConflictUseCase.Output> {
+    data class Input(val email: String) : UseCaseInput
+
+    sealed interface Output : UseCaseOutput {
+        data object Progress : Output
+        data object NoConflict : Output
+        data object SilentCleanup : Output
+        data object ShowWarning : Output
+    }
+}
+
+class EvaluateIdentityConflictUseCaseImpl @Inject constructor(
     private val rentingRepository: RentingRepository,
     private val preferencesRepository: PreferencesRepository,
     private val logger: LoggerKit
-) : FlowUseCase<EvaluateIdentityConflictUseCase.Input, EvaluateIdentityConflictUseCase.Output> {
+) : EvaluateIdentityConflictUseCase {
 
-    override fun invoke(input: Input): Flow<Output> = flow {
+    override fun invoke(input: EvaluateIdentityConflictUseCase.Input): Flow<EvaluateIdentityConflictUseCase.Output> = flow {
         val currentEmail = input.email.trim().lowercase()
 
         // One-shot check for conflict
@@ -45,24 +56,15 @@ class EvaluateIdentityConflictUseCase @Inject constructor(
 
         val result = when {
             // Case A: Same user as last time -> No conflict.
-            !isNewUser -> Output.NoConflict
+            !isNewUser -> EvaluateIdentityConflictUseCase.Output.NoConflict
             
             // Case B: Different user and we have data in the DB -> Warning.
-            hasExistingData -> Output.ShowWarning
+            hasExistingData -> EvaluateIdentityConflictUseCase.Output.ShowWarning
             
             // Case C: Different user but DB is empty -> Silent cleanup (clears prefs/cache).
-            else -> Output.SilentCleanup
+            else -> EvaluateIdentityConflictUseCase.Output.SilentCleanup
         }
 
         emit(result)
-    }.onStart { emit(Output.Progress) }
-
-    data class Input(val email: String) : UseCaseInput
-
-    sealed interface Output : UseCaseOutput {
-        data object Progress : Output
-        data object NoConflict : Output
-        data object SilentCleanup : Output
-        data object ShowWarning : Output
-    }
+    }.onStart { emit(EvaluateIdentityConflictUseCase.Output.Progress) }
 }

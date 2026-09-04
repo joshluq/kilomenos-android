@@ -12,25 +12,9 @@ import kotlinx.coroutines.flow.onStart
 import javax.inject.Inject
 
 /**
- * Use case to trigger a manual synchronization of service stations from the remote server.
+ * Domain interface to trigger a manual synchronization of service stations from the remote server.
  */
-class SyncStationsUseCase @Inject constructor(
-    private val repository: ServiceStationRepository,
-    private val logger: LoggerKit
-) : FlowUseCase<SyncStationsUseCase.Input, SyncStationsUseCase.Output> {
-
-    override fun invoke(input: Input): Flow<Output> {
-        logger.d("SyncStationsUseCase", "Triggering station synchronization")
-        return repository.syncStations()
-            .map {
-                Output.Success as Output
-            }
-            .onStart { emit(Output.Progress) }
-            .catch {
-                logger.e("SyncStationsUseCase", "Station synchronization failed", it)
-                emit(Output.Failure(it.message ?: "Unknown error"))
-            }
-    }
+interface SyncStationsUseCase : FlowUseCase<SyncStationsUseCase.Input, SyncStationsUseCase.Output> {
 
     object Input : UseCaseInput
 
@@ -38,5 +22,24 @@ class SyncStationsUseCase @Inject constructor(
         data object Progress : Output
         data object Success : Output
         data class Failure(val message: String) : Output
+    }
+}
+
+class SyncStationsUseCaseImpl @Inject constructor(
+    private val repository: ServiceStationRepository,
+    private val logger: LoggerKit
+) : SyncStationsUseCase {
+
+    override fun invoke(input: SyncStationsUseCase.Input): Flow<SyncStationsUseCase.Output> {
+        logger.d("SyncStationsUseCase", "Triggering station synchronization")
+        return repository.syncStations()
+            .map {
+                SyncStationsUseCase.Output.Success as SyncStationsUseCase.Output
+            }
+            .onStart { emit(SyncStationsUseCase.Output.Progress) }
+            .catch {
+                logger.e("SyncStationsUseCase", "Station synchronization failed", it)
+                emit(SyncStationsUseCase.Output.Failure(it.message ?: "Unknown error"))
+            }
     }
 }

@@ -12,25 +12,9 @@ import kotlinx.coroutines.flow.onStart
 import javax.inject.Inject
 
 /**
- * Use case to toggle the favorite status of a service station.
+ * Domain interface to toggle the favorite status of a service station.
  */
-class SetFavoriteStationUseCase @Inject constructor(
-    private val repository: ServiceStationRepository,
-    private val logger: LoggerKit
-) : FlowUseCase<SetFavoriteStationUseCase.Input, SetFavoriteStationUseCase.Output> {
-
-    override fun invoke(input: Input): Flow<Output> {
-        logger.d("SetFavoriteStation", "Setting favorite=${input.isFavorite} for station: ${input.stationId}")
-        return repository.setFavorite(input.stationId, input.isFavorite)
-            .map {
-                Output.Success as Output
-            }
-            .onStart { emit(Output.Progress) }
-            .catch { e ->
-                logger.e("SetFavoriteStation", "Error setting favorite", e)
-                emit(Output.Failure)
-            }
-    }
+interface SetFavoriteStationUseCase : FlowUseCase<SetFavoriteStationUseCase.Input, SetFavoriteStationUseCase.Output> {
 
     data class Input(val stationId: String, val isFavorite: Boolean) : UseCaseInput
 
@@ -38,5 +22,24 @@ class SetFavoriteStationUseCase @Inject constructor(
         data object Progress : Output
         data object Failure : Output
         data object Success : Output
+    }
+}
+
+class SetFavoriteStationUseCaseImpl @Inject constructor(
+    private val repository: ServiceStationRepository,
+    private val logger: LoggerKit
+) : SetFavoriteStationUseCase {
+
+    override fun invoke(input: SetFavoriteStationUseCase.Input): Flow<SetFavoriteStationUseCase.Output> {
+        logger.d("SetFavoriteStation", "Setting favorite=${input.isFavorite} for station: ${input.stationId}")
+        return repository.setFavorite(input.stationId, input.isFavorite)
+            .map {
+                SetFavoriteStationUseCase.Output.Success as SetFavoriteStationUseCase.Output
+            }
+            .onStart { emit(SetFavoriteStationUseCase.Output.Progress) }
+            .catch { e ->
+                logger.e("SetFavoriteStation", "Error setting favorite", e)
+                emit(SetFavoriteStationUseCase.Output.Failure)
+            }
     }
 }

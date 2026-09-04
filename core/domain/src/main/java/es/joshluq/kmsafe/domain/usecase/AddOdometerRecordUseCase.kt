@@ -15,16 +15,37 @@ import kotlinx.coroutines.flow.onStart
 import java.util.UUID
 import javax.inject.Inject
 
-class AddOdometerRecordUseCase @Inject constructor(
+/**
+ * Domain interface to add a new odometer increment/trip record.
+ */
+interface AddOdometerRecordUseCase : FlowUseCase<AddOdometerRecordUseCase.Input, AddOdometerRecordUseCase.Output> {
+
+    data class Input(
+        val odometerValue: Double,
+        val timestamp: Long,
+        val label: String? = null,
+        val fuelAmount: Double? = null,
+        val encodedPolyline: String? = null,
+        val pointCount: Int? = null
+    ) : UseCaseInput
+
+    sealed interface Output : UseCaseOutput {
+        object Progress : Output
+        data class Failure(val message: String) : Output
+        object Success : Output
+    }
+}
+
+class AddOdometerRecordUseCaseImpl @Inject constructor(
     private val rentingRepository: RentingRepository,
     private val historyRepository: HistoryRepository
-) : FlowUseCase<AddOdometerRecordUseCase.Input, AddOdometerRecordUseCase.Output> {
+) : AddOdometerRecordUseCase {
 
-    override fun invoke(input: Input): Flow<Output> = flow {
+    override fun invoke(input: AddOdometerRecordUseCase.Input): Flow<AddOdometerRecordUseCase.Output> = flow {
         val contract = rentingRepository.getContract().firstOrNull()
 
         if (contract == null) {
-            emit(Output.Failure("No renting contract found") as Output)
+            emit(AddOdometerRecordUseCase.Output.Failure("No renting contract found") as AddOdometerRecordUseCase.Output)
             return@flow
         }
 
@@ -48,23 +69,8 @@ class AddOdometerRecordUseCase @Inject constructor(
         }
 
         historyRepository.saveRecord(record, route)
-        emit(Output.Success as Output)
+        emit(AddOdometerRecordUseCase.Output.Success as AddOdometerRecordUseCase.Output)
     }
-        .onStart { emit(Output.Progress) }
-        .catch { emit(Output.Failure(it.message ?: "Unknown error")) }
-
-    data class Input(
-        val odometerValue: Double,
-        val timestamp: Long,
-        val label: String? = null,
-        val fuelAmount: Double? = null,
-        val encodedPolyline: String? = null,
-        val pointCount: Int? = null
-    ) : UseCaseInput
-
-    sealed interface Output : UseCaseOutput {
-        object Progress : Output
-        data class Failure(val message: String) : Output
-        object Success : Output
-    }
+        .onStart { emit(AddOdometerRecordUseCase.Output.Progress) }
+        .catch { emit(AddOdometerRecordUseCase.Output.Failure(it.message ?: "Unknown error")) }
 }

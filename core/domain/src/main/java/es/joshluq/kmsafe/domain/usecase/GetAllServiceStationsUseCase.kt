@@ -13,29 +13,9 @@ import kotlinx.coroutines.flow.onStart
 import javax.inject.Inject
 
 /**
- * Use case to retrieve all recorded service stations from local storage.
+ * Domain interface to retrieve all recorded service stations from local storage.
  */
-class GetAllServiceStationsUseCase @Inject constructor(
-    private val repository: ServiceStationRepository,
-    private val logger: LoggerKit
-) : FlowUseCase<GetAllServiceStationsUseCase.Input, GetAllServiceStationsUseCase.Output> {
-
-    override fun invoke(input: Input): Flow<Output> {
-        logger.d("GetAllServiceStations", "Fetching all stations")
-        return repository.getAllStations()
-            .map { stations ->
-                if (stations.isEmpty()) {
-                    Output.Empty
-                } else {
-                    Output.Success(stations)
-                }
-            }
-            .onStart { emit(Output.Progress) }
-            .catch { e ->
-                logger.e("GetAllServiceStations", "Error fetching stations", e)
-                emit(Output.Failure)
-            }
-    }
+interface GetAllServiceStationsUseCase : FlowUseCase<GetAllServiceStationsUseCase.Input, GetAllServiceStationsUseCase.Output> {
 
     object Input : UseCaseInput
 
@@ -44,5 +24,28 @@ class GetAllServiceStationsUseCase @Inject constructor(
         data object Failure : Output
         data object Empty : Output
         data class Success(val stations: List<ServiceStation>) : Output
+    }
+}
+
+class GetAllServiceStationsUseCaseImpl @Inject constructor(
+    private val repository: ServiceStationRepository,
+    private val logger: LoggerKit
+) : GetAllServiceStationsUseCase {
+
+    override fun invoke(input: GetAllServiceStationsUseCase.Input): Flow<GetAllServiceStationsUseCase.Output> {
+        logger.d("GetAllServiceStations", "Fetching all stations")
+        return repository.getAllStations()
+            .map { stations ->
+                if (stations.isEmpty()) {
+                    GetAllServiceStationsUseCase.Output.Empty
+                } else {
+                    GetAllServiceStationsUseCase.Output.Success(stations)
+                }
+            }
+            .onStart { emit(GetAllServiceStationsUseCase.Output.Progress) }
+            .catch { e ->
+                logger.e("GetAllServiceStations", "Error fetching stations", e)
+                emit(GetAllServiceStationsUseCase.Output.Failure)
+            }
     }
 }

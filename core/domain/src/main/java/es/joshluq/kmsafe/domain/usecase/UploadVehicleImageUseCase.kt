@@ -12,26 +12,9 @@ import kotlinx.coroutines.flow.onStart
 import javax.inject.Inject
 
 /**
- * Use case to handle vehicle image uploads to remote storage.
+ * Domain interface to handle vehicle image uploads to remote storage.
  */
-class UploadVehicleImageUseCase @Inject constructor(
-    private val repository: RentingRepository,
-    private val logger: LoggerKit
-) : FlowUseCase<UploadVehicleImageUseCase.Input, UploadVehicleImageUseCase.Output> {
-
-    override fun invoke(input: Input): Flow<Output> {
-        logger.d("UploadVehicleImageUseCase", "Starting upload for file: ${input.fileName}")
-        return repository.uploadVehicleImage(input.imageBytes, input.fileName)
-            .map { imageUrl ->
-                logger.i("UploadVehicleImageUseCase", "Upload successful: $imageUrl")
-                Output.Success(imageUrl) as Output
-            }
-            .onStart { emit(Output.Progress) }
-            .catch { e ->
-                logger.e("UploadVehicleImageUseCase", "Upload failed", e)
-                emit(Output.Failure)
-            }
-    }
+interface UploadVehicleImageUseCase : FlowUseCase<UploadVehicleImageUseCase.Input, UploadVehicleImageUseCase.Output> {
 
     data class Input(val imageBytes: ByteArray, val fileName: String) : UseCaseInput {
         override fun equals(other: Any?): Boolean {
@@ -57,5 +40,25 @@ class UploadVehicleImageUseCase @Inject constructor(
         object Progress : Output
         object Failure : Output
         data class Success(val imageUrl: String) : Output
+    }
+}
+
+class UploadVehicleImageUseCaseImpl @Inject constructor(
+    private val repository: RentingRepository,
+    private val logger: LoggerKit
+) : UploadVehicleImageUseCase {
+
+    override fun invoke(input: UploadVehicleImageUseCase.Input): Flow<UploadVehicleImageUseCase.Output> {
+        logger.d("UploadVehicleImageUseCase", "Starting upload for file: ${input.fileName}")
+        return repository.uploadVehicleImage(input.imageBytes, input.fileName)
+            .map { imageUrl ->
+                logger.i("UploadVehicleImageUseCase", "Upload successful: $imageUrl")
+                UploadVehicleImageUseCase.Output.Success(imageUrl) as UploadVehicleImageUseCase.Output
+            }
+            .onStart { emit(UploadVehicleImageUseCase.Output.Progress) }
+            .catch { e ->
+                logger.e("UploadVehicleImageUseCase", "Upload failed", e)
+                emit(UploadVehicleImageUseCase.Output.Failure)
+            }
     }
 }

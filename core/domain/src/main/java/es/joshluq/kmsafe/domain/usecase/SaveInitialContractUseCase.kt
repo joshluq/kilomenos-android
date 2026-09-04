@@ -17,22 +17,36 @@ import kotlinx.coroutines.flow.flow
 import java.util.UUID
 import javax.inject.Inject
 
-class SaveInitialContractUseCase @Inject constructor(
+/**
+ * Domain interface to validate and save an initial renting contract and its odometer record.
+ */
+interface SaveInitialContractUseCase : FlowUseCase<SaveInitialContractUseCase.Input, SaveInitialContractUseCase.Output> {
+
+    data class Input(val contract: RentingContract) : UseCaseInput
+
+    sealed interface Output : UseCaseOutput {
+        data object Progress : Output
+        data class Failure(val error: KmError) : Output
+        data class Success(val contractId: String) : Output
+    }
+}
+
+class SaveInitialContractUseCaseImpl @Inject constructor(
     private val rentingRepository: RentingRepository,
     private val historyRepository: HistoryRepository,
     private val authRepository: AuthRepository,
     private val logger: LoggerKit
-) : FlowUseCase<SaveInitialContractUseCase.Input, SaveInitialContractUseCase.Output> {
+) : SaveInitialContractUseCase {
 
-    override fun invoke(input: Input): Flow<Output> = flow {
-        emit(Output.Progress)
+    override fun invoke(input: SaveInitialContractUseCase.Input): Flow<SaveInitialContractUseCase.Output> = flow {
+        emit(SaveInitialContractUseCase.Output.Progress)
         
         // 1. Authenticated User Check
         val user = authRepository.getCurrentUser().first()
         val userId = user?.id
         if (userId.isNullOrBlank()) {
             logger.w("SaveInitialContractUseCase", "Aborting: No authenticated user found")
-            emit(Output.Failure(KmError.Unauthenticated))
+            emit(SaveInitialContractUseCase.Output.Failure(KmError.Unauthenticated))
             return@flow
         }
 
@@ -40,13 +54,13 @@ class SaveInitialContractUseCase @Inject constructor(
         val contract = input.contract
         if (contract.vehicleName.isBlank()) {
             logger.w("SaveInitialContractUseCase", "Aborting: Vehicle name is blank")
-            emit(Output.Failure(KmError.InvalidVehicleName))
+            emit(SaveInitialContractUseCase.Output.Failure(KmError.InvalidVehicleName))
             return@flow
         }
 
         if (contract.totalKms <= 0 || contract.durationMonths <= 0) {
             logger.w("SaveInitialContractUseCase", "Aborting: Invalid contract metrics (kms: ${contract.totalKms}, months: ${contract.durationMonths})")
-            emit(Output.Failure(KmError.InvalidContractMetrics))
+            emit(SaveInitialContractUseCase.Output.Failure(KmError.InvalidContractMetrics))
             return@flow
         }
         
@@ -61,22 +75,19 @@ class SaveInitialContractUseCase @Inject constructor(
             isInitialRecord = true
         )
 
-        val contractToSave = input.contract.copy(
+        // 3. Initial Baseline Record Creation
+        val contractToSave = contract.copy(
             id = contractId,
-            userId = userId,
-            isSelected = true
+            userId = userId
         )
 
-        // 3. Persist Initial History
         historyRepository.saveRecord(initialRecord)
-        logger.i("SaveInitialContractUseCase", "Initial record saved locally")
+        logger.i("SaveInitialContractUseCase", "Initial baseline record saved locally")
 
-        val currentOdo = input.contract.currentOdometer
-        val startOdo = input.contract.startOdometer
-
-        if (currentOdo > startOdo) {
-            val drivenOffset = currentOdo - startOdo
-            logger.d("SaveInitialContractUseCase", "Creating first delta record: $drivenOffset km (from $currentOdo - $startOdo)")
+        // 3.1 Offset Record Creation if current odometer is greater than start odometer
+        if (contractToSave.currentOdometer > contractToSave.startOdometer) {
+            val drivenOffset = contractToSave.currentOdometer - contractToSave.startOdometer
+            logger.d("SaveInitialContractUseCase", "Detected offset of $drivenOffset kms. Creating initial trip record.")
             
             val currentRecord = OdometerRecord(
                 id = UUID.randomUUID().toString(),
@@ -95,18 +106,10 @@ class SaveInitialContractUseCase @Inject constructor(
 
         // 5. Activation
         rentingRepository.selectContract(finalId).first()
-        emit(Output.Success(finalId))
+        emit(SaveInitialContractUseCase.Output.Success(finalId))
         
     }.catch { e ->
         logger.e("SaveInitialContractUseCase", "Failed to save contract", e)
-        emit(Output.Failure(KmError.UnknownError))
-    }
-
-    data class Input(val contract: RentingContract) : UseCaseInput
-
-    sealed interface Output : UseCaseOutput {
-        data object Progress : Output
-        data class Failure(val error: KmError) : Output
-        data class Success(val contractId: String) : Output
+        emit(SaveInitialContractUseCase.Output.Failure(KmError.UnknownError))
     }
 }

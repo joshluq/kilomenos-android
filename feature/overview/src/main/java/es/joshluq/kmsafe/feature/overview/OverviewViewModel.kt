@@ -6,27 +6,11 @@ import es.joshluq.analyticskit.domain.model.AnalyticsEvent
 import es.joshluq.analyticskit.sdk.AnalyticskitManager
 import es.joshluq.foundationkit.log.LoggerKit
 import es.joshluq.foundationkit.text.TextProvider
-import es.joshluq.foundationkit.usecase.FlowUseCase
 import es.joshluq.foundationkit.viewmodel.ScreenViewModel
 import es.joshluq.kmsafe.core.domain.usecase.SyncStationGeofencesUseCase
 import es.joshluq.kmsafe.core.monetization.domain.MonetizationConfig
 import es.joshluq.kmsafe.core.ui.util.DateUtils.getContractEndDate
 import es.joshluq.kmsafe.core.ui.util.DateUtils.normalizeToUtc00
-import es.joshluq.kmsafe.domain.di.AddOdometerRecord
-import es.joshluq.kmsafe.domain.di.ClearTracking
-import es.joshluq.kmsafe.domain.di.GetAllContracts
-import es.joshluq.kmsafe.domain.di.GetEntitlements
-import es.joshluq.kmsafe.domain.di.GetMonthlyUsage
-import es.joshluq.kmsafe.domain.di.GetOverviewData
-import es.joshluq.kmsafe.domain.di.GetPreferences
-import es.joshluq.kmsafe.domain.di.GetTripProjection
-import es.joshluq.kmsafe.domain.di.ObserveTrackingState
-import es.joshluq.kmsafe.domain.di.SelectContract
-import es.joshluq.kmsafe.domain.di.StartAutoTracking
-import es.joshluq.kmsafe.domain.di.StopAutoTracking
-import es.joshluq.kmsafe.domain.di.StopTracking
-import es.joshluq.kmsafe.domain.di.SyncStationGeofences
-import es.joshluq.kmsafe.domain.di.UpdatePreferences
 import es.joshluq.kmsafe.domain.model.Feature
 import es.joshluq.kmsafe.domain.model.SubscriptionLevel
 import es.joshluq.kmsafe.domain.usecase.AddOdometerRecordUseCase
@@ -56,36 +40,21 @@ import javax.inject.Inject
  */
 @HiltViewModel
 class OverviewViewModel @Inject constructor(
-    @param:GetOverviewData private val getOverviewDataUseCase:
-    @JvmSuppressWildcards FlowUseCase<GetOverviewDataUseCase.Input, GetOverviewDataUseCase.Output>,
-    @param:GetMonthlyUsage private val getMonthlyUsageUseCase:
-    @JvmSuppressWildcards FlowUseCase<GetMonthlyUsageUseCase.Input, GetMonthlyUsageUseCase.Output>,
-    @param:AddOdometerRecord private val addOdometerRecordUseCase:
-    @JvmSuppressWildcards FlowUseCase<AddOdometerRecordUseCase.Input, AddOdometerRecordUseCase.Output>,
-    @param:GetTripProjection private val getTripProjectionUseCase:
-    @JvmSuppressWildcards FlowUseCase<GetTripProjectionUseCase.Input, GetTripProjectionUseCase.Output>,
-    @param:GetAllContracts private val getAllContractsUseCase:
-    @JvmSuppressWildcards FlowUseCase<GetAllContractsUseCase.Input, GetAllContractsUseCase.Output>,
-    @param:SelectContract private val selectContractUseCase:
-    @JvmSuppressWildcards FlowUseCase<SelectContractUseCase.Input, SelectContractUseCase.Output>,
-    @param:GetEntitlements private val getEntitlementsUseCase:
-    @JvmSuppressWildcards FlowUseCase<GetEntitlementsUseCase.Input, GetEntitlementsUseCase.Output>,
-    @param:GetPreferences private val getPreferencesUseCase:
-    @JvmSuppressWildcards FlowUseCase<GetPreferencesUseCase.Input, GetPreferencesUseCase.Output>,
-    @param:UpdatePreferences private val updatePreferencesUseCase:
-    @JvmSuppressWildcards FlowUseCase<UpdatePreferencesUseCase.Input, UpdatePreferencesUseCase.Output>,
-    @param:ObserveTrackingState private val observeTrackingStateUseCase:
-    @JvmSuppressWildcards FlowUseCase<ObserveTrackingStateUseCase.Input, ObserveTrackingStateUseCase.Output>,
-    @param:StopTracking private val stopTrackingUseCase:
-    @JvmSuppressWildcards FlowUseCase<StopTrackingUseCase.Input, StopTrackingUseCase.Output>,
-    @param:ClearTracking private val clearTrackingUseCase:
-    @JvmSuppressWildcards FlowUseCase<ClearTrackingUseCase.Input, ClearTrackingUseCase.Output>,
-    @param:StartAutoTracking private val startAutoTrackingUseCase:
-    @JvmSuppressWildcards FlowUseCase<StartAutoTrackingUseCase.Input, StartAutoTrackingUseCase.Output>,
-    @param:StopAutoTracking private val stopAutoTrackingUseCase:
-    @JvmSuppressWildcards FlowUseCase<StopAutoTrackingUseCase.Input, StopAutoTrackingUseCase.Output>,
-    @param:SyncStationGeofences private val syncStationGeofencesUseCase:
-    @JvmSuppressWildcards FlowUseCase<SyncStationGeofencesUseCase.Input, SyncStationGeofencesUseCase.Output>,
+    private val getOverviewDataUseCase: GetOverviewDataUseCase,
+    private val getMonthlyUsageUseCase: GetMonthlyUsageUseCase,
+    private val addOdometerRecordUseCase: AddOdometerRecordUseCase,
+    private val getTripProjectionUseCase: GetTripProjectionUseCase,
+    private val getAllContractsUseCase: GetAllContractsUseCase,
+    private val selectContractUseCase: SelectContractUseCase,
+    private val getEntitlementsUseCase: GetEntitlementsUseCase,
+    private val getPreferencesUseCase: GetPreferencesUseCase,
+    private val updatePreferencesUseCase: UpdatePreferencesUseCase,
+    private val observeTrackingStateUseCase: ObserveTrackingStateUseCase,
+    private val stopTrackingUseCase: StopTrackingUseCase,
+    private val clearTrackingUseCase: ClearTrackingUseCase,
+    private val startAutoTrackingUseCase: StartAutoTrackingUseCase,
+    private val stopAutoTrackingUseCase: StopAutoTrackingUseCase,
+    private val syncStationGeofencesUseCase: SyncStationGeofencesUseCase,
     private val monetizationConfig: MonetizationConfig,
     private val analytics: AnalyticskitManager,
     private val logger: LoggerKit

@@ -12,24 +12,10 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onStart
 import javax.inject.Inject
 
-class GetAllContractsUseCase @Inject constructor(
-    private val repository: RentingRepository,
-    private val logger: LoggerKit
-) : FlowUseCase<GetAllContractsUseCase.Input, GetAllContractsUseCase.Output> {
-
-    override fun invoke(input: Input): Flow<Output> {
-        logger.d("GetAllContractsUseCase", "Fetching all contracts")
-        return repository.getAllContracts()
-            .map { contracts ->
-                logger.i("GetAllContractsUseCase", "Retrieved ${contracts.size} contracts")
-                Output.Success(contracts) as Output
-            }
-            .onStart { emit(Output.Progress) }
-            .catch {
-                logger.e("GetAllContractsUseCase", "Error fetching contracts", it)
-                emit(Output.Failure)
-            }
-    }
+/**
+ * Domain interface to fetch all vehicle contracts.
+ */
+interface GetAllContractsUseCase : FlowUseCase<GetAllContractsUseCase.Input, GetAllContractsUseCase.Output> {
 
     object Input : UseCaseInput
 
@@ -37,5 +23,25 @@ class GetAllContractsUseCase @Inject constructor(
         object Progress : Output
         object Failure : Output
         data class Success(val contracts: List<RentingContract>) : Output
+    }
+}
+
+class GetAllContractsUseCaseImpl @Inject constructor(
+    private val repository: RentingRepository,
+    private val logger: LoggerKit
+) : GetAllContractsUseCase {
+
+    override fun invoke(input: GetAllContractsUseCase.Input): Flow<GetAllContractsUseCase.Output> {
+        logger.d("GetAllContractsUseCase", "Fetching all contracts")
+        return repository.getAllContracts()
+            .map { contracts ->
+                logger.i("GetAllContractsUseCase", "Retrieved ${contracts.size} contracts")
+                GetAllContractsUseCase.Output.Success(contracts) as GetAllContractsUseCase.Output
+            }
+            .onStart { emit(GetAllContractsUseCase.Output.Progress) }
+            .catch {
+                logger.e("GetAllContractsUseCase", "Error fetching contracts", it)
+                emit(GetAllContractsUseCase.Output.Failure)
+            }
     }
 }

@@ -14,28 +14,9 @@ import kotlinx.coroutines.flow.onStart
 import javax.inject.Inject
 
 /**
- * Use case to delete a fuel expense entry.
+ * Domain interface to delete a fuel expense entry.
  */
-class DeleteFuelExpenseUseCase @Inject constructor(
-    private val expenseRepository: FuelExpenseRepository,
-    private val logger: LoggerKit
-) : FlowUseCase<DeleteFuelExpenseUseCase.Input, DeleteFuelExpenseUseCase.Output> {
-
-    override fun invoke(input: Input): Flow<Output> {
-        logger.d("DeleteFuelExpenseUseCase", "Deleting expense ID: ${input.expenseId}")
-
-        return expenseRepository.deleteExpense(input.expenseId)
-            .map {
-                logger.i("DeleteFuelExpenseUseCase", "Expense deleted: ${input.expenseId}")
-                Output.Success as Output
-            }
-            .onStart { emit(Output.Progress) }
-            .catch { e ->
-                logger.e("DeleteFuelExpenseUseCase", "Error deleting expense", e)
-                val error = (e as? KmException)?.error ?: KmError.UnknownError
-                emit(Output.Failure(error))
-            }
-    }
+interface DeleteFuelExpenseUseCase : FlowUseCase<DeleteFuelExpenseUseCase.Input, DeleteFuelExpenseUseCase.Output> {
 
     data class Input(val expenseId: String) : UseCaseInput
 
@@ -43,5 +24,27 @@ class DeleteFuelExpenseUseCase @Inject constructor(
         data object Progress : Output
         data class Failure(val error: KmError) : Output
         data object Success : Output
+    }
+}
+
+class DeleteFuelExpenseUseCaseImpl @Inject constructor(
+    private val expenseRepository: FuelExpenseRepository,
+    private val logger: LoggerKit
+) : DeleteFuelExpenseUseCase {
+
+    override fun invoke(input: DeleteFuelExpenseUseCase.Input): Flow<DeleteFuelExpenseUseCase.Output> {
+        logger.d("DeleteFuelExpenseUseCase", "Deleting expense ID: ${input.expenseId}")
+
+        return expenseRepository.deleteExpense(input.expenseId)
+            .map {
+                logger.i("DeleteFuelExpenseUseCase", "Expense deleted: ${input.expenseId}")
+                DeleteFuelExpenseUseCase.Output.Success as DeleteFuelExpenseUseCase.Output
+            }
+            .onStart { emit(DeleteFuelExpenseUseCase.Output.Progress) }
+            .catch { e ->
+                logger.e("DeleteFuelExpenseUseCase", "Error deleting expense", e)
+                val error = (e as? KmException)?.error ?: KmError.UnknownError
+                emit(DeleteFuelExpenseUseCase.Output.Failure(error))
+            }
     }
 }

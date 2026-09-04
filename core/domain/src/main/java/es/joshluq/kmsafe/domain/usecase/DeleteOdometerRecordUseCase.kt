@@ -12,22 +12,10 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.onStart
 import javax.inject.Inject
 
-class DeleteOdometerRecordUseCase @Inject constructor(
-    private val repository: HistoryRepository,
-    private val logger: LoggerKit
-) : FlowUseCase<DeleteOdometerRecordUseCase.Input, DeleteOdometerRecordUseCase.Output> {
-
-    override fun invoke(input: Input): Flow<Output> = flow {
-        logger.d("DeleteOdometerRecordUseCase", "Deleting record ID: ${input.record.id}")
-        repository.deleteRecord(input.record)
-        logger.i("DeleteOdometerRecordUseCase", "Record deleted")
-        emit(Output.Success as Output)
-    }
-        .onStart { emit(Output.Progress) }
-        .catch {
-            logger.e("DeleteOdometerRecordUseCase", "Error deleting record", it)
-            emit(Output.Failure)
-        }
+/**
+ * Domain interface to delete an odometer record.
+ */
+interface DeleteOdometerRecordUseCase : FlowUseCase<DeleteOdometerRecordUseCase.Input, DeleteOdometerRecordUseCase.Output> {
 
     data class Input(val record: OdometerRecord) : UseCaseInput
 
@@ -36,4 +24,22 @@ class DeleteOdometerRecordUseCase @Inject constructor(
         object Failure : Output
         object Success : Output
     }
+}
+
+class DeleteOdometerRecordUseCaseImpl @Inject constructor(
+    private val repository: HistoryRepository,
+    private val logger: LoggerKit
+) : DeleteOdometerRecordUseCase {
+
+    override fun invoke(input: DeleteOdometerRecordUseCase.Input): Flow<DeleteOdometerRecordUseCase.Output> = flow {
+        logger.d("DeleteOdometerRecordUseCase", "Deleting record ID: ${input.record.id}")
+        repository.deleteRecord(input.record)
+        logger.i("DeleteOdometerRecordUseCase", "Record deleted")
+        emit(DeleteOdometerRecordUseCase.Output.Success as DeleteOdometerRecordUseCase.Output)
+    }
+        .onStart { emit(DeleteOdometerRecordUseCase.Output.Progress) }
+        .catch {
+            logger.e("DeleteOdometerRecordUseCase", "Error deleting record", it)
+            emit(DeleteOdometerRecordUseCase.Output.Failure)
+        }
 }

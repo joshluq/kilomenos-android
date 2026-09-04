@@ -30,12 +30,9 @@ import dagger.hilt.android.AndroidEntryPoint
 import es.joshluq.analyticskit.domain.model.AnalyticsEvent
 import es.joshluq.analyticskit.sdk.AnalyticskitManager
 import es.joshluq.foundationkit.log.LoggerKit
-import es.joshluq.foundationkit.usecase.FlowUseCase
 import es.joshluq.kmsafe.BuildConfig
 import es.joshluq.kmsafe.MainActivity
 import es.joshluq.kmsafe.R
-import es.joshluq.kmsafe.domain.di.CheckFeatureAccess
-import es.joshluq.kmsafe.domain.di.GetRenting
 import es.joshluq.kmsafe.domain.model.Feature
 import es.joshluq.kmsafe.domain.repository.TrackingRepository
 import es.joshluq.kmsafe.domain.usecase.CheckFeatureAccessUseCase
@@ -67,14 +64,10 @@ class LocationTrackingService : Service() {
     lateinit var trackingRepository: TrackingRepository
 
     @Inject
-    @CheckFeatureAccess
-    lateinit var checkFeatureAccessUseCase:
-        @JvmSuppressWildcards FlowUseCase<CheckFeatureAccessUseCase.Input, CheckFeatureAccessUseCase.Output>
+    lateinit var checkFeatureAccessUseCase: CheckFeatureAccessUseCase
 
     @Inject
-    @GetRenting
-    lateinit var getRentingContractUseCase:
-        @JvmSuppressWildcards FlowUseCase<GetRentingContractUseCase.Input, GetRentingContractUseCase.Output>
+    lateinit var getRentingContractUseCase: GetRentingContractUseCase
 
     @Inject
     lateinit var logger: LoggerKit

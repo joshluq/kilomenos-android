@@ -6,12 +6,8 @@ import es.joshluq.analyticskit.domain.model.AnalyticsEvent
 import es.joshluq.analyticskit.sdk.AnalyticskitManager
 import es.joshluq.foundationkit.log.LoggerKit
 import es.joshluq.foundationkit.text.TextProvider
-import es.joshluq.foundationkit.usecase.FlowUseCase
 import es.joshluq.foundationkit.viewmodel.ScreenViewModel
 import es.joshluq.kmsafe.R
-import es.joshluq.kmsafe.domain.di.CheckFeatureAccess
-import es.joshluq.kmsafe.domain.di.ExportData
-import es.joshluq.kmsafe.domain.di.ImportData
 import es.joshluq.kmsafe.domain.model.Feature
 import es.joshluq.kmsafe.domain.usecase.CheckFeatureAccessUseCase
 import es.joshluq.kmsafe.domain.usecase.ExportDataUseCase
@@ -22,12 +18,9 @@ import javax.inject.Inject
 
 @HiltViewModel
 class DataManagementViewModel @Inject constructor(
-    @param:ExportData private val exportDataUseCase:
-    @JvmSuppressWildcards FlowUseCase<ExportDataUseCase.Input, ExportDataUseCase.Output>,
-    @param:ImportData private val importDataUseCase:
-    @JvmSuppressWildcards FlowUseCase<ImportDataUseCase.Input, ImportDataUseCase.Output>,
-    @param:CheckFeatureAccess private val checkFeatureAccessUseCase:
-    @JvmSuppressWildcards FlowUseCase<CheckFeatureAccessUseCase.Input, CheckFeatureAccessUseCase.Output>,
+    private val exportDataUseCase: ExportDataUseCase,
+    private val importDataUseCase: ImportDataUseCase,
+    private val checkFeatureAccessUseCase: CheckFeatureAccessUseCase,
     private val analytics: AnalyticskitManager,
     private val logger: LoggerKit
 ) : ScreenViewModel<State, Event, Effect>() {

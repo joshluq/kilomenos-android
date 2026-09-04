@@ -6,13 +6,7 @@ import es.joshluq.analyticskit.domain.model.AnalyticsEvent
 import es.joshluq.analyticskit.sdk.AnalyticskitManager
 import es.joshluq.foundationkit.log.LoggerKit
 import es.joshluq.foundationkit.text.TextProvider
-import es.joshluq.foundationkit.usecase.FlowUseCase
-import es.joshluq.foundationkit.usecase.UseCase
 import es.joshluq.foundationkit.viewmodel.ScreenViewModel
-import es.joshluq.kmsafe.domain.di.GetEntitlements
-import es.joshluq.kmsafe.domain.di.GetImageBytes
-import es.joshluq.kmsafe.domain.di.SaveInitialContract
-import es.joshluq.kmsafe.domain.di.UploadVehicleImage
 import es.joshluq.kmsafe.domain.model.RentingContract
 import es.joshluq.kmsafe.domain.model.SyncStatus
 import es.joshluq.kmsafe.domain.usecase.GetEntitlementsUseCase
@@ -37,14 +31,10 @@ import javax.inject.Inject
 
 @HiltViewModel
 class SetupWizardViewModel @Inject constructor(
-    @param:SaveInitialContract private val saveInitialContractUseCase:
-    @JvmSuppressWildcards FlowUseCase<SaveInitialContractUseCase.Input, SaveInitialContractUseCase.Output>,
-    @param:GetEntitlements private val getEntitlementsUseCase:
-    @JvmSuppressWildcards FlowUseCase<GetEntitlementsUseCase.Input, GetEntitlementsUseCase.Output>,
-    @param:UploadVehicleImage private val uploadVehicleImage:
-    @JvmSuppressWildcards FlowUseCase<UploadVehicleImageUseCase.Input, UploadVehicleImageUseCase.Output>,
-    @param:GetImageBytes private val getImageBytesUseCase:
-    @JvmSuppressWildcards UseCase<GetImageBytesUseCase.Input, GetImageBytesUseCase.Output>,
+    private val saveInitialContractUseCase: SaveInitialContractUseCase,
+    private val getEntitlementsUseCase: GetEntitlementsUseCase,
+    private val uploadVehicleImage: UploadVehicleImageUseCase,
+    private val getImageBytesUseCase: GetImageBytesUseCase,
     private val analytics: AnalyticskitManager,
     private val logger: LoggerKit
 ) : ScreenViewModel<State, Event, Effect>() {

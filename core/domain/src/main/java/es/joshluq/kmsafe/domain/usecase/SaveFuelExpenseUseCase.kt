@@ -19,114 +19,9 @@ import java.util.UUID
 import javax.inject.Inject
 
 /**
- * Use case for validating and saving a fuel or electric charging expense entry.
- *
- * Implements the **Hybrid A+C consumption algorithm**: calculates [FuelExpense.kmSinceLastRefuel]
- * by summing [es.joshluq.kmsafe.domain.model.OdometerRecord] values recorded between the previous
- * full-tank refuel and the current one. [FuelExpense.consumptionPer100km] is then derived from
- * `(volumeQuantity / kmSinceLastRefuel) * 100` and is only populated when [Input.isFullTank] is true
- * and sufficient historical data exists.
+ * Domain interface for validating and saving a fuel or electric charging expense entry.
  */
-class SaveFuelExpenseUseCase @Inject constructor(
-    private val expenseRepository: FuelExpenseRepository,
-    private val historyRepository: HistoryRepository,
-    private val logger: LoggerKit
-) : FlowUseCase<SaveFuelExpenseUseCase.Input, SaveFuelExpenseUseCase.Output> {
-
-    override fun invoke(input: Input): Flow<Output> = flow {
-        logger.d("SaveFuelExpenseUseCase", "UseCase invoked for vehicle: ${input.vehicleId}, fullTank: ${input.isFullTank}")
-        emit(Output.Progress)
-
-        val isPriceReport = input.volumeQuantity == 0.0 && input.totalCost == 0.0 && input.unitPrice > 0.0
-
-        if (!isPriceReport && (input.volumeQuantity <= 0.0 || input.unitPrice <= 0.0 || input.totalCost <= 0.0)) {
-            logger.w("SaveFuelExpenseUseCase", "Invalid numeric values in expense input: volume=${input.volumeQuantity}, price=${input.unitPrice}, total=${input.totalCost}")
-            emit(Output.InvalidInput(KmError.InvalidFuelExpenseValues))
-            return@flow
-        }
-
-        // Hybrid A+C: infer km driven since last full refuel from OdometerRecord history
-        val (kmSinceLastRefuel, consumptionPer100km) = calculateConsumption(input)
-
-        val expenseId = input.id ?: UUID.randomUUID().toString()
-        val expense = FuelExpense(
-            id = expenseId,
-            vehicleId = input.vehicleId,
-            stationId = input.stationId,
-            stationName = input.stationName,
-            timestamp = input.timestamp ?: System.currentTimeMillis(),
-            fuelType = input.fuelType,
-            unitPrice = input.unitPrice,
-            volumeQuantity = input.volumeQuantity,
-            totalCost = input.totalCost,
-            odometerAtExpense = input.odometerAtExpense,
-            isFullTank = input.isFullTank,
-            notes = input.notes,
-            kmSinceLastRefuel = kmSinceLastRefuel,
-            consumptionPer100km = consumptionPer100km
-        )
-
-        if (input.id == null) {
-            expenseRepository.saveExpense(expense).first()
-            logger.i("SaveFuelExpenseUseCase", "Expense created with ID: $expenseId")
-        } else {
-            expenseRepository.updateExpense(expense).first()
-            logger.i("SaveFuelExpenseUseCase", "Expense updated with ID: $expenseId")
-        }
-        
-        emit(Output.Success(expenseId))
-    }
-        .onStart { /* Progress already emitted inside flow block */ }
-        .catch { e ->
-            logger.e("SaveFuelExpenseUseCase", "Error saving expense", e)
-            val error = (e as? KmException)?.error ?: KmError.UnknownError
-            emit(Output.Failure(error))
-        }
-
-    /**
-     * Calculates [FuelExpense.kmSinceLastRefuel] and [FuelExpense.consumptionPer100km] using
-     * OdometerRecords as the ground truth for distance driven between refuels.
-     *
-     * @return Pair(kmSinceLastRefuel, consumptionPer100km). Both null if data is insufficient.
-     */
-    private suspend fun calculateConsumption(input: Input): Pair<Double?, Double?> {
-        val lastRefuelTs = input.lastRefuelTimestamp ?: return Pair(null, null)
-
-        return try {
-            val records = historyRepository.getHistory(input.vehicleId).first()
-            val currentTs = input.timestamp ?: System.currentTimeMillis()
-
-            // Sum incremental km recorded between the previous full refuel and now
-            val kmSinceLastRefuel = records
-                .filter { record ->
-                    !record.isInitialRecord &&
-                        record.timestamp > lastRefuelTs &&
-                        record.timestamp <= currentTs
-                }
-                .sumOf { it.odometerValue }
-
-            if (kmSinceLastRefuel <= 0.0) {
-                logger.d("SaveFuelExpenseUseCase", "No km recorded since last refuel, skipping consumption calculation")
-                return Pair(null, null)
-            }
-
-            // Only compute consumption if this is a full-tank event
-            val consumption = if (input.isFullTank) {
-                (input.volumeQuantity / kmSinceLastRefuel) * 100.0
-            } else {
-                null
-            }
-
-            logger.d(
-                "SaveFuelExpenseUseCase",
-                "Consumption calculated: ${input.volumeQuantity}L / ${kmSinceLastRefuel}km = $consumption L/100km"
-            )
-            Pair(kmSinceLastRefuel, consumption)
-        } catch (e: Exception) {
-            logger.w("SaveFuelExpenseUseCase", "Failed to calculate consumption from history, defaulting to null", e)
-            Pair(null, null)
-        }
-    }
+interface SaveFuelExpenseUseCase : FlowUseCase<SaveFuelExpenseUseCase.Input, SaveFuelExpenseUseCase.Output> {
 
     data class Input(
         val id: String? = null,
@@ -151,5 +46,101 @@ class SaveFuelExpenseUseCase @Inject constructor(
         data class Failure(val error: KmError) : Output
         data class InvalidInput(val error: KmError) : Output
         data class Success(val expenseId: String) : Output
+    }
+}
+
+class SaveFuelExpenseUseCaseImpl @Inject constructor(
+    private val expenseRepository: FuelExpenseRepository,
+    private val historyRepository: HistoryRepository,
+    private val logger: LoggerKit
+) : SaveFuelExpenseUseCase {
+
+    override fun invoke(input: SaveFuelExpenseUseCase.Input): Flow<SaveFuelExpenseUseCase.Output> = flow {
+        logger.d("SaveFuelExpenseUseCase", "UseCase invoked for vehicle: ${input.vehicleId}, fullTank: ${input.isFullTank}")
+        emit(SaveFuelExpenseUseCase.Output.Progress)
+
+        val isPriceReport = input.volumeQuantity == 0.0 && input.totalCost == 0.0 && input.unitPrice > 0.0
+
+        if (!isPriceReport && (input.volumeQuantity <= 0.0 || input.unitPrice <= 0.0 || input.totalCost <= 0.0)) {
+            logger.w("SaveFuelExpenseUseCase", "Invalid numeric values in expense input: volume=${input.volumeQuantity}, price=${input.unitPrice}, total=${input.totalCost}")
+            emit(SaveFuelExpenseUseCase.Output.InvalidInput(KmError.InvalidFuelExpenseValues))
+            return@flow
+        }
+
+        // Hybrid A+C: infer km driven since last full refuel from OdometerRecord history
+        val (kmSinceLastRefuel, consumptionPer100km) = calculateConsumption(input)
+
+        val expenseId = input.id ?: UUID.randomUUID().toString()
+        val expense = FuelExpense(
+            id = expenseId,
+            vehicleId = input.vehicleId,
+            stationId = input.stationId,
+            stationName = input.stationName,
+            timestamp = input.timestamp ?: System.currentTimeMillis(),
+            fuelType = input.fuelType,
+            unitPrice = input.unitPrice,
+            volumeQuantity = input.volumeQuantity,
+            totalCost = input.totalCost,
+            odometerAtExpense = input.odometerAtExpense,
+            isFullTank = input.isFullTank,
+            kmSinceLastRefuel = kmSinceLastRefuel,
+            consumptionPer100km = consumptionPer100km,
+            notes = input.notes
+        )
+
+        logger.d("SaveFuelExpenseUseCase", "Saving expense: $expenseId with kmSinceRefuel=$kmSinceLastRefuel, consumption=$consumptionPer100km")
+
+        val savedId = expenseRepository.saveExpense(expense).first()
+        logger.i("SaveFuelExpenseUseCase", "Expense saved successfully: $savedId")
+        emit(SaveFuelExpenseUseCase.Output.Success(savedId))
+    }
+        .onStart { emit(SaveFuelExpenseUseCase.Output.Progress) }
+        .catch { e ->
+            logger.e("SaveFuelExpenseUseCase", "Error saving expense", e)
+            val error = (e as? KmException)?.error ?: KmError.UnknownError
+            emit(SaveFuelExpenseUseCase.Output.Failure(error))
+        }
+
+    /**
+     * Hybrid A+C algorithm:
+     * - Queries [HistoryRepository] for odometer records belonging to [Input.vehicleId].
+     * - If [Input.lastRefuelTimestamp] is provided, only sums records whose timestamp is > that boundary.
+     * - Returns `(kmDriven, consumptionLPer100km)` only when [Input.isFullTank] is true and kmDriven > 0.
+     * - Gracefully falls back to `(null, null)` on any error or missing data.
+     */
+    private suspend fun calculateConsumption(input: SaveFuelExpenseUseCase.Input): Pair<Double?, Double?> {
+        if (!input.isFullTank) {
+            logger.d("SaveFuelExpenseUseCase", "isFullTank=false, skipping consumption calculation")
+            return Pair(null, null)
+        }
+
+        return try {
+            val records = historyRepository.getHistory(input.vehicleId).first()
+
+            val relevantRecords = if (input.lastRefuelTimestamp != null) {
+                records.filter { it.timestamp > input.lastRefuelTimestamp }
+            } else {
+                records
+            }
+
+            val kmSinceLastRefuel = relevantRecords
+                .filter { !it.isInitialRecord }
+                .sumOf { it.odometerValue }
+
+            if (kmSinceLastRefuel <= 0.0) {
+                logger.d("SaveFuelExpenseUseCase", "No km accumulated in window (km=$kmSinceLastRefuel), skipping consumption")
+                return Pair(null, null)
+            }
+
+            val consumption = (input.volumeQuantity / kmSinceLastRefuel) * 100.0
+            logger.d(
+                "SaveFuelExpenseUseCase",
+                "Consumption calculated: ${input.volumeQuantity}L / ${kmSinceLastRefuel}km = $consumption L/100km"
+            )
+            Pair(kmSinceLastRefuel, consumption)
+        } catch (e: Exception) {
+            logger.w("SaveFuelExpenseUseCase", "Failed to calculate consumption from history, defaulting to null", e)
+            Pair(null, null)
+        }
     }
 }

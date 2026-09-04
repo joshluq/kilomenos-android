@@ -3,9 +3,7 @@ package es.joshluq.kmsafe.feature.dashboard
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import es.joshluq.foundationkit.log.LoggerKit
-import es.joshluq.foundationkit.usecase.FlowUseCase
 import es.joshluq.foundationkit.viewmodel.ScreenViewModel
-import es.joshluq.kmsafe.domain.di.GetRenting
 import es.joshluq.kmsafe.domain.usecase.GetRentingContractUseCase
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
@@ -16,8 +14,7 @@ import javax.inject.Inject
  */
 @HiltViewModel
 class DashboardViewModel @Inject constructor(
-    @GetRenting private val getRentingContractUseCase:
-    @JvmSuppressWildcards FlowUseCase<GetRentingContractUseCase.Input, GetRentingContractUseCase.Output>,
+    private val getRentingContractUseCase: GetRentingContractUseCase,
     private val logger: LoggerKit
 ) : ScreenViewModel<State, Event, Effect>() {
 

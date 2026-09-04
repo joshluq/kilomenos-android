@@ -4,14 +4,7 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import es.joshluq.foundationkit.log.LoggerKit
 import es.joshluq.foundationkit.text.TextProvider
-import es.joshluq.foundationkit.usecase.FlowUseCase
 import es.joshluq.foundationkit.viewmodel.ScreenViewModel
-import es.joshluq.kmsafe.domain.di.CheckFeatureAccess
-import es.joshluq.kmsafe.domain.di.DeleteServiceStation
-import es.joshluq.kmsafe.domain.di.GetAllServiceStations
-import es.joshluq.kmsafe.domain.di.SaveServiceStation
-import es.joshluq.kmsafe.domain.di.SetFavoriteStation
-import es.joshluq.kmsafe.domain.di.SyncStations
 import es.joshluq.kmsafe.domain.model.Feature
 import es.joshluq.kmsafe.domain.model.ServiceStation
 import es.joshluq.kmsafe.domain.usecase.CheckFeatureAccessUseCase
@@ -30,18 +23,12 @@ import javax.inject.Inject
  */
 @HiltViewModel
 class StationManagementViewModel @Inject constructor(
-    @param:GetAllServiceStations private val getAllServiceStationsUseCase:
-    @JvmSuppressWildcards FlowUseCase<GetAllServiceStationsUseCase.Input, GetAllServiceStationsUseCase.Output>,
-    @param:SaveServiceStation private val saveServiceStationUseCase:
-    @JvmSuppressWildcards FlowUseCase<SaveServiceStationUseCase.Input, SaveServiceStationUseCase.Output>,
-    @param:DeleteServiceStation private val deleteServiceStationUseCase:
-    @JvmSuppressWildcards FlowUseCase<DeleteServiceStationUseCase.Input, DeleteServiceStationUseCase.Output>,
-    @param:SetFavoriteStation private val setFavoriteStationUseCase:
-    @JvmSuppressWildcards FlowUseCase<SetFavoriteStationUseCase.Input, SetFavoriteStationUseCase.Output>,
-    @param:CheckFeatureAccess private val checkFeatureAccessUseCase:
-    @JvmSuppressWildcards FlowUseCase<CheckFeatureAccessUseCase.Input, CheckFeatureAccessUseCase.Output>,
-    @param:SyncStations private val syncStationsUseCase:
-    @JvmSuppressWildcards FlowUseCase<SyncStationsUseCase.Input, SyncStationsUseCase.Output>,
+    private val getAllServiceStationsUseCase: GetAllServiceStationsUseCase,
+    private val saveServiceStationUseCase: SaveServiceStationUseCase,
+    private val deleteServiceStationUseCase: DeleteServiceStationUseCase,
+    private val setFavoriteStationUseCase: SetFavoriteStationUseCase,
+    private val checkFeatureAccessUseCase: CheckFeatureAccessUseCase,
+    private val syncStationsUseCase: SyncStationsUseCase,
     private val logger: LoggerKit
 ) : ScreenViewModel<StationManagementState, StationManagementEvent, StationManagementEffect>() {
 

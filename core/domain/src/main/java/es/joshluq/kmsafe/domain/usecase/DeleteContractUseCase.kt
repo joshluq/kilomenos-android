@@ -11,24 +11,10 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onStart
 import javax.inject.Inject
 
-class DeleteContractUseCase @Inject constructor(
-    private val repository: RentingRepository,
-    private val logger: LoggerKit
-) : FlowUseCase<DeleteContractUseCase.Input, DeleteContractUseCase.Output> {
-
-    override fun invoke(input: Input): Flow<Output> {
-        logger.d("DeleteContractUseCase", "Deleting contract ID: ${input.id}")
-        return repository.deleteContract(input.id)
-            .map {
-                logger.i("DeleteContractUseCase", "Contract deleted successfully")
-                Output.Success as Output
-            }
-            .onStart { emit(Output.Progress) }
-            .catch {
-                logger.e("DeleteContractUseCase", "Failed to delete contract", it)
-                emit(Output.Failure)
-            }
-    }
+/**
+ * Domain interface to delete a renting contract.
+ */
+interface DeleteContractUseCase : FlowUseCase<DeleteContractUseCase.Input, DeleteContractUseCase.Output> {
 
     data class Input(val id: String) : UseCaseInput
 
@@ -36,5 +22,25 @@ class DeleteContractUseCase @Inject constructor(
         object Progress : Output
         object Failure : Output
         object Success : Output
+    }
+}
+
+class DeleteContractUseCaseImpl @Inject constructor(
+    private val repository: RentingRepository,
+    private val logger: LoggerKit
+) : DeleteContractUseCase {
+
+    override fun invoke(input: DeleteContractUseCase.Input): Flow<DeleteContractUseCase.Output> {
+        logger.d("DeleteContractUseCase", "Deleting contract ID: ${input.id}")
+        return repository.deleteContract(input.id)
+            .map {
+                logger.i("DeleteContractUseCase", "Contract deleted successfully")
+                DeleteContractUseCase.Output.Success as DeleteContractUseCase.Output
+            }
+            .onStart { emit(DeleteContractUseCase.Output.Progress) }
+            .catch {
+                logger.e("DeleteContractUseCase", "Failed to delete contract", it)
+                emit(DeleteContractUseCase.Output.Failure)
+            }
     }
 }

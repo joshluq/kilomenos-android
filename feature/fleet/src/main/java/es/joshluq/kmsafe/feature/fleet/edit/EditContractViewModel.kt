@@ -7,14 +7,7 @@ import es.joshluq.analyticskit.domain.model.AnalyticsEvent
 import es.joshluq.analyticskit.sdk.AnalyticskitManager
 import es.joshluq.foundationkit.log.LoggerKit
 import es.joshluq.foundationkit.text.TextProvider
-import es.joshluq.foundationkit.usecase.FlowUseCase
-import es.joshluq.foundationkit.usecase.UseCase
 import es.joshluq.foundationkit.viewmodel.ScreenViewModel
-import es.joshluq.kmsafe.domain.di.CheckFeatureAccess
-import es.joshluq.kmsafe.domain.di.GetImageBytes
-import es.joshluq.kmsafe.domain.di.GetVehicleById
-import es.joshluq.kmsafe.domain.di.UpdateContract
-import es.joshluq.kmsafe.domain.di.UploadVehicleImage
 import es.joshluq.kmsafe.domain.model.Feature
 import es.joshluq.kmsafe.domain.usecase.CheckFeatureAccessUseCase
 import es.joshluq.kmsafe.domain.usecase.GetImageBytesUseCase
@@ -36,16 +29,11 @@ import es.joshluq.kmsafe.core.ui.R as CoreR
 @HiltViewModel
 class EditContractViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
-    @param:GetVehicleById private val getVehicleByIdUseCase:
-    @JvmSuppressWildcards FlowUseCase<GetVehicleByIdUseCase.Input, GetVehicleByIdUseCase.Output>,
-    @param:UpdateContract private val updateContractUseCase:
-    @JvmSuppressWildcards FlowUseCase<UpdateContractUseCase.Input, UpdateContractUseCase.Output>,
-    @param:UploadVehicleImage private val uploadVehicleImageUseCase:
-    @JvmSuppressWildcards FlowUseCase<UploadVehicleImageUseCase.Input, UploadVehicleImageUseCase.Output>,
-    @param:CheckFeatureAccess private val checkFeatureAccessUseCase:
-    @JvmSuppressWildcards FlowUseCase<CheckFeatureAccessUseCase.Input, CheckFeatureAccessUseCase.Output>,
-    @param:GetImageBytes private val getImageBytesUseCase:
-    @JvmSuppressWildcards UseCase<GetImageBytesUseCase.Input, GetImageBytesUseCase.Output>,
+    private val getVehicleByIdUseCase: GetVehicleByIdUseCase,
+    private val updateContractUseCase: UpdateContractUseCase,
+    private val uploadVehicleImageUseCase: UploadVehicleImageUseCase,
+    private val checkFeatureAccessUseCase: CheckFeatureAccessUseCase,
+    private val getImageBytesUseCase: GetImageBytesUseCase,
     private val analytics: AnalyticskitManager,
     private val logger: LoggerKit
 ) : ScreenViewModel<State, Event, Effect>() {

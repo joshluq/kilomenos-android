@@ -19,26 +19,37 @@ import kotlinx.coroutines.flow.onStart
 import javax.inject.Inject
 
 /**
- * Use case to push all PENDING local contracts and odometer records to the remote server.
+ * Domain interface to push all PENDING local contracts and odometer records to the remote server.
  * This is triggered after a user upgrades to PREMIUM or when network is restored.
  */
-class MigrateLocalDataToRemoteUseCase @Inject constructor(
+interface MigrateLocalDataToRemoteUseCase : FlowUseCase<MigrateLocalDataToRemoteUseCase.Input, MigrateLocalDataToRemoteUseCase.Output> {
+
+    object Input : UseCaseInput
+
+    sealed interface Output : UseCaseOutput {
+        data object Progress : Output
+        data object Failure : Output
+        data object Success : Output
+    }
+}
+
+class MigrateLocalDataToRemoteUseCaseImpl @Inject constructor(
     private val rentingRepository: RentingRepository,
     private val historyRepository: HistoryRepository,
     private val fuelRepository: FuelExpenseRepository,
     private val stationRepository: ServiceStationRepository,
     private val authRepository: AuthRepository,
     private val logger: LoggerKit
-) : FlowUseCase<MigrateLocalDataToRemoteUseCase.Input, MigrateLocalDataToRemoteUseCase.Output> {
+) : MigrateLocalDataToRemoteUseCase {
 
-    override fun invoke(input: Input): Flow<Output> = flow {
+    override fun invoke(input: MigrateLocalDataToRemoteUseCase.Input): Flow<MigrateLocalDataToRemoteUseCase.Output> = flow {
         logger.d("MigrateLocalData", "Starting migration of PENDING local data to remote")
 
         // 0. Ensure user session is refreshed to pick up PREMIUM level
         val entitlements = authRepository.getEntitlements().first()
         if (entitlements.subscriptionLevel == SubscriptionLevel.FREE) {
             logger.d("MigrateLocalData", "Aborting migration: User is FREE and cloud sync is disabled")
-            emit(Output.Success as Output)
+            emit(MigrateLocalDataToRemoteUseCase.Output.Success as MigrateLocalDataToRemoteUseCase.Output)
             return@flow
         }
 
@@ -100,18 +111,10 @@ class MigrateLocalDataToRemoteUseCase @Inject constructor(
         }
 
         logger.i("MigrateLocalData", "Migration process completed")
-        emit(Output.Success as Output)
-    }.onStart { emit(Output.Progress as Output) }
+        emit(MigrateLocalDataToRemoteUseCase.Output.Success as MigrateLocalDataToRemoteUseCase.Output)
+    }.onStart { emit(MigrateLocalDataToRemoteUseCase.Output.Progress as MigrateLocalDataToRemoteUseCase.Output) }
         .catch {
             logger.e("MigrateLocalData", "Critical failure during migration", it)
-            emit(Output.Failure as Output)
+            emit(MigrateLocalDataToRemoteUseCase.Output.Failure as MigrateLocalDataToRemoteUseCase.Output)
         }
-
-    object Input : UseCaseInput
-
-    sealed interface Output : UseCaseOutput {
-        data object Progress : Output
-        data object Failure : Output
-        data object Success : Output
-    }
 }

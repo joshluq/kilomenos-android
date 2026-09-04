@@ -12,11 +12,8 @@ import android.os.Build
 import androidx.core.app.NotificationCompat
 import dagger.hilt.android.AndroidEntryPoint
 import es.joshluq.foundationkit.log.LoggerKit
-import es.joshluq.foundationkit.usecase.FlowUseCase
 import es.joshluq.kmsafe.MainActivity
 import es.joshluq.kmsafe.R
-import es.joshluq.kmsafe.domain.di.CheckFeatureAccess
-import es.joshluq.kmsafe.domain.di.GetRenting
 import es.joshluq.kmsafe.domain.model.Feature
 import es.joshluq.kmsafe.domain.usecase.CheckFeatureAccessUseCase
 import es.joshluq.kmsafe.domain.usecase.GetRentingContractUseCase
@@ -39,14 +36,10 @@ class BluetoothConnectionReceiver : BroadcastReceiver() {
     lateinit var logger: LoggerKit
 
     @Inject
-    @CheckFeatureAccess
-    lateinit var checkFeatureAccessUseCase:
-        @JvmSuppressWildcards FlowUseCase<CheckFeatureAccessUseCase.Input, CheckFeatureAccessUseCase.Output>
+    lateinit var checkFeatureAccessUseCase: CheckFeatureAccessUseCase
 
     @Inject
-    @GetRenting
-    lateinit var getRentingContractUseCase:
-        @JvmSuppressWildcards FlowUseCase<GetRentingContractUseCase.Input, GetRentingContractUseCase.Output>
+    lateinit var getRentingContractUseCase: GetRentingContractUseCase
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 

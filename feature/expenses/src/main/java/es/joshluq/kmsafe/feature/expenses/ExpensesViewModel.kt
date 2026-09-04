@@ -5,16 +5,7 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import es.joshluq.foundationkit.log.LoggerKit
 import es.joshluq.foundationkit.text.TextProvider
-import es.joshluq.foundationkit.usecase.FlowUseCase
 import es.joshluq.foundationkit.viewmodel.ScreenViewModel
-import es.joshluq.kmsafe.domain.di.CheckFeatureAccess
-import es.joshluq.kmsafe.domain.di.DeleteFuelExpense
-import es.joshluq.kmsafe.domain.di.GetAllServiceStations
-import es.joshluq.kmsafe.domain.di.GetElectrificationSavings
-import es.joshluq.kmsafe.domain.di.GetExpensesByVehicle
-import es.joshluq.kmsafe.domain.di.GetStationVolatility
-import es.joshluq.kmsafe.domain.di.SaveFuelExpense
-import es.joshluq.kmsafe.domain.di.SaveServiceStation
 import es.joshluq.kmsafe.domain.model.EnergyCategory
 import es.joshluq.kmsafe.domain.model.Feature
 import es.joshluq.kmsafe.domain.model.FuelExpense
@@ -41,22 +32,14 @@ import javax.inject.Inject
 @HiltViewModel
 class ExpensesViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
-    @param:GetExpensesByVehicle private val getExpensesByVehicleUseCase:
-    @JvmSuppressWildcards FlowUseCase<GetExpensesByVehicleUseCase.Input, GetExpensesByVehicleUseCase.Output>,
-    @param:SaveFuelExpense private val saveFuelExpenseUseCase:
-    @JvmSuppressWildcards FlowUseCase<SaveFuelExpenseUseCase.Input, SaveFuelExpenseUseCase.Output>,
-    @param:DeleteFuelExpense private val deleteFuelExpenseUseCase:
-    @JvmSuppressWildcards FlowUseCase<DeleteFuelExpenseUseCase.Input, DeleteFuelExpenseUseCase.Output>,
-    @param:GetStationVolatility private val getStationVolatilityUseCase:
-    @JvmSuppressWildcards FlowUseCase<GetStationVolatilityUseCase.Input, GetStationVolatilityUseCase.Output>,
-    @param:GetElectrificationSavings private val getElectrificationSavingsUseCase:
-    @JvmSuppressWildcards FlowUseCase<GetElectrificationSavingsUseCase.Input, GetElectrificationSavingsUseCase.Output>,
-    @param:CheckFeatureAccess private val checkFeatureAccessUseCase:
-    @JvmSuppressWildcards FlowUseCase<CheckFeatureAccessUseCase.Input, CheckFeatureAccessUseCase.Output>,
-    @param:GetAllServiceStations private val getAllServiceStationsUseCase:
-    @JvmSuppressWildcards FlowUseCase<GetAllServiceStationsUseCase.Input, GetAllServiceStationsUseCase.Output>,
-    @param:SaveServiceStation private val saveServiceStationUseCase:
-    @JvmSuppressWildcards FlowUseCase<SaveServiceStationUseCase.Input, SaveServiceStationUseCase.Output>,
+    private val getExpensesByVehicleUseCase: GetExpensesByVehicleUseCase,
+    private val saveFuelExpenseUseCase: SaveFuelExpenseUseCase,
+    private val deleteFuelExpenseUseCase: DeleteFuelExpenseUseCase,
+    private val getStationVolatilityUseCase: GetStationVolatilityUseCase,
+    private val getElectrificationSavingsUseCase: GetElectrificationSavingsUseCase,
+    private val checkFeatureAccessUseCase: CheckFeatureAccessUseCase,
+    private val getAllServiceStationsUseCase: GetAllServiceStationsUseCase,
+    private val saveServiceStationUseCase: SaveServiceStationUseCase,
     private val logger: LoggerKit
 ) : ScreenViewModel<ExpensesState, ExpensesEvent, ExpensesEffect>() {
 

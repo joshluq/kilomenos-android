@@ -469,7 +469,7 @@ private fun RentingState(
         MainBalanceCard(
             vehicleName = state.renting?.vehicleName ?: "",
             balance = state.balance,
-            totalKms = state.totalKmsDriven,
+            totalKms = state.actualKmsDriven,
             imageUrl = state.renting?.vehicleImageUrl,
             onEditClick = {
                 keyboardController?.hide()

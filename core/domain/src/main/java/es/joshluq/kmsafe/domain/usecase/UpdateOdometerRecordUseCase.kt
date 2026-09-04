@@ -11,16 +11,10 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.onStart
 import javax.inject.Inject
 
-class UpdateOdometerRecordUseCase @Inject constructor(
-    private val repository: HistoryRepository
-) : FlowUseCase<UpdateOdometerRecordUseCase.Input, UpdateOdometerRecordUseCase.Output> {
-
-    override fun invoke(input: Input): Flow<Output> = flow {
-        repository.updateRecord(input.record)
-        emit(Output.Success as Output)
-    }
-        .onStart { emit(Output.Progress) }
-        .catch { emit(Output.Failure(it.message ?: "Unknown error")) }
+/**
+ * Domain interface to update an odometer record.
+ */
+interface UpdateOdometerRecordUseCase : FlowUseCase<UpdateOdometerRecordUseCase.Input, UpdateOdometerRecordUseCase.Output> {
 
     data class Input(val record: OdometerRecord) : UseCaseInput
 
@@ -29,4 +23,16 @@ class UpdateOdometerRecordUseCase @Inject constructor(
         data class Failure(val message: String) : Output
         object Success : Output
     }
+}
+
+class UpdateOdometerRecordUseCaseImpl @Inject constructor(
+    private val repository: HistoryRepository
+) : UpdateOdometerRecordUseCase {
+
+    override fun invoke(input: UpdateOdometerRecordUseCase.Input): Flow<UpdateOdometerRecordUseCase.Output> = flow {
+        repository.updateRecord(input.record)
+        emit(UpdateOdometerRecordUseCase.Output.Success as UpdateOdometerRecordUseCase.Output)
+    }
+        .onStart { emit(UpdateOdometerRecordUseCase.Output.Progress) }
+        .catch { emit(UpdateOdometerRecordUseCase.Output.Failure(it.message ?: "Unknown error")) }
 }

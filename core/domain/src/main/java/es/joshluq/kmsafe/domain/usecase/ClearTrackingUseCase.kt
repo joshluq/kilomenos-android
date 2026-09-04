@@ -9,20 +9,23 @@ import kotlinx.coroutines.flow.flow
 import javax.inject.Inject
 
 /**
- * Use case to clear the current tracked trip data.
+ * Domain interface to clear the current tracked trip data.
  */
-class ClearTrackingUseCase @Inject constructor(
-    private val repository: TrackingRepository
-) : FlowUseCase<ClearTrackingUseCase.Input, ClearTrackingUseCase.Output> {
-
-    override fun invoke(input: Input): Flow<Output> = flow {
-        repository.clear()
-        emit(Output.Success)
-    }
+interface ClearTrackingUseCase : FlowUseCase<ClearTrackingUseCase.Input, ClearTrackingUseCase.Output> {
 
     object Input : UseCaseInput
 
     sealed interface Output : UseCaseOutput {
         object Success : Output
+    }
+}
+
+class ClearTrackingUseCaseImpl @Inject constructor(
+    private val repository: TrackingRepository
+) : ClearTrackingUseCase {
+
+    override fun invoke(input: ClearTrackingUseCase.Input): Flow<ClearTrackingUseCase.Output> = flow {
+        repository.clear()
+        emit(ClearTrackingUseCase.Output.Success)
     }
 }

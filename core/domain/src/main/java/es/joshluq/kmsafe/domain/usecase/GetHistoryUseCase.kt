@@ -20,13 +20,31 @@ import kotlinx.coroutines.flow.onStart
 import javax.inject.Inject
 
 /**
- * Use case to retrieve the odometer history grouped by month.
+ * Domain interface to retrieve the odometer history grouped by month.
  */
-class GetHistoryUseCase @Inject constructor(
+interface GetHistoryUseCase : FlowUseCase<GetHistoryUseCase.Input, GetHistoryUseCase.Output> {
+
+    data class Input(val forceRefresh: Boolean = false) : UseCaseInput
+
+    sealed interface Output : UseCaseOutput {
+        data object Progress : Output
+        data object Failure : Output
+        data object Empty : Output
+        data class Success(
+            val contractId: String,
+            val initialRecord: OdometerRecord?,
+            val allRecords: List<RecordWithIndicator>,
+            val totalKms: Double,
+            val totalRecordsCount: Int
+        ) : Output
+    }
+}
+
+class GetHistoryUseCaseImpl @Inject constructor(
     private val historyRepository: HistoryRepository,
     private val rentingRepository: RentingRepository,
     private val logger: LoggerKit
-) : FlowUseCase<GetHistoryUseCase.Input, GetHistoryUseCase.Output> {
+) : GetHistoryUseCase {
 
     companion object {
         private const val DAYS_IN_MONTH = 30.4375
@@ -34,12 +52,12 @@ class GetHistoryUseCase @Inject constructor(
     }
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    override fun invoke(input: Input): Flow<Output> {
+    override fun invoke(input: GetHistoryUseCase.Input): Flow<GetHistoryUseCase.Output> {
         logger.d("GetHistoryUseCase", "Fetching history (forceRefresh=${input.forceRefresh})")
         return rentingRepository.getContract().flatMapLatest { contract ->
             if (contract == null) {
                 logger.w("GetHistoryUseCase", "No active contract")
-                return@flatMapLatest flowOf(Output.Empty)
+                return@flatMapLatest flowOf(GetHistoryUseCase.Output.Empty)
             }
 
             val localFlow = historyRepository.getHistory(contract.id)
@@ -59,29 +77,31 @@ class GetHistoryUseCase @Inject constructor(
                     processRecords(records, contract)
                 }
             }
-        }
-            .onStart { emit(Output.Progress) }
-            .catch { emit(Output.Failure) }
+        }.onStart { emit(GetHistoryUseCase.Output.Progress) }
     }
 
-    private fun processRecords(records: List<OdometerRecord>, contract: RentingContract): Output.Success {
-        logger.i("GetHistoryUseCase", "Processing ${records.size} records for contract ${contract.id}")
+    private fun processRecords(records: List<OdometerRecord>, contract: RentingContract): GetHistoryUseCase.Output {
+        if (records.isEmpty()) {
+            return GetHistoryUseCase.Output.Empty
+        }
+
         val initialRecord = records.find { it.isInitialRecord }
-        val activityRecords = records.filter { !it.isInitialRecord }
-            .sortedBy { it.timestamp }
 
-        val totalKms = activityRecords.sumOf { it.odometerValue }
-        val totalRecordsCount = activityRecords.size
+        // Core Business Rule: Exclude the initial contract record from the consumed real kilometers
+        val sortedAscending = records.filter { !it.isInitialRecord }.sortedBy { it.timestamp }
+        val totalKms = sortedAscending.sumOf { it.odometerValue }
+        val totalRecordsCount = sortedAscending.count()
 
-        var runningAccumulatedKms = initialRecord?.odometerValue ?: contract.startOdometer
+        var runningAccumulatedKms = 0.0
 
-        val recordsWithIndicators = activityRecords.map { record ->
+        // Precompute accumulated kilometers for each trip to determine if it is over the theoretical limit
+        val recordsWithIndicators = sortedAscending.map { record ->
             runningAccumulatedKms += record.odometerValue
             val isOverLimit = isOverLimit(runningAccumulatedKms, record.timestamp, contract)
             RecordWithIndicator(record, isOverLimit)
         }
 
-        return Output.Success(
+        return GetHistoryUseCase.Output.Success(
             contractId = contract.id,
             initialRecord = initialRecord,
             allRecords = recordsWithIndicators.sortedByDescending { it.record.timestamp },
@@ -100,20 +120,5 @@ class GetHistoryUseCase @Inject constructor(
         val expectedKms = contract.startOdometer + (daysPassed * dailyLimit)
 
         return currentTotalOdometer > expectedKms
-    }
-
-    data class Input(val forceRefresh: Boolean = false) : UseCaseInput
-
-    sealed interface Output : UseCaseOutput {
-        data object Progress : Output
-        data object Failure : Output
-        data object Empty : Output
-        data class Success(
-            val contractId: String,
-            val initialRecord: OdometerRecord?,
-            val allRecords: List<RecordWithIndicator>,
-            val totalKms: Double,
-            val totalRecordsCount: Int
-        ) : Output
     }
 }

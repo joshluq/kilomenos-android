@@ -12,14 +12,25 @@ import kotlinx.coroutines.flow.onEach
 import javax.inject.Inject
 
 /**
- * Use case to check the current session status.
+ * Domain interface to check the current session status.
  */
-class CheckSessionUseCase @Inject constructor(
+interface CheckSessionUseCase : FlowUseCase<CheckSessionUseCase.Input, CheckSessionUseCase.Output> {
+    object Input : UseCaseInput
+
+    sealed interface Output : UseCaseOutput {
+        data object Progress : Output
+        data object ActiveSession : Output
+        data object InconsistentSession : Output
+        data object IdleSession : Output
+    }
+}
+
+class CheckSessionUseCaseImpl @Inject constructor(
     private val repository: AuthRepository,
     private val logger: LoggerKit
-) : FlowUseCase<CheckSessionUseCase.Input, CheckSessionUseCase.Output> {
+) : CheckSessionUseCase {
 
-    override fun invoke(input: Input): Flow<Output> {
+    override fun invoke(input: CheckSessionUseCase.Input): Flow<CheckSessionUseCase.Output> {
         logger.d("CheckSessionUseCase", "Checking session state and integrity")
         return combine(
             repository.getSessionState(),
@@ -28,25 +39,16 @@ class CheckSessionUseCase @Inject constructor(
             when (state) {
                 AuthSessionState.Active, AuthSessionState.ExpiringSoon -> {
                     if (user != null) {
-                        Output.ActiveSession
+                        CheckSessionUseCase.Output.ActiveSession
                     } else {
                         // Integrity failure: Session is active in AuthKit but user data is null/unreadable
                         logger.e("CheckSessionUseCase", "Integrity Failure: Session active but User is NULL")
-                        Output.InconsistentSession
+                        CheckSessionUseCase.Output.InconsistentSession
                     }
                 }
-                AuthSessionState.Idle -> Output.IdleSession
-                AuthSessionState.Initializing -> Output.Progress
+                AuthSessionState.Idle -> CheckSessionUseCase.Output.IdleSession
+                AuthSessionState.Initializing -> CheckSessionUseCase.Output.Progress
             }
         }.onEach { logger.i("CheckSessionUseCase", "Session check result: $it") }
-    }
-
-    object Input : UseCaseInput
-
-    sealed interface Output : UseCaseOutput {
-        data object Progress : Output
-        data object ActiveSession : Output
-        data object InconsistentSession : Output
-        data object IdleSession : Output
     }
 }

@@ -4,12 +4,7 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import es.joshluq.foundationkit.log.LoggerKit
 import es.joshluq.foundationkit.text.TextProvider
-import es.joshluq.foundationkit.usecase.FlowUseCase
 import es.joshluq.foundationkit.viewmodel.ScreenViewModel
-import es.joshluq.kmsafe.domain.di.DeleteAccount
-import es.joshluq.kmsafe.domain.di.GetCurrentUser
-import es.joshluq.kmsafe.domain.di.GetEntitlements
-import es.joshluq.kmsafe.domain.di.SignOut
 import es.joshluq.kmsafe.domain.model.SubscriptionLevel
 import es.joshluq.kmsafe.domain.usecase.DeleteAccountUseCase
 import es.joshluq.kmsafe.domain.usecase.GetCurrentUserUseCase
@@ -24,14 +19,10 @@ import kotlin.time.Duration.Companion.milliseconds
 
 @HiltViewModel
 class ProfileViewModel @Inject constructor(
-    @param:SignOut private val signOutUseCase:
-    @JvmSuppressWildcards FlowUseCase<SignOutUseCase.Input, SignOutUseCase.Output>,
-    @param:GetCurrentUser private val getCurrentUserUseCase:
-    @JvmSuppressWildcards FlowUseCase<GetCurrentUserUseCase.Input, GetCurrentUserUseCase.Output>,
-    @param:DeleteAccount private val deleteAccountUseCase:
-    @JvmSuppressWildcards FlowUseCase<DeleteAccountUseCase.Input, DeleteAccountUseCase.Output>,
-    @param:GetEntitlements private val getEntitlementsUseCase:
-    @JvmSuppressWildcards FlowUseCase<GetEntitlementsUseCase.Input, GetEntitlementsUseCase.Output>,
+    private val signOutUseCase: SignOutUseCase,
+    private val getCurrentUserUseCase: GetCurrentUserUseCase,
+    private val deleteAccountUseCase: DeleteAccountUseCase,
+    private val getEntitlementsUseCase: GetEntitlementsUseCase,
     private val profileConfig: ProfileConfig,
     private val logger: LoggerKit
 ) : ScreenViewModel<State, Event, Effect>() {

@@ -7,14 +7,8 @@ import es.joshluq.analyticskit.domain.model.AnalyticsEvent
 import es.joshluq.analyticskit.sdk.AnalyticskitManager
 import es.joshluq.foundationkit.log.LoggerKit
 import es.joshluq.foundationkit.text.TextProvider
-import es.joshluq.foundationkit.usecase.FlowUseCase
 import es.joshluq.foundationkit.viewmodel.ScreenViewModel
 import es.joshluq.kmsafe.core.ui.R as CoreR
-import es.joshluq.kmsafe.domain.di.CheckFeatureAccess
-import es.joshluq.kmsafe.domain.di.DeleteOdometerRecord
-import es.joshluq.kmsafe.domain.di.GetOdometerRecord
-import es.joshluq.kmsafe.domain.di.GetRoute
-import es.joshluq.kmsafe.domain.di.UpdateOdometerRecord
 import es.joshluq.kmsafe.domain.model.Feature
 import es.joshluq.kmsafe.domain.model.OdometerRecord
 import es.joshluq.kmsafe.domain.usecase.CheckFeatureAccessUseCase
@@ -29,16 +23,11 @@ import javax.inject.Inject
 @HiltViewModel
 class RecordDetailViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
-    @param:GetOdometerRecord private val getOdometerRecordUseCase:
-    @JvmSuppressWildcards FlowUseCase<GetOdometerRecordUseCase.Input, GetOdometerRecordUseCase.Output>,
-    @param:DeleteOdometerRecord private val deleteOdometerRecordUseCase:
-    @JvmSuppressWildcards FlowUseCase<DeleteOdometerRecordUseCase.Input, DeleteOdometerRecordUseCase.Output>,
-    @param:UpdateOdometerRecord private val updateOdometerRecordUseCase:
-    @JvmSuppressWildcards FlowUseCase<UpdateOdometerRecordUseCase.Input, UpdateOdometerRecordUseCase.Output>,
-    @param:CheckFeatureAccess private val checkFeatureAccessUseCase:
-    @JvmSuppressWildcards FlowUseCase<CheckFeatureAccessUseCase.Input, CheckFeatureAccessUseCase.Output>,
-    @param:GetRoute private val getRouteUseCase:
-    @JvmSuppressWildcards FlowUseCase<GetRouteUseCase.Input, GetRouteUseCase.Output>,
+    private val getOdometerRecordUseCase: GetOdometerRecordUseCase,
+    private val deleteOdometerRecordUseCase: DeleteOdometerRecordUseCase,
+    private val updateOdometerRecordUseCase: UpdateOdometerRecordUseCase,
+    private val checkFeatureAccessUseCase: CheckFeatureAccessUseCase,
+    private val getRouteUseCase: GetRouteUseCase,
     private val analytics: AnalyticskitManager,
     private val logger: LoggerKit
 ) : ScreenViewModel<RecordDetailState, RecordDetailEvent, RecordDetailEffect>() {

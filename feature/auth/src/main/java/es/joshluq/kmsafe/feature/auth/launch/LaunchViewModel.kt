@@ -3,12 +3,7 @@ package es.joshluq.kmsafe.feature.auth.launch
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import es.joshluq.foundationkit.log.LoggerKit
-import es.joshluq.foundationkit.usecase.FlowUseCase
 import es.joshluq.foundationkit.viewmodel.ScreenViewModel
-import es.joshluq.kmsafe.domain.di.CheckSession
-import es.joshluq.kmsafe.domain.di.GetEntitlements
-import es.joshluq.kmsafe.domain.di.SignOut
-import es.joshluq.kmsafe.domain.di.SyncContracts
 import es.joshluq.kmsafe.domain.service.FingerprintProvider
 import es.joshluq.kmsafe.domain.usecase.CheckSessionUseCase
 import es.joshluq.kmsafe.domain.usecase.GetEntitlementsUseCase
@@ -25,14 +20,10 @@ import kotlin.time.Duration.Companion.milliseconds
 
 @HiltViewModel
 class LaunchViewModel @Inject constructor(
-    @param:CheckSession private val checkSessionUseCase:
-    @JvmSuppressWildcards FlowUseCase<CheckSessionUseCase.Input, CheckSessionUseCase.Output>,
-    @param:SyncContracts private val syncContractsUseCase:
-    @JvmSuppressWildcards FlowUseCase<SyncContractsUseCase.Input, SyncContractsUseCase.Output>,
-    @param:GetEntitlements private val getEntitlementsUseCase:
-    @JvmSuppressWildcards FlowUseCase<GetEntitlementsUseCase.Input, GetEntitlementsUseCase.Output>,
-    @param:SignOut private val signOutUseCase:
-    @JvmSuppressWildcards FlowUseCase<SignOutUseCase.Input, SignOutUseCase.Output>,
+    private val checkSessionUseCase: CheckSessionUseCase,
+    private val syncContractsUseCase: SyncContractsUseCase,
+    private val getEntitlementsUseCase: GetEntitlementsUseCase,
+    private val signOutUseCase: SignOutUseCase,
     private val fingerprintProvider: FingerprintProvider,
     private val logger: LoggerKit
 ) : ScreenViewModel<LaunchState, LaunchEvent, LaunchEffect>() {

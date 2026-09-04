@@ -9,23 +9,9 @@ import kotlinx.coroutines.flow.combine
 import javax.inject.Inject
 
 /**
- * Use case to observe the current trip tracking status and progress.
+ * Domain interface to observe the current trip tracking status and progress.
  */
-class ObserveTrackingStateUseCase @Inject constructor(
-    private val repository: TrackingRepository
-) : FlowUseCase<ObserveTrackingStateUseCase.Input, ObserveTrackingStateUseCase.Output> {
-
-    override fun invoke(input: Input): Flow<Output> {
-        return combine(
-            repository.isTracking,
-            repository.currentDistanceMeters,
-            repository.startTime,
-            repository.currentRoutePolyline,
-            repository.pointCount
-        ) { isTracking, distance, startTime, polyline, points ->
-            Output.Success(isTracking, distance, startTime, polyline, points)
-        }
-    }
+interface ObserveTrackingStateUseCase : FlowUseCase<ObserveTrackingStateUseCase.Input, ObserveTrackingStateUseCase.Output> {
 
     object Input : UseCaseInput
 
@@ -37,5 +23,22 @@ class ObserveTrackingStateUseCase @Inject constructor(
             val encodedPolyline: String?,
             val pointCount: Int
         ) : Output
+    }
+}
+
+class ObserveTrackingStateUseCaseImpl @Inject constructor(
+    private val repository: TrackingRepository
+) : ObserveTrackingStateUseCase {
+
+    override fun invoke(input: ObserveTrackingStateUseCase.Input): Flow<ObserveTrackingStateUseCase.Output> {
+        return combine(
+            repository.isTracking,
+            repository.currentDistanceMeters,
+            repository.startTime,
+            repository.currentRoutePolyline,
+            repository.pointCount
+        ) { isTracking, distance, startTime, polyline, points ->
+            ObserveTrackingStateUseCase.Output.Success(isTracking, distance, startTime, polyline, points)
+        }
     }
 }

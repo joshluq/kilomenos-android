@@ -12,29 +12,10 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onStart
 import javax.inject.Inject
 
-class GetVehicleByIdUseCase @Inject constructor(
-    private val repository: RentingRepository,
-    private val logger: LoggerKit
-) : FlowUseCase<GetVehicleByIdUseCase.Input, GetVehicleByIdUseCase.Output> {
-
-    override fun invoke(input: Input): Flow<Output> {
-        logger.d("GetVehicleByIdUseCase", "Fetching vehicle with ID: ${input.id}")
-        return repository.getContractById(input.id)
-            .map { contract ->
-                if (contract == null) {
-                    logger.w("GetVehicleByIdUseCase", "Vehicle not found")
-                    Output.Failure
-                } else {
-                    logger.i("GetVehicleByIdUseCase", "Vehicle found: ${contract.vehicleName}")
-                    Output.Success(contract)
-                }
-            }
-            .onStart { emit(Output.Progress) }
-            .catch {
-                logger.e("GetVehicleByIdUseCase", "Error fetching vehicle", it)
-                emit(Output.Failure)
-            }
-    }
+/**
+ * Domain interface to fetch a vehicle contract by its ID.
+ */
+interface GetVehicleByIdUseCase : FlowUseCase<GetVehicleByIdUseCase.Input, GetVehicleByIdUseCase.Output> {
 
     data class Input(val id: String) : UseCaseInput
 
@@ -42,5 +23,30 @@ class GetVehicleByIdUseCase @Inject constructor(
         object Progress : Output
         object Failure : Output
         data class Success(val contract: RentingContract) : Output
+    }
+}
+
+class GetVehicleByIdUseCaseImpl @Inject constructor(
+    private val repository: RentingRepository,
+    private val logger: LoggerKit
+) : GetVehicleByIdUseCase {
+
+    override fun invoke(input: GetVehicleByIdUseCase.Input): Flow<GetVehicleByIdUseCase.Output> {
+        logger.d("GetVehicleByIdUseCase", "Fetching vehicle with ID: ${input.id}")
+        return repository.getContractById(input.id)
+            .map { contract ->
+                if (contract == null) {
+                    logger.w("GetVehicleByIdUseCase", "Vehicle not found")
+                    GetVehicleByIdUseCase.Output.Failure
+                } else {
+                    logger.i("GetVehicleByIdUseCase", "Vehicle found: ${contract.vehicleName}")
+                    GetVehicleByIdUseCase.Output.Success(contract)
+                }
+            }
+            .onStart { emit(GetVehicleByIdUseCase.Output.Progress) }
+            .catch {
+                logger.e("GetVehicleByIdUseCase", "Error fetching vehicle", it)
+                emit(GetVehicleByIdUseCase.Output.Failure)
+            }
     }
 }

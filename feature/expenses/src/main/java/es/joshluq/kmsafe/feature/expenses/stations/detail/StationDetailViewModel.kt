@@ -5,13 +5,7 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import es.joshluq.foundationkit.log.LoggerKit
 import es.joshluq.foundationkit.text.TextProvider
-import es.joshluq.foundationkit.usecase.FlowUseCase
 import es.joshluq.foundationkit.viewmodel.ScreenViewModel
-import es.joshluq.kmsafe.domain.di.CheckFeatureAccess
-import es.joshluq.kmsafe.domain.di.GetServiceStationDetail
-import es.joshluq.kmsafe.domain.di.GetStationVolatility
-import es.joshluq.kmsafe.domain.di.SetFavoriteStation
-import es.joshluq.kmsafe.domain.di.SyncStations
 import es.joshluq.kmsafe.domain.model.Feature
 import es.joshluq.kmsafe.domain.model.FuelType
 import es.joshluq.kmsafe.domain.usecase.CheckFeatureAccessUseCase
@@ -30,16 +24,11 @@ import javax.inject.Inject
 @HiltViewModel
 class StationDetailViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
-    @param:GetServiceStationDetail private val getServiceStationDetailUseCase:
-    @JvmSuppressWildcards FlowUseCase<GetServiceStationDetailUseCase.Input, GetServiceStationDetailUseCase.Output>,
-    @param:GetStationVolatility private val getStationVolatilityUseCase:
-    @JvmSuppressWildcards FlowUseCase<GetStationVolatilityUseCase.Input, GetStationVolatilityUseCase.Output>,
-    @param:SetFavoriteStation private val setFavoriteStationUseCase:
-    @JvmSuppressWildcards FlowUseCase<SetFavoriteStationUseCase.Input, SetFavoriteStationUseCase.Output>,
-    @param:CheckFeatureAccess private val checkFeatureAccessUseCase:
-    @JvmSuppressWildcards FlowUseCase<CheckFeatureAccessUseCase.Input, CheckFeatureAccessUseCase.Output>,
-    @param:SyncStations private val syncStationsUseCase:
-    @JvmSuppressWildcards FlowUseCase<SyncStationsUseCase.Input, SyncStationsUseCase.Output>,
+    private val getServiceStationDetailUseCase: GetServiceStationDetailUseCase,
+    private val getStationVolatilityUseCase: GetStationVolatilityUseCase,
+    private val setFavoriteStationUseCase: SetFavoriteStationUseCase,
+    private val checkFeatureAccessUseCase: CheckFeatureAccessUseCase,
+    private val syncStationsUseCase: SyncStationsUseCase,
     private val logger: LoggerKit
 ) : ScreenViewModel<StationDetailState, StationDetailEvent, StationDetailEffect>() {
 

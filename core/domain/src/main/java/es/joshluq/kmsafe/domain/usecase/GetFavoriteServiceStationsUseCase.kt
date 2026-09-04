@@ -13,31 +13,33 @@ import kotlinx.coroutines.flow.onStart
 import javax.inject.Inject
 
 /**
- * Use case to retrieve only favorite service stations.
+ * Domain interface to retrieve only favorite service stations.
  */
-class GetFavoriteServiceStationsUseCase @Inject constructor(
-    private val repository: ServiceStationRepository,
-    private val logger: LoggerKit
-) : FlowUseCase<GetFavoriteServiceStationsUseCase.Input, GetFavoriteServiceStationsUseCase.Output> {
-
-    override fun invoke(input: Input): Flow<Output> {
-        logger.d("GetFavoriteStations", "Fetching favorite stations")
-        return repository.getFavoriteStations()
-            .map { stations ->
-                Output.Success(stations) as Output
-            }
-            .onStart { emit(Output.Progress) }
-            .catch { e ->
-                logger.e("GetFavoriteStations", "Error fetching favorites", e)
-                emit(Output.Failure)
-            }
-    }
-
+interface GetFavoriteServiceStationsUseCase : FlowUseCase<GetFavoriteServiceStationsUseCase.Input, GetFavoriteServiceStationsUseCase.Output> {
     object Input : UseCaseInput
 
     sealed interface Output : UseCaseOutput {
         data object Progress : Output
         data object Failure : Output
         data class Success(val stations: List<ServiceStation>) : Output
+    }
+}
+
+class GetFavoriteServiceStationsUseCaseImpl @Inject constructor(
+    private val repository: ServiceStationRepository,
+    private val logger: LoggerKit
+) : GetFavoriteServiceStationsUseCase {
+
+    override fun invoke(input: GetFavoriteServiceStationsUseCase.Input): Flow<GetFavoriteServiceStationsUseCase.Output> {
+        logger.d("GetFavoriteStations", "Fetching favorite stations")
+        return repository.getFavoriteStations()
+            .map { stations ->
+                GetFavoriteServiceStationsUseCase.Output.Success(stations) as GetFavoriteServiceStationsUseCase.Output
+            }
+            .onStart { emit(GetFavoriteServiceStationsUseCase.Output.Progress) }
+            .catch { e ->
+                logger.e("GetFavoriteStations", "Error fetching favorites", e)
+                emit(GetFavoriteServiceStationsUseCase.Output.Failure)
+            }
     }
 }

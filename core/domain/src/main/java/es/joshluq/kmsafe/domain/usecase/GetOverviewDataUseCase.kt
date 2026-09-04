@@ -54,7 +54,8 @@ class GetOverviewDataUseCaseImpl @Inject constructor(
             }
 
             historyRepository.getHistory(contract.id).distinctUntilChanged().map { records ->
-                val metrics = calculateContractMetricsUseCase.calculate(contract, records)
+                val input = CalculateContractMetricsUseCase.Input(contract, records)
+                val metrics = (calculateContractMetricsUseCase(input).getOrNull() as CalculateContractMetricsUseCase.Output.Success).metrics
 
                 if (metrics.isSyncPending) {
                     logger.i(

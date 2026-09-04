@@ -12,13 +12,25 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 
-class GetPreferencesUseCase @Inject constructor(
+/**
+ * Domain interface to fetch preferences.
+ */
+interface GetPreferencesUseCase : FlowUseCase<GetPreferencesUseCase.Input, GetPreferencesUseCase.Output> {
+
+    object Input : UseCaseInput
+
+    sealed interface Output : UseCaseOutput {
+        data class Success(val preferences: UserPreferences) : Output
+    }
+}
+
+class GetPreferencesUseCaseImpl @Inject constructor(
     private val repository: PreferencesRepository,
     private val authRepository: AuthRepository
-) : FlowUseCase<GetPreferencesUseCase.Input, GetPreferencesUseCase.Output> {
+) : GetPreferencesUseCase {
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    override fun invoke(input: Input): Flow<Output> {
+    override fun invoke(input: GetPreferencesUseCase.Input): Flow<GetPreferencesUseCase.Output> {
         return authRepository.getCurrentUser().flatMapLatest { user ->
             if (user != null) {
                 repository.getPreferences(user.id)
@@ -26,13 +38,7 @@ class GetPreferencesUseCase @Inject constructor(
                 repository.getGlobalPreferences()
             }
         }.map {
-            Output.Success(it)
+            GetPreferencesUseCase.Output.Success(it)
         }
-    }
-
-    object Input : UseCaseInput
-
-    sealed interface Output : UseCaseOutput {
-        data class Success(val preferences: UserPreferences) : Output
     }
 }

@@ -14,12 +14,9 @@ import kotlinx.coroutines.flow.onStart
 import javax.inject.Inject
 
 /**
- * Use case for signing in with Google OAuth.
+ * Domain interface for signing in with Google OAuth.
  */
-class SignInWithGoogleUseCase @Inject constructor(
-    private val repository: AuthRepository
-) : FlowUseCase<SignInWithGoogleUseCase.Input, SignInWithGoogleUseCase.Output> {
-
+interface SignInWithGoogleUseCase : FlowUseCase<SignInWithGoogleUseCase.Input, SignInWithGoogleUseCase.Output> {
     data class Input(val idToken: String) : UseCaseInput
 
     sealed interface Output : UseCaseOutput {
@@ -27,14 +24,19 @@ class SignInWithGoogleUseCase @Inject constructor(
         data class Success(val user: User) : Output
         data class Failure(val error: KmError) : Output
     }
+}
 
-    override fun invoke(input: Input): Flow<Output> {
+class SignInWithGoogleUseCaseImpl @Inject constructor(
+    private val repository: AuthRepository
+) : SignInWithGoogleUseCase {
+
+    override fun invoke(input: SignInWithGoogleUseCase.Input): Flow<SignInWithGoogleUseCase.Output> {
         return repository.signInWithGoogle(input.idToken)
-            .map { user -> Output.Success(user) as Output }
-            .onStart { emit(Output.Progress) }
+            .map { user -> SignInWithGoogleUseCase.Output.Success(user) as SignInWithGoogleUseCase.Output }
+            .onStart { emit(SignInWithGoogleUseCase.Output.Progress) }
             .catch { throwable ->
                 val error = (throwable as? KmException)?.error ?: KmError.UnknownError
-                emit(Output.Failure(error))
+                emit(SignInWithGoogleUseCase.Output.Failure(error))
             }
     }
 }

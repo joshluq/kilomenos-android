@@ -13,25 +13,28 @@ import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 
 /**
- * Use case to initiate the 7-day trial period.
+ * Domain interface to initiate the 7-day trial period.
  */
-class StartTrialUseCase @Inject constructor(
-    private val repository: EntitlementsRepository
-) : FlowUseCase<StartTrialUseCase.Input, StartTrialUseCase.Output> {
-
-    override fun invoke(input: Input): Flow<Output> {
-        return repository.startTrial(input.deviceFingerprint)
-            .map { Output.Success(it) as Output }
-            .catch { throwable ->
-                val error = (throwable as? KmException)?.error ?: KmError.UnknownError
-                emit(Output.Failure(error))
-            }
-    }
+interface StartTrialUseCase : FlowUseCase<StartTrialUseCase.Input, StartTrialUseCase.Output> {
 
     data class Input(val deviceFingerprint: String) : UseCaseInput
 
     sealed interface Output : UseCaseOutput {
         data class Success(val entitlements: Entitlements) : Output
         data class Failure(val error: KmError) : Output
+    }
+}
+
+class StartTrialUseCaseImpl @Inject constructor(
+    private val repository: EntitlementsRepository
+) : StartTrialUseCase {
+
+    override fun invoke(input: StartTrialUseCase.Input): Flow<StartTrialUseCase.Output> {
+        return repository.startTrial(input.deviceFingerprint)
+            .map { StartTrialUseCase.Output.Success(it) as StartTrialUseCase.Output }
+            .catch { throwable ->
+                val error = (throwable as? KmException)?.error ?: KmError.UnknownError
+                emit(StartTrialUseCase.Output.Failure(error))
+            }
     }
 }

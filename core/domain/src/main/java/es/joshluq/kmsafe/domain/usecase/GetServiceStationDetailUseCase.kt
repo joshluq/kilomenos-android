@@ -17,21 +17,32 @@ import kotlinx.coroutines.flow.onStart
 import javax.inject.Inject
 
 /**
- * Use case to retrieve detailed information, statistics, and history for a specific service station.
+ * Domain interface to retrieve detailed information, statistics, and history for a specific service station.
  */
-class GetServiceStationDetailUseCase @Inject constructor(
+interface GetServiceStationDetailUseCase : FlowUseCase<GetServiceStationDetailUseCase.Input, GetServiceStationDetailUseCase.Output> {
+
+    data class Input(val stationId: String) : UseCaseInput
+
+    sealed interface Output : UseCaseOutput {
+        data object Progress : Output
+        data class Failure(val error: KmError) : Output
+        data class Success(val detail: ServiceStationDetail) : Output
+    }
+}
+
+class GetServiceStationDetailUseCaseImpl @Inject constructor(
     private val stationRepository: ServiceStationRepository,
     private val expenseRepository: FuelExpenseRepository,
     private val logger: LoggerKit
-) : FlowUseCase<GetServiceStationDetailUseCase.Input, GetServiceStationDetailUseCase.Output> {
+) : GetServiceStationDetailUseCase {
 
     @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
-    override fun invoke(input: Input): Flow<Output> {
+    override fun invoke(input: GetServiceStationDetailUseCase.Input): Flow<GetServiceStationDetailUseCase.Output> {
         logger.d("GetServiceStationDetail", "Fetching detail for station: ${input.stationId}")
         
         return stationRepository.getStationById(input.stationId).flatMapLatest { station ->
             if (station == null) {
-                return@flatMapLatest flowOf(Output.Failure(KmError.UnknownError))
+                return@flatMapLatest flowOf(GetServiceStationDetailUseCase.Output.Failure(KmError.UnknownError))
             }
 
             // We combine the station info with all expenses linked to it
@@ -48,21 +59,13 @@ class GetServiceStationDetailUseCase @Inject constructor(
                             .takeIf { it.isNotEmpty() }
                             ?.average()
                     )
-                    Output.Success(detail)
+                    GetServiceStationDetailUseCase.Output.Success(detail)
                 }
         }
-        .onStart { emit(Output.Progress) }
+        .onStart { emit(GetServiceStationDetailUseCase.Output.Progress) }
         .catch { e ->
             logger.e("GetServiceStationDetail", "Error fetching station detail", e)
-            emit(Output.Failure(KmError.UnknownError))
+            emit(GetServiceStationDetailUseCase.Output.Failure(KmError.UnknownError))
         }
-    }
-
-    data class Input(val stationId: String) : UseCaseInput
-
-    sealed interface Output : UseCaseOutput {
-        data object Progress : Output
-        data class Failure(val error: KmError) : Output
-        data class Success(val detail: ServiceStationDetail) : Output
     }
 }

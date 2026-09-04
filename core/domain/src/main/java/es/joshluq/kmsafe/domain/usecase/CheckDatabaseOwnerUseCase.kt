@@ -10,17 +10,10 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.onStart
 import javax.inject.Inject
 
-class CheckDatabaseOwnerUseCase @Inject constructor(
-    private val repository: RentingRepository,
-    private val logger: LoggerKit
-) : FlowUseCase<CheckDatabaseOwnerUseCase.Input, CheckDatabaseOwnerUseCase.Output> {
-
-    override fun invoke(input: Input): Flow<Output> = flow {
-        logger.d("CheckDatabaseOwnerUseCase", "Checking database owner (One-shot)")
-        val ownerId = repository.getDatabaseOwnerId()
-        emit(Output.Success(ownerId) as Output)
-    }.onStart { emit(Output.Progress) }
-
+/**
+ * Domain interface to check the database owner.
+ */
+interface CheckDatabaseOwnerUseCase : FlowUseCase<CheckDatabaseOwnerUseCase.Input, CheckDatabaseOwnerUseCase.Output> {
     object Input : UseCaseInput
 
     sealed interface Output : UseCaseOutput {
@@ -28,4 +21,16 @@ class CheckDatabaseOwnerUseCase @Inject constructor(
         object Failure : Output
         data class Success(val ownerId: String?) : Output
     }
+}
+
+class CheckDatabaseOwnerUseCaseImpl @Inject constructor(
+    private val repository: RentingRepository,
+    private val logger: LoggerKit
+) : CheckDatabaseOwnerUseCase {
+
+    override fun invoke(input: CheckDatabaseOwnerUseCase.Input): Flow<CheckDatabaseOwnerUseCase.Output> = flow {
+        logger.d("CheckDatabaseOwnerUseCase", "Checking database owner (One-shot)")
+        val ownerId = repository.getDatabaseOwnerId()
+        emit(CheckDatabaseOwnerUseCase.Output.Success(ownerId) as CheckDatabaseOwnerUseCase.Output)
+    }.onStart { emit(CheckDatabaseOwnerUseCase.Output.Progress) }
 }

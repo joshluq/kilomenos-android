@@ -7,8 +7,6 @@ import androidx.work.WorkerParameters
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 import es.joshluq.foundationkit.log.LoggerKit
-import es.joshluq.foundationkit.usecase.FlowUseCase
-import es.joshluq.kmsafe.domain.di.MigrateLocalDataToRemote
 import es.joshluq.kmsafe.domain.usecase.MigrateLocalDataToRemoteUseCase
 import kotlinx.coroutines.flow.last
 
@@ -19,8 +17,7 @@ import kotlinx.coroutines.flow.last
 class SyncWorker @AssistedInject constructor(
     @Assisted context: Context,
     @Assisted params: WorkerParameters,
-    @param:MigrateLocalDataToRemote private val migrateLocalDataToRemoteUseCase:
-    @JvmSuppressWildcards FlowUseCase<MigrateLocalDataToRemoteUseCase.Input, MigrateLocalDataToRemoteUseCase.Output>,
+    private val migrateLocalDataToRemoteUseCase: MigrateLocalDataToRemoteUseCase,
     private val logger: LoggerKit
 ) : CoroutineWorker(context, params) {
 

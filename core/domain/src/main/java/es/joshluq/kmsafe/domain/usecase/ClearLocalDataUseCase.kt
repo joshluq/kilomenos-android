@@ -12,13 +12,26 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.onStart
 import javax.inject.Inject
 
-class ClearLocalDataUseCase @Inject constructor(
+/**
+ * Domain interface to clear all local data.
+ */
+interface ClearLocalDataUseCase : FlowUseCase<ClearLocalDataUseCase.Input, ClearLocalDataUseCase.Output> {
+    object Input : UseCaseInput
+
+    sealed interface Output : UseCaseOutput {
+        object Progress : Output
+        object Failure : Output
+        object Success : Output
+    }
+}
+
+class ClearLocalDataUseCaseImpl @Inject constructor(
     private val rentingRepository: RentingRepository,
     private val preferencesRepository: PreferencesRepository,
     private val logger: LoggerKit
-) : FlowUseCase<ClearLocalDataUseCase.Input, ClearLocalDataUseCase.Output> {
+) : ClearLocalDataUseCase {
 
-    override fun invoke(input: Input): Flow<Output> = flow {
+    override fun invoke(input: ClearLocalDataUseCase.Input): Flow<ClearLocalDataUseCase.Output> = flow {
         logger.d("ClearLocalDataUseCase", "Clearing all local data (DB and Preferences)")
 
         // Clear DB
@@ -27,18 +40,10 @@ class ClearLocalDataUseCase @Inject constructor(
         // Clear Preferences (Identity)
         preferencesRepository.clearPreferences()
 
-        emit(Output.Success as Output)
-    }.onStart { emit(Output.Progress) }
+        emit(ClearLocalDataUseCase.Output.Success as ClearLocalDataUseCase.Output)
+    }.onStart { emit(ClearLocalDataUseCase.Output.Progress) }
         .catch {
             logger.e("ClearLocalDataUseCase", "Failed to clear data", it)
-            emit(Output.Failure)
+            emit(ClearLocalDataUseCase.Output.Failure)
         }
-
-    object Input : UseCaseInput
-
-    sealed interface Output : UseCaseOutput {
-        object Progress : Output
-        object Failure : Output
-        object Success : Output
-    }
 }

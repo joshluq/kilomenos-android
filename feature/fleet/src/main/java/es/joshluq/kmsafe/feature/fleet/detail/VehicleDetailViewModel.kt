@@ -7,11 +7,7 @@ import es.joshluq.analyticskit.domain.model.AnalyticsEvent
 import es.joshluq.analyticskit.sdk.AnalyticskitManager
 import es.joshluq.foundationkit.log.LoggerKit
 import es.joshluq.foundationkit.text.TextProvider
-import es.joshluq.foundationkit.usecase.FlowUseCase
 import es.joshluq.foundationkit.viewmodel.ScreenViewModel
-import es.joshluq.kmsafe.domain.di.CheckFeatureAccess
-import es.joshluq.kmsafe.domain.di.DeleteContract
-import es.joshluq.kmsafe.domain.di.GetVehicleById
 import es.joshluq.kmsafe.domain.model.Feature
 import es.joshluq.kmsafe.domain.usecase.CheckFeatureAccessUseCase
 import es.joshluq.kmsafe.domain.usecase.DeleteContractUseCase
@@ -25,12 +21,9 @@ import es.joshluq.kmsafe.core.ui.R as CoreR
 @HiltViewModel
 class VehicleDetailViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
-    @param:GetVehicleById private val getVehicleByIdUseCase:
-    @JvmSuppressWildcards FlowUseCase<GetVehicleByIdUseCase.Input, GetVehicleByIdUseCase.Output>,
-    @param:DeleteContract private val deleteContractUseCase:
-    @JvmSuppressWildcards FlowUseCase<DeleteContractUseCase.Input, DeleteContractUseCase.Output>,
-    @param:CheckFeatureAccess private val checkFeatureAccessUseCase:
-    @JvmSuppressWildcards FlowUseCase<CheckFeatureAccessUseCase.Input, CheckFeatureAccessUseCase.Output>,
+    private val getVehicleByIdUseCase: GetVehicleByIdUseCase,
+    private val deleteContractUseCase: DeleteContractUseCase,
+    private val checkFeatureAccessUseCase: CheckFeatureAccessUseCase,
     private val analytics: AnalyticskitManager,
     private val logger: LoggerKit
 ) : ScreenViewModel<State, Event, Effect>() {

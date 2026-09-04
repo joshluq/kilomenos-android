@@ -10,19 +10,9 @@ import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 
 /**
- * Use case to retrieve the current entitlements for the user and device.
+ * Domain interface to retrieve the current entitlements for the user and device.
  */
-class GetEntitlementsUseCase @Inject constructor(
-    private val repository: EntitlementsRepository
-) : FlowUseCase<GetEntitlementsUseCase.Input, GetEntitlementsUseCase.Output> {
-
-    override fun invoke(input: Input): Flow<Output> {
-        return if (input.forceRefresh) {
-            repository.getEntitlements(input.deviceFingerprint, forceRefresh = true).map { Output.Success(it) }
-        } else {
-            repository.observeEntitlements().map { Output.Success(it) }
-        }
-    }
+interface GetEntitlementsUseCase : FlowUseCase<GetEntitlementsUseCase.Input, GetEntitlementsUseCase.Output> {
 
     data class Input(
         val deviceFingerprint: String,
@@ -32,5 +22,18 @@ class GetEntitlementsUseCase @Inject constructor(
     sealed interface Output : UseCaseOutput {
         data class Success(val entitlements: Entitlements) : Output
         data class Failure(val message: String) : Output
+    }
+}
+
+class GetEntitlementsUseCaseImpl @Inject constructor(
+    private val repository: EntitlementsRepository
+) : GetEntitlementsUseCase {
+
+    override fun invoke(input: GetEntitlementsUseCase.Input): Flow<GetEntitlementsUseCase.Output> {
+        return if (input.forceRefresh) {
+            repository.getEntitlements(input.deviceFingerprint, forceRefresh = true).map { GetEntitlementsUseCase.Output.Success(it) }
+        } else {
+            repository.observeEntitlements().map { GetEntitlementsUseCase.Output.Success(it) }
+        }
     }
 }

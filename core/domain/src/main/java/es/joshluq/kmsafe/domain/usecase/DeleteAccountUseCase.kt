@@ -12,25 +12,9 @@ import kotlinx.coroutines.flow.onStart
 import javax.inject.Inject
 
 /**
- * Use case to permanently delete the user's account and all associated data.
- * This is a requirement for GDPR compliance and Play Store policy.
+ * Domain interface to permanently delete the user's account and all associated data.
  */
-class DeleteAccountUseCase @Inject constructor(
-    private val authRepository: AuthRepository,
-    private val logger: LoggerKit
-) : FlowUseCase<DeleteAccountUseCase.Input, DeleteAccountUseCase.Output> {
-
-    override fun invoke(input: Input): Flow<Output> = flow {
-        logger.d("DeleteAccountUseCase", "Executing account deletion")
-        authRepository.deleteAccount().collect {
-            emit(Output.Success as Output)
-        }
-    }
-        .onStart { emit(Output.Progress as Output) }
-        .catch { error ->
-            logger.e("DeleteAccountUseCase", "Error during account deletion", error)
-            emit(Output.Failure as Output)
-        }
+interface DeleteAccountUseCase : FlowUseCase<DeleteAccountUseCase.Input, DeleteAccountUseCase.Output> {
 
     object Input : UseCaseInput
 
@@ -39,4 +23,22 @@ class DeleteAccountUseCase @Inject constructor(
         data object Failure : Output
         data object Success : Output
     }
+}
+
+class DeleteAccountUseCaseImpl @Inject constructor(
+    private val authRepository: AuthRepository,
+    private val logger: LoggerKit
+) : DeleteAccountUseCase {
+
+    override fun invoke(input: DeleteAccountUseCase.Input): Flow<DeleteAccountUseCase.Output> = flow {
+        logger.d("DeleteAccountUseCase", "Executing account deletion")
+        authRepository.deleteAccount().collect {
+            emit(DeleteAccountUseCase.Output.Success as DeleteAccountUseCase.Output)
+        }
+    }
+        .onStart { emit(DeleteAccountUseCase.Output.Progress as DeleteAccountUseCase.Output) }
+        .catch { error ->
+            logger.e("DeleteAccountUseCase", "Error during account deletion", error)
+            emit(DeleteAccountUseCase.Output.Failure as DeleteAccountUseCase.Output)
+        }
 }

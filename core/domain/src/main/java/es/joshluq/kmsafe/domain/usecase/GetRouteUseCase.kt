@@ -13,29 +13,9 @@ import kotlinx.coroutines.flow.onStart
 import javax.inject.Inject
 
 /**
- * Use case to fetch the trip route associated with an odometer record.
+ * Domain interface to fetch the trip route associated with an odometer record.
  */
-class GetRouteUseCase @Inject constructor(
-    private val repository: HistoryRepository,
-    private val logger: LoggerKit
-) : FlowUseCase<GetRouteUseCase.Input, GetRouteUseCase.Output> {
-
-    override fun invoke(input: Input): Flow<Output> {
-        logger.d("GetRouteUseCase", "Fetching route for record: ${input.recordId}")
-        return repository.getRoute(input.recordId)
-            .map { route ->
-                if (route == null) {
-                    Output.Failure("No route found for this record")
-                } else {
-                    Output.Success(route)
-                }
-            }
-            .onStart { emit(Output.Progress) }
-            .catch {
-                logger.e("GetRouteUseCase", "Error fetching route", it)
-                emit(Output.Failure(it.message ?: "Unknown error"))
-            }
-    }
+interface GetRouteUseCase : FlowUseCase<GetRouteUseCase.Input, GetRouteUseCase.Output> {
 
     data class Input(val recordId: String) : UseCaseInput
 
@@ -43,5 +23,28 @@ class GetRouteUseCase @Inject constructor(
         data object Progress : Output
         data class Failure(val message: String) : Output
         data class Success(val route: TripRoute) : Output
+    }
+}
+
+class GetRouteUseCaseImpl @Inject constructor(
+    private val repository: HistoryRepository,
+    private val logger: LoggerKit
+) : GetRouteUseCase {
+
+    override fun invoke(input: GetRouteUseCase.Input): Flow<GetRouteUseCase.Output> {
+        logger.d("GetRouteUseCase", "Fetching route for record: ${input.recordId}")
+        return repository.getRoute(input.recordId)
+            .map { route ->
+                if (route == null) {
+                    GetRouteUseCase.Output.Failure("No route found for this record")
+                } else {
+                    GetRouteUseCase.Output.Success(route)
+                }
+            }
+            .onStart { emit(GetRouteUseCase.Output.Progress) }
+            .catch {
+                logger.e("GetRouteUseCase", "Error fetching route", it)
+                emit(GetRouteUseCase.Output.Failure(it.message ?: "Unknown error"))
+            }
     }
 }

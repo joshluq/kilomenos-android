@@ -14,30 +14,10 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onStart
 import javax.inject.Inject
 
-class GetOdometerRecordUseCase @Inject constructor(
-    private val rentingRepository: RentingRepository,
-    private val historyRepository: HistoryRepository
-) : FlowUseCase<GetOdometerRecordUseCase.Input, GetOdometerRecordUseCase.Output> {
-
-    @OptIn(ExperimentalCoroutinesApi::class)
-    override fun invoke(input: Input): Flow<Output> {
-        return rentingRepository.getContract().flatMapLatest { contract ->
-            if (contract == null) return@flatMapLatest flowOf(Output.Failure("No contract found"))
-
-            historyRepository.getHistory(contract.id).map { records ->
-                val sortedRecords = records.sortedBy { it.timestamp }
-                val targetIndex = sortedRecords.indexOfFirst { it.id == input.recordId }
-
-                if (targetIndex == -1) {
-                    Output.Failure("Record not found")
-                } else {
-                    val target = sortedRecords[targetIndex]
-                    val previous = if (targetIndex > 0) sortedRecords[targetIndex - 1] else null
-                    Output.Success(target, previous)
-                }
-            }
-        }.onStart { emit(Output.Progress) }
-    }
+/**
+ * Domain interface to fetch a single odometer record and its previous record.
+ */
+interface GetOdometerRecordUseCase : FlowUseCase<GetOdometerRecordUseCase.Input, GetOdometerRecordUseCase.Output> {
 
     data class Input(val recordId: String) : UseCaseInput
 
@@ -45,5 +25,31 @@ class GetOdometerRecordUseCase @Inject constructor(
         object Progress : Output
         data class Failure(val message: String) : Output
         data class Success(val record: OdometerRecord, val previousRecord: OdometerRecord?) : Output
+    }
+}
+
+class GetOdometerRecordUseCaseImpl @Inject constructor(
+    private val rentingRepository: RentingRepository,
+    private val historyRepository: HistoryRepository
+) : GetOdometerRecordUseCase {
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    override fun invoke(input: GetOdometerRecordUseCase.Input): Flow<GetOdometerRecordUseCase.Output> {
+        return rentingRepository.getContract().flatMapLatest { contract ->
+            if (contract == null) return@flatMapLatest flowOf(GetOdometerRecordUseCase.Output.Failure("No contract found"))
+
+            historyRepository.getHistory(contract.id).map { records ->
+                val sortedRecords = records.sortedBy { it.timestamp }
+                val targetIndex = sortedRecords.indexOfFirst { it.id == input.recordId }
+
+                if (targetIndex == -1) {
+                    GetOdometerRecordUseCase.Output.Failure("Record not found")
+                } else {
+                    val target = sortedRecords[targetIndex]
+                    val previous = if (targetIndex > 0) sortedRecords[targetIndex - 1] else null
+                    GetOdometerRecordUseCase.Output.Success(target, previous)
+                }
+            }
+        }.onStart { emit(GetOdometerRecordUseCase.Output.Progress) }
     }
 }

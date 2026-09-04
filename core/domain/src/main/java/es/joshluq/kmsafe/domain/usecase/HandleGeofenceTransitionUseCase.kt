@@ -15,24 +15,32 @@ import kotlinx.coroutines.flow.flow
 import javax.inject.Inject
 
 /**
- * Use case to handle geofence transition events (e.g. entering a station area).
- * Validates Premium access and triggers the appropriate notification prompt.
+ * Domain interface to handle geofence transition events.
  */
-class HandleGeofenceTransitionUseCase @Inject constructor(
+interface HandleGeofenceTransitionUseCase : FlowUseCase<HandleGeofenceTransitionUseCase.Input, HandleGeofenceTransitionUseCase.Output> {
+    data class Input(val stationId: String) : UseCaseInput
+
+    sealed interface Output : UseCaseOutput {
+        data object Success : Output
+        data object Failure : Output
+    }
+}
+
+class HandleGeofenceTransitionUseCaseImpl @Inject constructor(
     private val stationRepository: ServiceStationRepository,
     private val notificationService: StationNotificationService,
     private val checkFeatureAccessUseCase: CheckFeatureAccessUseCase,
     private val logger: LoggerKit
-) : FlowUseCase<HandleGeofenceTransitionUseCase.Input, HandleGeofenceTransitionUseCase.Output> {
+) : HandleGeofenceTransitionUseCase {
 
-    override fun invoke(input: Input): Flow<Output> = flow {
+    override fun invoke(input: HandleGeofenceTransitionUseCase.Input): Flow<HandleGeofenceTransitionUseCase.Output> = flow {
         logger.d("HandleGeofence", "Transition detected for stationId: ${input.stationId}")
 
         // 1. Validate Premium Access (Fase 3 is Premium)
         val access = checkFeatureAccessUseCase(CheckFeatureAccessUseCase.Input(Feature.AUTO_TRACKING)).first()
         if (access !is CheckFeatureAccessUseCase.Output.Success || !access.isGranted) {
             logger.w("HandleGeofence", "User is not Premium, ignoring geofence")
-            emit(Output.Failure)
+            emit(HandleGeofenceTransitionUseCase.Output.Failure)
             return@flow
         }
 
@@ -40,7 +48,7 @@ class HandleGeofenceTransitionUseCase @Inject constructor(
         val station = stationRepository.getStationById(input.stationId).first()
         if (station == null) {
             logger.e("HandleGeofence", "Station not found: ${input.stationId}")
-            emit(Output.Failure)
+            emit(HandleGeofenceTransitionUseCase.Output.Failure)
             return@flow
         }
 
@@ -48,16 +56,9 @@ class HandleGeofenceTransitionUseCase @Inject constructor(
         logger.i("HandleGeofence", "Triggering proximity prompt for: ${station.name}")
         notificationService.showStationProximityPrompt(station)
         
-        emit(Output.Success)
+        emit(HandleGeofenceTransitionUseCase.Output.Success)
     }.catch { e ->
         logger.e("HandleGeofence", "Error handling transition", e)
-        emit(Output.Failure)
-    }
-
-    data class Input(val stationId: String) : UseCaseInput
-
-    sealed interface Output : UseCaseOutput {
-        data object Success : Output
-        data object Failure : Output
+        emit(HandleGeofenceTransitionUseCase.Output.Failure)
     }
 }

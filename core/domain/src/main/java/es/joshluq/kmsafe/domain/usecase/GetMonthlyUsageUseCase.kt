@@ -18,28 +18,38 @@ import java.util.Calendar
 import javax.inject.Inject
 
 /**
- * Use case to retrieve monthly kilometer usage aggregations.
- * Updated to sum individual records as increments (trips).
+ * Domain interface to retrieve monthly kilometer usage aggregations.
  */
-class GetMonthlyUsageUseCase @Inject constructor(
+interface GetMonthlyUsageUseCase : FlowUseCase<GetMonthlyUsageUseCase.Input, GetMonthlyUsageUseCase.Output> {
+
+    object Input : UseCaseInput
+
+    sealed interface Output : UseCaseOutput {
+        object Progress : Output
+        object Failure : Output
+        data class Success(val aggregations: List<MonthlyOdometerAggregation>) : Output
+    }
+}
+
+class GetMonthlyUsageUseCaseImpl @Inject constructor(
     private val historyRepository: HistoryRepository,
     private val rentingRepository: RentingRepository,
     private val logger: LoggerKit
-) : FlowUseCase<GetMonthlyUsageUseCase.Input, GetMonthlyUsageUseCase.Output> {
+) : GetMonthlyUsageUseCase {
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    override fun invoke(input: Input): Flow<Output> {
+    override fun invoke(input: GetMonthlyUsageUseCase.Input): Flow<GetMonthlyUsageUseCase.Output> {
         logger.d("GetMonthlyUsageUseCase", "Calculating monthly usage")
         return rentingRepository.getContract().flatMapLatest { contract ->
             if (contract == null) {
                 logger.w("GetMonthlyUsageUseCase", "No active contract")
-                return@flatMapLatest flowOf(Output.Success(emptyList()) as Output)
+                return@flatMapLatest flowOf(GetMonthlyUsageUseCase.Output.Success(emptyList()) as GetMonthlyUsageUseCase.Output)
             }
 
             historyRepository.getHistory(contract.id).map { records ->
                 logger.i("GetMonthlyUsageUseCase", "Processing ${records.size} records for aggregation")
                 if (records.isEmpty()) {
-                    return@map Output.Success(emptyList()) as Output
+                    return@map GetMonthlyUsageUseCase.Output.Success(emptyList()) as GetMonthlyUsageUseCase.Output
                 }
 
                 val monthlyLimit = contract.totalKms / contract.durationMonths
@@ -68,18 +78,10 @@ class GetMonthlyUsageUseCase @Inject constructor(
                     )
                 }.sortedWith(compareBy({ it.year }, { it.month }))
 
-                Output.Success(aggregations) as Output
+                GetMonthlyUsageUseCase.Output.Success(aggregations) as GetMonthlyUsageUseCase.Output
             }
         }
-            .onStart { emit(Output.Progress) }
-            .catch { emit(Output.Failure) }
-    }
-
-    object Input : UseCaseInput
-
-    sealed interface Output : UseCaseOutput {
-        object Progress : Output
-        object Failure : Output
-        data class Success(val aggregations: List<MonthlyOdometerAggregation>) : Output
+            .onStart { emit(GetMonthlyUsageUseCase.Output.Progress) }
+            .catch { emit(GetMonthlyUsageUseCase.Output.Failure) }
     }
 }

@@ -6,11 +6,7 @@ import es.joshluq.analyticskit.domain.model.AnalyticsEvent
 import es.joshluq.analyticskit.sdk.AnalyticskitManager
 import es.joshluq.foundationkit.log.LoggerKit
 import es.joshluq.foundationkit.text.TextProvider
-import es.joshluq.foundationkit.usecase.FlowUseCase
 import es.joshluq.foundationkit.viewmodel.ScreenViewModel
-import es.joshluq.kmsafe.domain.di.MigrateLocalDataToRemote
-import es.joshluq.kmsafe.domain.di.SyncContracts
-import es.joshluq.kmsafe.domain.di.UpdateSubscription
 import es.joshluq.kmsafe.domain.model.SubscriptionLevel
 import es.joshluq.kmsafe.domain.service.BillingService
 import es.joshluq.kmsafe.domain.usecase.MigrateLocalDataToRemoteUseCase
@@ -24,12 +20,9 @@ import es.joshluq.kmsafe.feature.fleet.R as FleetR
 @HiltViewModel
 class PremiumPaywallViewModel @Inject constructor(
     private val billingService: BillingService,
-    @param:UpdateSubscription private val updateSubscriptionUseCase:
-    @JvmSuppressWildcards FlowUseCase<UpdateSubscriptionUseCase.Input, UpdateSubscriptionUseCase.Output>,
-    @param:MigrateLocalDataToRemote private val migrateLocalDataUseCase:
-    @JvmSuppressWildcards FlowUseCase<MigrateLocalDataToRemoteUseCase.Input, MigrateLocalDataToRemoteUseCase.Output>,
-    @param:SyncContracts private val syncContractsUseCase:
-    @JvmSuppressWildcards FlowUseCase<SyncContractsUseCase.Input, SyncContractsUseCase.Output>,
+    private val updateSubscriptionUseCase: UpdateSubscriptionUseCase,
+    private val migrateLocalDataUseCase: MigrateLocalDataToRemoteUseCase,
+    private val syncContractsUseCase: SyncContractsUseCase,
     private val analytics: AnalyticskitManager,
     private val logger: LoggerKit
 ) : ScreenViewModel<State, Event, Effect>() {

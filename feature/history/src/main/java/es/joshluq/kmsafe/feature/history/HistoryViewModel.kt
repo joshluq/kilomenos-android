@@ -5,13 +5,9 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import es.joshluq.foundationkit.coroutines.DispatcherProvider
 import es.joshluq.foundationkit.log.LoggerKit
 import es.joshluq.foundationkit.text.TextProvider
-import es.joshluq.foundationkit.usecase.FlowUseCase
 import es.joshluq.foundationkit.viewmodel.ScreenViewModel
 import es.joshluq.kmsafe.core.monetization.domain.MonetizationConfig
 import es.joshluq.kmsafe.core.ui.R as CoreR
-import es.joshluq.kmsafe.domain.di.CheckFeatureAccess
-import es.joshluq.kmsafe.domain.di.DeleteOdometerRecord
-import es.joshluq.kmsafe.domain.di.GetHistory
 import es.joshluq.kmsafe.domain.model.Feature
 import es.joshluq.kmsafe.domain.model.OdometerRecord
 import es.joshluq.kmsafe.domain.usecase.CheckFeatureAccessUseCase
@@ -28,12 +24,9 @@ import javax.inject.Inject
 
 @HiltViewModel
 class HistoryViewModel @Inject constructor(
-    @param:GetHistory private val getHistoryUseCase:
-    @JvmSuppressWildcards FlowUseCase<GetHistoryUseCase.Input, GetHistoryUseCase.Output>,
-    @param:DeleteOdometerRecord private val deleteOdometerRecordUseCase:
-    @JvmSuppressWildcards FlowUseCase<DeleteOdometerRecordUseCase.Input, DeleteOdometerRecordUseCase.Output>,
-    @param:CheckFeatureAccess private val checkFeatureAccessUseCase:
-    @JvmSuppressWildcards FlowUseCase<CheckFeatureAccessUseCase.Input, CheckFeatureAccessUseCase.Output>,
+    private val getHistoryUseCase: GetHistoryUseCase,
+    private val deleteOdometerRecordUseCase: DeleteOdometerRecordUseCase,
+    private val checkFeatureAccessUseCase: CheckFeatureAccessUseCase,
     private val monetizationConfig: MonetizationConfig,
     private val dispatchers: DispatcherProvider,
     private val logger: LoggerKit

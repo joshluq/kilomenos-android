@@ -15,28 +15,9 @@ import kotlinx.coroutines.flow.onStart
 import javax.inject.Inject
 
 /**
- * Use case to handle user registration process.
+ * Domain interface to handle user registration process.
  */
-class SignUpUseCase @Inject constructor(
-    private val repository: AuthRepository,
-    private val logger: LoggerKit
-) : FlowUseCase<SignUpUseCase.Input, SignUpUseCase.Output> {
-
-    override fun invoke(input: Input): Flow<Output> {
-        logger.d("SignUpUseCase", "Executing sign up for: ${input.email}")
-        return repository.signUp(input.email, input.password, input.name)
-            .map { user ->
-                logger.i("SignUpUseCase", "Sign up request successful for: ${user.email}")
-                Output.Success(user) as Output
-            }
-            .onStart { emit(Output.Progress) }
-            .catch { throwable ->
-                logger.e("SignUpUseCase", "Sign up failed: ${throwable.message}")
-                val error = (throwable as? KmException)?.error ?: KmError.UnknownError
-                emit(Output.Failure(error))
-            }
-    }
-
+interface SignUpUseCase : FlowUseCase<SignUpUseCase.Input, SignUpUseCase.Output> {
     data class Input(
         val email: String,
         val password: String,
@@ -47,5 +28,26 @@ class SignUpUseCase @Inject constructor(
         data object Progress : Output
         data class Failure(val error: KmError) : Output
         data class Success(val user: User) : Output
+    }
+}
+
+class SignUpUseCaseImpl @Inject constructor(
+    private val repository: AuthRepository,
+    private val logger: LoggerKit
+) : SignUpUseCase {
+
+    override fun invoke(input: SignUpUseCase.Input): Flow<SignUpUseCase.Output> {
+        logger.d("SignUpUseCase", "Executing sign up for: ${input.email}")
+        return repository.signUp(input.email, input.password, input.name)
+            .map { user ->
+                logger.i("SignUpUseCase", "Sign up request successful for: ${user.email}")
+                SignUpUseCase.Output.Success(user) as SignUpUseCase.Output
+            }
+            .onStart { emit(SignUpUseCase.Output.Progress) }
+            .catch { throwable ->
+                logger.e("SignUpUseCase", "Sign up failed: ${throwable.message}")
+                val error = (throwable as? KmException)?.error ?: KmError.UnknownError
+                emit(SignUpUseCase.Output.Failure(error))
+            }
     }
 }

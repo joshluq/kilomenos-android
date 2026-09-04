@@ -18,19 +18,30 @@ import kotlinx.coroutines.flow.onStart
 import javax.inject.Inject
 
 /**
- * Use case to synchronize renting contracts from remote to local storage.
+ * Domain interface to synchronize renting contracts from remote to local storage.
  * Performs a "Deep Sync" by also fetching the history of the active contract and user stations.
  */
-class SyncContractsUseCase @Inject constructor(
+interface SyncContractsUseCase : FlowUseCase<SyncContractsUseCase.Input, SyncContractsUseCase.Output> {
+
+    object Input : UseCaseInput
+
+    sealed interface Output : UseCaseOutput {
+        data object Progress : Output
+        data object Success : Output
+        data class Failure(val message: String) : Output
+    }
+}
+
+class SyncContractsUseCaseImpl @Inject constructor(
     private val repository: RentingRepository,
     private val historyRepository: HistoryRepository,
     private val stationRepository: ServiceStationRepository,
     private val fuelRepository: FuelExpenseRepository,
     private val logger: LoggerKit
-) : FlowUseCase<SyncContractsUseCase.Input, SyncContractsUseCase.Output> {
+) : SyncContractsUseCase {
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    override fun invoke(input: Input): Flow<Output> {
+    override fun invoke(input: SyncContractsUseCase.Input): Flow<SyncContractsUseCase.Output> {
         logger.d("SyncContractsUseCase", "Executing Full Deep Sync")
         
         // 1. Sync Stations and Contracts in parallel
@@ -49,25 +60,17 @@ class SyncContractsUseCase @Inject constructor(
                     historyRepository.syncHistory(activeContract.id),
                     fuelRepository.syncFuelExpenses(activeContract.id)
                 ) { _, _ ->
-                    Output.Success as Output
+                    SyncContractsUseCase.Output.Success as SyncContractsUseCase.Output
                 }
             } else {
                 logger.w("SyncContractsUseCase", "No active contract found after sync")
-                flowOf(Output.Success as Output)
+                flowOf(SyncContractsUseCase.Output.Success as SyncContractsUseCase.Output)
             }
         }
-        .onStart { emit(Output.Progress) }
+        .onStart { emit(SyncContractsUseCase.Output.Progress) }
         .catch {
             logger.e("SyncContractsUseCase", "Full Deep Sync failed", it)
-            emit(Output.Failure(it.message ?: "Unknown sync error"))
+            emit(SyncContractsUseCase.Output.Failure(it.message ?: "Unknown sync error"))
         }
-    }
-
-    object Input : UseCaseInput
-
-    sealed interface Output : UseCaseOutput {
-        data object Progress : Output
-        data object Success : Output
-        data class Failure(val message: String) : Output
     }
 }

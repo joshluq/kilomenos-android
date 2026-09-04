@@ -14,30 +14,9 @@ import kotlinx.coroutines.flow.onStart
 import javax.inject.Inject
 
 /**
- * Use case to compute price volatility and savings insight for a given station and fuel type.
+ * Domain interface to compute price volatility and savings insight for a given station and fuel type.
  */
-class GetStationVolatilityUseCase @Inject constructor(
-    private val stationRepository: ServiceStationRepository,
-    private val logger: LoggerKit
-) : FlowUseCase<GetStationVolatilityUseCase.Input, GetStationVolatilityUseCase.Output> {
-
-    override fun invoke(input: Input): Flow<Output> {
-        logger.d("GetStationVolatilityUseCase", "Computing volatility for station: ${input.stationId}, fuel: ${input.fuelType}")
-
-        return stationRepository.getStationVolatility(input.stationId, input.fuelType)
-            .map { volatility ->
-                if (volatility != null) {
-                    Output.Success(volatility)
-                } else {
-                    Output.Empty
-                }
-            }
-            .onStart { emit(Output.Progress) }
-            .catch { e ->
-                logger.e("GetStationVolatilityUseCase", "Error computing station volatility", e)
-                emit(Output.Failure)
-            }
-    }
+interface GetStationVolatilityUseCase : FlowUseCase<GetStationVolatilityUseCase.Input, GetStationVolatilityUseCase.Output> {
 
     data class Input(
         val stationId: String,
@@ -49,5 +28,29 @@ class GetStationVolatilityUseCase @Inject constructor(
         data object Failure : Output
         data object Empty : Output
         data class Success(val volatility: StationPriceVolatility) : Output
+    }
+}
+
+class GetStationVolatilityUseCaseImpl @Inject constructor(
+    private val stationRepository: ServiceStationRepository,
+    private val logger: LoggerKit
+) : GetStationVolatilityUseCase {
+
+    override fun invoke(input: GetStationVolatilityUseCase.Input): Flow<GetStationVolatilityUseCase.Output> {
+        logger.d("GetStationVolatilityUseCase", "Computing volatility for station: ${input.stationId}, fuel: ${input.fuelType}")
+
+        return stationRepository.getStationVolatility(input.stationId, input.fuelType)
+            .map { volatility ->
+                if (volatility != null) {
+                    GetStationVolatilityUseCase.Output.Success(volatility)
+                } else {
+                    GetStationVolatilityUseCase.Output.Empty
+                }
+            }
+            .onStart { emit(GetStationVolatilityUseCase.Output.Progress) }
+            .catch { e ->
+                logger.e("GetStationVolatilityUseCase", "Error computing station volatility", e)
+                emit(GetStationVolatilityUseCase.Output.Failure)
+            }
     }
 }

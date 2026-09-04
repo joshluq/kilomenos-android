@@ -7,20 +7,9 @@ import es.joshluq.kmsafe.domain.repository.MediaRepository
 import javax.inject.Inject
 
 /**
- * Use case to read bytes from a media reference.
+ * Domain interface to read bytes from a media reference.
  */
-class GetImageBytesUseCase @Inject constructor(
-    private val repository: MediaRepository
-) : UseCase<GetImageBytesUseCase.Input, GetImageBytesUseCase.Output> {
-
-    override suspend fun invoke(input: Input): Result<Output> {
-        val bytes = repository.getFileBytes(input.uriPath)
-        return if (bytes != null) {
-            Result.success(Output.Success(bytes))
-        } else {
-            Result.failure(Exception("Could not read bytes from path: ${input.uriPath}"))
-        }
-    }
+interface GetImageBytesUseCase : UseCase<GetImageBytesUseCase.Input, GetImageBytesUseCase.Output> {
 
     data class Input(val uriPath: String) : UseCaseInput
 
@@ -33,6 +22,20 @@ class GetImageBytesUseCase @Inject constructor(
                 return bytes.contentEquals(other.bytes)
             }
             override fun hashCode(): Int = bytes.contentHashCode()
+        }
+    }
+}
+
+class GetImageBytesUseCaseImpl @Inject constructor(
+    private val repository: MediaRepository
+) : GetImageBytesUseCase {
+
+    override suspend fun invoke(input: GetImageBytesUseCase.Input): Result<GetImageBytesUseCase.Output> {
+        val bytes = repository.getFileBytes(input.uriPath)
+        return if (bytes != null) {
+            Result.success(GetImageBytesUseCase.Output.Success(bytes))
+        } else {
+            Result.failure(Exception("Could not read bytes from path: ${input.uriPath}"))
         }
     }
 }

@@ -9,26 +9,9 @@ import es.joshluq.kmsafe.domain.validator.Validator
 import javax.inject.Inject
 
 /**
- * Use case to validate login credentials asynchronously following the UseCase pattern.
+ * Domain interface to validate login credentials asynchronously following the UseCase pattern.
  */
-class ValidateCredentialsUseCase @Inject constructor(
-    @EmailValidator private val emailValidator: @JvmSuppressWildcards Validator<String>,
-    @PasswordValidator private val passwordValidator: @JvmSuppressWildcards  Validator<String>
-) : UseCase<ValidateCredentialsUseCase.Input, ValidateCredentialsUseCase.Output> {
-
-    override suspend fun invoke(input: Input): Result<Output> {
-        val isEmailValid = emailValidator.isValid(input.email)
-        val isPasswordValid = passwordValidator.isValid(input.password)
-
-        return Result.success(
-            Output(
-                isEmailValid = isEmailValid,
-                isPasswordValid = isPasswordValid,
-                canLogin = isEmailValid && isPasswordValid
-            )
-        )
-    }
-
+interface ValidateCredentialsUseCase : UseCase<ValidateCredentialsUseCase.Input, ValidateCredentialsUseCase.Output> {
     data class Input(
         val email: String,
         val password: String
@@ -39,4 +22,23 @@ class ValidateCredentialsUseCase @Inject constructor(
         val isPasswordValid: Boolean,
         val canLogin: Boolean
     ) : UseCaseOutput
+}
+
+class ValidateCredentialsUseCaseImpl @Inject constructor(
+    @EmailValidator private val emailValidator: @JvmSuppressWildcards Validator<String>,
+    @PasswordValidator private val passwordValidator: @JvmSuppressWildcards Validator<String>
+) : ValidateCredentialsUseCase {
+
+    override suspend fun invoke(input: ValidateCredentialsUseCase.Input): Result<ValidateCredentialsUseCase.Output> {
+        val isEmailValid = emailValidator.isValid(input.email)
+        val isPasswordValid = passwordValidator.isValid(input.password)
+
+        return Result.success(
+            ValidateCredentialsUseCase.Output(
+                isEmailValid = isEmailValid,
+                isPasswordValid = isPasswordValid,
+                canLogin = isEmailValid && isPasswordValid
+            )
+        )
+    }
 }

@@ -4,442 +4,313 @@ import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
-import es.joshluq.foundationkit.usecase.FlowUseCase
-import es.joshluq.foundationkit.usecase.UseCase
 import es.joshluq.kmsafe.core.domain.usecase.HandleGeofenceTransitionUseCase
+import es.joshluq.kmsafe.core.domain.usecase.HandleGeofenceTransitionUseCaseImpl
 import es.joshluq.kmsafe.core.domain.usecase.SyncStationGeofencesUseCase
-import es.joshluq.kmsafe.domain.di.*
+import es.joshluq.kmsafe.core.domain.usecase.SyncStationGeofencesUseCaseImpl
 import es.joshluq.kmsafe.domain.usecase.AddOdometerRecordUseCase
+import es.joshluq.kmsafe.domain.usecase.AddOdometerRecordUseCaseImpl
+import es.joshluq.kmsafe.domain.usecase.CalculateContractMetricsUseCase
+import es.joshluq.kmsafe.domain.usecase.CalculateContractMetricsUseCaseImpl
 import es.joshluq.kmsafe.domain.usecase.CheckDatabaseOwnerUseCase
+import es.joshluq.kmsafe.domain.usecase.CheckDatabaseOwnerUseCaseImpl
 import es.joshluq.kmsafe.domain.usecase.CheckFeatureAccessUseCase
+import es.joshluq.kmsafe.domain.usecase.CheckFeatureAccessUseCaseImpl
 import es.joshluq.kmsafe.domain.usecase.CheckSessionUseCase
+import es.joshluq.kmsafe.domain.usecase.CheckSessionUseCaseImpl
 import es.joshluq.kmsafe.domain.usecase.ClearLocalDataUseCase
+import es.joshluq.kmsafe.domain.usecase.ClearLocalDataUseCaseImpl
 import es.joshluq.kmsafe.domain.usecase.ClearTrackingUseCase
+import es.joshluq.kmsafe.domain.usecase.ClearTrackingUseCaseImpl
 import es.joshluq.kmsafe.domain.usecase.DeleteAccountUseCase
+import es.joshluq.kmsafe.domain.usecase.DeleteAccountUseCaseImpl
 import es.joshluq.kmsafe.domain.usecase.DeleteContractUseCase
+import es.joshluq.kmsafe.domain.usecase.DeleteContractUseCaseImpl
+import es.joshluq.kmsafe.domain.usecase.DeleteFuelExpenseUseCase
+import es.joshluq.kmsafe.domain.usecase.DeleteFuelExpenseUseCaseImpl
 import es.joshluq.kmsafe.domain.usecase.DeleteOdometerRecordUseCase
+import es.joshluq.kmsafe.domain.usecase.DeleteOdometerRecordUseCaseImpl
 import es.joshluq.kmsafe.domain.usecase.DeleteServiceStationUseCase
+import es.joshluq.kmsafe.domain.usecase.DeleteServiceStationUseCaseImpl
 import es.joshluq.kmsafe.domain.usecase.EvaluateIdentityConflictUseCase
+import es.joshluq.kmsafe.domain.usecase.EvaluateIdentityConflictUseCaseImpl
 import es.joshluq.kmsafe.domain.usecase.ExportDataUseCase
+import es.joshluq.kmsafe.domain.usecase.ExportDataUseCaseImpl
 import es.joshluq.kmsafe.domain.usecase.GetAllContractsUseCase
+import es.joshluq.kmsafe.domain.usecase.GetAllContractsUseCaseImpl
 import es.joshluq.kmsafe.domain.usecase.GetAllServiceStationsUseCase
+import es.joshluq.kmsafe.domain.usecase.GetAllServiceStationsUseCaseImpl
 import es.joshluq.kmsafe.domain.usecase.GetCurrentUserUseCase
+import es.joshluq.kmsafe.domain.usecase.GetCurrentUserUseCaseImpl
+import es.joshluq.kmsafe.domain.usecase.GetElectrificationSavingsUseCase
+import es.joshluq.kmsafe.domain.usecase.GetElectrificationSavingsUseCaseImpl
 import es.joshluq.kmsafe.domain.usecase.GetEntitlementsUseCase
+import es.joshluq.kmsafe.domain.usecase.GetEntitlementsUseCaseImpl
+import es.joshluq.kmsafe.domain.usecase.GetExpensesByVehicleUseCase
+import es.joshluq.kmsafe.domain.usecase.GetExpensesByVehicleUseCaseImpl
 import es.joshluq.kmsafe.domain.usecase.GetFavoriteServiceStationsUseCase
+import es.joshluq.kmsafe.domain.usecase.GetFavoriteServiceStationsUseCaseImpl
 import es.joshluq.kmsafe.domain.usecase.GetHistoryUseCase
+import es.joshluq.kmsafe.domain.usecase.GetHistoryUseCaseImpl
 import es.joshluq.kmsafe.domain.usecase.GetImageBytesUseCase
+import es.joshluq.kmsafe.domain.usecase.GetImageBytesUseCaseImpl
 import es.joshluq.kmsafe.domain.usecase.GetMonthlyUsageUseCase
+import es.joshluq.kmsafe.domain.usecase.GetMonthlyUsageUseCaseImpl
 import es.joshluq.kmsafe.domain.usecase.GetOdometerRecordUseCase
+import es.joshluq.kmsafe.domain.usecase.GetOdometerRecordUseCaseImpl
 import es.joshluq.kmsafe.domain.usecase.GetOverviewDataUseCase
 import es.joshluq.kmsafe.domain.usecase.GetOverviewDataUseCaseImpl
 import es.joshluq.kmsafe.domain.usecase.GetPreferencesUseCase
+import es.joshluq.kmsafe.domain.usecase.GetPreferencesUseCaseImpl
 import es.joshluq.kmsafe.domain.usecase.GetRentingContractUseCase
 import es.joshluq.kmsafe.domain.usecase.GetRentingContractUseCaseImpl
 import es.joshluq.kmsafe.domain.usecase.GetRouteUseCase
+import es.joshluq.kmsafe.domain.usecase.GetRouteUseCaseImpl
 import es.joshluq.kmsafe.domain.usecase.GetServiceStationDetailUseCase
+import es.joshluq.kmsafe.domain.usecase.GetServiceStationDetailUseCaseImpl
+import es.joshluq.kmsafe.domain.usecase.GetStationVolatilityUseCase
+import es.joshluq.kmsafe.domain.usecase.GetStationVolatilityUseCaseImpl
 import es.joshluq.kmsafe.domain.usecase.GetTripProjectionUseCase
 import es.joshluq.kmsafe.domain.usecase.GetTripProjectionUseCaseImpl
 import es.joshluq.kmsafe.domain.usecase.GetVehicleByIdUseCase
+import es.joshluq.kmsafe.domain.usecase.GetVehicleByIdUseCaseImpl
 import es.joshluq.kmsafe.domain.usecase.ImportDataUseCase
+import es.joshluq.kmsafe.domain.usecase.ImportDataUseCaseImpl
 import es.joshluq.kmsafe.domain.usecase.MigrateLocalDataToRemoteUseCase
+import es.joshluq.kmsafe.domain.usecase.MigrateLocalDataToRemoteUseCaseImpl
 import es.joshluq.kmsafe.domain.usecase.ObserveTrackingStateUseCase
+import es.joshluq.kmsafe.domain.usecase.ObserveTrackingStateUseCaseImpl
+import es.joshluq.kmsafe.domain.usecase.SaveFuelExpenseUseCase
+import es.joshluq.kmsafe.domain.usecase.SaveFuelExpenseUseCaseImpl
 import es.joshluq.kmsafe.domain.usecase.SaveInitialContractUseCase
+import es.joshluq.kmsafe.domain.usecase.SaveInitialContractUseCaseImpl
 import es.joshluq.kmsafe.domain.usecase.SaveServiceStationUseCase
+import es.joshluq.kmsafe.domain.usecase.SaveServiceStationUseCaseImpl
 import es.joshluq.kmsafe.domain.usecase.SelectContractUseCase
+import es.joshluq.kmsafe.domain.usecase.SelectContractUseCaseImpl
 import es.joshluq.kmsafe.domain.usecase.SetFavoriteStationUseCase
+import es.joshluq.kmsafe.domain.usecase.SetFavoriteStationUseCaseImpl
 import es.joshluq.kmsafe.domain.usecase.SignInUseCase
+import es.joshluq.kmsafe.domain.usecase.SignInUseCaseImpl
 import es.joshluq.kmsafe.domain.usecase.SignInWithGoogleUseCase
+import es.joshluq.kmsafe.domain.usecase.SignInWithGoogleUseCaseImpl
 import es.joshluq.kmsafe.domain.usecase.SignOutUseCase
+import es.joshluq.kmsafe.domain.usecase.SignOutUseCaseImpl
 import es.joshluq.kmsafe.domain.usecase.SignUpUseCase
+import es.joshluq.kmsafe.domain.usecase.SignUpUseCaseImpl
 import es.joshluq.kmsafe.domain.usecase.StartAutoTrackingUseCase
+import es.joshluq.kmsafe.domain.usecase.StartAutoTrackingUseCaseImpl
 import es.joshluq.kmsafe.domain.usecase.StartTrialUseCase
+import es.joshluq.kmsafe.domain.usecase.StartTrialUseCaseImpl
 import es.joshluq.kmsafe.domain.usecase.StopAutoTrackingUseCase
+import es.joshluq.kmsafe.domain.usecase.StopAutoTrackingUseCaseImpl
 import es.joshluq.kmsafe.domain.usecase.StopTrackingUseCase
+import es.joshluq.kmsafe.domain.usecase.StopTrackingUseCaseImpl
 import es.joshluq.kmsafe.domain.usecase.SyncContractsUseCase
+import es.joshluq.kmsafe.domain.usecase.SyncContractsUseCaseImpl
 import es.joshluq.kmsafe.domain.usecase.SyncHistoryUseCase
+import es.joshluq.kmsafe.domain.usecase.SyncHistoryUseCaseImpl
 import es.joshluq.kmsafe.domain.usecase.SyncStationsUseCase
+import es.joshluq.kmsafe.domain.usecase.SyncStationsUseCaseImpl
 import es.joshluq.kmsafe.domain.usecase.UpdateContractUseCase
+import es.joshluq.kmsafe.domain.usecase.UpdateContractUseCaseImpl
 import es.joshluq.kmsafe.domain.usecase.UpdateOdometerRecordUseCase
+import es.joshluq.kmsafe.domain.usecase.UpdateOdometerRecordUseCaseImpl
 import es.joshluq.kmsafe.domain.usecase.UpdatePreferencesUseCase
+import es.joshluq.kmsafe.domain.usecase.UpdatePreferencesUseCaseImpl
 import es.joshluq.kmsafe.domain.usecase.UpdateSubscriptionUseCase
+import es.joshluq.kmsafe.domain.usecase.UpdateSubscriptionUseCaseImpl
 import es.joshluq.kmsafe.domain.usecase.UploadVehicleImageUseCase
+import es.joshluq.kmsafe.domain.usecase.UploadVehicleImageUseCaseImpl
 import es.joshluq.kmsafe.domain.usecase.ValidateCredentialsUseCase
+import es.joshluq.kmsafe.domain.usecase.ValidateCredentialsUseCaseImpl
 
 /**
- * Dagger module for providing UseCase dependencies for ViewModels.
+ * Dagger module providing domain UseCase dependencies.
+ * Follows Option 2: Specific Domain Interfaces without Qualifiers.
  */
 @Suppress("unused")
 @Module
 @InstallIn(SingletonComponent::class)
-@JvmSuppressWildcards
 abstract class UseCaseModule {
 
     @Binds
-    abstract fun bindGetRentingContractUseCase(
-        impl: GetRentingContractUseCaseImpl
-    ): GetRentingContractUseCase
+    abstract fun bindCalculateContractMetricsUseCase(impl: CalculateContractMetricsUseCaseImpl): CalculateContractMetricsUseCase
 
     @Binds
-    @GetRenting
-    abstract fun bindGetRentingContractUseCaseLegacy(
-        impl: GetRentingContractUseCaseImpl
-    ): FlowUseCase<GetRentingContractUseCase.Input, GetRentingContractUseCase.Output>
+    abstract fun bindGetRentingContractUseCase(impl: GetRentingContractUseCaseImpl): GetRentingContractUseCase
 
     @Binds
-    @GetHistory
-    abstract fun bindGetHistoryUseCase(
-        useCase: GetHistoryUseCase
-    ): FlowUseCase<GetHistoryUseCase.Input, GetHistoryUseCase.Output>
+    abstract fun bindGetHistoryUseCase(impl: GetHistoryUseCaseImpl): GetHistoryUseCase
 
     @Binds
-    @GetOdometerRecord
-    abstract fun bindGetOdometerRecordUseCase(
-        useCase: GetOdometerRecordUseCase
-    ): FlowUseCase<GetOdometerRecordUseCase.Input, GetOdometerRecordUseCase.Output>
+    abstract fun bindGetOdometerRecordUseCase(impl: GetOdometerRecordUseCaseImpl): GetOdometerRecordUseCase
 
     @Binds
-    @DeleteOdometerRecord
-    abstract fun bindDeleteOdometerRecordUseCase(
-        useCase: DeleteOdometerRecordUseCase
-    ): FlowUseCase<DeleteOdometerRecordUseCase.Input, DeleteOdometerRecordUseCase.Output>
+    abstract fun bindDeleteOdometerRecordUseCase(impl: DeleteOdometerRecordUseCaseImpl): DeleteOdometerRecordUseCase
 
     @Binds
-    @EvaluateIdentityConflict
-    abstract fun bindEvaluateIdentityConflictUseCase(
-        useCase: EvaluateIdentityConflictUseCase
-    ): FlowUseCase<EvaluateIdentityConflictUseCase.Input, EvaluateIdentityConflictUseCase.Output>
+    abstract fun bindEvaluateIdentityConflictUseCase(impl: EvaluateIdentityConflictUseCaseImpl): EvaluateIdentityConflictUseCase
 
     @Binds
-    @UpdateOdometerRecord
-    abstract fun bindUpdateOdometerRecordUseCase(
-        useCase: UpdateOdometerRecordUseCase
-    ): FlowUseCase<UpdateOdometerRecordUseCase.Input, UpdateOdometerRecordUseCase.Output>
+    abstract fun bindUpdateOdometerRecordUseCase(impl: UpdateOdometerRecordUseCaseImpl): UpdateOdometerRecordUseCase
 
     @Binds
-    @UploadVehicleImage
-    abstract fun bindUploadVehicleImageUseCase(
-        useCase: UploadVehicleImageUseCase
-    ): FlowUseCase<UploadVehicleImageUseCase.Input, UploadVehicleImageUseCase.Output>
+    abstract fun bindUploadVehicleImageUseCase(impl: UploadVehicleImageUseCaseImpl): UploadVehicleImageUseCase
 
     @Binds
-    @SaveInitialContract
-    abstract fun bindSaveInitialContractUseCase(
-        useCase: SaveInitialContractUseCase
-    ): FlowUseCase<SaveInitialContractUseCase.Input, SaveInitialContractUseCase.Output>
+    abstract fun bindSaveInitialContractUseCase(impl: SaveInitialContractUseCaseImpl): SaveInitialContractUseCase
 
     @Binds
-    @UpdateContract
-    abstract fun bindUpdateContractUseCase(
-        useCase: UpdateContractUseCase
-    ): FlowUseCase<UpdateContractUseCase.Input, UpdateContractUseCase.Output>
+    abstract fun bindUpdateContractUseCase(impl: UpdateContractUseCaseImpl): UpdateContractUseCase
 
     @Binds
-    @UpdateSubscription
-    abstract fun bindUpdateSubscriptionUseCase(
-        useCase: UpdateSubscriptionUseCase
-    ): FlowUseCase<UpdateSubscriptionUseCase.Input, UpdateSubscriptionUseCase.Output>
+    abstract fun bindUpdateSubscriptionUseCase(impl: UpdateSubscriptionUseCaseImpl): UpdateSubscriptionUseCase
 
     @Binds
-    @MigrateLocalDataToRemote
-    abstract fun bindMigrateLocalDataToRemoteUseCase(
-        useCase: MigrateLocalDataToRemoteUseCase
-    ): FlowUseCase<MigrateLocalDataToRemoteUseCase.Input, MigrateLocalDataToRemoteUseCase.Output>
+    abstract fun bindMigrateLocalDataToRemoteUseCase(impl: MigrateLocalDataToRemoteUseCaseImpl): MigrateLocalDataToRemoteUseCase
 
     @Binds
-    @GetMonthlyUsage
-    abstract fun bindGetMonthlyUsageUseCase(
-        useCase: GetMonthlyUsageUseCase
-    ): FlowUseCase<GetMonthlyUsageUseCase.Input, GetMonthlyUsageUseCase.Output>
+    abstract fun bindGetMonthlyUsageUseCase(impl: GetMonthlyUsageUseCaseImpl): GetMonthlyUsageUseCase
 
     @Binds
-    abstract fun bindGetOverviewDataUseCase(
-        impl: GetOverviewDataUseCaseImpl
-    ): GetOverviewDataUseCase
+    abstract fun bindGetOverviewDataUseCase(impl: GetOverviewDataUseCaseImpl): GetOverviewDataUseCase
 
     @Binds
-    @GetOverviewData
-    abstract fun bindGetOverviewDataUseCaseLegacy(
-        impl: GetOverviewDataUseCaseImpl
-    ): FlowUseCase<GetOverviewDataUseCase.Input, GetOverviewDataUseCase.Output>
+    abstract fun bindGetPreferencesUseCase(impl: GetPreferencesUseCaseImpl): GetPreferencesUseCase
 
     @Binds
-    @GetPreferences
-    abstract fun bindGetPreferencesUseCase(
-        useCase: GetPreferencesUseCase
-    ): FlowUseCase<GetPreferencesUseCase.Input, GetPreferencesUseCase.Output>
+    abstract fun bindUpdatePreferencesUseCase(impl: UpdatePreferencesUseCaseImpl): UpdatePreferencesUseCase
 
     @Binds
-    @UpdatePreferences
-    abstract fun bindUpdatePreferencesUseCase(
-        useCase: UpdatePreferencesUseCase
-    ): FlowUseCase<UpdatePreferencesUseCase.Input, UpdatePreferencesUseCase.Output>
+    abstract fun bindAddOdometerRecordUseCase(impl: AddOdometerRecordUseCaseImpl): AddOdometerRecordUseCase
 
     @Binds
-    @AddOdometerRecord
-    abstract fun bindAddOdometerRecordUseCase(
-        useCase: AddOdometerRecordUseCase
-    ): FlowUseCase<AddOdometerRecordUseCase.Input, AddOdometerRecordUseCase.Output>
+    abstract fun bindGetTripProjectionUseCase(impl: GetTripProjectionUseCaseImpl): GetTripProjectionUseCase
 
     @Binds
-    abstract fun bindGetTripProjectionUseCase(
-        impl: GetTripProjectionUseCaseImpl
-    ): GetTripProjectionUseCase
+    abstract fun bindExportDataUseCase(impl: ExportDataUseCaseImpl): ExportDataUseCase
 
     @Binds
-    @GetTripProjection
-    abstract fun bindGetTripProjectionUseCaseLegacy(
-        impl: GetTripProjectionUseCaseImpl
-    ): FlowUseCase<GetTripProjectionUseCase.Input, GetTripProjectionUseCase.Output>
+    abstract fun bindImportDataUseCase(impl: ImportDataUseCaseImpl): ImportDataUseCase
 
     @Binds
-    @ExportData
-    abstract fun bindExportDataUseCase(
-        useCase: ExportDataUseCase
-    ): FlowUseCase<ExportDataUseCase.Input, ExportDataUseCase.Output>
+    abstract fun bindGetAllContractsUseCase(impl: GetAllContractsUseCaseImpl): GetAllContractsUseCase
 
     @Binds
-    @ImportData
-    abstract fun bindImportDataUseCase(
-        useCase: ImportDataUseCase
-    ): FlowUseCase<ImportDataUseCase.Input, ImportDataUseCase.Output>
+    abstract fun bindSelectContractUseCase(impl: SelectContractUseCaseImpl): SelectContractUseCase
 
     @Binds
-    @GetAllContracts
-    abstract fun bindGetAllContractsUseCase(
-        useCase: GetAllContractsUseCase
-    ): FlowUseCase<GetAllContractsUseCase.Input, GetAllContractsUseCase.Output>
+    abstract fun bindDeleteContractUseCase(impl: DeleteContractUseCaseImpl): DeleteContractUseCase
 
     @Binds
-    @SelectContract
-    abstract fun bindSelectContractUseCase(
-        useCase: SelectContractUseCase
-    ): FlowUseCase<SelectContractUseCase.Input, SelectContractUseCase.Output>
+    abstract fun bindDeleteAccountUseCase(impl: DeleteAccountUseCaseImpl): DeleteAccountUseCase
 
     @Binds
-    @DeleteContract
-    abstract fun bindDeleteContractUseCase(
-        useCase: DeleteContractUseCase
-    ): FlowUseCase<DeleteContractUseCase.Input, DeleteContractUseCase.Output>
+    abstract fun bindGetVehicleByIdUseCase(impl: GetVehicleByIdUseCaseImpl): GetVehicleByIdUseCase
 
     @Binds
-    @DeleteAccount
-    abstract fun bindDeleteAccountUseCase(
-        useCase: DeleteAccountUseCase
-    ): FlowUseCase<DeleteAccountUseCase.Input, DeleteAccountUseCase.Output>
+    abstract fun bindValidateCredentialsUseCase(impl: ValidateCredentialsUseCaseImpl): ValidateCredentialsUseCase
 
     @Binds
-    @GetVehicleById
-    abstract fun bindGetVehicleByIdUseCase(
-        useCase: GetVehicleByIdUseCase
-    ): FlowUseCase<GetVehicleByIdUseCase.Input, GetVehicleByIdUseCase.Output>
+    abstract fun bindSignInUseCase(impl: SignInUseCaseImpl): SignInUseCase
 
     @Binds
-    @ValidateCredentials
-    abstract fun bindValidateCredentialsUseCase(
-        useCase: ValidateCredentialsUseCase
-    ): UseCase<ValidateCredentialsUseCase.Input, ValidateCredentialsUseCase.Output>
+    abstract fun bindSignInWithGoogleUseCase(impl: SignInWithGoogleUseCaseImpl): SignInWithGoogleUseCase
 
     @Binds
-    @SignIn
-    abstract fun bindSignInUseCase(
-        useCase: SignInUseCase
-    ): FlowUseCase<SignInUseCase.Input, SignInUseCase.Output>
+    abstract fun bindSignUpUseCase(impl: SignUpUseCaseImpl): SignUpUseCase
 
     @Binds
-    @SignInWithGoogle
-    abstract fun bindSignInWithGoogleUseCase(
-        useCase: SignInWithGoogleUseCase
-    ): FlowUseCase<SignInWithGoogleUseCase.Input, SignInWithGoogleUseCase.Output>
+    abstract fun bindCheckSessionUseCase(impl: CheckSessionUseCaseImpl): CheckSessionUseCase
 
     @Binds
-    @SignUp
-    abstract fun bindSignUpUseCase(
-        useCase: SignUpUseCase
-    ): FlowUseCase<SignUpUseCase.Input, SignUpUseCase.Output>
+    abstract fun bindCheckDatabaseOwnerUseCase(impl: CheckDatabaseOwnerUseCaseImpl): CheckDatabaseOwnerUseCase
 
     @Binds
-    @CheckSession
-    abstract fun bindCheckSessionUseCase(
-        useCase: CheckSessionUseCase
-    ): FlowUseCase<CheckSessionUseCase.Input, CheckSessionUseCase.Output>
+    abstract fun bindClearLocalDataUseCase(impl: ClearLocalDataUseCaseImpl): ClearLocalDataUseCase
 
     @Binds
-    @CheckDatabaseOwner
-    abstract fun bindCheckDatabaseOwnerUseCase(
-        useCase: CheckDatabaseOwnerUseCase
-    ): FlowUseCase<CheckDatabaseOwnerUseCase.Input, CheckDatabaseOwnerUseCase.Output>
+    abstract fun bindSyncContractsUseCase(impl: SyncContractsUseCaseImpl): SyncContractsUseCase
 
     @Binds
-    @ClearLocalData
-    abstract fun bindClearLocalDataUseCase(
-        useCase: ClearLocalDataUseCase
-    ): FlowUseCase<ClearLocalDataUseCase.Input, ClearLocalDataUseCase.Output>
+    abstract fun bindSyncHistoryUseCase(impl: SyncHistoryUseCaseImpl): SyncHistoryUseCase
 
     @Binds
-    @SyncContracts
-    abstract fun bindSyncContractsUseCase(
-        useCase: SyncContractsUseCase
-    ): FlowUseCase<SyncContractsUseCase.Input, SyncContractsUseCase.Output>
+    abstract fun bindSignOutUseCase(impl: SignOutUseCaseImpl): SignOutUseCase
 
     @Binds
-    @SyncHistory
-    abstract fun bindSyncHistoryUseCase(
-        useCase: SyncHistoryUseCase
-    ): FlowUseCase<SyncHistoryUseCase.Input, SyncHistoryUseCase.Output>
+    abstract fun bindGetCurrentUserUseCase(impl: GetCurrentUserUseCaseImpl): GetCurrentUserUseCase
 
     @Binds
-    @SignOut
-    abstract fun bindSignOutUseCase(
-        useCase: SignOutUseCase
-    ): FlowUseCase<SignOutUseCase.Input, SignOutUseCase.Output>
+    abstract fun bindObserveTrackingStateUseCase(impl: ObserveTrackingStateUseCaseImpl): ObserveTrackingStateUseCase
 
     @Binds
-    @GetCurrentUser
-    abstract fun bindGetCurrentUserUseCase(
-        useCase: GetCurrentUserUseCase
-    ): FlowUseCase<GetCurrentUserUseCase.Input, GetCurrentUserUseCase.Output>
+    abstract fun bindClearTrackingUseCase(impl: ClearTrackingUseCaseImpl): ClearTrackingUseCase
 
     @Binds
-    @ObserveTrackingState
-    abstract fun bindObserveTrackingStateUseCase(
-        useCase: ObserveTrackingStateUseCase
-    ): FlowUseCase<ObserveTrackingStateUseCase.Input, ObserveTrackingStateUseCase.Output>
+    abstract fun bindStopTrackingUseCase(impl: StopTrackingUseCaseImpl): StopTrackingUseCase
 
     @Binds
-    @ClearTracking
-    abstract fun bindClearTrackingUseCase(
-        useCase: ClearTrackingUseCase
-    ): FlowUseCase<ClearTrackingUseCase.Input, ClearTrackingUseCase.Output>
+    abstract fun bindStartAutoTrackingUseCase(impl: StartAutoTrackingUseCaseImpl): StartAutoTrackingUseCase
 
     @Binds
-    @StopTracking
-    abstract fun bindStopTrackingUseCase(
-        useCase: StopTrackingUseCase
-    ): FlowUseCase<StopTrackingUseCase.Input, StopTrackingUseCase.Output>
+    abstract fun bindStopAutoTrackingUseCase(impl: StopAutoTrackingUseCaseImpl): StopAutoTrackingUseCase
 
     @Binds
-    @StartAutoTracking
-    abstract fun bindStartAutoTrackingUseCase(
-        useCase: StartAutoTrackingUseCase
-    ): FlowUseCase<StartAutoTrackingUseCase.Input, StartAutoTrackingUseCase.Output>
+    abstract fun bindGetEntitlementsUseCase(impl: GetEntitlementsUseCaseImpl): GetEntitlementsUseCase
 
     @Binds
-    @StopAutoTracking
-    abstract fun bindStopAutoTrackingUseCase(
-        useCase: StopAutoTrackingUseCase
-    ): FlowUseCase<StopAutoTrackingUseCase.Input, StopAutoTrackingUseCase.Output>
+    abstract fun bindStartTrialUseCase(impl: StartTrialUseCaseImpl): StartTrialUseCase
 
     @Binds
-    @GetEntitlements
-    abstract fun bindGetEntitlementsUseCase(
-        useCase: GetEntitlementsUseCase
-    ): FlowUseCase<GetEntitlementsUseCase.Input, GetEntitlementsUseCase.Output>
+    abstract fun bindCheckFeatureAccessUseCase(impl: CheckFeatureAccessUseCaseImpl): CheckFeatureAccessUseCase
 
     @Binds
-    @StartTrial
-    abstract fun bindStartTrialUseCase(
-        useCase: StartTrialUseCase
-    ): FlowUseCase<StartTrialUseCase.Input, StartTrialUseCase.Output>
+    abstract fun bindGetRouteUseCase(impl: GetRouteUseCaseImpl): GetRouteUseCase
 
     @Binds
-    @CheckFeatureAccess
-    abstract fun bindCheckFeatureAccessUseCase(
-        useCase: CheckFeatureAccessUseCase
-    ): FlowUseCase<CheckFeatureAccessUseCase.Input, CheckFeatureAccessUseCase.Output>
+    abstract fun bindGetImageBytesUseCase(impl: GetImageBytesUseCaseImpl): GetImageBytesUseCase
 
     @Binds
-    @GetRoute
-    abstract fun bindGetRouteUseCase(
-        useCase: GetRouteUseCase
-    ): FlowUseCase<GetRouteUseCase.Input, GetRouteUseCase.Output>
+    abstract fun bindGetExpensesByVehicleUseCase(impl: GetExpensesByVehicleUseCaseImpl): GetExpensesByVehicleUseCase
 
     @Binds
-    @GetImageBytes
-    abstract fun bindGetImageBytesUseCase(
-        useCase: GetImageBytesUseCase
-    ): UseCase<GetImageBytesUseCase.Input, GetImageBytesUseCase.Output>
+    abstract fun bindSaveFuelExpenseUseCase(impl: SaveFuelExpenseUseCaseImpl): SaveFuelExpenseUseCase
 
     @Binds
-    @GetExpensesByVehicle
-    abstract fun bindGetExpensesByVehicleUseCase(
-        useCase: es.joshluq.kmsafe.domain.usecase.GetExpensesByVehicleUseCase
-    ): FlowUseCase<es.joshluq.kmsafe.domain.usecase.GetExpensesByVehicleUseCase.Input, es.joshluq.kmsafe.domain.usecase.GetExpensesByVehicleUseCase.Output>
+    abstract fun bindDeleteFuelExpenseUseCase(impl: DeleteFuelExpenseUseCaseImpl): DeleteFuelExpenseUseCase
 
     @Binds
-    @SaveFuelExpense
-    abstract fun bindSaveFuelExpenseUseCase(
-        useCase: es.joshluq.kmsafe.domain.usecase.SaveFuelExpenseUseCase
-    ): FlowUseCase<es.joshluq.kmsafe.domain.usecase.SaveFuelExpenseUseCase.Input, es.joshluq.kmsafe.domain.usecase.SaveFuelExpenseUseCase.Output>
+    abstract fun bindGetStationVolatilityUseCase(impl: GetStationVolatilityUseCaseImpl): GetStationVolatilityUseCase
 
     @Binds
-    @DeleteFuelExpense
-    abstract fun bindDeleteFuelExpenseUseCase(
-        useCase: es.joshluq.kmsafe.domain.usecase.DeleteFuelExpenseUseCase
-    ): FlowUseCase<es.joshluq.kmsafe.domain.usecase.DeleteFuelExpenseUseCase.Input, es.joshluq.kmsafe.domain.usecase.DeleteFuelExpenseUseCase.Output>
+    abstract fun bindGetElectrificationSavingsUseCase(impl: GetElectrificationSavingsUseCaseImpl): GetElectrificationSavingsUseCase
 
     @Binds
-    @GetStationVolatility
-    abstract fun bindGetStationVolatilityUseCase(
-        useCase: es.joshluq.kmsafe.domain.usecase.GetStationVolatilityUseCase
-    ): FlowUseCase<es.joshluq.kmsafe.domain.usecase.GetStationVolatilityUseCase.Input, es.joshluq.kmsafe.domain.usecase.GetStationVolatilityUseCase.Output>
+    abstract fun bindGetAllServiceStationsUseCase(impl: GetAllServiceStationsUseCaseImpl): GetAllServiceStationsUseCase
 
     @Binds
-    @GetElectrificationSavings
-    abstract fun bindGetElectrificationSavingsUseCase(
-        useCase: es.joshluq.kmsafe.domain.usecase.GetElectrificationSavingsUseCase
-    ): FlowUseCase<es.joshluq.kmsafe.domain.usecase.GetElectrificationSavingsUseCase.Input, es.joshluq.kmsafe.domain.usecase.GetElectrificationSavingsUseCase.Output>
+    abstract fun bindGetFavoriteServiceStationsUseCase(impl: GetFavoriteServiceStationsUseCaseImpl): GetFavoriteServiceStationsUseCase
 
     @Binds
-    @GetAllServiceStations
-    abstract fun bindGetAllServiceStationsUseCase(
-        useCase: GetAllServiceStationsUseCase
-    ): FlowUseCase<GetAllServiceStationsUseCase.Input, GetAllServiceStationsUseCase.Output>
+    abstract fun bindSaveServiceStationUseCase(impl: SaveServiceStationUseCaseImpl): SaveServiceStationUseCase
 
     @Binds
-    @GetFavoriteServiceStations
-    abstract fun bindGetFavoriteServiceStationsUseCase(
-        useCase: GetFavoriteServiceStationsUseCase
-    ): FlowUseCase<GetFavoriteServiceStationsUseCase.Input, GetFavoriteServiceStationsUseCase.Output>
+    abstract fun bindSetFavoriteStationUseCase(impl: SetFavoriteStationUseCaseImpl): SetFavoriteStationUseCase
 
     @Binds
-    @SaveServiceStation
-    abstract fun bindSaveServiceStationUseCase(
-        useCase: SaveServiceStationUseCase
-    ): FlowUseCase<SaveServiceStationUseCase.Input, SaveServiceStationUseCase.Output>
+    abstract fun bindDeleteServiceStationUseCase(impl: DeleteServiceStationUseCaseImpl): DeleteServiceStationUseCase
 
     @Binds
-    @SetFavoriteStation
-    abstract fun bindSetFavoriteStationUseCase(
-        useCase: SetFavoriteStationUseCase
-    ): FlowUseCase<SetFavoriteStationUseCase.Input, SetFavoriteStationUseCase.Output>
+    abstract fun bindGetServiceStationDetailUseCase(impl: GetServiceStationDetailUseCaseImpl): GetServiceStationDetailUseCase
 
     @Binds
-    @DeleteServiceStation
-    abstract fun bindDeleteServiceStationUseCase(
-        useCase: DeleteServiceStationUseCase
-    ): FlowUseCase<DeleteServiceStationUseCase.Input, DeleteServiceStationUseCase.Output>
+    abstract fun bindSyncStationGeofencesUseCase(impl: SyncStationGeofencesUseCaseImpl): SyncStationGeofencesUseCase
 
     @Binds
-    @GetServiceStationDetail
-    abstract fun bindGetServiceStationDetailUseCase(
-        useCase: GetServiceStationDetailUseCase
-    ): FlowUseCase<GetServiceStationDetailUseCase.Input, GetServiceStationDetailUseCase.Output>
+    abstract fun bindHandleGeofenceTransitionUseCase(impl: HandleGeofenceTransitionUseCaseImpl): HandleGeofenceTransitionUseCase
 
     @Binds
-    @SyncStationGeofences
-    abstract fun bindSyncStationGeofencesUseCase(
-        useCase: SyncStationGeofencesUseCase
-    ): FlowUseCase<SyncStationGeofencesUseCase.Input, SyncStationGeofencesUseCase.Output>
-
-    @Binds
-    @HandleGeofenceTransition
-    abstract fun bindHandleGeofenceTransitionUseCase(
-        useCase: HandleGeofenceTransitionUseCase
-    ): FlowUseCase<HandleGeofenceTransitionUseCase.Input, HandleGeofenceTransitionUseCase.Output>
-
-    @Binds
-    @SyncStations
-    abstract fun bindSyncStationsUseCase(
-        useCase: SyncStationsUseCase
-    ): FlowUseCase<SyncStationsUseCase.Input, SyncStationsUseCase.Output>
+    abstract fun bindSyncStationsUseCase(impl: SyncStationsUseCaseImpl): SyncStationsUseCase
 }

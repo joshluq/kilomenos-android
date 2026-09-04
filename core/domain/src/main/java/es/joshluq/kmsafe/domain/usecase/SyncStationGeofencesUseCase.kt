@@ -14,16 +14,27 @@ import kotlinx.coroutines.flow.onStart
 import javax.inject.Inject
 
 /**
- * Use case to synchronize local favorite service stations with the system geofences.
+ * Domain interface to synchronize local favorite service stations with the system geofences.
  */
-class SyncStationGeofencesUseCase @Inject constructor(
+interface SyncStationGeofencesUseCase : FlowUseCase<SyncStationGeofencesUseCase.Input, SyncStationGeofencesUseCase.Output> {
+
+    data object Input : UseCaseInput
+
+    sealed interface Output : UseCaseOutput {
+        data object Progress : Output
+        data object Failure : Output
+        data object Success : Output
+    }
+}
+
+class SyncStationGeofencesUseCaseImpl @Inject constructor(
     private val stationRepository: ServiceStationRepository,
     private val geofenceService: GeofenceService,
     private val logger: LoggerKit
-) : FlowUseCase<SyncStationGeofencesUseCase.Input, SyncStationGeofencesUseCase.Output> {
+) : SyncStationGeofencesUseCase {
 
     @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
-    override fun invoke(input: Input): Flow<Output> {
+    override fun invoke(input: SyncStationGeofencesUseCase.Input): Flow<SyncStationGeofencesUseCase.Output> {
         logger.d("SyncStationGeofences", "Starting synchronization")
         
         return stationRepository.getFavoriteStations()
@@ -32,20 +43,12 @@ class SyncStationGeofencesUseCase @Inject constructor(
                 geofenceService.registerStationGeofences(favorites)
             }
             .map {
-                Output.Success as Output
+                SyncStationGeofencesUseCase.Output.Success as SyncStationGeofencesUseCase.Output
             }
-            .onStart { emit(Output.Progress) }
+            .onStart { emit(SyncStationGeofencesUseCase.Output.Progress) }
             .catch { e ->
                 logger.e("SyncStationGeofences", "Error synchronizing geofences", e)
-                emit(Output.Failure)
+                emit(SyncStationGeofencesUseCase.Output.Failure)
             }
-    }
-
-    data object Input : UseCaseInput
-
-    sealed interface Output : UseCaseOutput {
-        data object Progress : Output
-        data object Failure : Output
-        data object Success : Output
     }
 }
