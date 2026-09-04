@@ -15,7 +15,7 @@ import es.joshluq.kmsafe.domain.usecase.UpdateSubscriptionUseCase
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import javax.inject.Inject
-import es.joshluq.kmsafe.feature.fleet.R as FleetR
+import es.joshluq.kmsafe.feature.premium.R
 
 @HiltViewModel
 class PremiumPaywallViewModel @Inject constructor(
@@ -74,7 +74,7 @@ class PremiumPaywallViewModel @Inject constructor(
                         updateState {
                             copy(
                                 isLoading = false,
-                                error = TextProvider.Resource(FleetR.string.onboarding_register_error)
+                                error = TextProvider.Resource(R.string.premium_upgrade_error)
                             )
                         }
                     }

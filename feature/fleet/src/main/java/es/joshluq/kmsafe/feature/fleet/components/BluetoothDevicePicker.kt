@@ -2,10 +2,7 @@ package es.joshluq.kmsafe.feature.fleet.components
 
 import android.Manifest
 import android.annotation.SuppressLint
-import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
-import android.bluetooth.BluetoothManager
-import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
 import androidx.compose.foundation.background
@@ -57,6 +54,7 @@ data class BluetoothDeviceItemUiModel(
  * Content for the Bluetooth Device Picker.
  * Displays a list of paired devices, highlighting currently connected devices at the top.
  */
+@SuppressLint("MissingPermission")
 @Composable
 fun BluetoothDevicePicker(
     onDeviceSelected: (name: String?, address: String) -> Unit
@@ -73,7 +71,7 @@ fun BluetoothDevicePicker(
     }
 
     val devicesWithState by produceState(
-        initialValue = emptyList<BluetoothDeviceItemUiModel>(),
+        initialValue = emptyList(),
         key1 = hasPermission
     ) {
         if (hasPermission) {
@@ -91,7 +89,7 @@ fun BluetoothDevicePicker(
                     BluetoothDeviceItemUiModel(device, isConnected)
                 }.sortedWith(
                     compareByDescending<BluetoothDeviceItemUiModel> { it.isConnected }
-                        .thenBy { it.device.name ?: "" }
+                        .thenBy  { it.device.name ?: "" }
                 )
             }
         } else {

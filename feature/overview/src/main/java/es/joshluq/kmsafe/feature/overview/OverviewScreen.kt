@@ -127,8 +127,6 @@ import es.joshluq.kmsafe.feature.overview.components.TrackingCard
 import es.joshluq.kmsafe.feature.overview.model.MonthlyUsageUiModel
 import kotlin.math.absoluteValue
 import es.joshluq.kmsafe.core.ui.R as CoreR
-import es.joshluq.kmsafe.feature.fleet.R as FleetR
-import es.joshluq.kmsafe.feature.profile.R as ProfileR
 
 /**
  * Navigation entry point for the Overview screen.
@@ -394,7 +392,7 @@ fun OverviewScreen(
                 onDismiss = { onEvent(Event.OnDismissBluetoothSuggestionBanner) },
                 message = {
                     Text(
-                        text = stringResource(FleetR.string.onboarding_bluetooth_suggestion_banner),
+                        text = stringResource(R.string.overview_bluetooth_suggestion_banner),
                         style = CanvasKitTheme.typography.bodyMedium
                     )
                 }
@@ -1094,7 +1092,7 @@ private fun UpdateOdometerContent(
             onDateSelected = { millis ->
                 millis?.let { onEvent(Event.OnNewRecordDateChanged(it)) }
             },
-            placeholder = stringResource(FleetR.string.onboarding_start_date_placeholder),
+            placeholder = stringResource(R.string.overview_start_date_placeholder),
             isError = state.newRecordDateError != null,
             errorText = state.newRecordDateError?.asString()
         )
@@ -1327,7 +1325,7 @@ private fun EmptyState(
                         modifier = Modifier.fillMaxWidth()
                     ) { _ ->
                         Text(
-                            stringResource(ProfileR.string.profile_welcome_guide_option),
+                            stringResource(R.string.overview_welcome_guide_option),
                             color = CanvasKitTheme.colors.brandAccent,
                             style = CanvasKitTheme.typography.labelLarge
                         )

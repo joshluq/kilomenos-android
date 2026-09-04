@@ -28,4 +28,5 @@
     <string name="premium_limit_data_message">El backup completo y la restauración de datos son funciones exclusivas de KiloMenos Premium.</string>
     <string name="premium_upgrade_cancel">Ahora no</string>
     <string name="premium_upgrade_confirm">Subir a Premium</string>
+    <string name="premium_upgrade_error">Ha ocurrido un error al procesar tu suscripción. Por favor, inténtalo de nuevo.</string>
 </resources>

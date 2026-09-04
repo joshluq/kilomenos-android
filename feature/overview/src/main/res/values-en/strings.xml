@@ -55,4 +55,9 @@
     <string name="tracking_card_cancel_action">Cancel</string>
     <string name="tracking_card_start_action">START</string>
     <string name="tracking_card_stop_action">STOP TRIP</string>
+
+    <!-- Contextual & Suggestion -->
+    <string name="overview_bluetooth_suggestion_banner">Optimize auto-tracking by linking your vehicle\'s Bluetooth.</string>
+    <string name="overview_start_date_placeholder">e.g. 05/12/2023</string>
+    <string name="overview_welcome_guide_option">How KiloMenos works</string>
 </resources>

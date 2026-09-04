@@ -18,7 +18,6 @@ dependencies {
     implementation(project(":core:domain"))
     implementation(project(":core:ui"))
     implementation(project(":core:navigation"))
-    implementation(project(":feature:fleet"))
 
     implementation(deps.canvaskit)
     implementation(deps.foundationkit)

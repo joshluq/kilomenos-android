@@ -7,11 +7,9 @@ import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothManager
 import android.bluetooth.BluetoothProfile
 import android.content.Context
-import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import androidx.core.content.ContextCompat
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withTimeoutOrNull
 import java.util.Collections
@@ -62,7 +60,7 @@ object BluetoothUtils {
     @SuppressLint("MissingPermission")
     suspend fun getConnectedAudioDeviceAddresses(
         context: Context,
-        timeoutMillis: Long = 1200L
+        timeoutMillis: Long = 2000L
     ): Set<String> {
         if (!hasBluetoothConnectPermission(context)) return emptySet()
 
@@ -139,20 +137,6 @@ object BluetoothUtils {
     }
 
     /**
-     * Checks whether a specific Bluetooth MAC address is currently connected.
-     *
-     * @param context Android context.
-     * @param macAddress Target MAC address to check.
-     * @return True if connected, false otherwise.
-     */
-    suspend fun isDeviceConnected(context: Context, macAddress: String): Boolean {
-        if (macAddress.isBlank()) return false
-        val normalized = normalizeAddress(macAddress)
-        val connected = getConnectedAudioDeviceAddresses(context)
-        return connected.contains(normalized)
-    }
-
-    /**
      * Safely retrieves all bonded (paired) Bluetooth devices.
      *
      * @param context Android context.
@@ -165,15 +149,4 @@ object BluetoothUtils {
         return adapter?.bondedDevices?.toList() ?: emptyList()
     }
 
-    /**
-     * Extracts a [BluetoothDevice] extra from an [Intent] handling API differences.
-     */
-    fun Intent.getBluetoothDeviceExtra(): BluetoothDevice? {
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            getParcelableExtra(BluetoothDevice.EXTRA_DEVICE, BluetoothDevice::class.java)
-        } else {
-            @Suppress("DEPRECATION")
-            getParcelableExtra(BluetoothDevice.EXTRA_DEVICE)
-        }
-    }
 }

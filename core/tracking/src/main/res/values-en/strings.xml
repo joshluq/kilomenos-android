@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="tracking_app_name">KiloMenos</string>
-    <string name="tracking_validation_content">Checking vehicle connection...</string>
+    <string name="tracking_validation_content">Checking vehicle connection…</string>
     <string name="tracking_notification_title">KiloMenos Tracking</string>
     <string name="tracking_notification_content">Active trip: %1$.2f km</string>
     <string name="tracking_action_stop">Stop</string>

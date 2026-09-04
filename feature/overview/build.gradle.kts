@@ -19,8 +19,6 @@ dependencies {
     implementation(project(":core:ui"))
     implementation(project(":core:navigation"))
     implementation(project(":core:monetization"))
-    implementation(project(":feature:fleet"))
-    implementation(project(":feature:profile"))
 
     implementation(deps.canvaskit)
     implementation(deps.foundationkit)
