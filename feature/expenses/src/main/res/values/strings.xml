@@ -59,6 +59,8 @@
     <string name="expenses_sheet_action_save_ev">Guardar carga eléctrica</string>
     <string name="expenses_sheet_action_update_price">Actualizar precio</string>
     <string name="expenses_sheet_price_delta_label">vs. último</string>
+    <string name="expenses_station_autodetected_badge">Auto-detectada</string>
+    <string name="expenses_station_change_action">Cambiar</string>
 
     <!-- Messages and Errors -->
     <string name="expenses_error_load">Error al cargar los gastos</string>

@@ -34,6 +34,8 @@ import es.joshluq.kmsafe.domain.usecase.DeleteOdometerRecordUseCase
 import es.joshluq.kmsafe.domain.usecase.DeleteOdometerRecordUseCaseImpl
 import es.joshluq.kmsafe.domain.usecase.DeleteServiceStationUseCase
 import es.joshluq.kmsafe.domain.usecase.DeleteServiceStationUseCaseImpl
+import es.joshluq.kmsafe.domain.usecase.DetectNearestStationUseCase
+import es.joshluq.kmsafe.domain.usecase.DetectNearestStationUseCaseImpl
 import es.joshluq.kmsafe.domain.usecase.DiscardReceiptScanUseCase
 import es.joshluq.kmsafe.domain.usecase.DiscardReceiptScanUseCaseImpl
 import es.joshluq.kmsafe.domain.usecase.EvaluateIdentityConflictUseCase
@@ -344,4 +346,7 @@ abstract class UseCaseModule {
 
     @Binds
     abstract fun bindPredictBestRefuelDayUseCase(impl: PredictBestRefuelDayUseCaseImpl): PredictBestRefuelDayUseCase
+
+    @Binds
+    abstract fun bindDetectNearestStationUseCase(impl: DetectNearestStationUseCaseImpl): DetectNearestStationUseCase
 }

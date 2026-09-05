@@ -86,7 +86,9 @@ data class ExpensesState(
     /** Extracted receipt data pending user review/confirmation. */
     val scannedReceiptResult: ReceiptScanResult? = null,
     /** Local cached path of the captured/selected receipt image. */
-    val receiptImagePath: String? = null
+    val receiptImagePath: String? = null,
+    /** Whether the initial station was detected automatically via proximity when the vehicle stopped. */
+    val isStationAutoDetected: Boolean = false
 ) : UiState {
     companion object {
         val Empty = ExpensesState()

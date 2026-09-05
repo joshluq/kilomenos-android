@@ -70,7 +70,8 @@ class ExpensesViewModel @Inject constructor(
                 copy(
                     isAddExpenseSheetOpen = true,
                     initialStationId = stationId,
-                    priceReportMode = priceMode
+                    priceReportMode = priceMode,
+                    isStationAutoDetected = stationId != null
                 ) 
             }
         }
@@ -92,7 +93,8 @@ class ExpensesViewModel @Inject constructor(
                         currentLat = null,
                         currentLng = null,
                         initialStationId = null,
-                        priceReportMode = false
+                        priceReportMode = false,
+                        isStationAutoDetected = false
                     )
                 }
             }

@@ -1,5 +1,6 @@
 package es.joshluq.kmsafe.core.tracking
 
+import android.Manifest
 import android.annotation.SuppressLint
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -8,13 +9,19 @@ import android.bluetooth.BluetoothDevice
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.location.Location
 import android.os.Build
 import androidx.core.app.NotificationCompat
+import androidx.core.content.ContextCompat
+import androidx.core.net.toUri
+import com.google.android.gms.location.LocationServices
 import dagger.hilt.android.AndroidEntryPoint
 import es.joshluq.foundationkit.log.LoggerKit
 import es.joshluq.kmsafe.domain.model.Feature
 import es.joshluq.kmsafe.domain.repository.TrackingRepository
 import es.joshluq.kmsafe.domain.usecase.CheckFeatureAccessUseCase
+import es.joshluq.kmsafe.domain.usecase.DetectNearestStationUseCase
 import es.joshluq.kmsafe.domain.usecase.GetPreferencesUseCase
 import es.joshluq.kmsafe.domain.usecase.GetRentingContractUseCase
 import kotlinx.coroutines.CoroutineScope
@@ -22,7 +29,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.suspendCancellableCoroutine
 import javax.inject.Inject
+import kotlin.coroutines.resume
 
 /**
  * Receiver that listens for Bluetooth hardware connection and disconnection events.
@@ -49,13 +58,20 @@ class BluetoothConnectionReceiver : BroadcastReceiver() {
     @Inject
     lateinit var trackingRepository: TrackingRepository
 
+    @Inject
+    lateinit var detectNearestStationUseCase: DetectNearestStationUseCase
+
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     companion object {
         private const val CHANNEL_SUGGESTION_ID = "bluetooth_suggestion_channel"
         private const val CHANNEL_CONNECTED_ID = "bluetooth_feedback_channel"
+        private const val CHANNEL_STATION_ARRIVAL_ID = "station_arrival_channel"
         private const val NOTIFICATION_ID_SUGGESTION = 2002
         private const val NOTIFICATION_ID_CONNECTED = 2003
+        private const val NOTIFICATION_ID_STATION_ARRIVAL = 2004
+        private const val STATION_NOTIFICATION_COOLDOWN_MS = 20 * 60 * 1000L // 20 minutes
+        private var lastStationNotificationTimestamp: Long = 0L
     }
 
     override fun onReceive(context: Context, intent: Intent) {
@@ -141,6 +157,9 @@ class BluetoothConnectionReceiver : BroadcastReceiver() {
                 }
                 context.startService(stopIntent)
             }
+
+            // Smart Arrival: Detect if vehicle stopped at a service station
+            checkStationArrival(context)
         }
     }
 
@@ -229,6 +248,99 @@ class BluetoothConnectionReceiver : BroadcastReceiver() {
             .build()
 
         notificationManager.notify(NOTIFICATION_ID_SUGGESTION, notification)
+    }
+
+    private suspend fun checkStationArrival(context: Context) {
+        val now = System.currentTimeMillis()
+        if (now - lastStationNotificationTimestamp < STATION_NOTIFICATION_COOLDOWN_MS) {
+            logger.d("BluetoothReceiver", "Station notification cooldown active. Skipping detection.")
+            return
+        }
+
+        if (!hasLocationPermission(context)) {
+            logger.d("BluetoothReceiver", "No location permission granted for station arrival check.")
+            return
+        }
+
+        val location = getLastLocation(context) ?: return
+        val output = detectNearestStationUseCase(
+            DetectNearestStationUseCase.Input(
+                latitude = location.latitude,
+                longitude = location.longitude
+            )
+        ).first()
+
+        if (output is DetectNearestStationUseCase.Output.Found) {
+            logger.i("BluetoothReceiver", "Station detected near vehicle disconnect: ${output.station.name}")
+            lastStationNotificationTimestamp = now
+            showStationArrivalNotification(context, output.station.id, output.station.name)
+        }
+    }
+
+    private fun hasLocationPermission(context: Context): Boolean {
+        val fine = ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
+        val coarse = ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
+        return fine || coarse
+    }
+
+    private suspend fun getLastLocation(context: Context): Location? = suspendCancellableCoroutine { continuation ->
+        try {
+            val client = LocationServices.getFusedLocationProviderClient(context)
+            client.lastLocation
+                .addOnSuccessListener { location ->
+                    if (continuation.isActive) continuation.resume(location)
+                }
+                .addOnFailureListener {
+                    if (continuation.isActive) continuation.resume(null)
+                }
+                .addOnCanceledListener {
+                    if (continuation.isActive) continuation.resume(null)
+                }
+        } catch (e: SecurityException) {
+            if (continuation.isActive) continuation.resume(null)
+        } catch (e: Exception) {
+            if (continuation.isActive) continuation.resume(null)
+        }
+    }
+
+    private fun showStationArrivalNotification(context: Context, stationId: String, stationName: String) {
+        val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val channel = NotificationChannel(
+                CHANNEL_STATION_ARRIVAL_ID,
+                context.getString(R.string.tracking_station_arrival_channel_name),
+                NotificationManager.IMPORTANCE_DEFAULT
+            ).apply {
+                description = context.getString(R.string.tracking_station_arrival_channel_desc)
+            }
+            notificationManager.createNotificationChannel(channel)
+        }
+
+        val launchIntent = context.packageManager.getLaunchIntentForPackage(context.packageName)?.apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+            putExtra("stationId", stationId)
+            putExtra("autoOpenAdd", true)
+            data = "https://kmsafe.app/expenses?stationId=$stationId&autoOpenAdd=true".toUri()
+        } ?: Intent()
+
+        val pendingIntent = PendingIntent.getActivity(
+            context,
+            stationId.hashCode(),
+            launchIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
+        val notification = NotificationCompat.Builder(context, CHANNEL_STATION_ARRIVAL_ID)
+            .setSmallIcon(android.R.drawable.ic_dialog_map)
+            .setContentTitle(context.getString(R.string.tracking_station_arrival_title, stationName))
+            .setContentText(context.getString(R.string.tracking_station_arrival_desc))
+            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+            .setAutoCancel(true)
+            .setContentIntent(pendingIntent)
+            .build()
+
+        notificationManager.notify(NOTIFICATION_ID_STATION_ARRIVAL, notification)
     }
 
     private fun normalizeAddress(address: String): String {

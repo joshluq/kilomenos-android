@@ -3,6 +3,7 @@ package es.joshluq.kmsafe.feature.expenses.components
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -14,6 +15,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -24,6 +26,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TooltipAnchorPosition
 import androidx.compose.material3.TooltipBox
 import androidx.compose.material3.TooltipDefaults
@@ -47,6 +50,7 @@ import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import es.joshluq.canvaskit.components.buttons.CanvasKitButton
@@ -101,6 +105,7 @@ fun AddExpenseBottomSheet(
     stations: List<ServiceStation> = emptyList(),
     isLocationCaptured: Boolean = false,
     scannedReceiptResult: ReceiptScanResult? = null,
+    isStationAutoDetected: Boolean = false,
     onDiscardScan: () -> Unit = {},
     onDismiss: () -> Unit,
     onSave: (
@@ -132,6 +137,9 @@ fun AddExpenseBottomSheet(
     }
     var selectedStation by remember { 
         mutableStateOf(stations.find { it.id == initialStationId }) 
+    }
+    var isAutoDetected by remember(initialStationId, isStationAutoDetected) { 
+        mutableStateOf(isStationAutoDetected && selectedStation != null) 
     }
     var stationNameInput by remember { mutableStateOf("") }
     
@@ -360,38 +368,79 @@ fun AddExpenseBottomSheet(
                     color = CanvasKitTheme.colors.textSecondary
                 )
 
-                if (stations.isNotEmpty()) {
-                    FlowRow(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp),
-                        modifier = Modifier.fillMaxWidth()
+                if (isAutoDetected && selectedStation != null) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(CanvasKitTheme.colors.backgroundSecondary, RoundedCornerShape(10.dp))
+                            .padding(horizontal = CanvasKitTheme.spacing.sm, vertical = CanvasKitTheme.spacing.xs),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        stations.take(4).forEach { station ->
-                            val isSelected = selectedStation?.id == station.id
-                            CanvasKitChip(
-                                selected = isSelected,
-                                label = { Text(station.name) },
-                                onClick = safeClick { 
-                                    selectedStation = if (isSelected) null else station 
-                                    if (!isSelected) stationNameInput = ""
-                                },
-                                variant = CanvasKitChipVariant.Outlined
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(CanvasKitTheme.spacing.xs),
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.LocationOn,
+                                contentDescription = null,
+                                tint = CanvasKitTheme.colors.brandAccent,
+                                modifier = Modifier.size(18.dp)
+                            )
+                            Text(
+                                text = "${selectedStation?.name} · ${stringResource(R.string.expenses_station_autodetected_badge)}",
+                                style = CanvasKitTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.SemiBold,
+                                color = CanvasKitTheme.colors.textPrimary,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        }
+                        TextButton(
+                            onClick = safeClick { isAutoDetected = false }
+                        ) {
+                            Text(
+                                text = stringResource(R.string.expenses_station_change_action),
+                                style = CanvasKitTheme.typography.labelLarge,
+                                color = CanvasKitTheme.colors.brandAccent
                             )
                         }
                     }
-                }
+                } else {
+                    if (stations.isNotEmpty()) {
+                        FlowRow(
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalArrangement = Arrangement.spacedBy(8.dp),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            stations.take(4).forEach { station ->
+                                val isSelected = selectedStation?.id == station.id
+                                CanvasKitChip(
+                                    selected = isSelected,
+                                    label = { Text(station.name) },
+                                    onClick = safeClick { 
+                                        selectedStation = if (isSelected) null else station 
+                                        if (!isSelected) stationNameInput = ""
+                                    },
+                                    variant = CanvasKitChipVariant.Outlined
+                                )
+                            }
+                        }
+                    }
 
-                if (selectedStation == null) {
-                    CanvasKitTextField(
-                        value = stationNameInput,
-                        onValueChange = { stationNameInput = it },
-                        placeholder = if (isElectric) {
-                            stringResource(R.string.expenses_sheet_station_ev)
-                        } else {
-                            stringResource(R.string.expenses_sheet_station_fuel)
-                        },
-                        keyboardOptions = KeyboardOptions(imeAction = androidx.compose.ui.text.input.ImeAction.Next),
-                    )
+                    if (selectedStation == null) {
+                        CanvasKitTextField(
+                            value = stationNameInput,
+                            onValueChange = { stationNameInput = it },
+                            placeholder = if (isElectric) {
+                                stringResource(R.string.expenses_sheet_station_ev)
+                            } else {
+                                stringResource(R.string.expenses_sheet_station_fuel)
+                            },
+                            keyboardOptions = KeyboardOptions(imeAction = androidx.compose.ui.text.input.ImeAction.Next),
+                        )
+                    }
                 }
             }
 

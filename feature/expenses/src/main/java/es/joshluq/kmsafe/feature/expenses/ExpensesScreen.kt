@@ -337,6 +337,7 @@ fun ExpensesScreen(
                         stations = state.stations,
                         isLocationCaptured = state.currentLat != null,
                         scannedReceiptResult = state.scannedReceiptResult,
+                        isStationAutoDetected = state.isStationAutoDetected,
                         onDiscardScan = { onEvent(ExpensesEvent.OnDiscardReceiptScan) },
                         onDismiss = { onEvent(ExpensesEvent.OnDismissAddExpense) },
                         onSave = { fuelType, unitPrice, volume, total, stationId, stationName, odo, isFull, notes, _, receiptPath ->

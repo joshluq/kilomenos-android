@@ -24,7 +24,10 @@ enum class Feature(val id: String) {
     STATION_PRICE_RADAR("station_price_radar"),
 
     /** Secure audited receipt image cloud retention. */
-    RECEIPT_CLOUD_STORAGE("receipt_cloud_storage");
+    RECEIPT_CLOUD_STORAGE("receipt_cloud_storage"),
+
+    /** Smart background station arrival detection upon vehicle disconnect. */
+    STATION_AUTO_DETECTION("station_auto_detection");
 
     companion object {
         fun fromId(id: String): Feature? = entries.find { it.id == id }

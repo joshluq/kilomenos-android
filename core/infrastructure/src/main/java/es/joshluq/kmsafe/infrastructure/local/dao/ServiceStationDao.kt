@@ -22,6 +22,18 @@ interface ServiceStationDao {
     @Query("SELECT * FROM service_stations WHERE id = :id LIMIT 1")
     fun getStationById(id: String): Flow<ServiceStationEntity?>
 
+    @Query("""
+        SELECT * FROM service_stations 
+        WHERE latitude BETWEEN :minLat AND :maxLat 
+          AND longitude BETWEEN :minLng AND :maxLng
+    """)
+    fun getStationsInBoundingBox(
+        minLat: Double,
+        maxLat: Double,
+        minLng: Double,
+        maxLng: Double
+    ): Flow<List<ServiceStationEntity>>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertStation(station: ServiceStationEntity)
 

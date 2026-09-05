@@ -61,4 +61,9 @@ interface ServiceStationRepository {
      * Calculates price volatility metrics and trend comparison for a station and fuel type.
      */
     fun getStationVolatility(stationId: String, fuelType: FuelType): Flow<StationPriceVolatility?>
+
+    /**
+     * Finds service stations located within a spatial bounding box.
+     */
+    fun getStationsInBoundingBox(minLat: Double, maxLat: Double, minLng: Double, maxLng: Double): Flow<List<ServiceStation>>
 }

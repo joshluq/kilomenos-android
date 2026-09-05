@@ -215,4 +215,15 @@ class ServiceStationRepositoryImpl @Inject constructor(
             }
         }.flowOn(dispatchers.io)
     }
+
+    override fun getStationsInBoundingBox(
+        minLat: Double,
+        maxLat: Double,
+        minLng: Double,
+        maxLng: Double
+    ): Flow<List<ServiceStation>> {
+        return stationDao.getStationsInBoundingBox(minLat, maxLat, minLng, maxLng)
+            .map { entities -> entities.map { it.toDomain() } }
+            .flowOn(dispatchers.io)
+    }
 }
