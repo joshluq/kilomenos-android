@@ -16,7 +16,6 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
@@ -45,7 +44,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import android.net.Uri
-import androidx.compose.material.icons.filled.CameraAlt
+import androidx.compose.foundation.layout.BoxScope
+import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -100,7 +100,8 @@ fun ExpensesScreen(
     onEvent: (ExpensesEvent) -> Unit,
 ) {
     val context = LocalContext.current
-    val locationPermissionState = rememberPermissionState(Manifest.permission.ACCESS_COARSE_LOCATION)
+    val locationPermissionState =
+        rememberPermissionState(Manifest.permission.ACCESS_COARSE_LOCATION)
     val fusedLocationClient = remember { LocationServices.getFusedLocationProviderClient(context) }
     val listState = rememberLazyListState()
 
@@ -171,130 +172,131 @@ fun ExpensesScreen(
             onEvent(ExpensesEvent.OnOpenAddExpense)
         }
     }
+    Box {
 
-    CanvasKitLoadingScaffold(
-        isLoading = state.isLoading && state.expenses.isEmpty(),
-        topBar = {
-            CanvasKitTopBar(
-                title = {
-                    Text(
-                        text = stringResource(R.string.expenses_title),
-                        style = CanvasKitTheme.typography.headingMedium,
-                        color = CanvasKitTheme.colors.textPrimary,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                },
-                actions = {
-                    IconButton(onClick = safeClick { onEvent(ExpensesEvent.OnManageStationsClicked) }) {
-                        Icon(
-                            imageVector = Icons.Default.LocalGasStation,
-                            contentDescription = stringResource(R.string.stations_management_title),
-                            tint = CanvasKitTheme.colors.textPrimary
+
+        CanvasKitLoadingScaffold(
+            isLoading = state.isLoading && state.expenses.isEmpty(),
+            topBar = {
+                CanvasKitTopBar(
+                    title = {
+                        Text(
+                            text = stringResource(R.string.expenses_title),
+                            style = CanvasKitTheme.typography.headingMedium,
+                            color = CanvasKitTheme.colors.textPrimary,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
                         )
-                    }
-                },
-                centeredTitle = true
-            )
-        },
-        floatingActionButton = {
-            Column(
-                horizontalAlignment = Alignment.End,
-                verticalArrangement = Arrangement.spacedBy(10.dp)
-            ) {
-                FloatingActionButton(
-                    onClick = safeClick { showReceiptSourcePicker = true },
-                    containerColor = CanvasKitTheme.colors.brandAccent,
-                    contentColor = CanvasKitTheme.colors.onBrandAccent,
-                    shape = CircleShape
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.CameraAlt,
-                        contentDescription = stringResource(R.string.expenses_fab_scan_content_desc),
-                    )
-                }
-
-                // Primary FAB: Manual Add
-                FloatingActionButton(
-                    onClick = safeClick { handleOpenAddExpense() },
-                    containerColor = CanvasKitTheme.colors.brandAccent,
-                    contentColor = CanvasKitTheme.colors.onBrandAccent,
-                    shape = CircleShape
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Add,
-                        contentDescription = stringResource(R.string.expenses_action_add)
-                    )
-                }
-            }
-        },
-        containerColor = CanvasKitTheme.colors.backgroundSecondary,
-        contentWindowInsets = WindowInsets(0, 0, 0, 0),
-        modifier = modifier
-    ) { paddingValues ->
-        val content = @Composable {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(horizontal = CanvasKitTheme.spacing.md)
-            ) {
-                Spacer(modifier = Modifier.height(CanvasKitTheme.spacing.sm))
-
-                KpiHeaderSection(state = state, onEvent = onEvent)
-
-                Spacer(modifier = Modifier.height(CanvasKitTheme.spacing.md))
-
-                StationRadarCarousel(
-                    items = state.radarItems,
-                    isLocked = state.isRadarLocked,
-                    onUpgradeClick = { onEvent(ExpensesEvent.OnUpgradeToUnlockRadarClicked) }
-                )
-
-                if (state.vehicleFuelType.category == EnergyCategory.HYBRID) {
-                    Spacer(modifier = Modifier.height(CanvasKitTheme.spacing.md))
-
-                    FilterSection(
-                        currentFilter = state.filterMode,
-                        onFilterSelected = { onEvent(ExpensesEvent.OnFilterChanged(it)) }
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(CanvasKitTheme.spacing.md))
-
-                state.selectedVolatility?.let { volatility ->
-                    StationVolatilityCard(
-                        volatility = volatility,
-                        onDismiss = { onEvent(ExpensesEvent.OnDismissVolatility) },
-                        onViewDetail = { onEvent(ExpensesEvent.OnViewStationDetail(it)) }
-                    )
-                    Spacer(modifier = Modifier.height(CanvasKitTheme.spacing.md))
-                }
-
-                if (state.filteredExpenses.isEmpty() && !state.isLoading) {
-                    CanvasKitStateView(
-                        title = stringResource(R.string.expenses_empty_title),
-                        description = stringResource(R.string.expenses_empty_description),
-                        icon = {
+                    },
+                    actions = {
+                        IconButton(onClick = safeClick { onEvent(ExpensesEvent.OnManageStationsClicked) }) {
                             Icon(
                                 imageVector = Icons.Default.LocalGasStation,
-                                contentDescription = null,
-                                modifier = Modifier.size(40.dp),
-                                tint = CanvasKitTheme.colors.brandAccent
+                                contentDescription = stringResource(R.string.stations_management_title),
+                                tint = CanvasKitTheme.colors.textPrimary
                             )
-                        },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .weight(1f)
-                    )
-                } else {
-                    LazyColumn(
-                        state = listState,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .weight(1f),
-                        contentPadding = PaddingValues(bottom = 80.dp),
-                        verticalArrangement = Arrangement.spacedBy(CanvasKitTheme.spacing.sm)
+                        }
+                    },
+                    centeredTitle = true
+                )
+            },
+            floatingActionButton = {
+                Column(
+                    horizontalAlignment = Alignment.End,
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    FloatingActionButton(
+                        onClick = safeClick { showReceiptSourcePicker = true },
+                        containerColor = CanvasKitTheme.colors.brandAccent,
+                        contentColor = CanvasKitTheme.colors.onBrandAccent,
+                        shape = CircleShape
                     ) {
+                        Icon(
+                            imageVector = Icons.Default.AutoAwesome,
+                            contentDescription = stringResource(R.string.expenses_fab_scan_content_desc),
+                        )
+                    }
+
+                    // Primary FAB: Manual Add
+                    FloatingActionButton(
+                        onClick = safeClick { handleOpenAddExpense() },
+                        containerColor = CanvasKitTheme.colors.brandAccent,
+                        contentColor = CanvasKitTheme.colors.onBrandAccent,
+                        shape = CircleShape
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Add,
+                            contentDescription = stringResource(R.string.expenses_action_add)
+                        )
+                    }
+                }
+            },
+            containerColor = CanvasKitTheme.colors.backgroundSecondary,
+            contentWindowInsets = WindowInsets(0, 0, 0, 0),
+            modifier = modifier
+        ) { paddingValues ->
+            val content = @Composable {
+                LazyColumn(
+                    state = listState,
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(
+                        start = CanvasKitTheme.spacing.md,
+                        end = CanvasKitTheme.spacing.md,
+                        top = CanvasKitTheme.spacing.sm,
+                        bottom = 96.dp
+                    ),
+                    verticalArrangement = Arrangement.spacedBy(CanvasKitTheme.spacing.md)
+                ) {
+                    item(key = "kpi_header") {
+                        KpiHeaderSection(state = state, onEvent = onEvent)
+                    }
+
+                    item(key = "station_radar") {
+                        StationRadarCarousel(
+                            items = state.radarItems,
+                            isLocked = state.isRadarLocked,
+                            onUpgradeClick = { onEvent(ExpensesEvent.OnUpgradeToUnlockRadarClicked) }
+                        )
+                    }
+
+                    if (state.vehicleFuelType.category == EnergyCategory.HYBRID) {
+                        item(key = "filter_section") {
+                            FilterSection(
+                                currentFilter = state.filterMode,
+                                onFilterSelected = { onEvent(ExpensesEvent.OnFilterChanged(it)) }
+                            )
+                        }
+                    }
+
+                    state.selectedVolatility?.let { volatility ->
+                        item(key = "volatility_card") {
+                            StationVolatilityCard(
+                                volatility = volatility,
+                                onDismiss = { onEvent(ExpensesEvent.OnDismissVolatility) },
+                                onViewDetail = { onEvent(ExpensesEvent.OnViewStationDetail(it)) }
+                            )
+                        }
+                    }
+
+                    if (state.filteredExpenses.isEmpty() && !state.isLoading) {
+                        item(key = "empty_state") {
+                            CanvasKitStateView(
+                                title = stringResource(R.string.expenses_empty_title),
+                                description = stringResource(R.string.expenses_empty_description),
+                                icon = {
+                                    Icon(
+                                        imageVector = Icons.Default.LocalGasStation,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(40.dp),
+                                        tint = CanvasKitTheme.colors.brandAccent
+                                    )
+                                },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = CanvasKitTheme.spacing.xl)
+                            )
+                        }
+                    } else {
                         items(state.filteredExpenses, key = { it.id }) { expense ->
                             ExpenseItemCard(
                                 expense = expense,
@@ -304,155 +306,124 @@ fun ExpensesScreen(
                     }
                 }
             }
-        }
 
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-        ) {
-            if (state.isPremium) {
-                PullToRefreshBox(
-                    isRefreshing = state.isLoading,
-                    onRefresh = { onEvent(ExpensesEvent.OnRefresh) },
-                    modifier = Modifier.fillMaxSize(),
-                    content = { content() }
-                )
-            } else {
-                content()
-            }
-
-            // Add Expense Bottom Sheet
-            if (state.isAddExpenseSheetOpen) {
-                AddExpenseBottomSheet(
-                    currentOdometer = state.currentOdometer,
-                    vehicleFuelType = state.vehicleFuelType,
-                    lastUsedFuelType = state.lastUsedFuelType,
-                    lastUnitPrice = state.lastUnitPrice,
-                    lastGasolinePrice = state.lastGasolinePrice,
-                    lastElectricPrice = state.lastElectricPrice,
-                    initialStationId = state.initialStationId,
-                    isSaving = state.isSaving,
-                    stations = state.stations,
-                    isLocationCaptured = state.currentLat != null,
-                    scannedReceiptResult = state.scannedReceiptResult,
-                    onDiscardScan = { onEvent(ExpensesEvent.OnDiscardReceiptScan) },
-                    onDismiss = { onEvent(ExpensesEvent.OnDismissAddExpense) },
-                    onSave = { fuelType, unitPrice, volume, total, stationId, stationName, odo, isFull, notes, _, receiptPath ->
-                        onEvent(
-                            ExpensesEvent.OnSaveExpense(
-                                fuelType = fuelType,
-                                unitPrice = unitPrice,
-                                volumeQuantity = volume,
-                                totalCost = total,
-                                stationId = stationId,
-                                stationName = stationName,
-                                odometerAtExpense = odo,
-                                isFullTank = isFull,
-                                notes = notes,
-                                lastRefuelTimestamp = state.lastRefuelTimestamp,
-                                receiptImagePath = receiptPath ?: state.receiptImagePath
-                            )
-                        )
-                    }
-                )
-            }
-
-            // Receipt Source Picker (Camera vs Gallery)
-            if (showReceiptSourcePicker) {
-                ReceiptSourceBottomSheet(
-                    onDismiss = { showReceiptSourcePicker = false },
-                    onCameraClick = { launchCameraCapture() },
-                    onGalleryClick = { galleryLauncher.launch("image/*") }
-                )
-            }
-
-            // Scanning progress banner overlay
-            if (state.isScanningReceipt) {
-                CanvasKitBanner(
-                    title = { Text(stringResource(R.string.expenses_scanning_banner_title)) },
-                    message = {
-                        Text(stringResource(R.string.expenses_scanning_banner_desc))
-                    },
-                    variant = CanvasKitAlertVariant.Info,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(CanvasKitTheme.spacing.md)
-                        .align(Alignment.TopCenter)
-                )
-            }
-
-            // Consumption banner
-            state.consumptionBannerData?.let { data ->
-                val avg = data.averageConsumption
-                val isBetter = avg != null && data.consumptionPer100km < avg
-                val bannerVariant = if (isBetter) CanvasKitAlertVariant.Success else CanvasKitAlertVariant.Info
-                val subtitleText = when {
-                    avg != null && isBetter ->
-                        stringResource(R.string.expenses_banner_better_than_avg, avg)
-                    avg != null ->
-                        stringResource(R.string.expenses_banner_worse_than_avg, avg)
-                    else -> null
-                }
-                CanvasKitBanner(
-                    modifier = Modifier
-                        .align(Alignment.BottomCenter)
-                        .padding(CanvasKitTheme.spacing.md)
-                        .navigationBarsPadding(),
-                    variant = bannerVariant,
-                    visible = true,
-                    onDismiss = { onEvent(ExpensesEvent.OnDismissConsumptionBanner) },
-                    message = {
-                        Column {
-                            Text(
-                                text = stringResource(
-                                    R.string.expenses_banner_consumption,
-                                    data.consumptionPer100km,
-                                    data.unit
-                                ),
-                                style = CanvasKitTheme.typography.bodyLarge,
-                                fontWeight = FontWeight.Bold
-                            )
-                            subtitleText?.let {
-                                Text(
-                                    text = it,
-                                    style = CanvasKitTheme.typography.bodyMedium
-                                )
-                            }
-                        }
-                    }
-                )
-            }
-
-            // Toast-style Banner (Error & Success)
-            Column(
+            Box(
                 modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .padding(CanvasKitTheme.spacing.md)
-                    .navigationBarsPadding(),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+                    .fillMaxSize()
+                    .padding(paddingValues)
             ) {
-                CanvasKitBanner(
-                    variant = CanvasKitAlertVariant.Error,
-                    message = { Text(state.error?.asString() ?: "") },
-                    visible = state.error != null,
-                    onDismiss = { onEvent(ExpensesEvent.OnDismissError) }
-                )
-            }
+                if (state.isPremium) {
+                    PullToRefreshBox(
+                        isRefreshing = state.isLoading,
+                        onRefresh = { onEvent(ExpensesEvent.OnRefresh) },
+                        modifier = Modifier.fillMaxSize(),
+                        content = { content() }
+                    )
+                } else {
+                    content()
+                }
 
-            if (state.showDeleteConfirmation) {
-                CanvasKitConfirmDialog(
-                    title = stringResource(R.string.expenses_delete_confirmation_title),
-                    message = stringResource(R.string.expenses_delete_confirmation_message),
-                    confirmText = stringResource(R.string.expenses_action_delete),
-                    cancelText = stringResource(R.string.expenses_action_cancel),
-                    onConfirm = { onEvent(ExpensesEvent.OnConfirmDeleteExpense) },
-                    onDismissRequest = { onEvent(ExpensesEvent.OnCancelDeleteExpense) },
-                    isDestructive = true,
-                    icon = Icons.Default.Delete
-                )
+                // Add Expense Bottom Sheet
+                if (state.isAddExpenseSheetOpen) {
+                    AddExpenseBottomSheet(
+                        currentOdometer = state.currentOdometer,
+                        vehicleFuelType = state.vehicleFuelType,
+                        lastUsedFuelType = state.lastUsedFuelType,
+                        lastUnitPrice = state.lastUnitPrice,
+                        lastGasolinePrice = state.lastGasolinePrice,
+                        lastElectricPrice = state.lastElectricPrice,
+                        initialStationId = state.initialStationId,
+                        isSaving = state.isSaving,
+                        stations = state.stations,
+                        isLocationCaptured = state.currentLat != null,
+                        scannedReceiptResult = state.scannedReceiptResult,
+                        onDiscardScan = { onEvent(ExpensesEvent.OnDiscardReceiptScan) },
+                        onDismiss = { onEvent(ExpensesEvent.OnDismissAddExpense) },
+                        onSave = { fuelType, unitPrice, volume, total, stationId, stationName, odo, isFull, notes, _, receiptPath ->
+                            onEvent(
+                                ExpensesEvent.OnSaveExpense(
+                                    fuelType = fuelType,
+                                    unitPrice = unitPrice,
+                                    volumeQuantity = volume,
+                                    totalCost = total,
+                                    stationId = stationId,
+                                    stationName = stationName,
+                                    odometerAtExpense = odo,
+                                    isFullTank = isFull,
+                                    notes = notes,
+                                    lastRefuelTimestamp = state.lastRefuelTimestamp,
+                                    receiptImagePath = receiptPath ?: state.receiptImagePath
+                                )
+                            )
+                        }
+                    )
+                }
+
+                // Receipt Source Picker (Camera vs Gallery)
+                if (showReceiptSourcePicker) {
+                    ReceiptSourceBottomSheet(
+                        onDismiss = { showReceiptSourcePicker = false },
+                        onCameraClick = { launchCameraCapture() },
+                        onGalleryClick = { galleryLauncher.launch("image/*") }
+                    )
+                }
+
+
+
+                if (state.showDeleteConfirmation) {
+                    CanvasKitConfirmDialog(
+                        title = stringResource(R.string.expenses_delete_confirmation_title),
+                        message = stringResource(R.string.expenses_delete_confirmation_message),
+                        confirmText = stringResource(R.string.expenses_action_delete),
+                        cancelText = stringResource(R.string.expenses_action_cancel),
+                        onConfirm = { onEvent(ExpensesEvent.OnConfirmDeleteExpense) },
+                        onDismissRequest = { onEvent(ExpensesEvent.OnCancelDeleteExpense) },
+                        isDestructive = true,
+                        icon = Icons.Default.Delete
+                    )
+                }
             }
         }
+        // Banners Overlay Container (Scanning, Consumption & Errors)
+        BannerSections(state, onEvent)
+    }
+}
+
+
+@Composable
+private fun BoxScope.BannerSections(
+    state: ExpensesState,
+    onEvent: (ExpensesEvent) -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .align(Alignment.BottomCenter),
+        verticalArrangement = Arrangement.spacedBy(CanvasKitTheme.spacing.xs)
+    ) {
+        // Scanning progress banner overlay
+        if (state.isScanningReceipt) {
+            CanvasKitBanner(
+                title = { Text(stringResource(R.string.expenses_scanning_banner_title)) },
+                message = { Text(stringResource(R.string.expenses_scanning_banner_desc)) },
+                variant = CanvasKitAlertVariant.Info,
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
+
+        // Toast-style Banner (Error & Success)
+        CanvasKitBanner(
+            modifier = Modifier.fillMaxWidth(),
+            variant = CanvasKitAlertVariant.Error,
+            message = {
+                Text(
+                    text = state.error?.asString() ?: "",
+                    color = CanvasKitTheme.colors.textPrimary,
+                )
+            },
+            visible = state.error != null,
+            onDismiss = { onEvent(ExpensesEvent.OnDismissError) }
+        )
     }
 }
 
@@ -485,13 +456,19 @@ private fun KpiHeaderSection(
             ) {
                 if (hasCostPer100km) {
                     Text(
-                        text = stringResource(R.string.expenses_hero_cost_per_hundred_km_value, state.costPer100km),
+                        text = stringResource(
+                            R.string.expenses_hero_cost_per_hundred_km_value,
+                            state.costPer100km
+                        ),
                         style = CanvasKitTheme.typography.headingLarge,
                         fontWeight = FontWeight.Bold,
                         color = CanvasKitTheme.colors.brandAccent
                     )
                     Text(
-                        text = stringResource(R.string.expenses_kpi_total_spent, state.allTimeTotalCost),
+                        text = stringResource(
+                            R.string.expenses_kpi_total_spent,
+                            state.allTimeTotalCost
+                        ),
                         style = CanvasKitTheme.typography.bodyMedium,
                         color = CanvasKitTheme.colors.textSecondary
                     )
@@ -503,7 +480,10 @@ private fun KpiHeaderSection(
                         color = CanvasKitTheme.colors.brandAccent
                     )
                     Text(
-                        text = stringResource(R.string.expenses_kpi_total_spent, state.allTimeTotalCost),
+                        text = stringResource(
+                            R.string.expenses_kpi_total_spent,
+                            state.allTimeTotalCost
+                        ),
                         style = CanvasKitTheme.typography.bodyMedium,
                         color = CanvasKitTheme.colors.textSecondary
                     )
@@ -514,11 +494,18 @@ private fun KpiHeaderSection(
                 Spacer(modifier = Modifier.height(CanvasKitTheme.spacing.xs))
                 val isBetter = state.consumptionDeltaVsAverage < 0.0
                 val deltaText = if (isBetter) {
-                    stringResource(R.string.expenses_hero_delta_better, kotlin.math.abs(state.consumptionDeltaVsAverage))
+                    stringResource(
+                        R.string.expenses_hero_delta_better,
+                        kotlin.math.abs(state.consumptionDeltaVsAverage)
+                    )
                 } else {
-                    stringResource(R.string.expenses_hero_delta_worse, state.consumptionDeltaVsAverage)
+                    stringResource(
+                        R.string.expenses_hero_delta_worse,
+                        state.consumptionDeltaVsAverage
+                    )
                 }
-                val deltaColor = if (isBetter) CanvasKitTheme.colors.success else CanvasKitTheme.colors.warning
+                val deltaColor =
+                    if (isBetter) CanvasKitTheme.colors.success else CanvasKitTheme.colors.warning
 
                 Text(
                     text = deltaText,
@@ -573,7 +560,10 @@ private fun KpiHeaderSection(
                         tint = CanvasKitTheme.colors.success
                     )
                     Text(
-                        text = stringResource(R.string.expenses_kpi_ev_savings, state.electrificationSavingsEuros),
+                        text = stringResource(
+                            R.string.expenses_kpi_ev_savings,
+                            state.electrificationSavingsEuros
+                        ),
                         style = CanvasKitTheme.typography.bodyMedium,
                         fontWeight = FontWeight.SemiBold,
                         color = CanvasKitTheme.colors.success
@@ -642,7 +632,8 @@ private fun ExpenseItemCard(
                     )
                     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                         Text(
-                            text = expense.stationName ?: expense.fuelType.toTextProvider().asString(),
+                            text = expense.stationName ?: expense.fuelType.toTextProvider()
+                                .asString(),
                             style = CanvasKitTheme.typography.bodyLarge,
                             fontWeight = FontWeight.Bold,
                             color = CanvasKitTheme.colors.textPrimary,
@@ -656,8 +647,20 @@ private fun ExpenseItemCard(
                         )
 
                         Text(
-                            text = "${String.format(locale, "%.2f", expense.volumeQuantity)} $unit" +
-                                        " -> ${String.format(locale, "%.3f", expense.unitPrice)} €/$unit",
+                            text = "${
+                                String.format(
+                                    locale,
+                                    "%.2f",
+                                    expense.volumeQuantity
+                                )
+                            } $unit" +
+                                    " -> ${
+                                        String.format(
+                                            locale,
+                                            "%.3f",
+                                            expense.unitPrice
+                                        )
+                                    } €/$unit",
                             style = CanvasKitTheme.typography.bodyMedium,
                             color = CanvasKitTheme.colors.textSecondary
                         )
@@ -688,7 +691,8 @@ private fun ExpenseItemCard(
             // Diagnostic & Consumption badges
             val consumption = expense.consumptionPer100km
             val kmSince = expense.kmSinceLastRefuel
-            val hasBadges = consumption != null || kmSince != null || expense.isFullTank || expense.receiptImagePath != null
+            val hasBadges =
+                consumption != null || kmSince != null || expense.isFullTank || expense.receiptImagePath != null
 
             if (hasBadges) {
                 Spacer(modifier = Modifier.height(8.dp))
@@ -712,7 +716,11 @@ private fun ExpenseItemCard(
                     }
                     if (consumption != null && expense.isFullTank) {
                         ConsumptionBadge(
-                            text = stringResource(R.string.expenses_consumption_badge, consumption, unit)
+                            text = stringResource(
+                                R.string.expenses_consumption_badge,
+                                consumption,
+                                unit
+                            )
                         )
                     }
                     if (kmSince != null) {
@@ -765,7 +773,10 @@ private fun TripsSinceRefuelList(records: List<OdometerRecord>) {
                         modifier = Modifier.weight(1f)
                     )
                     Text(
-                        text = stringResource(R.string.expenses_trip_km_format, record.odometerValue),
+                        text = stringResource(
+                            R.string.expenses_trip_km_format,
+                            record.odometerValue
+                        ),
                         style = CanvasKitTheme.typography.labelLarge,
                         fontWeight = FontWeight.Bold,
                         color = CanvasKitTheme.colors.textSecondary
@@ -821,7 +832,8 @@ private fun ConsumptionBadge(
     }
 }
 
-private class ExpensesStateProvider : androidx.compose.ui.tooling.preview.PreviewParameterProvider<ExpensesState> {
+private class ExpensesStateProvider :
+    androidx.compose.ui.tooling.preview.PreviewParameterProvider<ExpensesState> {
     override val values: Sequence<ExpensesState> = sequenceOf(
         ExpensesState(
             error = TextProvider.Dynamic("Something went wrong"),
