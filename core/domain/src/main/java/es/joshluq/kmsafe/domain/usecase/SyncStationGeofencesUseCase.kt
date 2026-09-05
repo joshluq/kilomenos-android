@@ -4,8 +4,10 @@ import es.joshluq.foundationkit.log.LoggerKit
 import es.joshluq.foundationkit.usecase.FlowUseCase
 import es.joshluq.foundationkit.usecase.UseCaseInput
 import es.joshluq.foundationkit.usecase.UseCaseOutput
+import es.joshluq.kmsafe.domain.model.Feature
 import es.joshluq.kmsafe.domain.repository.ServiceStationRepository
 import es.joshluq.kmsafe.core.domain.service.GeofenceService
+import es.joshluq.kmsafe.domain.usecase.CheckFeatureAccessUseCase
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.flatMapLatest
@@ -30,17 +32,27 @@ interface SyncStationGeofencesUseCase : FlowUseCase<SyncStationGeofencesUseCase.
 class SyncStationGeofencesUseCaseImpl @Inject constructor(
     private val stationRepository: ServiceStationRepository,
     private val geofenceService: GeofenceService,
+    private val checkFeatureAccessUseCase: CheckFeatureAccessUseCase,
     private val logger: LoggerKit
 ) : SyncStationGeofencesUseCase {
 
     @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
     override fun invoke(input: SyncStationGeofencesUseCase.Input): Flow<SyncStationGeofencesUseCase.Output> {
         logger.d("SyncStationGeofences", "Starting synchronization")
-        
-        return stationRepository.getFavoriteStations()
-            .flatMapLatest { favorites ->
-                logger.d("SyncStationGeofences", "Registering ${favorites.size} favorite stations as geofences")
-                geofenceService.registerStationGeofences(favorites)
+
+        return checkFeatureAccessUseCase(CheckFeatureAccessUseCase.Input(Feature.STATION_AUTO_DETECTION))
+            .flatMapLatest { accessOutput ->
+                val isGranted = (accessOutput is CheckFeatureAccessUseCase.Output.Success) && accessOutput.isGranted
+                if (!isGranted) {
+                    logger.d("SyncStationGeofences", "Feature not granted for Free tier, clearing all geofences")
+                    geofenceService.clearAllGeofences()
+                } else {
+                    stationRepository.getFavoriteStations()
+                        .flatMapLatest { favorites ->
+                            logger.d("SyncStationGeofences", "Registering ${favorites.size} favorite stations as geofences")
+                            geofenceService.registerStationGeofences(favorites)
+                        }
+                }
             }
             .map {
                 SyncStationGeofencesUseCase.Output.Success as SyncStationGeofencesUseCase.Output

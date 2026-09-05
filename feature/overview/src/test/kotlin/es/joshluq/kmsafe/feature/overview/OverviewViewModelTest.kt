@@ -8,7 +8,6 @@ import es.joshluq.kmsafe.domain.model.ContractMetrics
 import es.joshluq.kmsafe.domain.model.Entitlements
 import es.joshluq.kmsafe.domain.model.RentingContract
 import es.joshluq.kmsafe.domain.model.SubscriptionLevel
-import es.joshluq.kmsafe.domain.model.TripProjection
 import es.joshluq.kmsafe.domain.model.UserPreferences
 import es.joshluq.kmsafe.domain.usecase.AddOdometerRecordUseCase
 import es.joshluq.kmsafe.domain.usecase.ClearTrackingUseCase
@@ -22,8 +21,10 @@ import es.joshluq.kmsafe.domain.usecase.ObserveTrackingStateUseCase
 import es.joshluq.kmsafe.domain.usecase.ObserveVehicleBluetoothConnectionUseCase
 import es.joshluq.kmsafe.domain.usecase.SelectContractUseCase
 import es.joshluq.kmsafe.domain.usecase.StartAutoTrackingUseCase
+import es.joshluq.kmsafe.domain.usecase.StartTripTrackingUseCase
 import es.joshluq.kmsafe.domain.usecase.StopAutoTrackingUseCase
 import es.joshluq.kmsafe.domain.usecase.StopTrackingUseCase
+import es.joshluq.kmsafe.domain.usecase.StopTripTrackingUseCase
 import es.joshluq.kmsafe.domain.usecase.UpdatePreferencesUseCase
 import io.mockk.clearAllMocks
 import io.mockk.coVerify
@@ -45,7 +46,6 @@ import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
-import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -70,6 +70,8 @@ class OverviewViewModelTest {
     private val clearTrackingUseCase: ClearTrackingUseCase = mockk(relaxed = true)
     private val startAutoTrackingUseCase: StartAutoTrackingUseCase = mockk(relaxed = true)
     private val stopAutoTrackingUseCase: StopAutoTrackingUseCase = mockk(relaxed = true)
+    private val startTripTrackingUseCase: StartTripTrackingUseCase = mockk(relaxed = true)
+    private val stopTripTrackingUseCase: StopTripTrackingUseCase = mockk(relaxed = true)
     private val syncStationGeofencesUseCase: SyncStationGeofencesUseCase = mockk(relaxed = true)
     private val monetizationConfig: MonetizationConfig = mockk(relaxed = true)
     private val analytics: AnalyticskitManager = mockk(relaxed = true)
@@ -183,6 +185,8 @@ class OverviewViewModelTest {
             clearTrackingUseCase = clearTrackingUseCase,
             startAutoTrackingUseCase = startAutoTrackingUseCase,
             stopAutoTrackingUseCase = stopAutoTrackingUseCase,
+            startTripTrackingUseCase = startTripTrackingUseCase,
+            stopTripTrackingUseCase = stopTripTrackingUseCase,
             syncStationGeofencesUseCase = syncStationGeofencesUseCase,
             monetizationConfig = monetizationConfig,
             analytics = analytics,
@@ -318,33 +322,23 @@ class OverviewViewModelTest {
     }
 
     @Test
-    fun `given start tracking clicked then emits StartTrackingService effect`() = runTest(testDispatcher) {
-        val effects = mutableListOf<Effect>()
+    fun `given start tracking clicked then invokes startTripTrackingUseCase`() = runTest(testDispatcher) {
         val viewModel = createViewModel()
-        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
-            viewModel.effects.collect { effects.add(it) }
-        }
 
         viewModel.sendEvent(Event.OnStartTrackingClicked)
         advanceUntilIdle()
 
-        assertEquals(1, effects.size)
-        assertEquals(Effect.StartTrackingService, effects.first())
+        coVerify(exactly = 1) { startTripTrackingUseCase(StartTripTrackingUseCase.Input) }
     }
 
     @Test
-    fun `given stop tracking clicked then emits StopTrackingService effect`() = runTest(testDispatcher) {
-        val effects = mutableListOf<Effect>()
+    fun `given stop tracking clicked then invokes stopTripTrackingUseCase`() = runTest(testDispatcher) {
         val viewModel = createViewModel()
-        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
-            viewModel.effects.collect { effects.add(it) }
-        }
 
         viewModel.sendEvent(Event.OnStopTrackingClicked)
         advanceUntilIdle()
 
-        assertEquals(1, effects.size)
-        assertEquals(Effect.StopTrackingService, effects.first())
+        coVerify(exactly = 1) { stopTripTrackingUseCase(StopTripTrackingUseCase.Input) }
     }
 
     @Test

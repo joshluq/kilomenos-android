@@ -54,10 +54,11 @@ class GeofenceServiceImpl @Inject constructor(
                     .setCircularRegion(
                         station.latitude,
                         station.longitude,
-                        150f // 150 meters radius
+                        180f // 180 meters radius
                     )
                     .setExpirationDuration(Geofence.NEVER_EXPIRE)
-                    .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_ENTER)
+                    .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_DWELL or Geofence.GEOFENCE_TRANSITION_ENTER)
+                    .setLoiteringDelay(45000) // 45 seconds stay inside geofence before triggering dwell
                     .build()
             }
 
@@ -67,32 +68,43 @@ class GeofenceServiceImpl @Inject constructor(
         }
 
         val request = GeofencingRequest.Builder()
-            .setInitialTrigger(GeofencingRequest.INITIAL_TRIGGER_ENTER)
+            .setInitialTrigger(GeofencingRequest.INITIAL_TRIGGER_DWELL or GeofencingRequest.INITIAL_TRIGGER_ENTER)
             .addGeofences(geofences)
             .build()
 
         logger.d("GeofenceService", "Registering ${geofences.size} geofences")
-        
-        // Remove existing first to avoid duplicates
-        geofencingClient.removeGeofences(geofencePendingIntent)
-        
-        geofencingClient.addGeofences(request, geofencePendingIntent)
-            .addOnSuccessListener {
-                logger.d("GeofenceService", "Geofences registered successfully")
-            }
-            .addOnFailureListener { e ->
-                logger.e("GeofenceService", "Failed to register geofences", e)
-            }
-        
+
+        try {
+            // Remove existing first to avoid duplicates
+            geofencingClient.removeGeofences(geofencePendingIntent)
+
+            geofencingClient.addGeofences(request, geofencePendingIntent)
+                .addOnSuccessListener {
+                    logger.d("GeofenceService", "Geofences registered successfully")
+                }
+                .addOnFailureListener { e ->
+                    logger.e("GeofenceService", "Failed to register geofences", e)
+                }
+        } catch (e: SecurityException) {
+            logger.e("GeofenceService", "Location permission missing when adding geofences", e)
+        }
+
         emit(Unit)
     }
 
     override fun clearAllGeofences(): Flow<Unit> = flow {
         logger.d("GeofenceService", "Clearing all geofences")
-        geofencingClient.removeGeofences(geofencePendingIntent)
-            .addOnSuccessListener {
-                logger.d("GeofenceService", "Geofences cleared successfully")
-            }
+        try {
+            geofencingClient.removeGeofences(geofencePendingIntent)
+                .addOnSuccessListener {
+                    logger.d("GeofenceService", "Geofences cleared successfully")
+                }
+                .addOnFailureListener { e ->
+                    logger.e("GeofenceService", "Failed to clear geofences", e)
+                }
+        } catch (e: SecurityException) {
+            logger.e("GeofenceService", "SecurityException clearing geofences", e)
+        }
         emit(Unit)
     }
 }

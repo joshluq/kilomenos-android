@@ -32,6 +32,7 @@ class HandleGeofenceTransitionUseCaseTest {
 
     @Before
     fun setUp() {
+        HandleGeofenceTransitionUseCaseImpl.lastNotifiedTimestamps.clear()
         useCase = HandleGeofenceTransitionUseCaseImpl(
             stationRepository = stationRepository,
             notificationService = notificationService,
@@ -42,6 +43,7 @@ class HandleGeofenceTransitionUseCaseTest {
 
     @After
     fun tearDown() {
+        HandleGeofenceTransitionUseCaseImpl.lastNotifiedTimestamps.clear()
         clearAllMocks()
     }
 
@@ -59,7 +61,7 @@ class HandleGeofenceTransitionUseCaseTest {
     @Test
     fun `given feature access not granted when invoke then emits Failure and does not show prompt`() = runTest {
         every {
-            checkFeatureAccessUseCase(CheckFeatureAccessUseCase.Input(Feature.AUTO_TRACKING))
+            checkFeatureAccessUseCase(CheckFeatureAccessUseCase.Input(Feature.STATION_AUTO_DETECTION))
         } returns flowOf(CheckFeatureAccessUseCase.Output.Success(isGranted = false))
 
         val emissions = useCase(HandleGeofenceTransitionUseCase.Input("station-1")).toList()
@@ -72,7 +74,7 @@ class HandleGeofenceTransitionUseCaseTest {
     @Test
     fun `given feature access granted but station not found when invoke then emits Failure`() = runTest {
         every {
-            checkFeatureAccessUseCase(CheckFeatureAccessUseCase.Input(Feature.AUTO_TRACKING))
+            checkFeatureAccessUseCase(CheckFeatureAccessUseCase.Input(Feature.STATION_AUTO_DETECTION))
         } returns flowOf(CheckFeatureAccessUseCase.Output.Success(isGranted = true))
         every { stationRepository.getStationById("station-missing") } returns flowOf(null)
 
@@ -87,7 +89,7 @@ class HandleGeofenceTransitionUseCaseTest {
     fun `given feature access granted and station exists when invoke then shows prompt and emits Success`() = runTest {
         val station = createStation("station-1")
         every {
-            checkFeatureAccessUseCase(CheckFeatureAccessUseCase.Input(Feature.AUTO_TRACKING))
+            checkFeatureAccessUseCase(CheckFeatureAccessUseCase.Input(Feature.STATION_AUTO_DETECTION))
         } returns flowOf(CheckFeatureAccessUseCase.Output.Success(isGranted = true))
         every { stationRepository.getStationById("station-1") } returns flowOf(station)
 
@@ -99,9 +101,30 @@ class HandleGeofenceTransitionUseCaseTest {
     }
 
     @Test
+    fun `given repeated trigger within cooldown when invoke then does not show prompt again`() = runTest {
+        val station = createStation("station-1")
+        every {
+            checkFeatureAccessUseCase(CheckFeatureAccessUseCase.Input(Feature.STATION_AUTO_DETECTION))
+        } returns flowOf(CheckFeatureAccessUseCase.Output.Success(isGranted = true))
+        every { stationRepository.getStationById("station-1") } returns flowOf(station)
+
+        // First trigger -> shows prompt
+        val firstEmissions = useCase(HandleGeofenceTransitionUseCase.Input("station-1")).toList()
+        assertEquals(1, firstEmissions.size)
+        assertTrue(firstEmissions[0] is HandleGeofenceTransitionUseCase.Output.Success)
+        coVerify(exactly = 1) { notificationService.showStationProximityPrompt(station) }
+
+        // Second trigger immediately -> within cooldown -> prompt not called again
+        val secondEmissions = useCase(HandleGeofenceTransitionUseCase.Input("station-1")).toList()
+        assertEquals(1, secondEmissions.size)
+        assertTrue(secondEmissions[0] is HandleGeofenceTransitionUseCase.Output.Success)
+        coVerify(exactly = 1) { notificationService.showStationProximityPrompt(station) }
+    }
+
+    @Test
     fun `given exception when invoke then catches and emits Failure`() = runTest {
         every {
-            checkFeatureAccessUseCase(CheckFeatureAccessUseCase.Input(Feature.AUTO_TRACKING))
+            checkFeatureAccessUseCase(CheckFeatureAccessUseCase.Input(Feature.STATION_AUTO_DETECTION))
         } returns flow { throw RuntimeException("Feature check error") }
 
         val emissions = useCase(HandleGeofenceTransitionUseCase.Input("station-1")).toList()

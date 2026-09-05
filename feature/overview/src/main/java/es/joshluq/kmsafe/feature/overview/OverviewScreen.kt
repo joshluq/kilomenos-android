@@ -173,24 +173,6 @@ fun OverviewRoute(
                 Effect.NavigateToPermissions -> onNavigateToPermissions()
                 Effect.NavigateToPremiumPaywall -> onNavigateToPremiumPaywall()
                 Effect.NavigateToPreferences -> onNavigateToPreferences()
-                Effect.StartTrackingService -> {
-                    val intent = Intent().apply {
-                        setClassName(context.packageName, "es.joshluq.kmsafe.core.tracking.LocationTrackingService")
-                        action = "ACTION_START"
-                    }
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                        context.startForegroundService(intent)
-                    } else {
-                        context.startService(intent)
-                    }
-                }
-                Effect.StopTrackingService -> {
-                    val intent = Intent().apply {
-                        setClassName(context.packageName, "es.joshluq.kmsafe.core.tracking.LocationTrackingService")
-                        action = "ACTION_STOP"
-                    }
-                    context.startService(intent)
-                }
                 Effect.OpenAppSettings -> {
                     val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
                         data = Uri.fromParts("package", context.packageName, null)

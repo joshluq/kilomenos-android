@@ -59,6 +59,8 @@
     <string name="expenses_sheet_action_save_ev">Save EV charge</string>
     <string name="expenses_sheet_action_update_price">Update price</string>
     <string name="expenses_sheet_price_delta_label">vs. last refuel</string>
+    <string name="expenses_station_autodetected_badge">Auto-detected</string>
+    <string name="expenses_station_change_action">Change</string>
 
     <!-- Messages and Errors -->
     <string name="expenses_error_load">Error loading expenses</string>

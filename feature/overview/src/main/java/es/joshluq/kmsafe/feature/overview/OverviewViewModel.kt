@@ -25,8 +25,10 @@ import es.joshluq.kmsafe.domain.usecase.ObserveTrackingStateUseCase
 import es.joshluq.kmsafe.domain.usecase.ObserveVehicleBluetoothConnectionUseCase
 import es.joshluq.kmsafe.domain.usecase.SelectContractUseCase
 import es.joshluq.kmsafe.domain.usecase.StartAutoTrackingUseCase
+import es.joshluq.kmsafe.domain.usecase.StartTripTrackingUseCase
 import es.joshluq.kmsafe.domain.usecase.StopAutoTrackingUseCase
 import es.joshluq.kmsafe.domain.usecase.StopTrackingUseCase
+import es.joshluq.kmsafe.domain.usecase.StopTripTrackingUseCase
 import es.joshluq.kmsafe.domain.usecase.UpdatePreferencesUseCase
 import es.joshluq.kmsafe.feature.overview.model.toUiModel
 import kotlinx.coroutines.Job
@@ -34,6 +36,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 /**
@@ -56,6 +59,8 @@ class OverviewViewModel @Inject constructor(
     private val clearTrackingUseCase: ClearTrackingUseCase,
     private val startAutoTrackingUseCase: StartAutoTrackingUseCase,
     private val stopAutoTrackingUseCase: StopAutoTrackingUseCase,
+    private val startTripTrackingUseCase: StartTripTrackingUseCase,
+    private val stopTripTrackingUseCase: StopTripTrackingUseCase,
     private val syncStationGeofencesUseCase: SyncStationGeofencesUseCase,
     private val monetizationConfig: MonetizationConfig,
     private val analytics: AnalyticskitManager,
@@ -446,13 +451,17 @@ class OverviewViewModel @Inject constructor(
 
     private fun handleStartTracking() {
         analytics.track(AnalyticsEvent.Custom("tracking_started"))
-        launchEffect(Effect.StartTrackingService)
+        viewModelScope.launch {
+            startTripTrackingUseCase(StartTripTrackingUseCase.Input)
+        }
     }
 
     private fun handleStopTracking() {
-        logger.d("OverviewViewModel", "handleStopTracking called. Launching Effect.StopTrackingService")
+        logger.d("OverviewViewModel", "handleStopTracking called")
         analytics.track(AnalyticsEvent.Custom("tracking_stopped", mapOf("distance" to state.value.trackedDistance)))
-        launchEffect(Effect.StopTrackingService)
+        viewModelScope.launch {
+            stopTripTrackingUseCase(StopTripTrackingUseCase.Input)
+        }
     }
 
     private fun handleConfirmTrackedTrip() {

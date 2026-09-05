@@ -296,9 +296,9 @@ class BluetoothConnectionReceiver : BroadcastReceiver() {
                 .addOnCanceledListener {
                     if (continuation.isActive) continuation.resume(null)
                 }
-        } catch (e: SecurityException) {
+        } catch (_: SecurityException) {
             if (continuation.isActive) continuation.resume(null)
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             if (continuation.isActive) continuation.resume(null)
         }
     }

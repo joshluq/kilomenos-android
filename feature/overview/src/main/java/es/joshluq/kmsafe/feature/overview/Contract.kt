@@ -104,8 +104,6 @@ sealed interface Effect : UiEffect {
     ) : Effect
     data class NavigateToVehicleDetail(val id: String) : Effect
     data object NavigateToProjection : Effect
-    data object StartTrackingService : Effect
-    data object StopTrackingService : Effect
     data object OpenAppSettings : Effect
     data object NavigateToPermissions : Effect
     data object NavigateToPremiumPaywall : Effect

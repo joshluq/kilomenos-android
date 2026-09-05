@@ -12,4 +12,8 @@
     <string name="tracking_bluetooth_connected_channel_desc">Notifications about vehicle connection status</string>
     <string name="tracking_bluetooth_connected_title">Connected to %1$s</string>
     <string name="tracking_bluetooth_connected_desc">Auto-tracking ready</string>
+    <string name="tracking_station_arrival_channel_name">Service Station Arrival</string>
+    <string name="tracking_station_arrival_channel_desc">Smart alerts to log refuels and EV charges when turning off the vehicle</string>
+    <string name="tracking_station_arrival_title">Did you refuel at %1$s?</string>
+    <string name="tracking_station_arrival_desc">Tap to log your expense with pre-filled station and prices.</string>
 </resources>

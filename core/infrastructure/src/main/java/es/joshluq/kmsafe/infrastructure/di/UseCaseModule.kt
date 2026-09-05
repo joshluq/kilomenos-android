@@ -116,10 +116,14 @@ import es.joshluq.kmsafe.domain.usecase.StartAutoTrackingUseCase
 import es.joshluq.kmsafe.domain.usecase.StartAutoTrackingUseCaseImpl
 import es.joshluq.kmsafe.domain.usecase.StartTrialUseCase
 import es.joshluq.kmsafe.domain.usecase.StartTrialUseCaseImpl
+import es.joshluq.kmsafe.domain.usecase.StartTripTrackingUseCase
+import es.joshluq.kmsafe.domain.usecase.StartTripTrackingUseCaseImpl
 import es.joshluq.kmsafe.domain.usecase.StopAutoTrackingUseCase
 import es.joshluq.kmsafe.domain.usecase.StopAutoTrackingUseCaseImpl
 import es.joshluq.kmsafe.domain.usecase.StopTrackingUseCase
 import es.joshluq.kmsafe.domain.usecase.StopTrackingUseCaseImpl
+import es.joshluq.kmsafe.domain.usecase.StopTripTrackingUseCase
+import es.joshluq.kmsafe.domain.usecase.StopTripTrackingUseCaseImpl
 import es.joshluq.kmsafe.domain.usecase.SyncContractsUseCase
 import es.joshluq.kmsafe.domain.usecase.SyncContractsUseCaseImpl
 import es.joshluq.kmsafe.domain.usecase.SyncHistoryUseCase
@@ -141,8 +145,6 @@ import es.joshluq.kmsafe.domain.usecase.ValidateCredentialsUseCaseImpl
 
 /**
  * Dagger module providing domain UseCase dependencies.
- * Follows Option 2: Specific Domain Interfaces without Qualifiers.
- * Lives in `:core:infrastructure` to keep `:app` as a pure orchestration shell.
  */
 @Suppress("unused")
 @Module
@@ -349,4 +351,10 @@ abstract class UseCaseModule {
 
     @Binds
     abstract fun bindDetectNearestStationUseCase(impl: DetectNearestStationUseCaseImpl): DetectNearestStationUseCase
+
+    @Binds
+    abstract fun bindStartTripTrackingUseCase(impl: StartTripTrackingUseCaseImpl): StartTripTrackingUseCase
+
+    @Binds
+    abstract fun bindStopTripTrackingUseCase(impl: StopTripTrackingUseCaseImpl): StopTripTrackingUseCase
 }

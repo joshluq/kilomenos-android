@@ -5,15 +5,23 @@ import android.content.Context
 import android.content.Intent
 import com.google.android.gms.location.Geofence
 import com.google.android.gms.location.GeofencingEvent
-import es.joshluq.foundationkit.log.LoggerKit
-import javax.inject.Inject
 import dagger.hilt.android.AndroidEntryPoint
+import es.joshluq.foundationkit.log.LoggerKit
+import es.joshluq.kmsafe.core.domain.usecase.HandleGeofenceTransitionUseCase
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 /**
  * Receiver for system geofence transition events.
  */
 @AndroidEntryPoint
 class GeofenceBroadcastReceiver : BroadcastReceiver() {
+
+    @Inject
+    lateinit var handleGeofenceTransitionUseCase: HandleGeofenceTransitionUseCase
 
     @Inject
     lateinit var logger: LoggerKit
@@ -27,12 +35,22 @@ class GeofenceBroadcastReceiver : BroadcastReceiver() {
         }
 
         val transition = geofencingEvent.geofenceTransition
-        if (transition == Geofence.GEOFENCE_TRANSITION_ENTER) {
+        if (transition == Geofence.GEOFENCE_TRANSITION_DWELL || transition == Geofence.GEOFENCE_TRANSITION_ENTER) {
             val triggeringGeofences = geofencingEvent.triggeringGeofences ?: emptyList()
-            triggeringGeofences.forEach { geofence ->
-                logger.d("GeofenceReceiver", "Entered geofence: ${geofence.requestId}")
-                // Fase 3.2: Trigger Activity Recognition to confirm stay
-                // For now, we'll log it. Notification logic will come in the next step.
+            if (triggeringGeofences.isEmpty()) return
+
+            val pendingResult = goAsync()
+            CoroutineScope(Dispatchers.IO).launch {
+                try {
+                    triggeringGeofences.forEach { geofence ->
+                        logger.d("GeofenceReceiver", "Processing geofence transition ($transition) for station: ${geofence.requestId}")
+                        handleGeofenceTransitionUseCase(HandleGeofenceTransitionUseCase.Input(geofence.requestId)).collect()
+                    }
+                } catch (e: Exception) {
+                    logger.e("GeofenceReceiver", "Error processing geofence transition", e)
+                } finally {
+                    pendingResult.finish()
+                }
             }
         }
     }

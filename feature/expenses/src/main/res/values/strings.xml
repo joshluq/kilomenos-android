@@ -1,6 +1,6 @@
 <resources>
     <!-- Screen & General -->
-    <string name="expenses_title">Gastos y Energia</string>
+    <string name="expenses_title">Gastos y Energía</string>
     <string name="expenses_action_add">Añadir gasto</string>
     <string name="expenses_action_delete">Eliminar</string>
     <string name="expenses_action_cancel">Cancelar</string>
