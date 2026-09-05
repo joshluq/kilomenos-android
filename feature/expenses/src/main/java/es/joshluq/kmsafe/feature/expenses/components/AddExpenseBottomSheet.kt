@@ -395,7 +395,7 @@ fun AddExpenseBottomSheet(
                 }
             }
 
-            // Layer 3 Zero-Friction: Quick Presets (20€, 30€, 50€, Lleno)
+            // Layer 3 Zero-Friction: Quick Presets (20€, 30€, 50€)
             if (!priceReportMode && !isElectric) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -415,6 +415,8 @@ fun AddExpenseBottomSheet(
                                 if (price > 0.0) {
                                     val computedVol = presetAmount / price
                                     volumeText = String.format(locale, "%.2f", computedVol)
+                                    // UX inteligente: un importe redondo suele ser repostaje parcial
+                                    isFullTank = false
                                 } else {
                                     priceFocusRequester.requestFocus()
                                 }
@@ -422,12 +424,6 @@ fun AddExpenseBottomSheet(
                             variant = CanvasKitChipVariant.Outlined
                         )
                     }
-                    CanvasKitChip(
-                        selected = isFullTank,
-                        label = { Text(stringResource(R.string.expenses_preset_full_tank)) },
-                        onClick = safeClick { isFullTank = !isFullTank },
-                        variant = CanvasKitChipVariant.Outlined
-                    )
                 }
             }
 
