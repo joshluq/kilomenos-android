@@ -24,14 +24,17 @@ import es.joshluq.kmsafe.domain.usecase.CheckFeatureAccessUseCase
 import es.joshluq.kmsafe.domain.usecase.DetectNearestStationUseCase
 import es.joshluq.kmsafe.domain.usecase.GetPreferencesUseCase
 import es.joshluq.kmsafe.domain.usecase.GetRentingContractUseCase
+import es.joshluq.kmsafe.domain.usecase.UpdateBluetoothConnectionStateUseCase
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.withTimeoutOrNull
 import javax.inject.Inject
 import kotlin.coroutines.resume
+import kotlin.time.Duration.Companion.milliseconds
 
 /**
  * Receiver that listens for Bluetooth hardware connection and disconnection events.
@@ -60,6 +63,9 @@ class BluetoothConnectionReceiver : BroadcastReceiver() {
 
     @Inject
     lateinit var detectNearestStationUseCase: DetectNearestStationUseCase
+
+    @Inject
+    lateinit var updateBluetoothConnectionStateUseCase: UpdateBluetoothConnectionStateUseCase
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
@@ -98,54 +104,86 @@ class BluetoothConnectionReceiver : BroadcastReceiver() {
     }
 
     private suspend fun handleBluetoothConnected(context: Context, device: BluetoothDevice) {
-        // 1. Check if user has Premium Access
-        val accessOutput = checkFeatureAccessUseCase(
-            CheckFeatureAccessUseCase.Input(Feature.AUTO_TRACKING)
-        ).first()
-        val isPremium = (accessOutput is CheckFeatureAccessUseCase.Output.Success) && accessOutput.isGranted
+        val deviceAddress = try {
+            device.address
+        } catch (_: SecurityException) {
+            null
+        } ?: return
+        val normalizedDeviceMac = normalizeAddress(deviceAddress)
 
-        if (!isPremium) return
-
-        // 2. Fetch active contract
+        // 1. Fetch active contract
         val contractOutput = getRentingContractUseCase(GetRentingContractUseCase.Input).first()
         if (contractOutput !is GetRentingContractUseCase.Output.Success) return
 
         val contract = contractOutput.contract
-        val deviceAddress = device.address ?: return
-        val normalizedDeviceMac = normalizeAddress(deviceAddress)
-
         val contractBluetoothMac = contract.bluetoothDeviceAddress
         if (contractBluetoothMac == null) {
-            // Case A: No bluetooth linked to this contract yet -> suggest linking
-            logger.i("BluetoothReceiver", "New connection detected: $deviceAddress. Suggesting link.")
-            showSuggestionNotification(context, device)
+            // Case A: No bluetooth linked to this contract yet -> suggest linking if premium
+            val accessOutput = checkFeatureAccessUseCase(
+                CheckFeatureAccessUseCase.Input(Feature.AUTO_TRACKING)
+            ).first()
+            val isPremium = (accessOutput is CheckFeatureAccessUseCase.Output.Success) && accessOutput.isGranted
+            if (isPremium) {
+                logger.i("BluetoothReceiver", "New connection detected: $deviceAddress. Suggesting link.")
+                showSuggestionNotification(context)
+            }
         } else {
             // Case B: Contract has linked MAC -> verify if it matches
             val normalizedContractMac = normalizeAddress(contractBluetoothMac)
             if (normalizedDeviceMac == normalizedContractMac) {
-                val prefsOutput = getPreferencesUseCase(GetPreferencesUseCase.Input).first()
-                val isAutoTrackingEnabled = (prefsOutput is GetPreferencesUseCase.Output.Success) &&
-                    prefsOutput.preferences.autoTrackingEnabled
+                // Rule 16.2: Activate live connection pill immediately in OverviewScreen
+                logger.i("BluetoothReceiver", "Vehicle Bluetooth connected: ${contract.vehicleName}. Notifying state.")
+                updateBluetoothConnectionStateUseCase(
+                    UpdateBluetoothConnectionStateUseCase.Input(
+                        macAddress = contractBluetoothMac,
+                        isConnected = true
+                    )
+                )
 
-                if (isAutoTrackingEnabled) {
-                    logger.i("BluetoothReceiver", "Vehicle Bluetooth connected: ${contract.vehicleName}. Showing feedback notification.")
-                    showConnectedNotification(context, contract.vehicleName)
+                val accessOutput = checkFeatureAccessUseCase(
+                    CheckFeatureAccessUseCase.Input(Feature.AUTO_TRACKING)
+                ).first()
+                val isPremium = (accessOutput is CheckFeatureAccessUseCase.Output.Success) && accessOutput.isGranted
+
+                if (isPremium) {
+                    val prefsOutput = getPreferencesUseCase(GetPreferencesUseCase.Input).first()
+                    val isAutoTrackingEnabled = (prefsOutput is GetPreferencesUseCase.Output.Success) &&
+                        prefsOutput.preferences.autoTrackingEnabled
+
+                    if (isAutoTrackingEnabled) {
+                        logger.i("BluetoothReceiver", "Showing feedback notification for ${contract.vehicleName}.")
+                        showConnectedNotification(context, contract.vehicleName)
+                    }
                 }
             }
         }
     }
 
     private suspend fun handleBluetoothDisconnected(context: Context, device: BluetoothDevice) {
+        val deviceAddress = try {
+            device.address
+        } catch (_: SecurityException) {
+            null
+        } ?: return
+        val normalizedDeviceMac = normalizeAddress(deviceAddress)
+
         val contractOutput = getRentingContractUseCase(GetRentingContractUseCase.Input).first()
         if (contractOutput !is GetRentingContractUseCase.Output.Success) return
 
         val contract = contractOutput.contract
         val contractMac = contract.bluetoothDeviceAddress?.let { normalizeAddress(it) } ?: return
-        val deviceAddress = device.address ?: return
-        val normalizedDeviceMac = normalizeAddress(deviceAddress)
 
         if (normalizedDeviceMac == contractMac) {
-            logger.i("BluetoothReceiver", "Vehicle Bluetooth disconnected: ${contract.vehicleName}. Dismissing feedback notification.")
+            logger.i("BluetoothReceiver", "Vehicle Bluetooth disconnected: ${contract.vehicleName}. Updating connection state.")
+
+            // Rule 16.2: Deactivate live connection pill immediately in OverviewScreen
+            updateBluetoothConnectionStateUseCase(
+                UpdateBluetoothConnectionStateUseCase.Input(
+                    macAddress = contract.bluetoothDeviceAddress ?: deviceAddress,
+                    isConnected = false
+                )
+            )
+
             dismissConnectedNotification(context)
 
             // Fast-path: Conclude trip tracking immediately instead of waiting for Activity Recognition delay
@@ -208,7 +246,7 @@ class BluetoothConnectionReceiver : BroadcastReceiver() {
     }
 
     @SuppressLint("MissingPermission")
-    private fun showSuggestionNotification(context: Context, device: BluetoothDevice) {
+    private fun showSuggestionNotification(context: Context) {
         val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -262,7 +300,7 @@ class BluetoothConnectionReceiver : BroadcastReceiver() {
             return
         }
 
-        val location = getLastLocation(context) ?: return
+        val location = withTimeoutOrNull(4000L.milliseconds) { getLastLocation(context) } ?: return
         val output = detectNearestStationUseCase(
             DetectNearestStationUseCase.Input(
                 latitude = location.latitude,

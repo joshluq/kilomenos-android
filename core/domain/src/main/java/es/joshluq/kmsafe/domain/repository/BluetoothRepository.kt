@@ -23,4 +23,12 @@ interface BluetoothRepository {
      * @return True if currently connected, false otherwise.
      */
     suspend fun isDeviceConnected(macAddress: String): Boolean
+
+    /**
+     * Notifies the repository of a hardware Bluetooth connection state change for the given MAC address.
+     *
+     * @param macAddress Bluetooth hardware address.
+     * @param isConnected True if connected, false otherwise.
+     */
+    fun updateDeviceConnectionState(macAddress: String, isConnected: Boolean)
 }

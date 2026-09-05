@@ -24,6 +24,8 @@ import es.joshluq.kmsafe.domain.usecase.ClearLocalDataUseCase
 import es.joshluq.kmsafe.domain.usecase.ClearLocalDataUseCaseImpl
 import es.joshluq.kmsafe.domain.usecase.ClearTrackingUseCase
 import es.joshluq.kmsafe.domain.usecase.ClearTrackingUseCaseImpl
+import es.joshluq.kmsafe.domain.usecase.UpdateBluetoothConnectionStateUseCase
+import es.joshluq.kmsafe.domain.usecase.UpdateBluetoothConnectionStateUseCaseImpl
 import es.joshluq.kmsafe.domain.usecase.DeleteAccountUseCase
 import es.joshluq.kmsafe.domain.usecase.DeleteAccountUseCaseImpl
 import es.joshluq.kmsafe.domain.usecase.DeleteContractUseCase
@@ -357,4 +359,7 @@ abstract class UseCaseModule {
 
     @Binds
     abstract fun bindStopTripTrackingUseCase(impl: StopTripTrackingUseCaseImpl): StopTripTrackingUseCase
+
+    @Binds
+    abstract fun bindUpdateBluetoothConnectionStateUseCase(impl: UpdateBluetoothConnectionStateUseCaseImpl): UpdateBluetoothConnectionStateUseCase
 }

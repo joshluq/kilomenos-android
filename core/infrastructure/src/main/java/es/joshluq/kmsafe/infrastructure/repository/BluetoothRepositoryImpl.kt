@@ -2,8 +2,10 @@ package es.joshluq.kmsafe.infrastructure.repository
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.bluetooth.BluetoothA2dp
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
+import android.bluetooth.BluetoothHeadset
 import android.bluetooth.BluetoothManager
 import android.bluetooth.BluetoothProfile
 import android.content.BroadcastReceiver
@@ -16,9 +18,11 @@ import androidx.core.content.ContextCompat
 import dagger.hilt.android.qualifiers.ApplicationContext
 import es.joshluq.foundationkit.log.LoggerKit
 import es.joshluq.kmsafe.domain.repository.BluetoothRepository
+import es.joshluq.kmsafe.infrastructure.local.datasource.BluetoothDataSource
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withTimeoutOrNull
@@ -30,40 +34,92 @@ import kotlin.time.Duration.Companion.milliseconds
 
 /**
  * Android infrastructure implementation of [BluetoothRepository].
- * Observes Bluetooth hardware states using reactive callback flows and profile proxies.
+ * Observes Bluetooth hardware states using reactive flows, [BluetoothDataSource] bridge,
+ * broadcast receivers, and profile proxies.
  */
 @Singleton
 class BluetoothRepositoryImpl @Inject constructor(
     @ApplicationContext private val context: Context,
+    private val bluetoothDataSource: BluetoothDataSource,
     private val logger: LoggerKit
 ) : BluetoothRepository {
+
+    override fun updateDeviceConnectionState(macAddress: String, isConnected: Boolean) {
+        bluetoothDataSource.emitConnectionUpdate(macAddress, isConnected)
+    }
 
     override fun observeDeviceConnection(macAddress: String): Flow<Boolean> = callbackFlow {
         val normalizedTarget = normalizeAddress(macAddress)
         logger.d("BluetoothRepository", "Starting observation for target MAC: $normalizedTarget")
 
-        // 1. Initial asynchronous check
+        // 1. Initial asynchronous check of current connected audio devices
         launch {
             val initiallyConnected = isDeviceConnected(macAddress)
+            logger.d("BluetoothRepository", "Initial connection check for $normalizedTarget: $initiallyConnected")
             trySend(initiallyConnected)
         }
 
-        // 2. BroadcastReceiver for hardware ACL events
+        // 2. Observe events from BluetoothDataSource (fed by BluetoothConnectionReceiver)
+        val dataSourceJob = launch {
+            bluetoothDataSource.observeDeviceUpdates(macAddress).collect { isConnected ->
+                logger.d("BluetoothRepository", "DataSource update for $normalizedTarget: $isConnected")
+                trySend(isConnected)
+            }
+        }
+
+        // 3. BroadcastReceiver for hardware ACL events and Bluetooth adapter/profile changes
         val receiver = object : BroadcastReceiver() {
             override fun onReceive(ctx: Context?, intent: Intent?) {
                 val action = intent?.action ?: return
-                val device = intent.getBluetoothDevice() ?: return
-                val deviceAddress = normalizeAddress(device.address ?: "")
-
-                if (deviceAddress == normalizedTarget) {
-                    when (action) {
-                        BluetoothDevice.ACTION_ACL_CONNECTED -> {
-                            logger.i("BluetoothRepository", "Device $deviceAddress CONNECTED")
+                logger.d("BluetoothRepository", "Received broadcast: $action")
+                when (action) {
+                    BluetoothDevice.ACTION_ACL_CONNECTED -> {
+                        val device = intent.getBluetoothDevice()
+                        val deviceAddress = try {
+                            normalizeAddress(device?.address ?: "")
+                        } catch (_: SecurityException) {
+                            ""
+                        }
+                        if (deviceAddress == normalizedTarget) {
+                            logger.i("BluetoothRepository", "Device $deviceAddress CONNECTED via dynamic receiver")
                             trySend(true)
                         }
-                        BluetoothDevice.ACTION_ACL_DISCONNECTED -> {
-                            logger.i("BluetoothRepository", "Device $deviceAddress DISCONNECTED")
+                    }
+                    BluetoothDevice.ACTION_ACL_DISCONNECTED,
+                    BluetoothDevice.ACTION_ACL_DISCONNECT_REQUESTED -> {
+                        val device = intent.getBluetoothDevice()
+                        val deviceAddress = try {
+                            normalizeAddress(device?.address ?: "")
+                        } catch (_: SecurityException) {
+                            ""
+                        }
+                        if ((deviceAddress == normalizedTarget) || deviceAddress.isEmpty()) {
+                            logger.i("BluetoothRepository", "Device $deviceAddress DISCONNECTED via dynamic receiver")
                             trySend(false)
+                        } else {
+                            launch {
+                                val stillConnected = isDeviceConnected(macAddress)
+                                trySend(stillConnected)
+                            }
+                        }
+                    }
+                    BluetoothA2dp.ACTION_CONNECTION_STATE_CHANGED,
+                    BluetoothHeadset.ACTION_CONNECTION_STATE_CHANGED -> {
+                        launch {
+                            val isConnected = isDeviceConnected(macAddress)
+                            trySend(isConnected)
+                        }
+                    }
+                    BluetoothAdapter.ACTION_STATE_CHANGED -> {
+                        val state = intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, BluetoothAdapter.ERROR)
+                        if (state == BluetoothAdapter.STATE_OFF || state == BluetoothAdapter.STATE_TURNING_OFF) {
+                            logger.i("BluetoothRepository", "Bluetooth adapter turned OFF")
+                            trySend(false)
+                        } else if (state == BluetoothAdapter.STATE_ON) {
+                            launch {
+                                val isConnected = isDeviceConnected(macAddress)
+                                trySend(isConnected)
+                            }
                         }
                     }
                 }
@@ -73,24 +129,33 @@ class BluetoothRepositoryImpl @Inject constructor(
         val filter = IntentFilter().apply {
             addAction(BluetoothDevice.ACTION_ACL_CONNECTED)
             addAction(BluetoothDevice.ACTION_ACL_DISCONNECTED)
+            addAction(BluetoothDevice.ACTION_ACL_DISCONNECT_REQUESTED)
+            addAction(BluetoothA2dp.ACTION_CONNECTION_STATE_CHANGED)
+            addAction(BluetoothHeadset.ACTION_CONNECTION_STATE_CHANGED)
+            addAction(BluetoothAdapter.ACTION_STATE_CHANGED)
         }
 
-        ContextCompat.registerReceiver(
-            context,
-            receiver,
-            filter,
-            ContextCompat.RECEIVER_NOT_EXPORTED
-        )
+        try {
+            ContextCompat.registerReceiver(
+                context,
+                receiver,
+                filter,
+                ContextCompat.RECEIVER_EXPORTED
+            )
+        } catch (e: Exception) {
+            logger.e("BluetoothRepository", "Error registering receiver", e)
+        }
 
         awaitClose {
             logger.d("BluetoothRepository", "Closing observation for target MAC: $normalizedTarget")
+            dataSourceJob.cancel()
             try {
                 context.unregisterReceiver(receiver)
             } catch (_: Exception) {
                 // Receiver was already unregistered
             }
         }
-    }
+    }.distinctUntilChanged()
 
     override suspend fun isDeviceConnected(macAddress: String): Boolean {
         if (macAddress.isBlank()) return false
@@ -100,7 +165,7 @@ class BluetoothRepositoryImpl @Inject constructor(
     }
 
     private fun normalizeAddress(address: String): String {
-        return address.replace(":", "").uppercase().trim()
+        return address.replace(":", "").replace("-", "").uppercase().trim()
     }
 
     private fun hasBluetoothConnectPermission(): Boolean {
@@ -143,13 +208,19 @@ class BluetoothRepositoryImpl @Inject constructor(
                             if (profile == BluetoothProfile.A2DP) {
                                 a2dpProxy = proxy
                                 proxy.connectedDevices.forEach { device ->
-                                    connectedMacs.add(normalizeAddress(device.address))
+                                    try {
+                                        connectedMacs.add(normalizeAddress(device.address))
+                                    } catch (_: SecurityException) {
+                                    }
                                 }
                                 a2dpProcessed = true
                             } else if (profile == BluetoothProfile.HEADSET) {
                                 headsetProxy = proxy
                                 proxy.connectedDevices.forEach { device ->
-                                    connectedMacs.add(normalizeAddress(device.address))
+                                    try {
+                                        connectedMacs.add(normalizeAddress(device.address))
+                                    } catch (_: SecurityException) {
+                                    }
                                 }
                                 headsetProcessed = true
                             }
@@ -170,8 +241,13 @@ class BluetoothRepositoryImpl @Inject constructor(
                 }
 
                 try {
-                    adapter.getProfileProxy(context, profileListener, BluetoothProfile.A2DP)
-                    adapter.getProfileProxy(context, profileListener, BluetoothProfile.HEADSET)
+                    val a2dpStarted = adapter.getProfileProxy(context, profileListener, BluetoothProfile.A2DP)
+                    if (!a2dpStarted) a2dpProcessed = true
+
+                    val headsetStarted = adapter.getProfileProxy(context, profileListener, BluetoothProfile.HEADSET)
+                    if (!headsetStarted) headsetProcessed = true
+
+                    checkCompletion()
                 } catch (_: Exception) {
                     if (!continuation.isCompleted) continuation.resume(Unit)
                 }
@@ -191,9 +267,15 @@ class BluetoothRepositoryImpl @Inject constructor(
     }
 
     private fun Intent.getBluetoothDevice(): BluetoothDevice? {
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            getParcelableExtra(BluetoothDevice.EXTRA_DEVICE, BluetoothDevice::class.java)
-        } else {
+        return try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                getParcelableExtra(BluetoothDevice.EXTRA_DEVICE, BluetoothDevice::class.java)
+                    ?: @Suppress("DEPRECATION") getParcelableExtra(BluetoothDevice.EXTRA_DEVICE)
+            } else {
+                @Suppress("DEPRECATION")
+                getParcelableExtra(BluetoothDevice.EXTRA_DEVICE)
+            }
+        } catch (_: Exception) {
             @Suppress("DEPRECATION")
             getParcelableExtra(BluetoothDevice.EXTRA_DEVICE)
         }

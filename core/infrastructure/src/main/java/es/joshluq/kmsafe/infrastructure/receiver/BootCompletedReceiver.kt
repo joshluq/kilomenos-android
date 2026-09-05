@@ -8,9 +8,11 @@ import es.joshluq.foundationkit.log.LoggerKit
 import es.joshluq.kmsafe.core.domain.usecase.SyncStationGeofencesUseCase
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 import javax.inject.Inject
+import kotlin.time.Duration.Companion.milliseconds
 
 /**
  * BroadcastReceiver triggered when the device boots or when the app package is replaced/updated.
@@ -33,7 +35,10 @@ class BootCompletedReceiver : BroadcastReceiver() {
             val pendingResult = goAsync()
             CoroutineScope(Dispatchers.IO).launch {
                 try {
-                    syncStationGeofencesUseCase(SyncStationGeofencesUseCase.Input).collect()
+                    withTimeoutOrNull(5000L.milliseconds) {
+                        syncStationGeofencesUseCase(SyncStationGeofencesUseCase.Input)
+                            .first { it is SyncStationGeofencesUseCase.Output.Success || it is SyncStationGeofencesUseCase.Output.Failure }
+                    }
                     logger.d("BootReceiver", "Station geofences successfully restored after boot")
                 } catch (e: Exception) {
                     logger.e("BootReceiver", "Failed to restore station geofences on boot", e)

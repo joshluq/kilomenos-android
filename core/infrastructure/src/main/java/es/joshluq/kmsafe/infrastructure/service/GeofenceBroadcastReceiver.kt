@@ -12,7 +12,9 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 import javax.inject.Inject
+import kotlin.time.Duration.Companion.milliseconds
 
 /**
  * Receiver for system geofence transition events.
@@ -42,9 +44,11 @@ class GeofenceBroadcastReceiver : BroadcastReceiver() {
             val pendingResult = goAsync()
             CoroutineScope(Dispatchers.IO).launch {
                 try {
-                    triggeringGeofences.forEach { geofence ->
-                        logger.d("GeofenceReceiver", "Processing geofence transition ($transition) for station: ${geofence.requestId}")
-                        handleGeofenceTransitionUseCase(HandleGeofenceTransitionUseCase.Input(geofence.requestId)).collect()
+                    withTimeoutOrNull(5000L.milliseconds) {
+                        triggeringGeofences.forEach { geofence ->
+                            logger.d("GeofenceReceiver", "Processing geofence transition ($transition) for station: ${geofence.requestId}")
+                            handleGeofenceTransitionUseCase(HandleGeofenceTransitionUseCase.Input(geofence.requestId)).collect()
+                        }
                     }
                 } catch (e: Exception) {
                     logger.e("GeofenceReceiver", "Error processing geofence transition", e)
