@@ -151,9 +151,11 @@
     <string name="overview_permissions_button_continue">Continuar</string>
     <string name="overview_permissions_button_settings">Ir a Ajustes</string>
 
-    <!-- Auto-Tracking Promotion -->
-    <string name="overview_promotion_autotracking_title">Auto-Tracking</string>
-    <string name="overview_promotion_autotracking_desc">Registra tus viajes automáticamente sin pulsar ningún botón.\n\n*Este aviso no volverá a aparecer.</string>
-    <string name="overview_promotion_autotracking_confirm">Activar</string>
-    <string name="overview_promotion_autotracking_dismiss">Omitir</string>
+    <!-- Assisted Tracking Permissions (Free Tier) -->
+    <string name="assisted_permissions_title">Copilot Asistido</string>
+    <string name="assisted_permissions_desc">Para registrar tus trayectos manualmente por GPS, necesitamos configurar los siguientes permisos básicos.</string>
+    <string name="assisted_permissions_step_location_title">1. Ubicación GPS</string>
+    <string name="assisted_permissions_step_location_desc">Permite registrar la distancia y ruta recorrida mientras la grabación está activa.</string>
+    <string name="assisted_permissions_step_notifications_title">2. Notificaciones de Viaje</string>
+    <string name="assisted_permissions_step_notifications_desc">Muestra la barra de control para pausar o finalizar tu trayecto en cualquier momento.</string>
 </resources>

@@ -88,6 +88,8 @@ sealed interface Event : UiEvent {
     data object OnConfirmTrackedTripClicked : Event
     data object OnCancelTrackedTripClicked : Event
     data object OnRequestPermissionsRationale : Event
+    data object OnRequestAssistedPermissions : Event
+    data object OnNavigateToPreferences : Event
     data object OnPremiumUpgradeClicked : Event
     data object OnDismissAutoTrackingPromotion : Event
     data object OnAutoTrackingPromotionAccepted : Event
@@ -109,6 +111,7 @@ sealed interface Effect : UiEffect {
     data object NavigateToProjection : Effect
     data object OpenAppSettings : Effect
     data object NavigateToPermissions : Effect
+    data object NavigateToAssistedPermissions : Effect
     data object NavigateToPremiumPaywall : Effect
     data object NavigateToPreferences : Effect
     data object NavigateToWelcomeDiscovery : Effect

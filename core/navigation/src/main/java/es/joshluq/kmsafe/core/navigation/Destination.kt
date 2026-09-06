@@ -133,6 +133,12 @@ sealed interface Destination {
     object AutoTrackingPermissions : Destination
 
     /**
+     * Assisted Tracking Permissions Rationale destination (Free tier manual tracking).
+     */
+    @Serializable
+    object AssistedTrackingPermissions : Destination
+
+    /**
      * Expenses destination.
      */
     @Serializable

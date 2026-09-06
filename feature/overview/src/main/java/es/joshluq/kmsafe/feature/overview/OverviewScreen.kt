@@ -6,8 +6,6 @@ import android.content.res.Configuration
 import android.net.Uri
 import android.os.Build
 import android.provider.Settings
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
@@ -38,14 +36,9 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.HelpOutline
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.CarRental
-import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.DirectionsCar
 import androidx.compose.material.icons.filled.SyncProblem
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -73,11 +66,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
-import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -98,8 +89,6 @@ import es.joshluq.canvaskit.components.inputs.CanvasKitDatePickerField
 import es.joshluq.canvaskit.components.inputs.CanvasKitTextField
 import es.joshluq.canvaskit.components.layout.CanvasKitLoadingScaffold
 import es.joshluq.canvaskit.components.layout.CanvasKitLoadingStrategy
-import es.joshluq.canvaskit.components.menus.CanvasKitDropdownMenu
-import es.joshluq.canvaskit.components.menus.CanvasKitDropdownMenuItem
 import es.joshluq.canvaskit.components.navigation.CanvasKitTopBar
 import es.joshluq.canvaskit.components.sheets.CanvasKitBottomSheet
 import es.joshluq.canvaskit.foundations.theme.CanvasKitTheme
@@ -108,7 +97,6 @@ import es.joshluq.kmsafe.core.monetization.components.AdMobBanner
 import es.joshluq.kmsafe.core.ui.components.BrandingLogo
 import es.joshluq.kmsafe.core.ui.util.DateUtils
 import es.joshluq.kmsafe.core.ui.util.safeClick
-import es.joshluq.kmsafe.core.ui.util.safeClickable
 import es.joshluq.kmsafe.domain.model.RentingContract
 import es.joshluq.kmsafe.domain.model.SubscriptionLevel
 import es.joshluq.kmsafe.domain.model.TripProjection
@@ -127,6 +115,7 @@ fun OverviewRoute(
     onNavigateToOnboarding: (String?, Boolean) -> Unit,
     onNavigateToProjection: () -> Unit,
     onNavigateToPermissions: () -> Unit,
+    onNavigateToAssistedPermissions: () -> Unit = {},
     onNavigateToPremiumPaywall: () -> Unit,
     onNavigateToPreferences: () -> Unit,
     onNavigateToWelcomeDiscovery: () -> Unit,
@@ -143,7 +132,15 @@ fun OverviewRoute(
 
     LaunchedEffect(permissionResult) {
         permissionResult?.let { granted ->
-            viewModel.sendEvent(Event.OnPermissionsResult(granted))
+            if (granted) {
+                if (state.value.isPremium == false) {
+                    viewModel.sendEvent(Event.OnStartTrackingClicked)
+                } else {
+                    viewModel.sendEvent(Event.OnPermissionsResult(true))
+                }
+            } else {
+                viewModel.sendEvent(Event.OnPermissionsResult(false))
+            }
             backStackEntry.savedStateHandle["permissions_granted"] = null
         }
     }
@@ -162,6 +159,7 @@ fun OverviewRoute(
                 is Effect.NavigateToOnboarding -> onNavigateToOnboarding(effect.vehicleId, effect.isEdit)
                 Effect.NavigateToProjection -> onNavigateToProjection()
                 Effect.NavigateToPermissions -> onNavigateToPermissions()
+                Effect.NavigateToAssistedPermissions -> onNavigateToAssistedPermissions()
                 Effect.NavigateToPremiumPaywall -> onNavigateToPremiumPaywall()
                 Effect.NavigateToPreferences -> onNavigateToPreferences()
                 Effect.OpenAppSettings -> {
@@ -216,22 +214,6 @@ fun OverviewScreen(
         rememberPermissionState(Manifest.permission.BLUETOOTH_CONNECT)
     } else {
         null
-    }
-
-    val bluetoothPermissionLauncher = rememberLauncherForActivityResult(
-        ActivityResultContracts.RequestPermission()
-    ) { isGranted ->
-        if (!isGranted) {
-            onEvent(Event.OnRequestPermissionsRationale)
-        }
-    }
-
-    val multiplePermissionsLauncher = rememberLauncherForActivityResult(
-        ActivityResultContracts.RequestMultiplePermissions()
-    ) { permissions ->
-        if (permissions.values.all { it }) {
-            onEvent(Event.OnStartTrackingClicked)
-        }
     }
 
     LaunchedEffect(state.showBottomSheet) {
@@ -291,34 +273,35 @@ fun OverviewScreen(
                 .padding(innerPadding)
         ) {
             Column {
+                val isFineLocationGranted = fineLocationState.status.isGranted
+                val isActivityGranted = activityRecognitionState?.status?.isGranted ?: true
+                val isBackgroundGranted = backgroundLocationState?.status?.isGranted ?: true
+                val isNotificationsGranted = notificationsPermissionState?.status?.isGranted ?: true
                 val isBluetoothGranted = bluetoothPermissionState?.status?.isGranted ?: true
+
                 val hasBluetoothLinked = !state.renting?.bluetoothDeviceAddress.isNullOrBlank()
-                // Business Rule: The warning should ONLY appear if the vehicle has already linked
-                // Bluetooth but for some reason Bluetooth permission is missing.
-                val isBluetoothPermissionMissing = hasBluetoothLinked && !isBluetoothGranted
-                val hasBluetoothPermissions = !isBluetoothPermissionMissing
+                val isBluetoothRequiredAndGranted = if (hasBluetoothLinked) isBluetoothGranted else true
+
+                val hasAutoTrackingPermissions = isFineLocationGranted &&
+                    isActivityGranted &&
+                    isBackgroundGranted &&
+                    isNotificationsGranted &&
+                    isBluetoothRequiredAndGranted
 
                 if (state.hasRenting) {
                     RentingState(
                         state = state,
                         onEvent = onEvent,
-                        hasBluetoothPermissions = hasBluetoothPermissions,
-                        onRequestBluetoothPermission = {
-                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                                bluetoothPermissionLauncher.launch(Manifest.permission.BLUETOOTH_CONNECT)
-                            } else {
-                                onEvent(Event.OnRequestPermissionsRationale)
-                            }
+                        hasAutoTrackingPermissions = hasAutoTrackingPermissions,
+                        onRequestPermissions = {
+                            onEvent(Event.OnRequestPermissionsRationale)
                         },
                         onStartTracking = {
-                            val permissions = mutableListOf(
-                                Manifest.permission.ACCESS_FINE_LOCATION,
-                                Manifest.permission.ACCESS_COARSE_LOCATION
-                            )
-                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                                permissions.add(Manifest.permission.POST_NOTIFICATIONS)
+                            if (isFineLocationGranted && isNotificationsGranted) {
+                                onEvent(Event.OnStartTrackingClicked)
+                            } else {
+                                onEvent(Event.OnRequestAssistedPermissions)
                             }
-                            multiplePermissionsLauncher.launch(permissions.toTypedArray())
                         },
                         onNavigateToVehicleDetail = onNavigateToVehicleDetail
                     )
@@ -365,15 +348,6 @@ fun OverviewScreen(
                 UpdateOdometerContent(state, onEvent)
             }
         }
-
-        if (state.showAutoTrackingPromotion) {
-            AutoTrackingPromotionDialog(
-                onConfigClicked = {
-                    onEvent(Event.OnAutoTrackingPromotionAccepted)
-                },
-                onDismiss = { onEvent(Event.OnDismissAutoTrackingPromotion) }
-            )
-        }
     }
 }
 
@@ -381,8 +355,8 @@ fun OverviewScreen(
 private fun RentingState(
     state: State,
     onEvent: (Event) -> Unit,
-    hasBluetoothPermissions: Boolean,
-    onRequestBluetoothPermission: () -> Unit,
+    hasAutoTrackingPermissions: Boolean,
+    onRequestPermissions: () -> Unit,
     onStartTracking: () -> Unit,
     onNavigateToVehicleDetail: (String) -> Unit
 ) {
@@ -441,10 +415,12 @@ private fun RentingState(
             dailyQuotaKm = state.dailyLimit,
             isPremium = state.isPremium ?: false,
             isBluetoothConnected = state.isVehicleBluetoothConnected,
-            hasPermissions = hasBluetoothPermissions,
+            hasPermissions = hasAutoTrackingPermissions,
+            autoTrackingEnabled = state.autoTrackingEnabled,
             onStartTripClick = onStartTracking,
             onUpgradeClick = { onEvent(Event.OnPremiumUpgradeClicked) },
-            onRequestPermissions = onRequestBluetoothPermission
+            onRequestPermissions = onRequestPermissions,
+            onNavigateToPreferences = { onEvent(Event.OnNavigateToPreferences) }
         )
 
         if (state.isPremium == false) {
@@ -868,22 +844,6 @@ private fun ChartInfoDialog(
         confirmText = stringResource(CoreR.string.history_close_button),
         onConfirm = onDismiss,
         onDismissRequest = onDismiss
-    )
-}
-
-@Composable
-private fun AutoTrackingPromotionDialog(
-    onConfigClicked: () -> Unit,
-    onDismiss: () -> Unit
-) {
-    CanvasKitConfirmDialog(
-        title = stringResource(R.string.overview_promotion_autotracking_title),
-        message = stringResource(R.string.overview_promotion_autotracking_desc),
-        confirmText = stringResource(R.string.overview_promotion_autotracking_confirm),
-        cancelText = stringResource(R.string.overview_promotion_autotracking_dismiss),
-        onConfirm = onConfigClicked,
-        onDismissRequest = onDismiss,
-        icon = Icons.Default.AutoAwesome
     )
 }
 

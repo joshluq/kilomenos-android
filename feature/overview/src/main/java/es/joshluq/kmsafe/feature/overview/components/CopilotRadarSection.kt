@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
@@ -20,6 +19,7 @@ import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Bluetooth
 import androidx.compose.material.icons.filled.BluetoothConnected
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -49,14 +49,16 @@ import es.joshluq.kmsafe.feature.overview.R
  */
 @Composable
 fun CopilotRadarSection(
+    modifier: Modifier = Modifier,
     dailyQuotaKm: Double,
     isPremium: Boolean,
     isBluetoothConnected: Boolean,
     hasPermissions: Boolean = true,
+    autoTrackingEnabled: Boolean = true,
     onStartTripClick: () -> Unit,
     onUpgradeClick: () -> Unit,
     onRequestPermissions: () -> Unit = {},
-    modifier: Modifier = Modifier
+    onNavigateToPreferences: () -> Unit = {}
 ) {
     Row(
         modifier = modifier
@@ -101,12 +103,22 @@ fun CopilotRadarSection(
         }
 
         // Card 2: Copilot Trip Control (Free vs Premium)
-        val cardModifier = if (isPremium && !hasPermissions) {
-            Modifier
-                .weight(1f)
-                .defaultMinSize(minHeight = 130.dp)
-                .safeClickable { onRequestPermissions() }
-                .testTag("copilot_radar_no_permissions")
+        val cardModifier = if (isPremium) {
+            when {
+                !autoTrackingEnabled -> Modifier
+                    .weight(1f)
+                    .defaultMinSize(minHeight = 130.dp)
+                    .safeClickable { onNavigateToPreferences() }
+                    .testTag("copilot_radar_disabled")
+                !hasPermissions -> Modifier
+                    .weight(1f)
+                    .defaultMinSize(minHeight = 130.dp)
+                    .safeClickable { onRequestPermissions() }
+                    .testTag("copilot_radar_no_permissions")
+                else -> Modifier
+                    .weight(1f)
+                    .defaultMinSize(minHeight = 130.dp)
+            }
         } else {
             Modifier
                 .weight(1f)
@@ -130,8 +142,65 @@ fun CopilotRadarSection(
             }
         ) {
             if (isPremium) {
-                if (!hasPermissions) {
-                    // Missing Permissions State (Warning + Invite to configure)
+                if (!autoTrackingEnabled) {
+                    // State 1: Auto-Tracking Disabled in Preferences
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(24.dp)
+                                    .clip(CircleShape)
+                                    .background(CanvasKitTheme.colors.textSecondary.copy(alpha = 0.12f)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Settings,
+                                    contentDescription = null,
+                                    tint = CanvasKitTheme.colors.textSecondary,
+                                    modifier = Modifier.size(16.dp)
+                                )
+                            }
+
+                            Text(
+                                text = stringResource(R.string.overview_radar_autotracking_disabled),
+                                style = CanvasKitTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = CanvasKitTheme.colors.textSecondary,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            Text(
+                                text = stringResource(R.string.overview_radar_enable_in_settings),
+                                style = CanvasKitTheme.typography.labelSmall,
+                                color = CanvasKitTheme.colors.brandAccent,
+                                fontWeight = FontWeight.SemiBold,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                                contentDescription = null,
+                                tint = CanvasKitTheme.colors.brandAccent,
+                                modifier = Modifier.size(14.dp)
+                            )
+                        }
+                    }
+                } else if (!hasPermissions) {
+                    // State 2: Missing Permissions (Warning + Invite to configure)
                     Column(
                         modifier = Modifier.fillMaxWidth(),
                         verticalArrangement = Arrangement.SpaceBetween
@@ -188,7 +257,7 @@ fun CopilotRadarSection(
                         }
                     }
                 } else {
-                    // Premium Auto-Tracking State
+                    // State 3 & 4: Premium Auto-Tracking (Connected or Standby)
                     Column(
                         modifier = Modifier.fillMaxWidth(),
                         verticalArrangement = Arrangement.SpaceBetween
@@ -324,9 +393,27 @@ fun PreviewCopilotRadarNoPermissions() {
             isPremium = true,
             isBluetoothConnected = false,
             hasPermissions = false,
+            autoTrackingEnabled = true,
             onStartTripClick = {},
             onUpgradeClick = {},
             onRequestPermissions = {}
+        )
+    }
+}
+
+@Preview(name = "CopilotRadar - Premium Disabled")
+@Composable
+fun PreviewCopilotRadarDisabled() {
+    CanvasKitTheme {
+        CopilotRadarSection(
+            dailyQuotaKm = 82.0,
+            isPremium = true,
+            isBluetoothConnected = false,
+            hasPermissions = true,
+            autoTrackingEnabled = false,
+            onStartTripClick = {},
+            onUpgradeClick = {},
+            onNavigateToPreferences = {}
         )
     }
 }

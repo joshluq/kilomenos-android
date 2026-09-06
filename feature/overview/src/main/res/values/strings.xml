@@ -90,6 +90,8 @@
     <string name="overview_radar_auto_with_pro">Auto con PRO</string>
     <string name="overview_radar_permissions_required">Sin permiso</string>
     <string name="overview_radar_grant_permissions_desc">Toca para activar</string>
+    <string name="overview_radar_autotracking_disabled">Desactivado</string>
+    <string name="overview_radar_enable_in_settings">Activar en Ajustes</string>
 
     <!-- Floating Telemetry Pill -->
     <string name="overview_pill_recording_trip">Grabando</string>

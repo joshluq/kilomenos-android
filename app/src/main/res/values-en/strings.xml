@@ -151,9 +151,11 @@
     <string name="overview_permissions_button_continue">Continue</string>
     <string name="overview_permissions_button_settings">Go to Settings</string>
 
-    <!-- Auto-Tracking Promotion -->
-    <string name="overview_promotion_autotracking_title">Auto-Tracking</string>
-    <string name="overview_promotion_autotracking_desc">Registers your trips automatically without pressing any buttons.\n\n*This notice will not appear again.</string>
-    <string name="overview_promotion_autotracking_confirm">Activate</string>
-    <string name="overview_promotion_autotracking_dismiss">Skip</string>
+    <!-- Assisted Tracking Permissions (Free Tier) -->
+    <string name="assisted_permissions_title">Assisted Copilot</string>
+    <string name="assisted_permissions_desc">To manually record your trips via GPS, we need to configure the following basic permissions.</string>
+    <string name="assisted_permissions_step_location_title">1. GPS Location</string>
+    <string name="assisted_permissions_step_location_desc">Allows recording distance and route while trip recording is active.</string>
+    <string name="assisted_permissions_step_notifications_title">2. Trip Notifications</string>
+    <string name="assisted_permissions_step_notifications_desc">Shows the floating control bar to pause or end your trip at any time.</string>
 </resources>

@@ -25,6 +25,7 @@ fun DashboardNavigation(
     onNavigateToLogin: () -> Unit,
     onNavigateToPremiumPaywall: () -> Unit,
     onNavigateToPermissions: () -> Unit,
+    onNavigateToAssistedPermissions: () -> Unit,
     onNavigateToWelcomeDiscovery: () -> Unit,
     onNavigateToVehicleDetail: (String) -> Unit,
     backStackEntry: NavBackStackEntry
@@ -42,6 +43,7 @@ fun DashboardNavigation(
                     }
                 },
                 onNavigateToPermissions = onNavigateToPermissions,
+                onNavigateToAssistedPermissions = onNavigateToAssistedPermissions,
                 onNavigateToPremiumPaywall = onNavigateToPremiumPaywall,
                 onNavigateToPreferences = onNavigateToPreferences,
                 onNavigateToWelcomeDiscovery = onNavigateToWelcomeDiscovery,

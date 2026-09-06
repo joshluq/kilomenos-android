@@ -25,6 +25,7 @@ import es.joshluq.kmsafe.feature.history.detail.RecordDetailRoute
 import es.joshluq.kmsafe.feature.premium.paywall.PremiumPaywallRoute
 import es.joshluq.kmsafe.feature.profile.preferences.PreferencesRoute
 import es.joshluq.kmsafe.ui.common.cropper.CropImageScreen
+import es.joshluq.kmsafe.ui.common.permissions.AssistedTrackingPermissionsScreen
 import es.joshluq.kmsafe.ui.common.permissions.AutoTrackingPermissionsScreen
 import es.joshluq.kmsafe.feature.profile.datamanagement.DataManagementRoute
 
@@ -169,6 +170,9 @@ fun AppNavigation(
                         onNavigateToPermissions = {
                             navController.navigate(Destination.AutoTrackingPermissions)
                         },
+                        onNavigateToAssistedPermissions = {
+                            navController.navigate(Destination.AssistedTrackingPermissions)
+                        },
                         onNavigateToWelcomeDiscovery = {
                             navController.navigate(Destination.WelcomeDiscovery)
                         },
@@ -224,6 +228,19 @@ fun AppNavigation(
 
         composable<Destination.AutoTrackingPermissions> {
             AutoTrackingPermissionsScreen(
+                onAllPermissionsGranted = {
+                    navController.previousBackStackEntry?.savedStateHandle?.set("permissions_granted", true)
+                    navController.popBackStack()
+                },
+                onDismiss = {
+                    navController.previousBackStackEntry?.savedStateHandle?.set("permissions_granted", false)
+                    navController.popBackStack()
+                }
+            )
+        }
+
+        composable<Destination.AssistedTrackingPermissions> {
+            AssistedTrackingPermissionsScreen(
                 onAllPermissionsGranted = {
                     navController.previousBackStackEntry?.savedStateHandle?.set("permissions_granted", true)
                     navController.popBackStack()

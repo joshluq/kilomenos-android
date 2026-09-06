@@ -7,11 +7,11 @@ import es.joshluq.foundationkit.text.TextProvider
  * Priority levels for the unified status capsule.
  * Lower value represents higher cognitive priority.
  */
-enum class CapsulePriority(val order: Int) {
-    CRITICAL_RISK(1),
-    BLUETOOTH_SETUP(2),
-    FLEET_NOTICE(3),
-    INSIGHT(4)
+enum class CapsulePriority {
+    CRITICAL_RISK,
+    BLUETOOTH_SETUP,
+    FLEET_NOTICE,
+    INSIGHT
 }
 
 /**

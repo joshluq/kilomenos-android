@@ -117,7 +117,7 @@ class OverviewViewModel @Inject constructor(
                 val isAutoTrackEnabled = prefs.autoTrackingEnabled
                 val isPromoDismissed = prefs.autoTrackingPromotionDismissed
 
-                val shouldShowPromo = (isPremiumUser || isTrialable) && !isAutoTrackEnabled && !isPromoDismissed
+                val shouldShowPromo = false
 
                 if (isAutoTrackEnabled) {
                     logger.d("OverviewViewModel", "Auto-tracking is enabled in preferences. Ensuring registration.")
@@ -296,6 +296,8 @@ class OverviewViewModel @Inject constructor(
             Event.OnConfirmTrackedTripClicked -> handleConfirmTrackedTrip()
             Event.OnCancelTrackedTripClicked -> handleCancelTrackedTrip()
             Event.OnRequestPermissionsRationale -> launchEffect(Effect.NavigateToPermissions)
+            Event.OnRequestAssistedPermissions -> launchEffect(Effect.NavigateToAssistedPermissions)
+            Event.OnNavigateToPreferences -> launchEffect(Effect.NavigateToPreferences)
             is Event.OnPermissionsResult -> handlePermissionsResult(event.granted)
             Event.OnPremiumUpgradeClicked -> {
                 analytics.track(AnalyticsEvent.Custom("premium_upgrade_clicked", mapOf("source" to "top_bar")))

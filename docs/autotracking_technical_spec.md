@@ -86,6 +86,44 @@ Google Play Services Activity Recognition can take 1 to 3 minutes of continuous 
    - Highlights the connected device with a distinct `"Conectado ahora"` badge.
    - Automatically sorts connected devices to the top of the list to eliminate configuration errors.
 
+### 3.4 SMART Copilot & Assisted Copilot UI State Machine (`CopilotRadarSection`)
+
+The Cockpit Radar card on `OverviewScreen` dynamically adapts depending on the user's subscription level, preferences, and hardware telemetry:
+
+```mermaid
+graph TD
+    UserCheck{Is User Premium?}
+    
+    UserCheck -->|Free Tier: Copilot Asistido| FreeState[Manual Trip Control Card]
+    FreeState --> FreeClick[User taps 'Iniciar Viaje']
+    FreeClick --> PermCheck{Location & Notifications Granted?}
+    PermCheck -->|Yes| StartTrip[Start Manual GPS Trip]
+    PermCheck -->|No| NavAssisted[Navigate to AssistedTrackingPermissionsScreen]
+    NavAssisted -->|Granted| StartTrip
+
+    UserCheck -->|Premium Tier: SMART Copilot| PrefCheck{Auto-Tracking Enabled in Preferences?}
+    PrefCheck -->|No| StateDisabled[State 1: 'Desactivado'<br/>Subtitle: 'Activar en Ajustes']
+    StateDisabled -->|Tap Card| NavPrefs[Navigate to PreferencesScreen]
+
+    PrefCheck -->|Yes| AllPermsCheck{All 5 Telemetry Permissions Granted?}
+    AllPermsCheck -->|No| StateNoPerms[State 2: 'Sin permiso'<br/>Subtitle: 'Toca para activar']
+    StateNoPerms -->|Tap Card| NavAutoPerms[Navigate to AutoTrackingPermissionsScreen]
+
+    AllPermsCheck -->|Yes| BtCheck{Active Vehicle Bluetooth Connected?}
+    BtCheck -->|Yes| StateConnected[State 3: 'Coche Enlazado'<br/>Subtitle: 'Listo para grabar' (Green)]
+    BtCheck -->|No| StateStandby[State 4: 'En Espera'<br/>Subtitle: 'Listo para grabar' (Blue)]
+```
+
+#### Detailed State Specifications:
+
+| Tier | State | Badge / Status | Subtitle | Icon & Color | Interaction / Destination |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **Free** | **Copilot Asistido** | *Dynamic* | *Contextual* | `Navigation` / Accent | Tapping "Iniciar Viaje": If permissions are granted, starts recording. Otherwise, routes to `AssistedTrackingPermissionsScreen` (step-by-step: Location -> Notifications). Upon completion, returns and immediately triggers trip recording. |
+| **Premium** | **1. Desactivado** | `Desactivado` | `Activar en Ajustes` | `Settings` / Amber | Tapping card opens `PreferencesScreen` directly to enable auto-tracking. Eliminates intrusive modal dialogs. |
+| **Premium** | **2. Sin permiso** | `Sin permiso` | `Toca para activar` | `Warning` / Amber | Evaluates full auto-tracking permission set (Fine Location, Background Location, Notifications, Activity Recognition, and Bluetooth Connect if vehicle has MAC linked). Tapping card opens `AutoTrackingPermissionsScreen` (guided step-by-step onboarding). |
+| **Premium** | **3. Coche Enlazado** | `Coche Enlazado` | `Listo para grabar` | `BluetoothConnected` / Emerald | Passive telemetry confirmation. Phone is actively connected to the vehicle's paired hands-free or audio system. |
+| **Premium** | **4. En Espera** | `En Espera` | `Listo para grabar` | `Bluetooth` / Blue | Passive standby state. System is ready to trigger as soon as vehicle Bluetooth connects or Activity Recognition detects `IN_VEHICLE`. |
+
 ---
 
 ## 4. Validation Logic (The "Triple Check")
