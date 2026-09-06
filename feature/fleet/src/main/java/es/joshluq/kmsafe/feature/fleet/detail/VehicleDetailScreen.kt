@@ -149,22 +149,23 @@ fun VehicleDetailScreen(
                         .verticalScroll(rememberScrollState())
                         .padding(horizontal = CanvasKitTheme.spacing.screenHorizontal)
                 ) {
+                    Spacer(modifier = Modifier.height(24.dp))
+                    Text(
+                        modifier = Modifier.fillMaxWidth(),
+                        text = contract.vehicleName,
+                        style = CanvasKitTheme.typography.bodyLarge,
+                        color = CanvasKitTheme.colors.textPrimary,
+                        fontWeight = FontWeight.Black,
+                        textAlign = TextAlign.Start,
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
                     VehiclePhotoSelector(
                         imageUrl = contract.vehicleImageUrl,
                         isReadOnly = true,
                         selectedUri = null,
-                        onClick = { },
-                        modifier = Modifier.padding(top = 24.dp)
+                        onClick = { }
                     )
-                    Spacer(modifier = Modifier.height(12.dp))
-                    Text(
-                        modifier = Modifier.fillMaxWidth(),
-                        text = contract.vehicleName,
-                        style = CanvasKitTheme.typography.headingLarge,
-                        color = CanvasKitTheme.colors.textPrimary,
-                        fontWeight = FontWeight.Black,
-                        textAlign = TextAlign.Center,
-                    )
+
                     Spacer(modifier = Modifier.height(24.dp))
                     // Section: Contract
                     SectionHeader(stringResource(R.string.vehicle_detail_contract_section))
@@ -177,7 +178,7 @@ fun VehicleDetailScreen(
                         )
                         ContractMetricCard(
                             icon = Icons.Default.Timelapse,
-                            label = stringResource(R.string.onboarding_duration_months_label),
+                            label = stringResource(R.string.vehicle_detail_duration_months_label),
                             value = "${contract.durationMonths} ${stringResource(R.string.onboarding_months_suffix)}",
                             modifier = Modifier.weight(1f)
                         )
@@ -196,7 +197,7 @@ fun VehicleDetailScreen(
                         )
                         ContractMetricCard(
                             icon = Icons.Default.DirectionsCar,
-                            label = stringResource(R.string.onboarding_start_odometer_label),
+                            label = stringResource(R.string.vehicle_detail_start_odometer_label),
                             value = "${contract.startOdometer} km",
                             modifier = Modifier.weight(1f)
                         )

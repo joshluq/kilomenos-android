@@ -74,6 +74,8 @@
     <string name="vehicle_detail_bt_permission_warning_title">Bluetooth permission needed</string>
     <string name="vehicle_detail_bt_permission_warning_desc">You have linked this vehicle via Bluetooth, but we don\'t have permission to validate the connection. Auto-Tracking might be less accurate.</string>
     <string name="vehicle_detail_bt_permission_warning_action">Grant Permission</string>
+    <string name="vehicle_detail_start_odometer_label">At signing</string>
+    <string name="vehicle_detail_duration_months_label">Duration</string>
 
     <!-- Setup Wizard -->
     <string name="setup_wizard_step_identity_title">Which vehicle are we going to protect?</string>

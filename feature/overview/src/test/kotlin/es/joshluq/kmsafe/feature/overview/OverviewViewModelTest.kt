@@ -8,7 +8,9 @@ import es.joshluq.kmsafe.domain.model.ContractMetrics
 import es.joshluq.kmsafe.domain.model.Entitlements
 import es.joshluq.kmsafe.domain.model.RentingContract
 import es.joshluq.kmsafe.domain.model.SubscriptionLevel
+import es.joshluq.kmsafe.domain.model.TripProjection
 import es.joshluq.kmsafe.domain.model.UserPreferences
+import es.joshluq.kmsafe.feature.overview.model.StatusCapsuleUiModel
 import es.joshluq.kmsafe.domain.usecase.AddOdometerRecordUseCase
 import es.joshluq.kmsafe.domain.usecase.ClearTrackingUseCase
 import es.joshluq.kmsafe.domain.usecase.GetAllContractsUseCase
@@ -375,5 +377,104 @@ class OverviewViewModelTest {
         advanceUntilIdle()
 
         assertFalse(viewModel.state.value.isVehicleBluetoothConnected)
+    }
+
+    @Test
+    fun `given contract without bluetooth and auto tracking enabled then statusCapsule is BluetoothMissing`() = runTest(testDispatcher) {
+        val noBtContract = sampleContract.copy(bluetoothDeviceAddress = null)
+        every { getOverviewDataUseCase(any()) } returns flowOf(
+            GetOverviewDataUseCase.Output.Success(
+                contract = noBtContract,
+                actualKmsDrivenSinceStart = 2500.0,
+                isSyncPending = false,
+                metrics = sampleMetrics.copy(contract = noBtContract)
+            )
+        )
+        every { getPreferencesUseCase(any()) } returns flowOf(
+            GetPreferencesUseCase.Output.Success(UserPreferences(autoTrackingEnabled = true))
+        )
+
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        val capsule = viewModel.state.value.statusCapsule
+        assertNotNull(capsule)
+        assertTrue(capsule is StatusCapsuleUiModel.BluetoothMissing)
+    }
+
+    @Test
+    fun `given projection over limit and banner active then statusCapsule is CriticalRisk`() = runTest(testDispatcher) {
+        val projection = TripProjection(
+            projectedTotalKms = 16200.0,
+            expectedFinalBalance = -1200.0,
+            dailyAverage = 50.0,
+            isOverLimit = true,
+            hasEnoughData = true
+        )
+        every { getTripProjectionUseCase(any()) } returns flowOf(
+            GetTripProjectionUseCase.Output.Success(projection)
+        )
+        every { getPreferencesUseCase(any()) } returns flowOf(
+            GetPreferencesUseCase.Output.Success(
+                UserPreferences(showProjectionBanner = true, lastKnownOverLimit = null)
+            )
+        )
+
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        val capsule = viewModel.state.value.statusCapsule
+        assertNotNull(capsule)
+        assertTrue(capsule is StatusCapsuleUiModel.CriticalRisk)
+        assertTrue((capsule as StatusCapsuleUiModel.CriticalRisk).isOverLimit)
+    }
+
+    @Test
+    fun `given OnStatusCapsuleClicked with CriticalRisk then emits NavigateToProjection effect`() = runTest(testDispatcher) {
+        val effects = mutableListOf<Effect>()
+        val viewModel = createViewModel()
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
+            viewModel.effects.collect { effects.add(it) }
+        }
+
+        val dummyRisk = StatusCapsuleUiModel.CriticalRisk(
+            message = es.joshluq.foundationkit.text.TextProvider.Dynamic("Risk"),
+            isOverLimit = true
+        )
+        viewModel.sendEvent(Event.OnStatusCapsuleClicked(dummyRisk))
+        advanceUntilIdle()
+
+        assertEquals(1, effects.size)
+        assertEquals(Effect.NavigateToProjection, effects.first())
+    }
+
+    @Test
+    fun `given OnStatusCapsuleClicked with BluetoothMissing then emits NavigateToOnboarding edit effect`() = runTest(testDispatcher) {
+        val effects = mutableListOf<Effect>()
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
+            viewModel.effects.collect { effects.add(it) }
+        }
+
+        val dummyBt = StatusCapsuleUiModel.BluetoothMissing(
+            message = es.joshluq.foundationkit.text.TextProvider.Dynamic("Bluetooth")
+        )
+        viewModel.sendEvent(Event.OnStatusCapsuleClicked(dummyBt))
+        advanceUntilIdle()
+
+        assertEquals(1, effects.size)
+        assertEquals(Effect.NavigateToOnboarding("contract-1", isEdit = true), effects.first())
+    }
+
+    @Test
+    fun `given OnDismissStatusCapsule then clears statusCapsule in state`() = runTest(testDispatcher) {
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        viewModel.sendEvent(Event.OnDismissStatusCapsule)
+        advanceUntilIdle()
+
+        assertEquals(null, viewModel.state.value.statusCapsule)
     }
 }

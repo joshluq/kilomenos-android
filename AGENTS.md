@@ -229,7 +229,7 @@ graph TD
 
 | Feature Module | Layer 1: Hero Pulse | Layer 2: Decision Radar | Layer 3: Zero-Friction Action | Layer 4: Diagnostic Feed |
 | :--- | :--- | :--- | :--- | :--- |
-| **`:feature:overview`** *(Tab 1)* | Updated Balance (UB) in km & Daily Base Budget (DBB) with live status pill. | Remaining km quota for today + Live Bluetooth tethering pill. | Quick 1-Tap manual odometer increment pill. | 7-day consumption pace chart with "Zona Verde" indicator. |
+| **`:feature:overview`** *(Tab 1)* | Aero Runway Pacing Bar (Time % vs. Km % horizon) & Updated Balance (UB). | Remaining km quota for today + GPS Trip Control (Free 1-Tap / Premium Bluetooth). | Dedicated Auditable FAB [+] for exact odometer settlement (zero approximate presets, zero OCR). | Monthly consumption pace chart with "Zona Verde" indicator. |
 | **`:feature:expenses`** *(Tab 3)* | Real Cost per 100 km (`€/100 km`) & Electrification Savings KPI. | "My Stations" Price Radar (horizontal cards with +/- price delta vs average). | Quick Refuel BottomSheet with 1-Tap preset amounts (30€, 50€, Full). | Refueling cycle feed showing consumption (`5.4 L/100 km`) and cycle km. |
 | **`:feature:projection`** *(Tab 4)* | Contract Risk Sentinel: projected excess km and penalty cost in € at expiry. | Pace Simulator Sliders (adjust driving pace: -10%, normal, +10%). | "Plan Trip" simulator to test vacation routes against contract limit. | Monthly contract exhaustion forecast graph. |
 | **`:feature:history`** *(Tab 2)* | Cumulative Audited Odometer & total verified trips count. | Filter pills (Automated Bluetooth vs Manual) + GPS telemetry validity pill. | 1-Tap "Export Certified Audit (CSV/PDF)" button. | Enriched trip cards with route badges, duration, speed, and accuracy level. |

@@ -33,6 +33,7 @@ import es.joshluq.canvaskit.foundations.theme.CanvasKitTheme
 import es.joshluq.kmsafe.core.ui.util.safeClick
 import es.joshluq.kmsafe.domain.model.StationRadarItem
 import es.joshluq.kmsafe.feature.expenses.R
+import java.util.Locale
 import kotlin.math.abs
 
 /**
@@ -131,13 +132,13 @@ fun StationRadarCarousel(
 @Composable
 private fun StationRadarCard(
     item: StationRadarItem,
-    locale: java.util.Locale,
+    locale: Locale,
     modifier: Modifier = Modifier
 ) {
     val unit = item.fuelType.unitOfMeasure
     CanvasKitCard(
         modifier = modifier.width(180.dp),
-        variant = CanvasKitCardVariant.Elevated
+        variant = CanvasKitCardVariant.Outlined
     ) {
         Column(
             modifier = Modifier.fillMaxWidth(),

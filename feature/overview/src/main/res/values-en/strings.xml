@@ -1,63 +1,103 @@
 <resources>
-    <!-- Overview -->
-    <string name="overview_empty_state_title">Your mileage control starts here</string>
-    <string name="overview_empty_state_description">To start, register your renting contract. This will allow us to calculate your daily balance and warn you if you exceed kilometers before the end of your contract.</string>
-    <string name="overview_kilometer_balance">Kilometer Balance</string>
-    <string name="overview_daily_limit">Ideal daily limit</string>
-    <string name="overview_monthly_limit">Ideal monthly limit</string>
+    <!-- Overview & Empty State -->
+    <string name="overview_empty_state_title">Your Renting Copilot</string>
+    <string name="overview_empty_state_description">Register your contract to track your daily balance and avoid mileage penalties.</string>
+    <string name="overview_kilometer_balance">Balance</string>
+    <string name="overview_daily_limit">Ideal daily allowance</string>
+    <string name="overview_monthly_limit">Ideal monthly allowance</string>
     <string name="overview_total_kms_driven">Total traveled</string>
     <string name="overview_vehicle_bluetooth_connected">Connected</string>
-    <string name="overview_ideal_limits_title">IDEAL LIMITS (CONTRACT)</string>
+    <string name="overview_ideal_limits_title">IDEAL LIMITS</string>
     <string name="overview_usage_comparison_title">USAGE COMPARISON</string>
-    <string name="overview_monthly_usage_title">MONTHLY USAGE</string>
-    <string name="overview_no_data_available">Not enough data</string>
+    <string name="overview_monthly_usage_title">MONTHLY PACE</string>
+    <string name="overview_no_data_available">Insufficient data</string>
     <string name="overview_difference_label">Difference</string>
-    <string name="overview_time_used_label">Time\nUsed</string>
-    <string name="overview_kms_used_label">Kms\nUsed</string>
-    <string name="overview_update_odometer_title">Register Kilometers</string>
-    <string name="overview_save_record_button">Save Record</string>
-    <string name="overview_register_renting_button">Register my Renting</string>
+    <string name="overview_time_used_label">Time\nElapsed</string>
+    <string name="overview_kms_used_label">Kms\nConsumed</string>
+    <string name="overview_update_odometer_title">Log Odometer</string>
+    <string name="overview_save_record_button">Save</string>
+    <string name="overview_register_renting_button">Register Renting</string>
     <string name="overview_chart_info_title">Chart Help</string>
-    <string name="overview_chart_comparison_info">This chart compares the time elapsed in your contract versus the kilometers you have already consumed.\n\n• If the blue circle is larger than the gray one, you have spent a higher percentage of kilometers than time (Be careful!).\n\n• The difference (%) tells you how much margin you have relative to your temporal budget.</string>
-    <string name="overview_chart_monthly_info">Shows your real kilometer consumption versus the ideal budget for each month.\n\n• Blue Bar: Your real kilometers.\n\n• Gray Bar: The theoretical budget for the month.\n\n• Horizontal Line: The maximum limit not to exceed.</string>
-    <string name="overview_chart_legend_kms">Kms used</string>
+    <string name="overview_chart_comparison_info">Compares elapsed contract time against consumed kilometers.\n\n• Blue exceeds gray: pace is ahead of schedule.\n\n• Cushion (%): leeway relative to time budget.</string>
+    <string name="overview_chart_monthly_info">Real consumption versus monthly budget.\n\n• Blue Bar: Real kms.\n\n• Gray Bar: Theoretical budget.\n\n• Horizontal Line: Max limit.</string>
+    <string name="overview_chart_legend_kms">Kms consumed</string>
     <string name="overview_chart_legend_time">Elapsed time</string>
     <string name="overview_chart_legend_actual">Real Consumption</string>
     <string name="overview_chart_legend_budget">Budget</string>
-    <string name="overview_error_date_outside_contract">The date must be within the contract\'s validity period.</string>
+    <string name="overview_error_date_outside_contract">The date must be within contract validity.</string>
 
-    <!-- Projection Card -->
-    <string name="projection_card_title">YOUR FUTURE BEHIND THE WHEEL</string>
-    <string name="projection_card_expected_balance">Expected final balance</string>
-    <string name="projection_card_projected_total">Reading upon delivery</string>
-    <string name="projection_card_daily_average">Your current pace</string>
-    <string name="projection_card_not_enough_data">Drawing your future (%1$d days of data needed)&#8230;</string>
-    <string name="projection_card_status_safe">Everything under control! You would have %1$s km left over.</string>
-    <string name="projection_card_status_over">⚠️ Attention: you will exceed your limit by %1$s km.</string>
+    <!-- Projection Card / Risk Sentinel -->
+    <string name="projection_card_title">PROJECTION</string>
+    <string name="projection_card_expected_balance">Balance at expiry</string>
+    <string name="projection_card_projected_total">Odometer on return</string>
+    <string name="projection_card_daily_average">Daily average pace</string>
+    <string name="projection_card_not_enough_data">Calculating projection (%1$d days left)&#8230;</string>
+    <string name="projection_card_status_safe">Copilot: Safe pace (+%1$s km)</string>
+    <string name="projection_card_status_over">Risk Sentinel: Drift +%1$s km</string>
 
     <!-- Auto-Tracking Promotion -->
-    <string name="overview_promotion_autotracking_title">Auto-Tracking</string>
-    <string name="overview_promotion_autotracking_desc">Registers your trips automatically without pressing any buttons.\n\n*This notice will not appear again.</string>
-    <string name="overview_promotion_autotracking_confirm">Activate</string>
+    <string name="overview_promotion_autotracking_title">SmartCopilot PRO</string>
+    <string name="overview_promotion_autotracking_desc">SmartCopilot detects your drives via Bluetooth and logs every trip in the background.</string>
+    <string name="overview_promotion_autotracking_confirm">Activate PRO</string>
     <string name="overview_promotion_autotracking_dismiss">Skip</string>
 
     <!-- Tracking Card -->
-    <string name="tracking_card_status_pending">Detecting driving…</string>
-    <string name="tracking_card_status_recording">Active trip</string>
+    <string name="tracking_card_status_pending">Detecting drive…</string>
+    <string name="tracking_card_status_recording">Telemetry active</string>
     <string name="tracking_card_distance_label">Distance</string>
     <string name="tracking_card_time_label">Time</string>
-    <string name="tracking_card_stop_button">Stop</string>
-    <string name="tracking_card_start_button">Confirm Start</string>
-    <string name="tracking_card_active_mode">CO-PILOT MODE</string>
-    <string name="tracking_card_idle_mode">TRIP ASSISTANT</string>
+    <string name="tracking_card_stop_button">Finish</string>
+    <string name="tracking_card_start_button">Start</string>
+    <string name="tracking_card_active_mode">SMARTCOPILOT ACTIVE</string>
+    <string name="tracking_card_idle_mode">COPILOT ON STANDBY</string>
     <string name="tracking_card_kms_label">KILOMETERS TRAVELED</string>
-    <string name="tracking_card_save_action">Save</string>
-    <string name="tracking_card_cancel_action">Cancel</string>
+    <string name="tracking_card_save_action">Settle</string>
+    <string name="tracking_card_cancel_action">Discard</string>
     <string name="tracking_card_start_action">START</string>
-    <string name="tracking_card_stop_action">STOP TRIP</string>
+    <string name="tracking_card_stop_action">FINISH</string>
 
     <!-- Contextual & Suggestion -->
-    <string name="overview_bluetooth_suggestion_banner">Optimize auto-tracking by linking your vehicle\'s Bluetooth.</string>
+    <string name="overview_bluetooth_suggestion_banner">Optimize telemetry by pairing car Bluetooth.</string>
+    <string name="overview_status_capsule_bluetooth">Pair Bluetooth to enable SmartCopilot</string>
     <string name="overview_start_date_placeholder">e.g. 05/12/2023</string>
     <string name="overview_welcome_guide_option">How KiloMenos works</string>
+
+    <!-- Aero Runway Pacing Bar (Hero) -->
+    <string name="overview_hero_contract_pace_title">Contract Pace</string>
+    <string name="overview_hero_green_zone">GREEN ZONE</string>
+    <string name="overview_hero_over_limit">DRIFT</string>
+    <string name="overview_hero_current_balance">Available Balance</string>
+    <string name="overview_hero_cushion_format">Margin +%1$.2f%%</string>
+    <string name="overview_hero_drift_format">Drift -%1$.2f%%</string>
+    <string name="overview_hero_time_label">TIME</string>
+    <string name="overview_hero_km_use_label">KM USAGE</string>
+    <string name="overview_hero_odometer_format">Odometer: %1$s km</string>
+    <string name="overview_hero_days_remaining_format">%1$d days left</string>
+    <string name="overview_view_vehicle_detail_acc">View vehicle specifications</string>
+    <string name="overview_topbar_fleet_button_acc">View vehicle garage</string>
+    <string name="overview_hero_switch_vehicles_format">%1$d Cars ▾</string>
+
+    <!-- Copilot Radar Section -->
+    <string name="overview_radar_daily_quota_title">TODAY\'S QUOTA</string>
+    <string name="overview_radar_daily_quota_subtitle">Daily ideal (contract)</string>
+    <string name="overview_radar_smartcopilot_title">SMARTCOPILOT</string>
+    <string name="overview_radar_assisted_copilot_title">ASSISTED COPILOT</string>
+    <string name="overview_radar_car_connected">Car Paired</string>
+    <string name="overview_radar_standby">Standby</string>
+    <string name="overview_radar_record_on_start">Will record on ignition</string>
+    <string name="overview_radar_auto_detection_active">Auto-detection active</string>
+    <string name="overview_radar_start_trip_button">Start Trip</string>
+    <string name="overview_radar_auto_with_pro">Auto with PRO</string>
+    <string name="overview_radar_permissions_required">No permission</string>
+    <string name="overview_radar_grant_permissions_desc">Tap to enable</string>
+
+    <!-- Floating Telemetry Pill -->
+    <string name="overview_pill_recording_trip">Recording</string>
+    <string name="overview_pill_distance_in_progress">%1$s km in progress</string>
+    <string name="overview_pill_finish_button">Finish</string>
+    <string name="overview_pill_finish_desc">Finish trip</string>
+
+    <!-- Trip Completed Card -->
+    <string name="overview_trip_completed_title">TRIP COMPLETED</string>
+    <string name="overview_trip_completed_question">Log these kilometers into your odometer?</string>
 </resources>

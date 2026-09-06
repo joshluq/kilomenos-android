@@ -49,6 +49,7 @@ data class State(
     val tripStartTime: Long? = null,
     val showBluetoothSuggestionBanner: Boolean = false,
     val isVehicleBluetoothConnected: Boolean = false,
+    val statusCapsule: es.joshluq.kmsafe.feature.overview.model.StatusCapsuleUiModel? = null,
     val error: TextProvider? = null,
     val newRecordDateError: TextProvider? = null
 ) : UiState {
@@ -72,6 +73,8 @@ sealed interface Event : UiEvent {
     data object OnBottomSheetDismissed : Event
     data object OnDismissProjectionBanner : Event
     data object OnProjectionBannerClicked : Event
+    data class OnStatusCapsuleClicked(val item: es.joshluq.kmsafe.feature.overview.model.StatusCapsuleUiModel) : Event
+    data object OnDismissStatusCapsule : Event
     data object OnToggleVehicleSwitcher : Event
     data class OnNewOdometerChanged(val value: String) : Event
     data class OnNewLabelChanged(val value: String) : Event

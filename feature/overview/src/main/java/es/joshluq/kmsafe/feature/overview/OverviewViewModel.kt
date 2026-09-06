@@ -11,8 +11,11 @@ import es.joshluq.kmsafe.core.domain.usecase.SyncStationGeofencesUseCase
 import es.joshluq.kmsafe.core.monetization.domain.MonetizationConfig
 import es.joshluq.kmsafe.core.ui.util.DateUtils.getContractEndDate
 import es.joshluq.kmsafe.core.ui.util.DateUtils.normalizeToUtc00
+import es.joshluq.kmsafe.core.ui.util.NumberFormatter
 import es.joshluq.kmsafe.domain.model.Feature
+import es.joshluq.kmsafe.domain.model.RentingContract
 import es.joshluq.kmsafe.domain.model.SubscriptionLevel
+import es.joshluq.kmsafe.domain.model.TripProjection
 import es.joshluq.kmsafe.domain.usecase.AddOdometerRecordUseCase
 import es.joshluq.kmsafe.domain.usecase.ClearTrackingUseCase
 import es.joshluq.kmsafe.domain.usecase.GetAllContractsUseCase
@@ -30,7 +33,9 @@ import es.joshluq.kmsafe.domain.usecase.StopAutoTrackingUseCase
 import es.joshluq.kmsafe.domain.usecase.StopTrackingUseCase
 import es.joshluq.kmsafe.domain.usecase.StopTripTrackingUseCase
 import es.joshluq.kmsafe.domain.usecase.UpdatePreferencesUseCase
+import es.joshluq.kmsafe.feature.overview.model.StatusCapsuleUiModel
 import es.joshluq.kmsafe.feature.overview.model.toUiModel
+import kotlin.math.absoluteValue
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -139,6 +144,14 @@ class OverviewViewModel @Inject constructor(
                     val hasBluetooth = contract.bluetoothDeviceAddress != null
                     val showBluetoothSuggestion = isPremium && isAutoTrackingEnabled && !hasBluetooth
 
+                    val capsule = resolveStatusCapsule(
+                        projection = newState.projection,
+                        showProjectionBanner = newState.showProjectionBanner,
+                        renting = contract,
+                        isPremium = isPremium,
+                        isAutoTrackingEnabled = isAutoTrackingEnabled
+                    )
+
                     newState = newState.copy(
                         renting = contract,
                         balance = metrics.balance,
@@ -150,6 +163,7 @@ class OverviewViewModel @Inject constructor(
                         kmsPercentage = metrics.kmsPercentage,
                         differencePercentage = metrics.differencePercentage,
                         showBluetoothSuggestionBanner = showBluetoothSuggestion,
+                        statusCapsule = capsule,
                         isSyncPending = metrics.isSyncPending,
                         isLoading = false
                     )
@@ -238,11 +252,37 @@ class OverviewViewModel @Inject constructor(
                 }
             }
             Event.OnBottomSheetDismissed -> updateState { copy(showBottomSheet = false) }
-            Event.OnDismissProjectionBanner -> updateState { copy(showProjectionBanner = false) }
+            Event.OnDismissProjectionBanner -> {
+                val capsule = resolveStatusCapsule(
+                    projection = state.value.projection,
+                    showProjectionBanner = false,
+                    renting = state.value.renting,
+                    isPremium = state.value.isPremium ?: false,
+                    isAutoTrackingEnabled = state.value.autoTrackingEnabled
+                )
+                updateState { copy(showProjectionBanner = false, statusCapsule = capsule) }
+            }
             Event.OnProjectionBannerClicked -> {
                 analytics.track(AnalyticsEvent.Custom("projection_banner_clicked"))
                 launchEffect(Effect.NavigateToProjection)
             }
+            is Event.OnStatusCapsuleClicked -> {
+                when (event.item) {
+                    is StatusCapsuleUiModel.CriticalRisk -> {
+                        analytics.track(AnalyticsEvent.Custom("status_capsule_clicked", mapOf("type" to "critical_risk")))
+                        launchEffect(Effect.NavigateToProjection)
+                    }
+                    is StatusCapsuleUiModel.BluetoothMissing -> {
+                        analytics.track(AnalyticsEvent.Custom("status_capsule_clicked", mapOf("type" to "bluetooth_missing")))
+                        state.value.renting?.let { launchEffect(Effect.NavigateToOnboarding(it.id, isEdit = true)) }
+                    }
+                    is StatusCapsuleUiModel.FleetNotice,
+                    is StatusCapsuleUiModel.DrivingInsight -> {
+                        analytics.track(AnalyticsEvent.Custom("status_capsule_clicked", mapOf("type" to "insight")))
+                    }
+                }
+            }
+            Event.OnDismissStatusCapsule -> updateState { copy(statusCapsule = null) }
             is Event.OnNewOdometerChanged -> updateState { copy(newOdometerValue = event.value) }
             is Event.OnNewLabelChanged -> updateState { copy(newRecordLabel = event.value) }
             is Event.OnNewFuelChanged -> updateState { copy(newRecordFuel = event.value) }
@@ -271,9 +311,42 @@ class OverviewViewModel @Inject constructor(
                 launchEffect(Effect.NavigateToPreferences)
             }
             is Event.OnAutoTrackingToggled -> handleAutoTrackingToggled(event.enabled)
-            Event.OnDismissBluetoothSuggestionBanner -> updateState { copy(showBluetoothSuggestionBanner = false) }
+            Event.OnDismissBluetoothSuggestionBanner -> {
+                val capsule = if (state.value.statusCapsule is StatusCapsuleUiModel.BluetoothMissing) null else state.value.statusCapsule
+                updateState { copy(showBluetoothSuggestionBanner = false, statusCapsule = capsule) }
+            }
             Event.OnWelcomeGuideClicked -> launchEffect(Effect.NavigateToWelcomeDiscovery)
         }
+    }
+
+    private fun resolveStatusCapsule(
+        projection: TripProjection?,
+        showProjectionBanner: Boolean,
+        renting: RentingContract?,
+        isPremium: Boolean,
+        isAutoTrackingEnabled: Boolean
+    ): StatusCapsuleUiModel? {
+        // P1: Critical Risk from projection
+        if (showProjectionBanner && projection != null) {
+            val isOverLimit = projection.isOverLimit
+            val distanceStr = NumberFormatter.formatDistance(projection.expectedFinalBalance.absoluteValue)
+            val text = if (isOverLimit) {
+                TextProvider.Resource(R.string.projection_card_status_over, distanceStr)
+            } else {
+                TextProvider.Resource(R.string.projection_card_status_safe, distanceStr)
+            }
+            return StatusCapsuleUiModel.CriticalRisk(message = text, isOverLimit = isOverLimit)
+        }
+
+        // P2: Bluetooth not configured for premium auto-tracking
+        val hasBluetooth = renting?.bluetoothDeviceAddress != null
+        if (isPremium && isAutoTrackingEnabled && !hasBluetooth) {
+            return StatusCapsuleUiModel.BluetoothMissing(
+                message = TextProvider.Resource(R.string.overview_status_capsule_bluetooth)
+            )
+        }
+
+        return null
     }
 
     private fun handlePermissionsResult(granted: Boolean) {
@@ -334,14 +407,28 @@ class OverviewViewModel @Inject constructor(
                     if (prefs.showProjectionBanner) {
                         val lastState = prefs.lastKnownOverLimit
                         if (lastState == null || lastState != currentOverLimit) {
-                            updateState { copy(showProjectionBanner = true) }
+                            val capsule = resolveStatusCapsule(
+                                projection = state.value.projection,
+                                showProjectionBanner = true,
+                                renting = state.value.renting,
+                                isPremium = state.value.isPremium ?: false,
+                                isAutoTrackingEnabled = state.value.autoTrackingEnabled
+                            )
+                            updateState { copy(showProjectionBanner = true, statusCapsule = capsule) }
                             updatePreferencesUseCase(
                                 UpdatePreferencesUseCase.Input(lastKnownOverLimit = currentOverLimit)
                             )
                                 .launchIn(viewModelScope)
                         }
                     } else {
-                        updateState { copy(showProjectionBanner = false) }
+                        val capsule = resolveStatusCapsule(
+                            projection = state.value.projection,
+                            showProjectionBanner = false,
+                            renting = state.value.renting,
+                            isPremium = state.value.isPremium ?: false,
+                            isAutoTrackingEnabled = state.value.autoTrackingEnabled
+                        )
+                        updateState { copy(showProjectionBanner = false, statusCapsule = capsule) }
                     }
                 }
             }.launchIn(viewModelScope)
@@ -495,11 +582,23 @@ class OverviewViewModel @Inject constructor(
                         stopAutoTrackingUseCase(StopAutoTrackingUseCase.Input).launchIn(viewModelScope)
                     }
 
-                    // Re-trigger evaluation of the banner after toggle
+                    // Re-trigger evaluation of the banner and capsule after toggle
                     val isPremium = state.value.isPremium ?: false
                     val hasBluetooth = state.value.renting?.bluetoothDeviceAddress != null
                     val showBluetooth = isPremium && enabled && !hasBluetooth
-                    updateState { copy(showBluetoothSuggestionBanner = showBluetooth) }
+                    val capsule = resolveStatusCapsule(
+                        projection = state.value.projection,
+                        showProjectionBanner = state.value.showProjectionBanner,
+                        renting = state.value.renting,
+                        isPremium = isPremium,
+                        isAutoTrackingEnabled = enabled
+                    )
+                    updateState {
+                        copy(
+                            showBluetoothSuggestionBanner = showBluetooth,
+                            statusCapsule = capsule
+                        )
+                    }
                 }
             }.launchIn(viewModelScope)
     }

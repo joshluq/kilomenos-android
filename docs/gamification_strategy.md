@@ -48,11 +48,11 @@ En lugar de representaciones caricaturescas que trivializan el impacto económic
 
 ---
 
-## 4. Eficiencia Energética y Colchón Financiero
+## 4. Eficiencia Energética y Margen Financiero
 
 Para impulsar la adopción del módulo de gastos (**Fuel & Energy Expenses**), se aplican dinámicas de optimización patrimonial:
 
-### 🛡️ Colchón de Seguridad (Financial Buffer)
+### 🛡️ Margen de Seguridad (Financial Buffer)
 - Premia el registro continuo de repostajes y odómetros mostrando el margen real de kilómetros de seguridad que protegen al conductor frente a penalizaciones contractuales.
 - **Medalla de Volatilidad Óptima:** Reconocimiento mensual al repostar sistemáticamente en estaciones por debajo de la media histórica provincial.
 

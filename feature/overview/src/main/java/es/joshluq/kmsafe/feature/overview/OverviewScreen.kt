@@ -13,7 +13,6 @@ import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -30,8 +29,6 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.pager.HorizontalPager
-import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -43,16 +40,14 @@ import androidx.compose.material.icons.automirrored.filled.HelpOutline
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.AutoAwesome
-import androidx.compose.material.icons.filled.BrokenImage
 import androidx.compose.material.icons.filled.CarRental
-import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.Speed
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.DirectionsCar
 import androidx.compose.material.icons.filled.SyncProblem
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Surface
@@ -68,11 +63,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusDirection
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
@@ -86,14 +77,12 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
+import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavBackStackEntry
-import coil.compose.SubcomposeAsyncImage
-import coil.request.CachePolicy
-import coil.request.ImageRequest
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
@@ -104,12 +93,13 @@ import es.joshluq.canvaskit.components.cards.CanvasKitCardVariant
 import es.joshluq.canvaskit.components.feedback.CanvasKitAlertVariant
 import es.joshluq.canvaskit.components.feedback.CanvasKitBanner
 import es.joshluq.canvaskit.components.feedback.CanvasKitConfirmDialog
-import es.joshluq.canvaskit.components.feedback.CanvasKitSkeleton
 import es.joshluq.canvaskit.components.feedback.CanvasKitStateView
 import es.joshluq.canvaskit.components.inputs.CanvasKitDatePickerField
 import es.joshluq.canvaskit.components.inputs.CanvasKitTextField
 import es.joshluq.canvaskit.components.layout.CanvasKitLoadingScaffold
 import es.joshluq.canvaskit.components.layout.CanvasKitLoadingStrategy
+import es.joshluq.canvaskit.components.menus.CanvasKitDropdownMenu
+import es.joshluq.canvaskit.components.menus.CanvasKitDropdownMenuItem
 import es.joshluq.canvaskit.components.navigation.CanvasKitTopBar
 import es.joshluq.canvaskit.components.sheets.CanvasKitBottomSheet
 import es.joshluq.canvaskit.foundations.theme.CanvasKitTheme
@@ -117,15 +107,16 @@ import es.joshluq.foundationkit.text.asString
 import es.joshluq.kmsafe.core.monetization.components.AdMobBanner
 import es.joshluq.kmsafe.core.ui.components.BrandingLogo
 import es.joshluq.kmsafe.core.ui.util.DateUtils
-import es.joshluq.kmsafe.core.ui.util.NumberFormatter
 import es.joshluq.kmsafe.core.ui.util.safeClick
 import es.joshluq.kmsafe.core.ui.util.safeClickable
 import es.joshluq.kmsafe.domain.model.RentingContract
 import es.joshluq.kmsafe.domain.model.SubscriptionLevel
 import es.joshluq.kmsafe.domain.model.TripProjection
-import es.joshluq.kmsafe.feature.overview.components.TrackingCard
+import es.joshluq.kmsafe.feature.overview.components.AeroRunwayPacingBar
+import es.joshluq.kmsafe.feature.overview.components.CopilotRadarSection
+import es.joshluq.kmsafe.feature.overview.components.FloatingTelemetryPill
+import es.joshluq.kmsafe.feature.overview.components.StatusCapsule
 import es.joshluq.kmsafe.feature.overview.model.MonthlyUsageUiModel
-import kotlin.math.absoluteValue
 import es.joshluq.kmsafe.core.ui.R as CoreR
 
 /**
@@ -201,6 +192,8 @@ fun OverviewScreen(
     val focusManager = LocalFocusManager.current
     val keyboardController = LocalSoftwareKeyboardController.current
 
+    val fineLocationState = rememberPermissionState(Manifest.permission.ACCESS_FINE_LOCATION)
+
     val activityRecognitionState = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
         rememberPermissionState(Manifest.permission.ACTIVITY_RECOGNITION)
     } else {
@@ -217,6 +210,20 @@ fun OverviewScreen(
         rememberPermissionState(Manifest.permission.POST_NOTIFICATIONS)
     } else {
         null
+    }
+
+    val bluetoothPermissionState = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+        rememberPermissionState(Manifest.permission.BLUETOOTH_CONNECT)
+    } else {
+        null
+    }
+
+    val bluetoothPermissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (!isGranted) {
+            onEvent(Event.OnRequestPermissionsRationale)
+        }
     }
 
     val multiplePermissionsLauncher = rememberLauncherForActivityResult(
@@ -245,7 +252,12 @@ fun OverviewScreen(
     CanvasKitLoadingScaffold(
         isLoading = state.isLoading,
         loadingStrategy = loadingStrategy,
-        topBar = { OverviewTopBar(state, onEvent) },
+        topBar = {
+            OverviewTopBar(
+                state = state,
+                onEvent = onEvent
+            )
+        },
         containerColor = CanvasKitTheme.colors.backgroundSecondary,
         contentWindowInsets = WindowInsets(),
         floatingActionButton = {
@@ -279,14 +291,25 @@ fun OverviewScreen(
                 .padding(innerPadding)
         ) {
             Column {
-                val isActivityGranted = activityRecognitionState?.status?.isGranted ?: true
-                val isBackgroundGranted = backgroundLocationState?.status?.isGranted ?: true
-                val isNotificationsGranted = notificationsPermissionState?.status?.isGranted ?: true
+                val isBluetoothGranted = bluetoothPermissionState?.status?.isGranted ?: true
+                val hasBluetoothLinked = !state.renting?.bluetoothDeviceAddress.isNullOrBlank()
+                // Business Rule: The warning should ONLY appear if the vehicle has already linked
+                // Bluetooth but for some reason Bluetooth permission is missing.
+                val isBluetoothPermissionMissing = hasBluetoothLinked && !isBluetoothGranted
+                val hasBluetoothPermissions = !isBluetoothPermissionMissing
 
                 if (state.hasRenting) {
                     RentingState(
                         state = state,
                         onEvent = onEvent,
+                        hasBluetoothPermissions = hasBluetoothPermissions,
+                        onRequestBluetoothPermission = {
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                                bluetoothPermissionLauncher.launch(Manifest.permission.BLUETOOTH_CONNECT)
+                            } else {
+                                onEvent(Event.OnRequestPermissionsRationale)
+                            }
+                        },
                         onStartTracking = {
                             val permissions = mutableListOf(
                                 Manifest.permission.ACCESS_FINE_LOCATION,
@@ -306,18 +329,6 @@ fun OverviewScreen(
                         onHowItWorksClick = { onEvent(Event.OnWelcomeGuideClicked) }
                     )
                 }
-
-                // BUSINESS RULE: If auto-tracking is enabled but Critical Permissions are missing -> Navigate to Permissions Screen
-                LaunchedEffect(
-                    state.autoTrackingEnabled,
-                    isActivityGranted,
-                    isBackgroundGranted,
-                    isNotificationsGranted
-                ) {
-                    if (state.autoTrackingEnabled && (!isActivityGranted || !isBackgroundGranted || !isNotificationsGranted)) {
-                        onEvent(Event.OnRequestPermissionsRationale)
-                    }
-                }
             }
             CanvasKitBanner(
                 modifier = Modifier
@@ -331,53 +342,14 @@ fun OverviewScreen(
                 onDismiss = { onEvent(Event.OnDismissError) }
             )
 
-            // Projection Banner (Warning/Info)
-            state.projection?.let { projection ->
-                val variant = if (projection.isOverLimit) CanvasKitAlertVariant.Warning else CanvasKitAlertVariant.Success
-                CanvasKitBanner(
-                    modifier = Modifier
-                        .align(Alignment.TopCenter)
-                        .padding(horizontal = 0.dp)
-                        .safeClickable { onEvent(Event.OnProjectionBannerClicked) },
-                    variant = variant,
-                    visible = state.showProjectionBanner,
-                    onDismiss = { onEvent(Event.OnDismissProjectionBanner) },
-                    message = {
-                        Text(
-                            text = if (projection.isOverLimit) {
-                                stringResource(
-                                    R.string.projection_card_status_over,
-                                    NumberFormatter.formatDistance(projection.expectedFinalBalance.absoluteValue)
-                                )
-                            } else {
-                                stringResource(
-                                    R.string.projection_card_status_safe,
-                                    NumberFormatter.formatDistance(projection.expectedFinalBalance)
-                                )
-                            },
-                            style = CanvasKitTheme.typography.bodyMedium
-                        )
-                    }
-                )
-            }
-
-            // Bluetooth Suggestion Banner (Premium only)
-            CanvasKitBanner(
+            // Floating Telemetry Pill (Dynamic Island pattern during active recording)
+            FloatingTelemetryPill(
+                isVisible = state.isTracking,
+                distanceMeters = state.trackedDistance,
+                onStopClick = { onEvent(Event.OnStopTrackingClicked) },
                 modifier = Modifier
                     .align(Alignment.TopCenter)
-                    .padding(top = if (state.showProjectionBanner) 64.dp else 0.dp)
-                    .safeClickable {
-                        state.renting?.let { onEvent(Event.OnEditContractClicked(it.id)) }
-                    },
-                variant = CanvasKitAlertVariant.Info,
-                visible = state.showBluetoothSuggestionBanner,
-                onDismiss = { onEvent(Event.OnDismissBluetoothSuggestionBanner) },
-                message = {
-                    Text(
-                        text = stringResource(R.string.overview_bluetooth_suggestion_banner),
-                        style = CanvasKitTheme.typography.bodyMedium
-                    )
-                }
+                    .padding(top = 8.dp)
             )
         }
 
@@ -409,10 +381,16 @@ fun OverviewScreen(
 private fun RentingState(
     state: State,
     onEvent: (Event) -> Unit,
+    hasBluetoothPermissions: Boolean,
+    onRequestBluetoothPermission: () -> Unit,
     onStartTracking: () -> Unit,
     onNavigateToVehicleDetail: (String) -> Unit
 ) {
-    val keyboardController = LocalSoftwareKeyboardController.current
+    val contract = state.renting
+    val daysRemaining = if (contract != null) {
+        val endDate = DateUtils.getContractEndDate(contract.startDate, contract.durationMonths)
+        ((endDate - System.currentTimeMillis()) / (1000L * 60 * 60 * 24)).toInt().coerceAtLeast(0)
+    } else 0
 
     Column(
         modifier = Modifier
@@ -421,337 +399,124 @@ private fun RentingState(
             .verticalScroll(rememberScrollState()),
         verticalArrangement = Arrangement.spacedBy(CanvasKitTheme.spacing.md)
     ) {
+        Spacer(modifier = Modifier.height(2.dp))
+
+        if (state.statusCapsule != null) {
+            StatusCapsule(
+                item = state.statusCapsule,
+                onClick = { onEvent(Event.OnStatusCapsuleClicked(it)) }
+            )
+        }
+
+        if (!state.isTracking && state.trackedDistance > 0) {
+            TripCompletedCard(
+                distanceMeters = state.trackedDistance,
+                onConfirm = { onEvent(Event.OnConfirmTrackedTripClicked) },
+                onCancel = { onEvent(Event.OnCancelTrackedTripClicked) }
+            )
+        }
+
+        AeroRunwayPacingBar(
+            vehicleName = contract?.vehicleName ?: "",
+            timePercentage = state.timePercentage,
+            kmsPercentage = state.kmsPercentage,
+            differencePercentage = state.differencePercentage,
+            balance = state.balance,
+            currentOdometer = state.actualKmsDriven,
+            daysRemaining = daysRemaining,
+            availableVehicles = state.availableVehicles,
+            showVehicleSwitcher = state.showVehicleSwitcher,
+            onVehicleDetailClick = {
+                contract?.let { onNavigateToVehicleDetail(it.id) }
+            },
+            onToggleVehicleSwitcher = {
+                onEvent(Event.OnToggleVehicleSwitcher)
+            },
+            onSwitchVehicle = { vehicleId ->
+                onEvent(Event.OnSwitchVehicleClicked(vehicleId))
+            }
+        )
+
+        CopilotRadarSection(
+            dailyQuotaKm = state.dailyLimit,
+            isPremium = state.isPremium ?: false,
+            isBluetoothConnected = state.isVehicleBluetoothConnected,
+            hasPermissions = hasBluetoothPermissions,
+            onStartTripClick = onStartTracking,
+            onUpgradeClick = { onEvent(Event.OnPremiumUpgradeClicked) },
+            onRequestPermissions = onRequestBluetoothPermission
+        )
+
         if (state.isPremium == false) {
             AdMobBanner(
                 adUnitId = state.adUnitId
             )
         }
-        Spacer(modifier = Modifier.height(2.dp))
 
-        TrackingCard(
-            isTracking = state.isTracking,
-            distanceMeters = state.trackedDistance,
-            onStart = onStartTracking,
-            onStop = {
-                keyboardController?.hide()
-                onEvent(Event.OnStopTrackingClicked)
-            },
-            onConfirm = {
-                keyboardController?.hide()
-                onEvent(Event.OnConfirmTrackedTripClicked)
-            },
-            onCancel = {
-                keyboardController?.hide()
-                onEvent(Event.OnCancelTrackedTripClicked)
-            }
-        )
+        MonthlyBarChart(monthlyUsage = state.monthlyUsage)
 
-        MainBalanceCard(
-            vehicleName = state.renting?.vehicleName ?: "",
-            balance = state.balance,
-            totalKms = state.actualKmsDriven,
-            imageUrl = state.renting?.vehicleImageUrl,
-            isBluetoothConnected = state.isVehicleBluetoothConnected,
-            onEditClick = {
-                keyboardController?.hide()
-                state.renting?.let { onEvent(Event.OnEditContractClicked(it.id)) }
-            },
-            onCardClick = {
-                state.renting?.let { onNavigateToVehicleDetail(it.id) }
-            }
-        )
-
-        TheoreticalLimitsSection(
-            dailyLimit = state.dailyLimit,
-            monthlyLimit = state.monthlyLimit
-        )
-
-        ChartsSection(state)
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(16.dp))
     }
 }
 
 @Composable
-private fun MainBalanceCard(
-    vehicleName: String,
-    balance: Double,
-    totalKms: Double,
-    imageUrl: String? = null,
-    isBluetoothConnected: Boolean = false,
-    onEditClick: () -> Unit,
-    onCardClick: () -> Unit
+private fun TripCompletedCard(
+    distanceMeters: Double,
+    onConfirm: () -> Unit,
+    onCancel: () -> Unit
 ) {
-    val isPositive = balance >= 0
-    val balanceColor = if (isPositive) CanvasKitTheme.colors.brandAccent else CanvasKitTheme.colors.error
-
+    val kms = distanceMeters / 1000.0
     CanvasKitCard(
         modifier = Modifier.fillMaxWidth(),
-        variant = CanvasKitCardVariant.Elevated,
-        onClick = onCardClick,
-        header = {
-            Box(
-                modifier = Modifier.fillMaxWidth(),
-                contentAlignment = Alignment.BottomCenter
-            ) {
-                if (imageUrl != null) {
-                    SubcomposeAsyncImage(
-                        model = ImageRequest.Builder(LocalContext.current)
-                            .data(imageUrl)
-                            .crossfade(true)
-                            .diskCachePolicy(CachePolicy.ENABLED)
-                            .memoryCachePolicy(CachePolicy.ENABLED)
-                            .diskCacheKey(imageUrl)
-                            .build(),
-                        contentDescription = stringResource(CoreR.string.acc_vehicle_info),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(120.dp)
-                            .clip(RoundedCornerShape(16.dp)),
-                        contentScale = ContentScale.Crop,
-                        loading = {
-                            CanvasKitSkeleton(
-                                modifier = Modifier.fillMaxSize()
-                            )
-                        },
-                        error = {
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .background(CanvasKitTheme.colors.error.copy(alpha = 0.05f)),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.BrokenImage,
-                                    contentDescription = null,
-                                    tint = CanvasKitTheme.colors.textSecondary
-                                )
-                            }
-                        }
-                    )
-                }
-
-                IconButton(
-                    onClick = onEditClick,
-                    modifier = Modifier
-                        .align(Alignment.TopEnd)
-                        .padding(4.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Edit,
-                        contentDescription = stringResource(CoreR.string.acc_edit_contract),
-                        tint = if (imageUrl != null) Color.White else CanvasKitTheme.colors.textSecondary,
-                        modifier = Modifier
-                            .size(24.dp)
-                            .background(
-                                color = if (imageUrl != null) Color.Black.copy(alpha = 0.3f) else Color.Transparent,
-                                shape = CircleShape
-                            )
-                            .padding(4.dp)
-                    )
-                }
-
-                if (imageUrl != null) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(24.dp)
-                            .clip(RoundedCornerShape(bottomStart = 16.dp, bottomEnd = 16.dp))
-                            .background(CanvasKitTheme.colors.borderSubtle.copy(alpha = 0.65f))
-                    )
-                }
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 12.dp, start = 8.dp, end = 8.dp),
-                    horizontalArrangement = Arrangement.Center,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = vehicleName.uppercase(),
-                        style = CanvasKitTheme.typography.bodyLarge,
-                        color = CanvasKitTheme.colors.brandAccent,
-                        fontWeight = FontWeight.Bold,
-                        textAlign = TextAlign.Center,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier.weight(1f, fill = false)
-                    )
-
-                    if (isBluetoothConnected) {
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Surface(
-                            color = CanvasKitTheme.colors.brandAccent.copy(alpha = 0.12f),
-                            shape = RoundedCornerShape(12.dp)
-                        ) {
-                            Row(
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(4.dp)
-                            ) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(6.dp)
-                                        .clip(CircleShape)
-                                        .background(CanvasKitTheme.colors.brandAccent)
-                                )
-                                Text(
-                                    text = stringResource(R.string.overview_vehicle_bluetooth_connected),
-                                    style = CanvasKitTheme.typography.labelSmall,
-                                    color = CanvasKitTheme.colors.brandAccent,
-                                    fontWeight = FontWeight.Bold
-                                )
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        footer = {
-            HorizontalDivider(
-                modifier = Modifier.padding(vertical = 16.dp),
-                thickness = 1.dp,
-                color = CanvasKitTheme.colors.textSecondary
-            )
-
+        variant = CanvasKitCardVariant.Elevated
+    ) {
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = stringResource(R.string.overview_total_kms_driven),
-                    style = CanvasKitTheme.typography.bodyLarge,
-                    color = CanvasKitTheme.colors.textSecondary
+                    text = stringResource(R.string.overview_trip_completed_title),
+                    style = CanvasKitTheme.typography.labelSmall,
+                    color = CanvasKitTheme.colors.brandAccent,
+                    letterSpacing = 1.sp
                 )
                 Text(
-                    text = stringResource(CoreR.string.common_km_suffix, NumberFormatter.formatDistance(totalKms)),
+                    text = "${"%.2f".format(kms)} km",
                     style = CanvasKitTheme.typography.headingMedium,
-                    color = CanvasKitTheme.colors.textPrimary,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
+                    color = CanvasKitTheme.colors.textPrimary
                 )
             }
-        }
-    ) {
-        Column(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Icon(
-                imageVector = Icons.Filled.Speed,
-                contentDescription = null,
-                tint = CanvasKitTheme.colors.textSecondary,
-                modifier = Modifier.size(52.dp)
-            )
+
             Text(
-                text = stringResource(R.string.overview_kilometer_balance),
+                text = stringResource(R.string.overview_trip_completed_question),
                 style = CanvasKitTheme.typography.bodyMedium,
                 color = CanvasKitTheme.colors.textSecondary
             )
+
             Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center,
-                modifier = Modifier
-                    .padding(vertical = 8.dp)
-                    .fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
+                CanvasKitButton(
+                    text = stringResource(R.string.tracking_card_cancel_action),
+                    variant = CanvasKitButtonVariant.Ghost,
                     modifier = Modifier.weight(1f),
-                    text = stringResource(
-                        if (isPositive) CoreR.string.common_km_positive_suffix else CoreR.string.common_km_negative_suffix,
-                        balance.absoluteValue.toInt()
-                    ),
-                    style = CanvasKitTheme.typography.displayLarge,
-                    textAlign = TextAlign.Center,
-                    color = balanceColor,
-                    fontWeight = FontWeight.Black
+                    onClick = safeClick { onCancel() }
+                )
+                CanvasKitButton(
+                    text = stringResource(R.string.tracking_card_save_action),
+                    variant = CanvasKitButtonVariant.Primary,
+                    modifier = Modifier.weight(1f),
+                    onClick = safeClick { onConfirm() }
                 )
             }
         }
-    }
-}
-
-@Composable
-private fun TheoreticalLimitsSection(
-    dailyLimit: Double,
-    monthlyLimit: Double
-) {
-    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        Text(
-            text = stringResource(R.string.overview_ideal_limits_title),
-            style = CanvasKitTheme.typography.bodyMedium,
-            color = CanvasKitTheme.colors.textSecondary,
-            fontWeight = FontWeight.Bold,
-            modifier = Modifier.padding(start = 4.dp)
-        )
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            MetricCard(
-                label = stringResource(R.string.overview_daily_limit),
-                value = stringResource(CoreR.string.common_km_suffix, dailyLimit.toInt()),
-                modifier = Modifier.weight(1f)
-            )
-            MetricCard(
-                label = stringResource(R.string.overview_monthly_limit),
-                value = stringResource(CoreR.string.common_km_suffix, monthlyLimit.toInt()),
-                modifier = Modifier.weight(1f)
-            )
-        }
-    }
-}
-
-@Composable
-private fun ChartsSection(state: State) {
-    val pagerState = rememberPagerState(pageCount = { 2 })
-    Column(modifier = Modifier.fillMaxWidth()) {
-        HorizontalPager(
-            state = pagerState,
-            modifier = Modifier.fillMaxWidth(),
-            pageSpacing = 16.dp
-        ) { page ->
-            if (page == 0) {
-                ComparisonChart(state.timePercentage, state.kmsPercentage, state.differencePercentage)
-            } else {
-                MonthlyBarChart(monthlyUsage = state.monthlyUsage)
-            }
-        }
-        Spacer(modifier = Modifier.height(16.dp))
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
-            repeat(2) { iteration ->
-                val color = if (pagerState.currentPage == iteration) CanvasKitTheme.colors.brandAccent else CanvasKitTheme.colors.borderSubtle
-                Box(
-                    modifier = Modifier
-                        .padding(4.dp)
-                        .clip(CircleShape)
-                        .background(color)
-                        .size(8.dp)
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun MetricCard(label: String, value: String, modifier: Modifier = Modifier) {
-    CanvasKitCard(
-        modifier = modifier,
-        variant = CanvasKitCardVariant.Outlined,
-        header = {
-            Text(
-                text = label,
-                style = CanvasKitTheme.typography.labelSmall,
-                color = CanvasKitTheme.colors.textSecondary
-            )
-        }
-    ) {
-        Text(
-            text = value,
-            style = CanvasKitTheme.typography.headingMedium,
-            fontWeight = FontWeight.Bold,
-            color = CanvasKitTheme.colors.textPrimary
-        )
     }
 }
 
@@ -762,7 +527,7 @@ fun MonthlyBarChart(monthlyUsage: List<MonthlyUsageUiModel>) {
     CanvasKitCard(
         modifier = Modifier
             .fillMaxWidth()
-            .height(350.dp),
+            .height(320.dp),
         header = {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -775,7 +540,10 @@ fun MonthlyBarChart(monthlyUsage: List<MonthlyUsageUiModel>) {
                     fontWeight = FontWeight.Bold,
                     color = CanvasKitTheme.colors.textPrimary
                 )
-                IconButton(onClick = { showInfo = true }) {
+                IconButton(
+                    modifier = Modifier.size(24.dp),
+                    onClick = { showInfo = true })
+                {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.HelpOutline,
                         contentDescription = stringResource(CoreR.string.acc_chart_help),
@@ -909,112 +677,6 @@ fun MonthlyBarChart(monthlyUsage: List<MonthlyUsageUiModel>) {
     }
 }
 
-@Composable
-private fun ComparisonChart(timeP: Float, kmsP: Float, diff: Float) {
-    var showInfo by remember { mutableStateOf(false) }
-
-    CanvasKitCard(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(350.dp),
-        header = {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    stringResource(R.string.overview_usage_comparison_title),
-                    style = CanvasKitTheme.typography.labelLarge,
-                    fontWeight = FontWeight.Bold,
-                    color = CanvasKitTheme.colors.textPrimary
-                )
-                IconButton(onClick = { showInfo = true }) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.HelpOutline,
-                        contentDescription = stringResource(CoreR.string.acc_chart_help),
-                        tint = CanvasKitTheme.colors.textSecondary,
-                        modifier = Modifier.size(20.dp)
-                    )
-                }
-            }
-        }
-    ) {
-        Column(
-            modifier = Modifier.padding(24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            Box(
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxWidth(),
-                contentAlignment = Alignment.Center
-            ) {
-                DonutChart(timeP, kmsP)
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Text(
-                        stringResource(CoreR.string.common_percentage_format, diff.absoluteValue),
-                        style = CanvasKitTheme.typography.headingLarge,
-                        color = CanvasKitTheme.colors.textSecondary
-                    )
-                    Text(
-                        stringResource(R.string.overview_difference_label),
-                        style = CanvasKitTheme.typography.bodyMedium,
-                        color = CanvasKitTheme.colors.textSecondary
-                    )
-                }
-            }
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.Center,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                ChartLegendItem(
-                    color = CanvasKitTheme.colors.brandAccent,
-                    label = stringResource(R.string.overview_chart_legend_kms)
-                )
-                Spacer(modifier = Modifier.width(16.dp))
-                ChartLegendItem(
-                    color = CanvasKitTheme.colors.textSecondary,
-                    label = stringResource(R.string.overview_chart_legend_time)
-                )
-            }
-        }
-    }
-
-    if (showInfo) {
-        ChartInfoDialog(
-            content = stringResource(R.string.overview_chart_comparison_info),
-            onDismiss = { showInfo = false }
-        )
-    }
-}
-
-@Composable
-private fun DonutChart(timeP: Float, kmsP: Float) {
-    val backgroundGray = CanvasKitTheme.colors.borderSubtle
-    val gray = CanvasKitTheme.colors.textSecondary
-    val accent = CanvasKitTheme.colors.brandAccent
-    Canvas(Modifier.size(160.dp)) {
-        val sW = 16.dp.toPx()
-        drawArc(backgroundGray, -90f, 360f, false, style = Stroke(sW * 1.5f, cap = StrokeCap.Round))
-        drawArc(gray, -90f, 360f * timeP, false, style = Stroke(sW, cap = StrokeCap.Round))
-        drawArc(
-            accent,
-            -90f,
-            360f * kmsP,
-            false,
-            style = Stroke(sW),
-            size = size.copy(width = size.width - 40f, height = size.height - 40f),
-            topLeft = Offset(20f, 20f)
-        )
-    }
-}
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun UpdateOdometerContent(
@@ -1097,56 +759,14 @@ private fun UpdateOdometerContent(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun OverviewTopBar(state: State, onEvent: (Event) -> Unit) {
+private fun OverviewTopBar(
+    state: State,
+    onEvent: (Event) -> Unit
+) {
     CanvasKitTopBar(
         title = {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.safeClickable(
-                    enabled = state.availableVehicles.size > 1,
-                    onClick = { onEvent(Event.OnToggleVehicleSwitcher) }
-                )
-            ) {
-                BrandingLogo(logoSize = 34.dp)
-
-                if (state.availableVehicles.size > 1) {
-                    Icon(
-                        imageVector = Icons.Default.ArrowDropDown,
-                        contentDescription = stringResource(CoreR.string.acc_open_menu),
-                        tint = CanvasKitTheme.colors.textSecondary,
-                        modifier = Modifier.padding(start = 4.dp)
-                    )
-                }
-
-                DropdownMenu(
-                    expanded = state.showVehicleSwitcher,
-                    onDismissRequest = { onEvent(Event.OnToggleVehicleSwitcher) },
-                    modifier = Modifier.background(CanvasKitTheme.colors.backgroundPrimary)
-                ) {
-                    state.availableVehicles.forEach { vehicle ->
-                        DropdownMenuItem(
-                            text = {
-                                Text(
-                                    text = vehicle.vehicleName,
-                                    style = CanvasKitTheme.typography.bodyLarge,
-                                    color = if (vehicle.isSelected) CanvasKitTheme.colors.brandAccent else CanvasKitTheme.colors.textPrimary,
-                                    fontWeight = if (vehicle.isSelected) FontWeight.Bold else FontWeight.Normal
-                                )
-                            },
-                            onClick = safeClick { onEvent(Event.OnSwitchVehicleClicked(vehicle.id)) },
-                            leadingIcon = {
-                                Icon(
-                                    imageVector = Icons.Default.CarRental,
-                                    contentDescription = null,
-                                    tint = if (vehicle.isSelected) CanvasKitTheme.colors.brandAccent else CanvasKitTheme.colors.textSecondary
-                                )
-                            }
-                        )
-                    }
-                }
-            }
+            BrandingLogo(logoSize = 32.dp, isMinimized = false)
         },
         actions = {
             OverviewTopbarActions(state, onEvent)
