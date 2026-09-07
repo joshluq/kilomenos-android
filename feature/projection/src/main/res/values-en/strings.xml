@@ -27,4 +27,62 @@
     <string name="projection_planner_add_trip">Add trip (+%1$s km)</string>
     <string name="projection_planner_impact_warning">⚠️ This trip brings you closer to your contract limit.</string>
     <string name="projection_planner_impact_safe">Completely affordable trip. Enjoy!</string>
+
+    <!-- 4-Layer Redesign Strings -->
+    <!-- Layer 1: Financial Sentinel -->
+    <string name="projection_sentinel_maturity_date">Maturity: %1$s</string>
+    <string name="projection_sentinel_badge_safe">SAFE ZONE</string>
+    <string name="projection_sentinel_badge_risk">PENALTY RISK</string>
+    <string name="projection_sentinel_surplus_kms">+ %1$s km</string>
+    <string name="projection_sentinel_deficit_kms">- %1$s km</string>
+    <string name="projection_sentinel_excess_title">PROJECTED EXCESS</string>
+    <string name="projection_sentinel_surplus_title">PROJECTED MARGIN</string>
+    <string name="projection_sentinel_penalty_title">ESTIMATED PENALTY</string>
+    <string name="projection_sentinel_safe_penalty">0.00 €</string>
+    <string name="projection_sentinel_odometer_reading">Projected final reading: %1$s / %2$s km</string>
+    <string name="projection_ceiling_bar_ceiling_label">Limit: %1$s km</string>
+    <string name="projection_ceiling_bar_cushion_label">Margin: %1$s km</string>
+    <string name="projection_ceiling_bar_excess_label">+%1$s km excess</string>
+
+    <!-- Layer 2: Runway Timeline -->
+    <string name="projection_runway_title">RUNWAY TIMELINE</string>
+    <string name="projection_runway_collision_warning">You will exhaust your km in: %1$s</string>
+    <string name="projection_runway_collision_months_early">⚠️ %1$d months before contract maturity</string>
+    <string name="projection_runway_safe_description">You have enough mileage allowance to cover the entire contract.</string>
+    <string name="projection_runway_progress_label">%1$d%% Runway exhausted</string>
+    <string name="projection_runway_free_teaser_title">CRITICAL COLLISION DATE</string>
+    <string name="projection_runway_free_teaser_desc">Your habits indicate you will exhaust your km before delivery. Discover the exact month with KmSafe Premium.</string>
+    <string name="projection_runway_free_teaser_cta">Unlock Collision Date</string>
+
+    <!-- Layer 3: Interactive Sandbox -->
+    <string name="projection_sandbox_daily_pace_title">DAILY PACE SIMULATOR</string>
+    <string name="projection_sandbox_preset_minus_20">-20%</string>
+    <string name="projection_sandbox_preset_minus_10">-10%</string>
+    <string name="projection_sandbox_preset_normal">Normal</string>
+    <string name="projection_sandbox_preset_plus_10">+10%</string>
+    <string name="projection_sandbox_preset_plus_20">+20%</string>
+    <string name="projection_sandbox_trip_planner_title">GETAWAY PLANNER</string>
+    <string name="projection_sandbox_preset_getaway">Getaway (350 km)</string>
+    <string name="projection_sandbox_preset_vacation">Summer (1,500 km)</string>
+    <string name="projection_sandbox_preset_custom">Custom</string>
+    <string name="projection_custom_trip_dialog_title">Plan Getaway</string>
+    <string name="projection_custom_trip_name_label">Trip name</string>
+    <string name="projection_custom_trip_name_placeholder">E.g. Trip to Valencia</string>
+    <string name="projection_custom_trip_distance_label">Estimated distance</string>
+    <string name="projection_custom_trip_distance_placeholder">E.g. 450</string>
+    <string name="projection_custom_trip_cancel_button">Cancel</string>
+    <string name="projection_custom_trip_confirm_button">Add Trip</string>
+    <string name="projection_sandbox_trips_stacked_title">Simulated trips (%1$d):</string>
+    <string name="projection_sandbox_remove_trip_content_description">Remove trip %1$s</string>
+    <string name="projection_sandbox_free_trip_limit_notice">Free mode: 1 trial trip simulated. Upgrade to Premium to stack multiple trips.</string>
+    <string name="projection_sandbox_free_upgrade_button">Stack More Trips with Premium</string>
+
+    <!-- Layer 4: Remedial Advisory (Copilot Prescription) -->
+    <string name="projection_advisory_copilot_badge">COPILOT PRESCRIPTION FOR 0.00 €</string>
+    <string name="projection_advisory_remedial_prescription">To neutralize the penalty to 0.00 €, adjust your pace to:</string>
+    <string name="projection_advisory_remedial_rate_highlight">%1$s km/day starting tomorrow</string>
+    <string name="projection_advisory_remedial_already_exceeded">You have exceeded the total contract mileage. Every new kilometer will incur a penalty.</string>
+    <string name="projection_advisory_free_teaser_title">COPILOT PRESCRIPTION</string>
+    <string name="projection_advisory_free_teaser_desc">There is an exact daily pace to reverse this penalty and return the car at 0.00 €. Unlock it with Premium.</string>
+    <string name="projection_advisory_free_teaser_cta">Unlock Remedial Pace</string>
 </resources>

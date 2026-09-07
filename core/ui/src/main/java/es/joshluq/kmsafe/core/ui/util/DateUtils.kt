@@ -19,6 +19,22 @@ object DateUtils {
     }
 
     /**
+     * Formats a timestamp into a short month and year string (e.g., "Nov 2027").
+     */
+    fun formatShortDate(timestamp: Long): String {
+        val sdf = SimpleDateFormat("MMM yyyy", Locale.getDefault())
+        return sdf.format(timestamp).replaceFirstChar { it.uppercase() }
+    }
+
+    /**
+     * Formats a timestamp into a full month and year string (e.g., "Marzo 2027").
+     */
+    fun formatMonthYear(timestamp: Long): String {
+        val sdf = SimpleDateFormat("MMMM yyyy", Locale.getDefault())
+        return sdf.format(timestamp).replaceFirstChar { it.uppercase() }
+    }
+
+    /**
      * Merges the date component of [selectedDateMillis] (usually from a DatePicker at 00:00 UTC)
      * with the current time (hours, minutes, seconds) of the system.
      *

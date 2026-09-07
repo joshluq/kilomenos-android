@@ -80,6 +80,8 @@ import es.joshluq.kmsafe.domain.usecase.GetStationVolatilityUseCase
 import es.joshluq.kmsafe.domain.usecase.GetStationVolatilityUseCaseImpl
 import es.joshluq.kmsafe.domain.usecase.GetTripProjectionUseCase
 import es.joshluq.kmsafe.domain.usecase.GetTripProjectionUseCaseImpl
+import es.joshluq.kmsafe.domain.usecase.SimulateContractProjectionUseCase
+import es.joshluq.kmsafe.domain.usecase.SimulateContractProjectionUseCaseImpl
 import es.joshluq.kmsafe.domain.usecase.GetVehicleByIdUseCase
 import es.joshluq.kmsafe.domain.usecase.GetVehicleByIdUseCaseImpl
 import es.joshluq.kmsafe.domain.usecase.ImportDataUseCase
@@ -206,6 +208,9 @@ abstract class UseCaseModule {
 
     @Binds
     abstract fun bindGetTripProjectionUseCase(impl: GetTripProjectionUseCaseImpl): GetTripProjectionUseCase
+
+    @Binds
+    abstract fun bindSimulateContractProjectionUseCase(impl: SimulateContractProjectionUseCaseImpl): SimulateContractProjectionUseCase
 
     @Binds
     abstract fun bindExportDataUseCase(impl: ExportDataUseCaseImpl): ExportDataUseCase

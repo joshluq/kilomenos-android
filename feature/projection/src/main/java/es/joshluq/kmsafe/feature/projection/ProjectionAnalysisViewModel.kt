@@ -6,12 +6,17 @@ import es.joshluq.analyticskit.domain.model.AnalyticsEvent
 import es.joshluq.analyticskit.sdk.AnalyticskitManager
 import es.joshluq.foundationkit.log.LoggerKit
 import es.joshluq.foundationkit.viewmodel.ScreenViewModel
+import es.joshluq.kmsafe.domain.model.Feature
+import es.joshluq.kmsafe.domain.model.PlannedTrip
 import es.joshluq.kmsafe.domain.model.RentingContract
+import es.joshluq.kmsafe.domain.usecase.CheckFeatureAccessUseCase
 import es.joshluq.kmsafe.domain.usecase.GetOverviewDataUseCase
 import es.joshluq.kmsafe.domain.usecase.GetRentingContractUseCase
 import es.joshluq.kmsafe.domain.usecase.GetTripProjectionUseCase
+import es.joshluq.kmsafe.domain.usecase.SimulateContractProjectionUseCase
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
@@ -19,6 +24,8 @@ class ProjectionAnalysisViewModel @Inject constructor(
     private val getTripProjectionUseCase: GetTripProjectionUseCase,
     private val getOverviewDataUseCase: GetOverviewDataUseCase,
     private val getRentingContractUseCase: GetRentingContractUseCase,
+    private val checkFeatureAccessUseCase: CheckFeatureAccessUseCase,
+    private val simulateContractProjectionUseCase: SimulateContractProjectionUseCase,
     private val analytics: AnalyticskitManager,
     private val logger: LoggerKit
 ) : ScreenViewModel<State, Event, Effect>() {
@@ -30,6 +37,9 @@ class ProjectionAnalysisViewModel @Inject constructor(
 
     override fun createInitialState(): State = State.Empty
 
+    private var currentContract: RentingContract? = null
+    private var actualKmsDrivenSinceStart: Double = 0.0
+
     init {
         observeData()
     }
@@ -37,17 +47,16 @@ class ProjectionAnalysisViewModel @Inject constructor(
     override fun handleEvent(event: Event) {
         logger.d("ProjectionAnalysisViewModel", "Event received: $event")
         when (event) {
-            is Event.OnSimulatedKmChanged -> {
-                updateState { copy(simulatedDailyKm = event.newValue) }
-                recalculateSimulation()
-            }
-            is Event.OnPenaltyPriceChanged -> {
-                updateState { copy(penaltyPricePerKm = event.newValue) }
-                recalculateSimulation()
-            }
-            is Event.OnPlannedTripChanged -> {
-                updateState { copy(plannedTripKms = event.newValue) }
-                recalculateSimulation()
+            is Event.OnSimulatedKmChanged -> handleSimulatedKmChanged(event.newValue)
+            is Event.OnPacePresetSelected -> handlePacePresetSelected(event.multiplier)
+            is Event.OnAddPresetTrip -> handleAddPresetTrip(event.title, event.distanceKms)
+            is Event.OnRemoveTrip -> handleRemoveTrip(event.tripId)
+            is Event.OnCustomTripChanged -> handleCustomTripChanged(event.distanceKms)
+            is Event.OnPenaltyPriceChanged -> handlePenaltyPriceChanged(event.newPrice)
+            Event.OnResetSimulation -> handleResetSimulation()
+            Event.OnUpgradeToPremiumClicked -> {
+                analytics.track(AnalyticsEvent.Custom("projection_upgrade_clicked"))
+                launchEffect(Effect.NavigateToPremiumPaywall)
             }
             Event.OnDismissError -> updateState { copy(error = null) }
         }
@@ -58,71 +67,165 @@ class ProjectionAnalysisViewModel @Inject constructor(
         combine(
             getTripProjectionUseCase(GetTripProjectionUseCase.Input),
             getOverviewDataUseCase(GetOverviewDataUseCase.Input),
-            getRentingContractUseCase(GetRentingContractUseCase.Input)
-        ) { projectionOutput, overviewOutput, rentingOutput ->
+            getRentingContractUseCase(GetRentingContractUseCase.Input),
+            checkFeatureAccessUseCase(CheckFeatureAccessUseCase.Input(Feature.ADVANCED_PROJECTIONS))
+        ) { projectionOutput, overviewOutput, rentingOutput, accessOutput ->
             if (projectionOutput is GetTripProjectionUseCase.Output.Success &&
                 overviewOutput is GetOverviewDataUseCase.Output.Success &&
                 rentingOutput is GetRentingContractUseCase.Output.Success
             ) {
                 val contract = rentingOutput.contract
                 val projection = projectionOutput.projection
+                val isPremium = (accessOutput is CheckFeatureAccessUseCase.Output.Success) && accessOutput.isGranted
+
                 val totalDays = (contract.durationMonths * DAYS_IN_MONTH).toLong()
-                val elapsedDays = ((System.currentTimeMillis() - contract.startDate) / MILLIS_IN_DAY).coerceAtLeast(0)
-                val remainingDays = (totalDays - elapsedDays).coerceAtLeast(0)
+                val elapsedMillis = (System.currentTimeMillis() - contract.startDate).coerceAtLeast(0L)
+                val elapsedDays = (elapsedMillis / MILLIS_IN_DAY.toDouble()).coerceAtLeast(0.0)
+                val remainingDays = (totalDays - elapsedDays.toLong()).coerceAtLeast(0L)
+                val contractEndDate = contract.startDate + (totalDays * MILLIS_IN_DAY)
+
+                val realDailyAvg = projection?.dailyAverage?.toFloat() ?: 0f
+                val defaultPenaltyPrice = contract.excessDistancePrice?.toFloat() ?: 0.05f
+
+                currentContract = contract
+                actualKmsDrivenSinceStart = overviewOutput.actualKmsDrivenSinceStart
+
+                // If simulated daily km is not yet set (initial load), default to real daily avg
+                val initialSimDailyKm = if (state.value.simulatedDailyKm == 0f) realDailyAvg else state.value.simulatedDailyKm
 
                 updateState {
                     copy(
                         isLoading = false,
-                        baselineProjection = projection,
-                        currentRealDailyAverage = projection?.dailyAverage?.toFloat() ?: 0f,
-                        simulatedDailyKm = projection?.dailyAverage?.toFloat() ?: 0f,
-                        simulatedFinalBalance = projection?.expectedFinalBalance ?: 0.0,
-                        daysRemaining = remainingDays,
+                        isPremium = isPremium,
                         totalContractKms = contract.totalKms,
-                        estimatedPenalty = if (projection != null) {
-                            val balanceWithTrip = projection.expectedFinalBalance - plannedTripKms
-                            if (balanceWithTrip < 0) {
-                                balanceWithTrip * -penaltyPricePerKm
-                            } else {
-                                0.0
-                            }
-                        } else {
-                            0.0
-                        },
-                        recommendedDailyKm = if (remainingDays > 0) {
-                            val availableKms = (contract.totalKms + contract.startOdometer - (overviewOutput.actualKmsDrivenSinceStart + contract.startOdometer)).coerceAtLeast(
-                                0.0
-                            )
-                            availableKms / remainingDays
-                        } else {
-                            null
-                        }
+                        startOdometer = contract.startOdometer,
+                        contractEndDateMillis = contractEndDate,
+                        daysRemaining = remainingDays,
+                        penaltyPricePerKm = defaultPenaltyPrice,
+                        baselineProjection = projection,
+                        realDailyAverage = realDailyAvg,
+                        simulatedDailyKm = initialSimDailyKm
                     )
                 }
 
-                actualKmsDrivenSinceStart = overviewOutput.actualKmsDrivenSinceStart
-                contractData = contract
+                executeSimulation()
             }
         }.launchIn(viewModelScope)
     }
 
-    private var actualKmsDrivenSinceStart: Double = 0.0
-    private var contractData: RentingContract? = null
-
-    private fun recalculateSimulation() {
-        val contract = contractData ?: return
-
-        val simulatedAdditionalKms = state.value.simulatedDailyKm * state.value.daysRemaining
-        val totalProjectedKms = actualKmsDrivenSinceStart + contract.startOdometer + simulatedAdditionalKms + state.value.plannedTripKms
-
-        val contractedLimitKms = contract.startOdometer + contract.totalKms
-        val simulatedBalance = contractedLimitKms - totalProjectedKms
-
+    private fun handleSimulatedKmChanged(newValue: Float) {
+        val basePace = state.value.realDailyAverage
+        val multiplier = if (basePace > 0f) newValue / basePace else 1.0f
         updateState {
             copy(
-                simulatedFinalBalance = simulatedBalance,
-                estimatedPenalty = if (simulatedBalance < 0) simulatedBalance * -penaltyPricePerKm else 0.0
+                simulatedDailyKm = newValue,
+                paceMultiplier = multiplier
             )
+        }
+        executeSimulation()
+    }
+
+    private fun handlePacePresetSelected(multiplier: Float) {
+        val basePace = state.value.realDailyAverage
+        val newDailyKm = basePace * multiplier
+        updateState {
+            copy(
+                simulatedDailyKm = newDailyKm,
+                paceMultiplier = multiplier
+            )
+        }
+        executeSimulation()
+    }
+
+    private fun handleAddPresetTrip(title: String, distanceKms: Int) {
+        // Enforce Freemium rule: Free users can only have 1 active planned trip
+        if (!state.value.isPremium && state.value.plannedTrips.isNotEmpty()) {
+            analytics.track(AnalyticsEvent.Custom("projection_multi_trip_blocked_free"))
+            launchEffect(Effect.NavigateToPremiumPaywall)
+            return
+        }
+
+        val newTrip = PlannedTrip(title = title, distanceKms = distanceKms)
+        val updatedTrips = state.value.plannedTrips + newTrip
+        updateState {
+            copy(
+                plannedTrips = updatedTrips,
+                totalPlannedTripsKm = updatedTrips.sumOf { it.distanceKms }
+            )
+        }
+        executeSimulation()
+    }
+
+    private fun handleRemoveTrip(tripId: String) {
+        val updatedTrips = state.value.plannedTrips.filter { it.id != tripId }
+        updateState {
+            copy(
+                plannedTrips = updatedTrips,
+                totalPlannedTripsKm = updatedTrips.sumOf { it.distanceKms }
+            )
+        }
+        executeSimulation()
+    }
+
+    private fun handleCustomTripChanged(distanceKms: Int) {
+        val updatedTrips = if (distanceKms <= 0) {
+            emptyList()
+        } else {
+            listOf(PlannedTrip(title = "Escapada Personalizada", distanceKms = distanceKms))
+        }
+        updateState {
+            copy(
+                plannedTrips = updatedTrips,
+                totalPlannedTripsKm = updatedTrips.sumOf { it.distanceKms }
+            )
+        }
+        executeSimulation()
+    }
+
+    private fun handlePenaltyPriceChanged(newPrice: Float) {
+        updateState { copy(penaltyPricePerKm = newPrice) }
+        executeSimulation()
+    }
+
+    private fun handleResetSimulation() {
+        val realAvg = state.value.realDailyAverage
+        updateState {
+            copy(
+                simulatedDailyKm = realAvg,
+                paceMultiplier = 1.0f,
+                plannedTrips = emptyList(),
+                totalPlannedTripsKm = 0
+            )
+        }
+        executeSimulation()
+    }
+
+    private fun executeSimulation() {
+        val contract = currentContract ?: return
+
+        viewModelScope.launch {
+            val input = SimulateContractProjectionUseCase.Input(
+                contract = contract,
+                actualKmsDrivenSinceStart = actualKmsDrivenSinceStart,
+                simulatedDailyKm = state.value.simulatedDailyKm,
+                plannedTrips = state.value.plannedTrips,
+                penaltyPricePerKm = state.value.penaltyPricePerKm
+            )
+
+            val result = simulateContractProjectionUseCase(input).getOrNull()
+            if (result is SimulateContractProjectionUseCase.Output.Success) {
+                val sim = result.result
+                updateState {
+                    copy(
+                        simulatedProjectedTotalKms = sim.simulatedProjectedTotalKms,
+                        simulatedFinalBalance = sim.simulatedFinalBalance,
+                        estimatedPenalty = sim.estimatedPenalty,
+                        exhaustionDateMillis = sim.exhaustionDateMillis,
+                        monthsAheadOrBehind = sim.monthsAheadOrBehind,
+                        remedialDailyKm = sim.remedialDailyKm
+                    )
+                }
+            }
         }
     }
 }

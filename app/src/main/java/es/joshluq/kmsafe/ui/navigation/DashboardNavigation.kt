@@ -59,7 +59,9 @@ fun DashboardNavigation(
         }
 
         composable<Destination.ProjectionAnalysis> {
-            ProjectionAnalysisRoute()
+            ProjectionAnalysisRoute(
+                onNavigateToUpgrade = onNavigateToPremiumPaywall
+            )
         }
 
         composable<Destination.Expenses> {
