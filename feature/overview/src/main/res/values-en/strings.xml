@@ -36,9 +36,9 @@
     <string name="projection_card_status_over">Risk Sentinel: Drift +%1$s km</string>
 
     <!-- Auto-Tracking Promotion -->
-    <string name="overview_promotion_autotracking_title">SmartCopilot PRO</string>
+    <string name="overview_promotion_autotracking_title">SmartCopilot</string>
     <string name="overview_promotion_autotracking_desc">SmartCopilot detects your drives via Bluetooth and logs every trip in the background.</string>
-    <string name="overview_promotion_autotracking_confirm">Activate PRO</string>
+    <string name="overview_promotion_autotracking_confirm">Activate</string>
     <string name="overview_promotion_autotracking_dismiss">Skip</string>
 
     <!-- Tracking Card -->
@@ -87,7 +87,7 @@
     <string name="overview_radar_record_on_start">Will record on ignition</string>
     <string name="overview_radar_auto_detection_active">Auto-detection active</string>
     <string name="overview_radar_start_trip_button">Start Trip</string>
-    <string name="overview_radar_auto_with_pro">Auto with PRO</string>
+    <string name="overview_radar_auto_with_pro">Auto with Premium</string>
     <string name="overview_radar_permissions_required">No permission</string>
     <string name="overview_radar_grant_permissions_desc">Tap to enable</string>
     <string name="overview_radar_autotracking_disabled">Disabled</string>

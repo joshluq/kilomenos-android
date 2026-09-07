@@ -36,9 +36,9 @@
     <string name="projection_card_status_over">Risk Sentinel: Desvío +%1$s km</string>
 
     <!-- Auto-Tracking Promotion -->
-    <string name="overview_promotion_autotracking_title">SmartCopilot PRO</string>
+    <string name="overview_promotion_autotracking_title">SmartCopilot</string>
     <string name="overview_promotion_autotracking_desc">SmartCopilot detecta tus trayectos por Bluetooth y registra cada viaje en segundo plano.</string>
-    <string name="overview_promotion_autotracking_confirm">Activar PRO</string>
+    <string name="overview_promotion_autotracking_confirm">Activar</string>
     <string name="overview_promotion_autotracking_dismiss">Omitir</string>
 
     <!-- Tracking Card -->
@@ -87,7 +87,7 @@
     <string name="overview_radar_record_on_start">Grabará al arrancar</string>
     <string name="overview_radar_auto_detection_active">Auto-detección activa</string>
     <string name="overview_radar_start_trip_button">Iniciar Viaje</string>
-    <string name="overview_radar_auto_with_pro">Auto con PRO</string>
+    <string name="overview_radar_auto_with_pro">Auto con Premium</string>
     <string name="overview_radar_permissions_required">Sin permiso</string>
     <string name="overview_radar_grant_permissions_desc">Toca para activar</string>
     <string name="overview_radar_autotracking_disabled">Desactivado</string>

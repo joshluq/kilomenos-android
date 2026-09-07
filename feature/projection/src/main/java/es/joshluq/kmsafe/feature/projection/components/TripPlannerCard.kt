@@ -208,7 +208,7 @@ fun TripPlannerCard(
                                 variant = CanvasKitButtonVariant.Primary
                             ) { contentColor ->
                                 Text(
-                                    text = "PRO",
+                                    text = "Premium",
                                     style = CanvasKitTheme.typography.labelSmall,
                                     fontWeight = FontWeight.Bold,
                                     color = contentColor
