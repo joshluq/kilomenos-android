@@ -1,11 +1,20 @@
 package es.joshluq.kmsafe.ui.navigation
 
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Modifier
 import androidx.navigation.NavBackStackEntry
-import androidx.navigation.NavHostController
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
+import androidx.navigation3.runtime.NavEntry
+import androidx.navigation3.ui.NavDisplay
 import es.joshluq.kmsafe.core.navigation.Destination
+import es.joshluq.kmsafe.feature.dashboard.DashboardTab
 import es.joshluq.kmsafe.feature.expenses.ExpensesRoute
 import es.joshluq.kmsafe.feature.history.HistoryRoute
 import es.joshluq.kmsafe.feature.overview.OverviewRoute
@@ -14,7 +23,8 @@ import es.joshluq.kmsafe.feature.projection.ProjectionAnalysisRoute
 
 @Composable
 fun DashboardNavigation(
-    navController: NavHostController,
+    selectedTab: DashboardTab,
+    onSelectTab: (DashboardTab) -> Unit,
     onNavigateToOnboarding: (String?, Boolean) -> Unit,
     onNavigateToVehicles: () -> Unit,
     onNavigateToDataManagement: () -> Unit,
@@ -30,57 +40,84 @@ fun DashboardNavigation(
     onNavigateToVehicleDetail: (String) -> Unit,
     backStackEntry: NavBackStackEntry
 ) {
-    NavHost(
-        navController = navController,
-        startDestination = Destination.Overview
-    ) {
-        composable<Destination.Overview> {
-            OverviewRoute(
-                onNavigateToOnboarding = onNavigateToOnboarding,
-                onNavigateToProjection = {
-                    navController.navigate(Destination.ProjectionAnalysis) {
-                        launchSingleTop = true
-                    }
-                },
-                onNavigateToPermissions = onNavigateToPermissions,
-                onNavigateToAssistedPermissions = onNavigateToAssistedPermissions,
-                onNavigateToPremiumPaywall = onNavigateToPremiumPaywall,
-                onNavigateToPreferences = onNavigateToPreferences,
-                onNavigateToWelcomeDiscovery = { onNavigateToWelcomeDiscovery(false) },
-                onNavigateToVehicleDetail = onNavigateToVehicleDetail,
-                backStackEntry = backStackEntry
-            )
-        }
-
-        composable<Destination.History> {
-            HistoryRoute(
-                onNavigateToDetail = onNavigateToRecordDetail
-            )
-        }
-
-        composable<Destination.ProjectionAnalysis> {
-            ProjectionAnalysisRoute(
-                onNavigateToUpgrade = onNavigateToPremiumPaywall
-            )
-        }
-
-        composable<Destination.Expenses> {
-            ExpensesRoute(
-                onNavigateToUpgrade = onNavigateToPremiumPaywall,
-                onNavigateToStations = onNavigateToStations,
-                onNavigateToStationDetail = onNavigateToStationDetail
-            )
-        }
-
-        composable<Destination.Profile> {
-            ProfileRoute(
-                onNavigateToDataManagement = onNavigateToDataManagement,
-                onNavigateToVehicles = onNavigateToVehicles,
-                onNavigateToPreferences = onNavigateToPreferences,
-                onNavigateToLogin = onNavigateToLogin,
-                onNavigateToPremiumPaywall = onNavigateToPremiumPaywall,
-                onNavigateToWelcomeDiscovery = { onNavigateToWelcomeDiscovery(true) }
-            )
+    val destinationForTab: (DashboardTab) -> Destination = { tab ->
+        when (tab) {
+            DashboardTab.OVERVIEW -> Destination.Overview
+            DashboardTab.HISTORY -> Destination.History
+            DashboardTab.EXPENSES -> Destination.Expenses()
+            DashboardTab.PROJECTION -> Destination.ProjectionAnalysis
+            DashboardTab.PROFILE -> Destination.Profile
         }
     }
+
+    val backStack = remember { mutableStateListOf<Destination>(destinationForTab(selectedTab)) }
+
+    LaunchedEffect(selectedTab) {
+        val targetDestination = destinationForTab(selectedTab)
+        if (backStack.lastOrNull() != targetDestination) {
+            backStack.clear()
+            backStack.add(targetDestination)
+        }
+    }
+
+    NavDisplay(
+        backStack = backStack,
+        onBack = {
+            if (selectedTab != DashboardTab.OVERVIEW) {
+                onSelectTab(DashboardTab.OVERVIEW)
+            }
+        },
+        modifier = Modifier.fillMaxSize(),
+        transitionSpec = {
+            fadeIn(animationSpec = tween(150)) togetherWith fadeOut(animationSpec = tween(100))
+        },
+        popTransitionSpec = {
+            fadeIn(animationSpec = tween(150)) togetherWith fadeOut(animationSpec = tween(100))
+        },
+        entryProvider = { key ->
+            when (key) {
+                Destination.Overview -> NavEntry(key) {
+                    OverviewRoute(
+                        onNavigateToOnboarding = onNavigateToOnboarding,
+                        onNavigateToProjection = { onSelectTab(DashboardTab.PROJECTION) },
+                        onNavigateToPermissions = onNavigateToPermissions,
+                        onNavigateToAssistedPermissions = onNavigateToAssistedPermissions,
+                        onNavigateToPremiumPaywall = onNavigateToPremiumPaywall,
+                        onNavigateToPreferences = onNavigateToPreferences,
+                        onNavigateToWelcomeDiscovery = { onNavigateToWelcomeDiscovery(false) },
+                        onNavigateToVehicleDetail = onNavigateToVehicleDetail,
+                        backStackEntry = backStackEntry
+                    )
+                }
+                Destination.History -> NavEntry(key) {
+                    HistoryRoute(
+                        onNavigateToDetail = onNavigateToRecordDetail
+                    )
+                }
+                Destination.ProjectionAnalysis -> NavEntry(key) {
+                    ProjectionAnalysisRoute(
+                        onNavigateToUpgrade = onNavigateToPremiumPaywall
+                    )
+                }
+                is Destination.Expenses -> NavEntry(key) {
+                    ExpensesRoute(
+                        onNavigateToUpgrade = onNavigateToPremiumPaywall,
+                        onNavigateToStations = onNavigateToStations,
+                        onNavigateToStationDetail = onNavigateToStationDetail
+                    )
+                }
+                Destination.Profile -> NavEntry(key) {
+                    ProfileRoute(
+                        onNavigateToDataManagement = onNavigateToDataManagement,
+                        onNavigateToVehicles = onNavigateToVehicles,
+                        onNavigateToPreferences = onNavigateToPreferences,
+                        onNavigateToLogin = onNavigateToLogin,
+                        onNavigateToPremiumPaywall = onNavigateToPremiumPaywall,
+                        onNavigateToWelcomeDiscovery = { onNavigateToWelcomeDiscovery(true) }
+                    )
+                }
+                else -> NavEntry(key) { }
+            }
+        }
+    )
 }

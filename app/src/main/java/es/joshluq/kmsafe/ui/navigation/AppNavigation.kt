@@ -140,9 +140,10 @@ fun AppNavigation(
 
         composable<Destination.Dashboard> { backStackEntry ->
             DashboardRoute(
-                navigationContent = { dashboardNavController ->
+                navigationContent = { selectedTab, onSelectTab ->
                     DashboardNavigation(
-                        navController = dashboardNavController,
+                        selectedTab = selectedTab,
+                        onSelectTab = onSelectTab,
                         onNavigateToOnboarding = { vehicleId, isEdit ->
                             if (isEdit && vehicleId != null) {
                                 navController.navigate(Destination.EditContract(vehicleId))

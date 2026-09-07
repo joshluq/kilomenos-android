@@ -17,37 +17,28 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.navigation.NavDestination.Companion.hasRoute
-import androidx.navigation.NavGraph.Companion.findStartDestination
-import androidx.navigation.NavHostController
-import androidx.navigation.compose.currentBackStackEntryAsState
-import androidx.navigation.compose.rememberNavController
 import es.joshluq.canvaskit.components.navigation.CanvasKitBottomBar
 import es.joshluq.canvaskit.components.navigation.CanvasKitBottomBarItem
 import es.joshluq.canvaskit.foundations.theme.CanvasKitTheme
 import es.joshluq.foundationkit.text.TextProvider
 import es.joshluq.foundationkit.text.asString
-import es.joshluq.kmsafe.core.navigation.Destination
 import es.joshluq.kmsafe.core.ui.R as CoreR
 import es.joshluq.kmsafe.core.ui.util.safeClick
-import kotlinx.coroutines.flow.Flow
 
 /**
  * Route Composable connecting the ViewModel to the DashboardScreen.
  */
 @Composable
 fun DashboardRoute(
-    navigationContent: @Composable (NavHostController) -> Unit
+    navigationContent: @Composable (selectedTab: DashboardTab, onSelectTab: (DashboardTab) -> Unit) -> Unit
 ) {
     val viewModel: DashboardViewModel = hiltViewModel()
     val state = viewModel.state.collectAsStateWithLifecycle()
     DashboardScreen(
         state = state.value,
-        effects = viewModel.effects,
         onEvent = viewModel::sendEvent,
         navigationContent = navigationContent
     )
@@ -60,32 +51,9 @@ fun DashboardRoute(
 @Composable
 fun DashboardScreen(
     state: State,
-    effects: Flow<Effect>? = null,
     onEvent: (Event) -> Unit,
-    navigationContent: @Composable (NavHostController) -> Unit
+    navigationContent: @Composable (selectedTab: DashboardTab, onSelectTab: (DashboardTab) -> Unit) -> Unit
 ) {
-    val navController = rememberNavController()
-    val navBackStackEntry = navController.currentBackStackEntryAsState()
-    val currentDestination = navBackStackEntry.value?.destination
-
-    LaunchedEffect(currentDestination) {
-        currentDestination?.let { dest ->
-            val tab = when {
-                dest.hasRoute<Destination.Overview>() -> DashboardTab.OVERVIEW
-                dest.hasRoute<Destination.History>() -> DashboardTab.HISTORY
-                dest.hasRoute(Destination.Expenses::class) -> DashboardTab.EXPENSES
-                dest.hasRoute<Destination.ProjectionAnalysis>() -> DashboardTab.PROJECTION
-                dest.hasRoute<Destination.Profile>() -> DashboardTab.PROFILE
-                else -> null
-            }
-            tab?.let { onEvent(Event.OnTabSynced(it)) }
-        }
-    }
-
-    effects?.let {
-        navController.HandleEffects(effects)
-    }
-
     BackHandler(enabled = state.selectedTab != DashboardTab.OVERVIEW) {
         onEvent(Event.OnTabSelected(DashboardTab.OVERVIEW))
     }
@@ -102,31 +70,8 @@ fun DashboardScreen(
                 .fillMaxSize()
                 .padding(innerPadding)
         ) {
-            navigationContent(navController)
-        }
-    }
-}
-
-@Composable
-private fun NavHostController.HandleEffects(
-    effects: Flow<Effect>
-) {
-    LaunchedEffect(effects) {
-        effects.collect { effect ->
-            when (effect) {
-                is Effect.NavigateToTab -> {
-                    val route = when (effect.tab) {
-                        DashboardTab.OVERVIEW -> Destination.Overview
-                        DashboardTab.HISTORY -> Destination.History
-                        DashboardTab.EXPENSES -> Destination.Expenses()
-                        DashboardTab.PROJECTION -> Destination.ProjectionAnalysis
-                        DashboardTab.PROFILE -> Destination.Profile
-                    }
-                    navigate(route) {
-                        popUpTo(graph.findStartDestination().id)
-                        launchSingleTop = true
-                    }
-                }
+            navigationContent(state.selectedTab) { tab ->
+                onEvent(Event.OnTabSelected(tab))
             }
         }
     }
