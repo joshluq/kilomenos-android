@@ -111,21 +111,27 @@ class LocationTrackingService : Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        logger.d("LocationService", "onStartCommand received. Action: ${intent?.action}")
+        val action = intent?.action
+        logger.d("LocationService", "onStartCommand received. Action: $action")
 
-        // 1. Handle explicit UI actions
-        when (intent?.action) {
-            ACTION_START -> {
-                startTracking()
-                return START_STICKY
-            }
-            ACTION_STOP -> {
-                stopTracking()
-                return START_NOT_STICKY
-            }
+        // 1. Handle explicit stop commands immediately without promoting to foreground
+        if (action == ACTION_STOP) {
+            stopTracking()
+            return START_NOT_STICKY
         }
 
-        // 2. Handle Intelligent Transitions from ActivityTransitionReceiver
+        // 2. CRITICAL ANDROID CONTRACT:
+        // When started via context.startForegroundService(), we MUST call startForeground()
+        // synchronously on the main thread within seconds. Never defer behind coroutines or I/O.
+        showValidationNotification()
+
+        // 3. Handle explicit UI manual start
+        if (action == ACTION_START) {
+            startTracking()
+            return START_STICKY
+        }
+
+        // 4. Handle Intelligent Transitions from ActivityTransitionReceiver
         val transitionResult = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             intent?.getParcelableExtra("EXTRA_TRANSITION_RESULT", ActivityTransitionResult::class.java)
         } else {
@@ -135,10 +141,15 @@ class LocationTrackingService : Service() {
 
         if (transitionResult != null) {
             logger.i("LocationService", "ActivityTransitionResult received. Processing events...")
-            transitionResult.transitionEvents.forEach { event ->
-                if (event.activityType == DetectedActivity.IN_VEHICLE) {
-                    processTransition(event.transitionType)
-                }
+            val lastInVehicleEvent = transitionResult.transitionEvents
+                .filter { it.activityType == DetectedActivity.IN_VEHICLE }
+                .maxByOrNull { it.elapsedRealTimeNanos }
+
+            if (lastInVehicleEvent != null) {
+                processTransition(lastInVehicleEvent.transitionType)
+            } else {
+                logger.d("LocationService", "No IN_VEHICLE transition in result. Stopping service gracefully.")
+                stopTrackingGracefully()
             }
         }
 
@@ -156,18 +167,15 @@ class LocationTrackingService : Service() {
 
     private fun startAutoValidationAndTracking() {
         serviceScope.launch {
-            // A. Show "Validation" notification immediately to comply with Android background rules
-            showValidationNotification()
-
             try {
-                // B. Run business validations
+                // Run business validations
                 logger.d("LocationService", "Starting autostart validation flow...")
 
                 // 1. Check Access
                 val access = checkFeatureAccessUseCase(CheckFeatureAccessUseCase.Input(Feature.AUTO_TRACKING)).first()
                 if (access !is CheckFeatureAccessUseCase.Output.Success || !access.isGranted) {
                     logger.w("LocationService", "Validation failed: User has no Premium access.")
-                    stopSelf()
+                    stopTrackingGracefully()
                     return@launch
                 }
 
@@ -186,27 +194,28 @@ class LocationTrackingService : Service() {
                     if (mac != null) {
                         if (!isBluetoothDeviceConnected(this@LocationTrackingService, mac)) {
                             logger.i("LocationService", "Validation failed: Vehicle Bluetooth ($mac) not found.")
-                            stopSelf()
+                            stopTrackingGracefully()
                             return@launch
                         }
                     }
                 } else {
                     logger.w("LocationService", "Validation failed: No active vehicle selected.")
-                    stopSelf()
+                    stopTrackingGracefully()
                     return@launch
                 }
 
-                // C. Validations passed! Start GPS capture
+                // Validations passed! Start GPS capture
                 logger.i("LocationService", "VALIDATIONS PASSED. Switching to active tracking.")
                 startTracking()
             } catch (e: Exception) {
                 logger.e("LocationService", "Error during autostart validation", e)
-                stopSelf()
+                stopTrackingGracefully()
             }
         }
     }
 
     private fun showValidationNotification() {
+        createNotificationChannel()
         val notification = NotificationCompat.Builder(this, CHANNEL_ID)
             .setContentTitle(getString(R.string.tracking_app_name))
             .setContentText(getString(R.string.tracking_validation_content))
@@ -215,10 +224,26 @@ class LocationTrackingService : Service() {
             .setPriority(NotificationCompat.PRIORITY_LOW)
             .build()
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            startForeground(NOTIFICATION_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION)
-        } else {
-            startForeground(NOTIFICATION_ID, notification)
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                startForeground(NOTIFICATION_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION)
+            } else {
+                startForeground(NOTIFICATION_ID, notification)
+            }
+        } catch (e: Exception) {
+            logger.e("LocationService", "Error calling startForeground: ${e.message}", e)
+        }
+    }
+
+    private fun stopTrackingGracefully() {
+        try {
+            stopForeground(STOP_FOREGROUND_REMOVE)
+            val notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
+            notificationManager.cancel(NOTIFICATION_ID)
+        } catch (e: Exception) {
+            logger.e("LocationService", "Error stopping foreground: ${e.message}", e)
+        } finally {
+            stopSelf()
         }
     }
 
@@ -273,19 +298,24 @@ class LocationTrackingService : Service() {
 
     private fun startTracking() {
         logger.i("LocationService", "startTracking initiated")
-        serviceScope.launch {
-            val isAlreadyTracking = trackingRepository.isTracking.first()
-
+        // Update notification synchronously on main thread to show active trip tracking
+        val notification = createNotification(0.0)
+        try {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 startForeground(
                     NOTIFICATION_ID,
-                    createNotification(0.0),
+                    notification,
                     ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION
                 )
             } else {
-                startForeground(NOTIFICATION_ID, createNotification(0.0))
+                startForeground(NOTIFICATION_ID, notification)
             }
+        } catch (e: Exception) {
+            logger.e("LocationService", "Error updating foreground notification: ${e.message}", e)
+        }
 
+        serviceScope.launch {
+            val isAlreadyTracking = trackingRepository.isTracking.first()
             if (!isAlreadyTracking) {
                 trackingRepository.startTracking()
             }
@@ -303,7 +333,7 @@ class LocationTrackingService : Service() {
                 )
             } catch (e: SecurityException) {
                 logger.e("LocationService", "Permission missing for tracking", e)
-                stopSelf()
+                stopTrackingGracefully()
             }
         }
     }
@@ -360,15 +390,21 @@ class LocationTrackingService : Service() {
 
     private fun stopTracking() {
         logger.i("LocationService", "Stopping tracking process...")
-        fusedLocationClient.removeLocationUpdates(locationCallback)
+        try {
+            fusedLocationClient.removeLocationUpdates(locationCallback)
+        } catch (e: Exception) {
+            logger.e("LocationService", "Error removing location updates", e)
+        }
         distanceJob?.cancel()
 
         serviceScope.launch {
-            trackingRepository.stopTracking()
-            stopForeground(STOP_FOREGROUND_REMOVE)
-            val notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
-            notificationManager.cancel(NOTIFICATION_ID)
-            stopSelf()
+            try {
+                trackingRepository.stopTracking()
+            } catch (e: Exception) {
+                logger.e("LocationService", "Error stopping tracking repository", e)
+            } finally {
+                stopTrackingGracefully()
+            }
         }
     }
 

@@ -8,9 +8,9 @@ The auto-tracking system combines **Google Play Services Activity Recognition AP
 
 ### Components:
 - **`AutoTrackingManager`**: Registers and unregisters for Google Play Activity Recognition transitions (`IN_VEHICLE`).
-- **`ActivityTransitionReceiver`**: Synchronous `BroadcastReceiver` that wakes up the app upon activity detection.
+- **`ActivityTransitionReceiver`**: Synchronous `BroadcastReceiver` that wakes up the app upon activity detection (`ENTER` invokes `context.startForegroundService()`, while `EXIT` dispatches `ACTION_STOP` via standard `context.startService()`).
 - **`BluetoothConnectionReceiver`**: Synchronous `BroadcastReceiver` listening to `BluetoothDevice.ACTION_ACL_CONNECTED` and `ACTION_ACL_DISCONNECTED` to manage immediate feedback and fast-path auto-tracking.
-- **`LocationTrackingService`**: `Foreground Service` (type `location`) that validates contract entitlements and records GPS points.
+- **`LocationTrackingService`**: `Foreground Service` (type `location`) that promotes itself immediately to foreground on the Main Thread to satisfy OS timing constraints, then asynchronously validates contract entitlements and records GPS points.
 - **`TrackingRepository`**: Manages the persistent state of the active trip and distance accumulation.
 - **UI Indicators**: Live connection badges in `OverviewScreen` (vehicle header) and `BluetoothDevicePicker` (paired devices list).
 
@@ -38,30 +38,41 @@ sequenceDiagram
         end
     end
 
-    alt Activity Recognition Transition
+    alt Activity Recognition Transition: Vehicle ENTER
         GPS->>ATR: Transition Event (IN_VEHICLE ENTER)
-        Note over ATR: Synchronous wake-up
-        ATR->>LTS: Start Service (Intent with Result)
+        Note over ATR: Synchronous wake-up in onReceive
+        ATR->>LTS: context.startForegroundService(ACTION_START)
         activate LTS
-        LTS->>LTS: showValidationNotification()
-        Note right of LTS: "Validating trip conditions..."
+        Note over LTS: MAIN THREAD (Synchronous)
+        LTS->>LTS: showValidationNotification() -> startForeground()
+        Note right of LTS: "Validating trip conditions..." (Satisfies 5s watchdog)
         
-        LTS->>DB: Check Premium Access
-        LTS->>DB: Check Active Contract
+        Note over LTS: IO THREAD (Async Coroutine)
+        LTS->>DB: Check Premium Access (Triple Check 1)
+        LTS->>DB: Check Active Contract (Triple Check 2)
         
-        alt Has Linked Bluetooth
+        alt Has Linked Bluetooth (Triple Check 3)
             LTS->>Car: isBluetoothDeviceConnected(MAC)
             Car-->>LTS: Connection Status
         end
 
         alt Validations Passed
-            LTS->>LTS: startTracking()
+            LTS->>LTS: startTracking() -> promote to Trip in Progress
             Note right of LTS: "Trip in progress..."
             LTS->>GPS: Request Location Updates
         else Validations Failed
-            LTS->>LTS: stopSelf()
+            LTS->>LTS: stopTrackingGracefully()
+            Note right of LTS: stopForeground(STOP_FOREGROUND_REMOVE) & stopSelf()
             deactivate LTS
         end
+    end
+
+    alt Activity Recognition Transition: Vehicle EXIT
+        GPS->>ATR: Transition Event (IN_VEHICLE EXIT)
+        ATR->>LTS: context.startService(ACTION_STOP)
+        Note over ATR: NEVER use startForegroundService for EXIT
+        LTS->>LTS: stopTrackingGracefully()
+        deactivate LTS
     end
 ```
 
@@ -157,9 +168,19 @@ Before recording any GPS point, `LocationTrackingService` performs three validat
 - **Speed Filter**: `LocationTrackingService` ignores updates if speed is below `1.5 m/s` (~5.4 km/h).
 - **Accuracy Filter**: GPS points with accuracy > `30m` are discarded to prevent "jumpy" routes in urban canyons.
 
+### Error: `ForegroundServiceDidNotStartInTimeException`
+- **Context**: Thrown by the Android OS (`android.app.RemoteServiceException`) when `Context.startForegroundService()` is called, but the service fails to call `Service.startForeground()` within the mandatory 5-second window.
+- **Root Causes**:
+  1. **Calling `startForegroundService` on Vehicle EXIT**: When `ActivityTransitionReceiver` received an `EXIT` event, calling `startForegroundService()` followed by an immediate `stopTracking()` -> `stopSelf()` without `startForeground()` triggered a fatal exception on Android 8.0+.
+  2. **Background / Deferred Coroutine Latency**: Initiating `startForeground()` from inside an asynchronous coroutine (`serviceScope.launch(Dispatchers.IO)`) was susceptible to thread pool exhaustion and file lock contention during app startup (e.g. Firebase, Room, DataStore), delaying the foreground promotion past 5 seconds.
+- **Architectural Fix**:
+  1. **Synchronous Main-Thread Promotion**: In `LocationTrackingService.onStartCommand()`, `showValidationNotification()` is called immediately on the Main Thread outside any coroutine, immediately satisfying the Android watchdog.
+  2. **Asymmetric Lifecycle Contract**: Only `IN_VEHICLE ENTER` transitions invoke `context.startForegroundService()`. The `EXIT` transition strictly uses `context.startService(ACTION_STOP)` since stopping does not require elevated foreground priority.
+  3. **Graceful Teardown (`stopTrackingGracefully`)**: If validations fail or when an active trip stops, the service explicitly removes foreground status (`stopForeground(STOP_FOREGROUND_REMOVE)`), dismisses notifications, and then calls `stopSelf()`.
+
 ### Error: `ForegroundServiceStartNotAllowedException`
-- **Context**: This happens if the `Receiver` takes too long to start the service or if it's started from an asynchronous block (coroutine).
-- **Fix**: The code currently uses an explicit, synchronous `context.startForegroundService()` call immediately in `onReceive`.
+- **Context**: This happens if the `Receiver` takes too long to start the service or if it's started from an asynchronous block (coroutine) outside the allowed foreground service start window.
+- **Fix**: Broadcast receivers (`ActivityTransitionReceiver`, `BluetoothConnectionReceiver`) invoke `context.startForegroundService()` synchronously and directly inside `onReceive()`.
 
 ---
 

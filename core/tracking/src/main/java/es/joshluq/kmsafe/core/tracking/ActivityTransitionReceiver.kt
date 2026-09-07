@@ -4,7 +4,9 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.os.Build
+import com.google.android.gms.location.ActivityTransition
 import com.google.android.gms.location.ActivityTransitionResult
+import com.google.android.gms.location.DetectedActivity
 import dagger.hilt.android.AndroidEntryPoint
 import es.joshluq.foundationkit.log.LoggerKit
 import javax.inject.Inject
@@ -28,18 +30,43 @@ class ActivityTransitionReceiver : BroadcastReceiver() {
 
         logger.d("ActivityReceiver", "onReceive: $action")
 
-        // Standard Activity Transition Action (from Google Play Services)
         val isTransitionAction = action == "es.joshluq.kmsafe.core.tracking.ActivityTransitionReceiver"
 
         if (isTransitionAction && ActivityTransitionResult.hasResult(intent)) {
-            logger.i("ActivityReceiver", "Transition result received. Forwarding to Service...")
-
             val result = ActivityTransitionResult.extractResult(intent)
-            val serviceIntent = Intent(context, LocationTrackingService::class.java).apply {
-                putExtra("EXTRA_TRANSITION_RESULT", result)
-            }
+            if (result != null) {
+                logger.i("ActivityReceiver", "Transition result received. Analyzing events...")
 
-            startTrackingService(context, serviceIntent)
+                val lastInVehicleEvent = result.transitionEvents
+                    .filter { it.activityType == DetectedActivity.IN_VEHICLE }
+                    .maxByOrNull { it.elapsedRealTimeNanos }
+
+                if (lastInVehicleEvent != null) {
+                    when (lastInVehicleEvent.transitionType) {
+                        ActivityTransition.ACTIVITY_TRANSITION_ENTER -> {
+                            logger.i("ActivityReceiver", "Latest IN_VEHICLE transition is ENTER. Starting tracking service...")
+                            val serviceIntent = Intent(context, LocationTrackingService::class.java).apply {
+                                putExtra("EXTRA_TRANSITION_RESULT", result)
+                            }
+                            startTrackingService(context, serviceIntent)
+                        }
+                        ActivityTransition.ACTIVITY_TRANSITION_EXIT -> {
+                            logger.i("ActivityReceiver", "Latest IN_VEHICLE transition is EXIT. Stopping service via startService...")
+                            val stopIntent = Intent(context, LocationTrackingService::class.java).apply {
+                                this.action = LocationTrackingService.ACTION_STOP
+                            }
+                            // Crucial: Use standard startService for stopping, NEVER startForegroundService
+                            try {
+                                context.startService(stopIntent)
+                            } catch (e: Exception) {
+                                logger.e("ActivityReceiver", "Failed to send stop command to service: ${e.message}")
+                            }
+                        }
+                    }
+                } else {
+                    logger.d("ActivityReceiver", "No IN_VEHICLE transition in result. Ignoring.")
+                }
+            }
         }
 
         pendingResult.finish()
