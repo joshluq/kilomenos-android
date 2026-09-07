@@ -32,6 +32,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 
 /**
@@ -242,31 +243,19 @@ class AuthRepositoryImpl @Inject constructor(
         return sessionDataSource.getSessionState()
     }
 
-    @OptIn(ExperimentalCoroutinesApi::class)
     override fun getCurrentUser(): Flow<User?> {
-        return combine(
-            sessionDataSource.getSessionState(),
-            sessionDataSource.observeUserSession()
-        ) { state, session ->
-            if (state is AuthSessionState.Active) {
-                session?.toDomain()
-            } else {
-                null
-            }
+        return sessionDataSource.observeUserSession().map { session ->
+            val user = session?.toDomain()
+            logger.d("AuthRepository", "getCurrentUser observed session: $session -> domain user: $user")
+            user
         }
     }
 
-    @OptIn(ExperimentalCoroutinesApi::class)
     override fun getEntitlements(): Flow<Entitlements> {
-        return combine(
-            sessionDataSource.getSessionState(),
-            sessionDataSource.observeUserSession()
-        ) { state, session ->
-            if (state is AuthSessionState.Active) {
-                session?.entitlements?.toDomain() ?: Entitlements.Default
-            } else {
-                Entitlements.Default
-            }
+        return sessionDataSource.observeUserSession().map { session ->
+            val entitlements = session?.entitlements?.toDomain() ?: Entitlements.Default
+            logger.d("AuthRepository", "getEntitlements observed session: $session -> entitlements: $entitlements")
+            entitlements
         }
     }
 

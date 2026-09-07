@@ -41,6 +41,7 @@ class LaunchViewModel @Inject constructor(
     private fun validateSession() {
         checkSessionUseCase(CheckSessionUseCase.Input)
             .onEach { output ->
+                logger.d("LaunchViewModel", "checkSessionUseCase emitted: $output | isNavigating=$isNavigating")
                 if (isNavigating && output != CheckSessionUseCase.Output.Progress) return@onEach
 
                 when (output) {

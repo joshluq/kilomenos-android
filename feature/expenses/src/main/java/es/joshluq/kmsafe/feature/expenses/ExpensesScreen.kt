@@ -244,7 +244,7 @@ fun ExpensesScreen(
                         start = CanvasKitTheme.spacing.md,
                         end = CanvasKitTheme.spacing.md,
                         top = CanvasKitTheme.spacing.sm,
-                        bottom = 96.dp
+                        bottom = CanvasKitTheme.spacing.md
                     ),
                     verticalArrangement = Arrangement.spacedBy(CanvasKitTheme.spacing.md)
                 ) {
