@@ -8,6 +8,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import es.joshluq.foundationkit.log.LoggerKit
 import es.joshluq.foundationkit.text.TextProvider
 import es.joshluq.foundationkit.viewmodel.ScreenViewModel
+import es.joshluq.kmsafe.core.monetization.domain.MonetizationConfig
 import es.joshluq.kmsafe.domain.model.EnergyCategory
 import es.joshluq.kmsafe.domain.model.Feature
 import es.joshluq.kmsafe.domain.model.FuelExpense
@@ -50,6 +51,7 @@ class ExpensesViewModel @Inject constructor(
     private val observeStationRadarUseCase: ObserveStationRadarUseCase,
     private val processFuelReceiptUseCase: ProcessFuelReceiptUseCase,
     private val discardReceiptScanUseCase: DiscardReceiptScanUseCase,
+    private val monetizationConfig: MonetizationConfig,
     private val logger: LoggerKit
 ) : ScreenViewModel<ExpensesState, ExpensesEvent, ExpensesEffect>() {
 
@@ -58,6 +60,7 @@ class ExpensesViewModel @Inject constructor(
         loadExpenses()
         loadStations()
         handleInitialParams(savedStateHandle)
+        updateState { copy(adUnitId = monetizationConfig.getExpensesBannerAdUnitId()) }
     }
 
     private fun handleInitialParams(handle: SavedStateHandle) {

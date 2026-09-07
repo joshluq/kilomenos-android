@@ -9,7 +9,23 @@ import javax.inject.Inject
  * This effectively injects the environment-specific secrets into the core/feature modules.
  */
 class MonetizationConfigImpl @Inject constructor() : MonetizationConfig {
+    override fun getOverviewBannerAdUnitId(): String {
+        return BuildConfig.ADMOB_OVERVIEW_BANNER_ID
+    }
+
+    override fun getHistoryBannerAdUnitId(): String {
+        return BuildConfig.ADMOB_HISTORY_BANNER_ID
+    }
+
+    override fun getExpensesBannerAdUnitId(): String {
+        return BuildConfig.ADMOB_EXPENSES_BANNER_ID
+    }
+
+    override fun getProjectionBannerAdUnitId(): String {
+        return BuildConfig.ADMOB_PROJECTION_BANNER_ID
+    }
+
     override fun getBannerAdUnitId(): String {
-        return BuildConfig.ADMOB_BANNER_ID
+        return getOverviewBannerAdUnitId()
     }
 }

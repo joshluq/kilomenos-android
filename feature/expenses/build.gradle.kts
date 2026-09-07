@@ -16,6 +16,7 @@ configure<LibraryExtension> {
 dependencies {
     implementation(project(":core:domain"))
     implementation(project(":core:ui"))
+    implementation(project(":core:monetization"))
 
     implementation(deps.canvaskit)
     implementation(deps.foundationkit)

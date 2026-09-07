@@ -79,7 +79,7 @@ class OverviewViewModel @Inject constructor(
         consolidatedInitialLoad()
         observeTracking()
         startGeofenceSync()
-        updateState { copy(adUnitId = monetizationConfig.getBannerAdUnitId()) }
+        updateState { copy(adUnitId = monetizationConfig.getOverviewBannerAdUnitId()) }
     }
 
     private fun startGeofenceSync() {

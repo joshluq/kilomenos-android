@@ -88,6 +88,7 @@ import es.joshluq.kmsafe.domain.model.OdometerRecord
 import es.joshluq.kmsafe.feature.expenses.components.AddExpenseBottomSheet
 import es.joshluq.kmsafe.feature.expenses.components.StationRadarCarousel
 import es.joshluq.kmsafe.feature.expenses.components.StationVolatilityCard
+import es.joshluq.kmsafe.core.monetization.components.AdMobBanner
 import java.text.SimpleDateFormat
 import java.util.Date
 
@@ -301,6 +302,17 @@ fun ExpensesScreen(
                             ExpenseItemCard(
                                 expense = expense,
                                 onDelete = safeClick { onEvent(ExpensesEvent.OnDeleteExpense(expense.id)) }
+                            )
+                        }
+                    }
+
+                    if (!state.isPremium && state.adUnitId != null) {
+                        item(key = "expenses_ad_banner") {
+                            AdMobBanner(
+                                adUnitId = state.adUnitId,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = CanvasKitTheme.spacing.sm)
                             )
                         }
                     }

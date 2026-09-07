@@ -27,7 +27,6 @@ import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -76,7 +75,7 @@ class HistoryViewModelTest {
     @Before
     fun setUp() {
         Dispatchers.setMain(testDispatcher)
-        every { monetizationConfig.getBannerAdUnitId() } returns "ad_unit_123"
+        every { monetizationConfig.getHistoryBannerAdUnitId() } returns "ad_unit_123"
         every { checkFeatureAccessUseCase(CheckFeatureAccessUseCase.Input(Feature.CLOUD_SYNC)) } returns flowOf(
             CheckFeatureAccessUseCase.Output.Success(isGranted = true)
         )

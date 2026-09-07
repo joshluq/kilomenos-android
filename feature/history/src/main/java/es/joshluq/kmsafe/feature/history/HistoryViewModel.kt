@@ -35,7 +35,7 @@ class HistoryViewModel @Inject constructor(
     init {
         checkSubscription()
         loadHistory(forceRefresh = false)
-        updateState { copy(adUnitId = monetizationConfig.getBannerAdUnitId()) }
+        updateState { copy(adUnitId = monetizationConfig.getHistoryBannerAdUnitId()) }
     }
 
     override fun createInitialState(): HistoryState = HistoryState.Empty

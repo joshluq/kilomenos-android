@@ -2,6 +2,7 @@ package es.joshluq.kmsafe.feature.expenses
 
 import android.net.Uri
 import androidx.lifecycle.SavedStateHandle
+import es.joshluq.kmsafe.core.monetization.domain.MonetizationConfig
 import es.joshluq.foundationkit.log.LoggerKit
 import es.joshluq.kmsafe.domain.model.ArithmeticCheck
 import es.joshluq.kmsafe.domain.model.Feature
@@ -64,6 +65,7 @@ class ExpensesViewModelTest {
     private val observeStationRadarUseCase: ObserveStationRadarUseCase = mockk()
     private val processFuelReceiptUseCase: ProcessFuelReceiptUseCase = mockk()
     private val discardReceiptScanUseCase: DiscardReceiptScanUseCase = mockk()
+    private val monetizationConfig: MonetizationConfig = mockk()
     private val logger: LoggerKit = mockk(relaxed = true)
 
     private val sampleExpense = FuelExpense(
@@ -83,6 +85,7 @@ class ExpensesViewModelTest {
     @Before
     fun setUp() {
         Dispatchers.setMain(testDispatcher)
+        every { monetizationConfig.getExpensesBannerAdUnitId() } returns "test_expenses_ad_unit_id"
         every { checkFeatureAccessUseCase(CheckFeatureAccessUseCase.Input(Feature.ADVANCED_PROJECTIONS)) } returns flowOf(
             CheckFeatureAccessUseCase.Output.Success(isGranted = true)
         )
@@ -171,8 +174,16 @@ class ExpensesViewModelTest {
             observeStationRadarUseCase = observeStationRadarUseCase,
             processFuelReceiptUseCase = processFuelReceiptUseCase,
             discardReceiptScanUseCase = discardReceiptScanUseCase,
+            monetizationConfig = monetizationConfig,
             logger = logger
         )
+    }
+
+    @Test
+    fun `given initialized when created then state contains expenses adUnitId`() = runTest(testDispatcher) {
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+        assertEquals("test_expenses_ad_unit_id", viewModel.state.value.adUnitId)
     }
 
     @Test

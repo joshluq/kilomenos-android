@@ -74,6 +74,18 @@ configure<ApplicationExtension> {
                 val apiKey = secrets.getProperty("${envPrefix}_API_KEY") ?: ""
                 val adMobId = secrets.getProperty("${envPrefix}_ADMOB_APP_ID") ?: ""
                 val adMobBanner = secrets.getProperty("${envPrefix}_ADMOB_BANNER_ID") ?: ""
+                val adMobOverviewBanner = secrets.getProperty("${envPrefix}_ADMOB_OVERVIEW_BANNER_ID")
+                    ?: secrets.getProperty("${envPrefix}_ADMOB_BANNER_ID")
+                    ?: "ca-app-pub-3940256099942544/6300978111"
+                val adMobHistoryBanner = secrets.getProperty("${envPrefix}_ADMOB_HISTORY_BANNER_ID")
+                    ?: secrets.getProperty("${envPrefix}_ADMOB_BANNER_ID")
+                    ?: "ca-app-pub-3940256099942544/6300978111"
+                val adMobExpensesBanner = secrets.getProperty("${envPrefix}_ADMOB_EXPENSES_BANNER_ID")
+                    ?: secrets.getProperty("${envPrefix}_ADMOB_BANNER_ID")
+                    ?: "ca-app-pub-3940256099942544/6300978111"
+                val adMobProjectionBanner = secrets.getProperty("${envPrefix}_ADMOB_PROJECTION_BANNER_ID")
+                    ?: secrets.getProperty("${envPrefix}_ADMOB_BANNER_ID")
+                    ?: "ca-app-pub-3940256099942544/6300978111"
                 val googleClientId = secrets.getProperty("${envPrefix}_GOOGLE_WEB_CLIENT_ID") ?: ""
                 val mapsKey = secrets.getProperty("${envPrefix}_MAPS_API_KEY") ?: ""
 
@@ -84,6 +96,10 @@ configure<ApplicationExtension> {
                 buildConfigField("String", "PRIVACY_URL", "\"${env.privacyUrl}\"")
                 buildConfigField("String", "GOOGLE_WEB_CLIENT_ID", "\"$googleClientId\"")
                 buildConfigField("String", "ADMOB_BANNER_ID", "\"$adMobBanner\"")
+                buildConfigField("String", "ADMOB_OVERVIEW_BANNER_ID", "\"$adMobOverviewBanner\"")
+                buildConfigField("String", "ADMOB_HISTORY_BANNER_ID", "\"$adMobHistoryBanner\"")
+                buildConfigField("String", "ADMOB_EXPENSES_BANNER_ID", "\"$adMobExpensesBanner\"")
+                buildConfigField("String", "ADMOB_PROJECTION_BANNER_ID", "\"$adMobProjectionBanner\"")
                 buildConfigField("String", "PREMIUM_SKU", "\"${env.premiumSku}\"")
                 
                 manifestPlaceholders["adMobAppId"] = adMobId

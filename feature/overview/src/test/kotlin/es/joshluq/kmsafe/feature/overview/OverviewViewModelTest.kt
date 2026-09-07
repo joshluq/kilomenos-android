@@ -107,7 +107,7 @@ class OverviewViewModelTest {
     @Before
     fun setUp() {
         Dispatchers.setMain(testDispatcher)
-        every { monetizationConfig.getBannerAdUnitId() } returns "test_ad_unit_id"
+        every { monetizationConfig.getOverviewBannerAdUnitId() } returns "test_ad_unit_id"
         every { getEntitlementsUseCase(any()) } returns flowOf(
             GetEntitlementsUseCase.Output.Success(Entitlements.Default.copy(subscriptionLevel = SubscriptionLevel.PREMIUM))
         )

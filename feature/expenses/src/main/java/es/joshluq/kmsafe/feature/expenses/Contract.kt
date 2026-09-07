@@ -49,6 +49,7 @@ data class ExpensesState(
     val isAddExpenseSheetOpen: Boolean = false,
     val selectedVolatility: StationPriceVolatility? = null,
     val isPremium: Boolean = false,
+    val adUnitId: String? = null,
     val isLoading: Boolean = false,
     val isSaving: Boolean = false,
     val initialStationId: String? = null,
