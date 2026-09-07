@@ -54,6 +54,9 @@ interface OdometerRecordDao {
     @Query("UPDATE odometer_record SET hasRoute = :hasRoute WHERE id = :recordId")
     suspend fun updateHasRoute(recordId: String, hasRoute: Boolean)
 
+    @Query("SELECT COUNT(*) FROM odometer_record")
+    suspend fun getRecordCount(): Int
+
     /**
      * Deletes all odometer records from the database.
      */

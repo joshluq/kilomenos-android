@@ -320,11 +320,12 @@ class RentingRepositoryImpl @Inject constructor(
 
     override suspend fun hasLocalData(): Boolean {
         val contracts = rentingDao.getContractCount()
+        val records = odometerDao.getRecordCount()
         val expenses = fuelExpenseDao.getExpenseCount()
         val stations = stationDao.getStationCount()
         
-        logger.d("RentingRepository", "Local data check: $contracts contracts, $expenses expenses, $stations stations")
-        return contracts > 0 || expenses > 0 || stations > 0
+        logger.d("RentingRepository", "Local data check: $contracts contracts, $records records, $expenses expenses, $stations stations")
+        return contracts > 0 || records > 0 || expenses > 0 || stations > 0
     }
 
     override fun clearAllLocalData(): Flow<Unit> = flow {

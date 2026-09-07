@@ -50,18 +50,19 @@ class EvaluateIdentityConflictUseCaseImpl @Inject constructor(
         )
 
         // Conflict detection logic:
-        // 1. If there's an email mismatch and the previous session was authenticated.
-        // 2. If there's NO previous email recorded (Free/Local user) but the DB already contains data.
+        // 1. If there's an email mismatch and a previous email was recorded or local data exists -> Warning.
+        // 2. If same email as last time -> No conflict.
         val isNewUser = currentEmail != lastEmail
+        val hasPreviousDriver = lastEmail.isNotEmpty()
 
         val result = when {
             // Case A: Same user as last time -> No conflict.
             !isNewUser -> EvaluateIdentityConflictUseCase.Output.NoConflict
             
-            // Case B: Different user and we have data in the DB -> Warning.
-            hasExistingData -> EvaluateIdentityConflictUseCase.Output.ShowWarning
+            // Case B: Different user and (we have data in DB OR a previous driver email was recorded) -> Warning.
+            hasExistingData || hasPreviousDriver -> EvaluateIdentityConflictUseCase.Output.ShowWarning
             
-            // Case C: Different user but DB is empty -> Silent cleanup (clears prefs/cache).
+            // Case C: Different user, no DB data, and no previous driver -> Silent cleanup.
             else -> EvaluateIdentityConflictUseCase.Output.SilentCleanup
         }
 

@@ -62,7 +62,20 @@ class EvaluateIdentityConflictUseCaseTest {
     }
 
     @Test
-    fun `given different email and hasLocalData false when invoke then emits Progress and SilentCleanup`() = runTest {
+    fun `given different email and no previous driver or local data when invoke then emits Progress and SilentCleanup`() = runTest {
+        coEvery { rentingRepository.getDatabaseOwnerId() } returns null
+        coEvery { rentingRepository.hasLocalData() } returns false
+        every { preferencesRepository.getGlobalPreferences() } returns flowOf(UserPreferences(lastEmail = ""))
+
+        val emissions = useCase(EvaluateIdentityConflictUseCase.Input("new@test.com")).toList()
+
+        assertEquals(2, emissions.size)
+        assertTrue(emissions[0] is EvaluateIdentityConflictUseCase.Output.Progress)
+        assertTrue(emissions[1] is EvaluateIdentityConflictUseCase.Output.SilentCleanup)
+    }
+
+    @Test
+    fun `given different email and previous driver email recorded when invoke then emits Progress and ShowWarning`() = runTest {
         coEvery { rentingRepository.getDatabaseOwnerId() } returns null
         coEvery { rentingRepository.hasLocalData() } returns false
         every { preferencesRepository.getGlobalPreferences() } returns flowOf(UserPreferences(lastEmail = "old@test.com"))
@@ -71,6 +84,6 @@ class EvaluateIdentityConflictUseCaseTest {
 
         assertEquals(2, emissions.size)
         assertTrue(emissions[0] is EvaluateIdentityConflictUseCase.Output.Progress)
-        assertTrue(emissions[1] is EvaluateIdentityConflictUseCase.Output.SilentCleanup)
+        assertTrue(emissions[1] is EvaluateIdentityConflictUseCase.Output.ShowWarning)
     }
 }
