@@ -94,7 +94,7 @@ fun DashboardScreen(
         bottomBar = {
             DashboardNavigationBar(state, onEvent)
         },
-        containerColor = CanvasKitTheme.colors.backgroundSecondary,
+        containerColor = CanvasKitTheme.colors.backgroundPrimary,
         contentWindowInsets = WindowInsets.navigationBars
     ) { innerPadding ->
         Box(

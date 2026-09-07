@@ -85,7 +85,7 @@ fun AeroRunwayPacingBar(
     val normalizedKm = if (kmsPercentage > 1f) (kmsPercentage / 100f).coerceIn(0f, 1f) else kmsPercentage.coerceIn(0f, 1f)
 
     val isSafe = balance >= 0.0
-    val kmBarColor = if (isSafe) CanvasKitTheme.colors.success else CanvasKitTheme.colors.error
+    val kmBarColor = if (isSafe) CanvasKitTheme.colors.brandAccent else CanvasKitTheme.colors.error
 
     val statusColor = if (isSafe) CanvasKitTheme.colors.success else CanvasKitTheme.colors.error
 

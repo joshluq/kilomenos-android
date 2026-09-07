@@ -69,7 +69,7 @@ fun RunwayCeilingBar(
     )
 
     val brandColor = CanvasKitTheme.colors.brandAccent
-    val successColor = CanvasKitTheme.colors.success
+    val successColor = CanvasKitTheme.colors.brandAccent
     val errorColor = CanvasKitTheme.colors.error
     val trackBackgroundColor = CanvasKitTheme.colors.borderSubtle.copy(alpha = 0.45f)
     val markerColor = CanvasKitTheme.colors.textPrimary
