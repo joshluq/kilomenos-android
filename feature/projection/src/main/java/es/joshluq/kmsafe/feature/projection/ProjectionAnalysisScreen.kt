@@ -29,7 +29,6 @@ import es.joshluq.canvaskit.components.navigation.CanvasKitTopBar
 import es.joshluq.canvaskit.foundations.theme.CanvasKitTheme
 import es.joshluq.foundationkit.text.asString
 import es.joshluq.kmsafe.domain.model.PlannedTrip
-import es.joshluq.kmsafe.domain.model.TripProjection
 import es.joshluq.kmsafe.feature.projection.components.PaceSimulatorCard
 import es.joshluq.kmsafe.feature.projection.components.ProjectionSentinelCard
 import es.joshluq.kmsafe.feature.projection.components.RemedialAdvisoryCard

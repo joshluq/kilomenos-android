@@ -48,7 +48,8 @@
     <string name="projection_runway_title">HORIZONTE DE AGOTAMIENTO</string>
     <string name="projection_runway_collision_warning">Agotarás tus km en: %1$s</string>
     <string name="projection_runway_collision_months_early">⚠️ %1$d meses antes de que venza tu contrato</string>
-    <string name="projection_runway_safe_description">Tienes suficiente kilometraje para cubrir todo el contrato.</string>
+    <string name="projection_runway_safe_headline">Cobertura total garantizada</string>
+    <string name="projection_runway_safe_description">Tu kilometraje cubre el 100% de los días restantes del contrato.</string>
     <string name="projection_runway_progress_label">%1$d%% Runway agotado</string>
     <string name="projection_runway_free_teaser_title">FECHA CRÍTICA DE COLISIÓN</string>
     <string name="projection_runway_free_teaser_desc">Tus hábitos indican que agotarás tus km antes de la entrega. Descubre el mes exacto con KmSafe Premium.</string>

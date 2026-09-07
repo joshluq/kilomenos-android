@@ -112,11 +112,17 @@ Todos los componentes emplean exclusivamente tokens de **`CanvasKitTheme`** (col
 - **Lógica de Cálculo:**
   $$\text{Días de autonomía de km} = \frac{\text{Km disponibles restantes}}{\text{Ritmo medio diario}}$$
   $$\text{Fecha de agotamiento} = \text{Fecha actual} + \text{Días de autonomía de km}$$
-- **Variante Premium:**
-  - Icono de calendario (`Icons.Default.DateRange`).
-  - Título: *"HORIZONTE DE AGOTAMIENTO"*.
-  - Indicador de impacto: *"Agotarás tus km en: Marzo 2027 (8 meses antes de que venza tu contrato)"*.
-  - Mini-barra de progreso con porcentaje de Runway agotado.
+- **Variante Premium Simétrica (Estabilidad Vertical sin Jitter):**
+  - **Transición Fluida:** Contenedor con `Modifier.animateContentSize(tween(250))` que absorbe cualquier microvariación sin saltos bruscos.
+  - **En Riesgo (`isOverLimit = true`):**
+    - Header: Icono calendario + *"HORIZONTE DE AGOTAMIENTO"*.
+    - Hero Headline (`headingMedium`, bold, error): *"Agotarás tus km en: Marzo 2027"*.
+    - Subtítulo (`bodyMedium`): *"⚠️ 8 meses antes de que venza tu contrato"*.
+  - **En Seguro (`isOverLimit = false`):**
+    - Header: Icono `CheckCircle` + *"HORIZONTE DE AGOTAMIENTO"*.
+    - Hero Headline (`headingMedium`, bold, success): *"Cobertura total garantizada"*.
+    - Subtítulo (`bodyMedium`): *"Tu kilometraje cubre el 100% de los días restantes del contrato."*.
+  *(Ambos estados comparten la misma jerarquía de 3 niveles y altura natural idéntica, eliminando cualquier salto de layout).*
 - **Variante Free (Smart Teaser):**
   - Fondo de tarjeta sutil (`CanvasKitCardVariant.Outlined`).
   - Icono de candado / corona (`brandAccent`).

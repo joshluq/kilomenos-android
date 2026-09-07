@@ -17,7 +17,6 @@ class SimulateContractProjectionUseCaseTest {
 
     companion object {
         private const val MILLIS_IN_DAY = 1000L * 60 * 60 * 24
-        private const val DAYS_IN_MONTH = 30.4375
     }
 
     @Before

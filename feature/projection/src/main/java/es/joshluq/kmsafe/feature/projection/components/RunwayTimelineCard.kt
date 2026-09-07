@@ -1,7 +1,8 @@
 package es.joshluq.kmsafe.feature.projection.components
 
 import android.content.res.Configuration
-import androidx.compose.foundation.background
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -10,18 +11,15 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material3.Icon
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -38,6 +36,7 @@ import es.joshluq.kmsafe.feature.projection.R
 /**
  * Layer 2: Runway Timeline Card (Radar de Agotamiento).
  * Displays the exact exhaustion date in calendar for Premium users, or an ethical conversion teaser for Free users.
+ * Symmetrical 3-tier structure in both Safe and Risk states with smooth animated transitions.
  */
 @Composable
 fun RunwayTimelineCard(
@@ -49,15 +48,17 @@ fun RunwayTimelineCard(
     modifier: Modifier = Modifier
 ) {
     CanvasKitCard(
-        modifier = modifier.fillMaxWidth(),
-        variant = if (isPremium) CanvasKitCardVariant.Elevated else CanvasKitCardVariant.Outlined
+        modifier = modifier
+            .fillMaxWidth()
+            .animateContentSize(animationSpec = tween(durationMillis = 250)),
+        variant = CanvasKitCardVariant.Outlined
     ) {
         Column(
             modifier = Modifier.padding(CanvasKitTheme.spacing.md),
             verticalArrangement = Arrangement.spacedBy(CanvasKitTheme.spacing.sm)
         ) {
             if (isPremium) {
-                // Premium Content: Exact Date & Runway Progress
+                // Header: Icon + Section Title
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -93,11 +94,18 @@ fun RunwayTimelineCard(
                         )
                     }
                 } else {
+                    // Safe State Mirror: Hero Headline + Contextual reassurance
+                    Text(
+                        text = stringResource(R.string.projection_runway_safe_headline),
+                        style = CanvasKitTheme.typography.headingMedium,
+                        fontWeight = FontWeight.Black,
+                        color = CanvasKitTheme.colors.success
+                    )
                     Text(
                         text = stringResource(R.string.projection_runway_safe_description),
                         style = CanvasKitTheme.typography.bodyMedium,
-                        color = CanvasKitTheme.colors.success,
-                        fontWeight = FontWeight.Medium
+                        color = CanvasKitTheme.colors.textSecondary,
+                        fontWeight = FontWeight.SemiBold
                     )
                 }
             } else {
@@ -148,6 +156,21 @@ fun RunwayTimelineCard(
 @Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Preview
 @Composable
+private fun PreviewRunwayTimelineCardPremiumSafeLimit() {
+    CanvasKitTheme {
+        RunwayTimelineCard(
+            isPremium = true,
+            isOverLimit = false,
+            exhaustionDateMillis = System.currentTimeMillis() + (180L * 24 * 3600 * 1000),
+            monthsAheadOrBehind = 8,
+            onUpgradeClick = {}
+        )
+    }
+}
+
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Preview
+@Composable
 private fun PreviewRunwayTimelineCardPremiumOverLimit() {
     CanvasKitTheme {
         RunwayTimelineCard(
@@ -160,6 +183,7 @@ private fun PreviewRunwayTimelineCardPremiumOverLimit() {
     }
 }
 
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Preview
 @Composable
 private fun PreviewRunwayTimelineCardFree() {

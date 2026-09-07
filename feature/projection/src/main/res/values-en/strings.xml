@@ -48,7 +48,8 @@
     <string name="projection_runway_title">RUNWAY TIMELINE</string>
     <string name="projection_runway_collision_warning">You will exhaust your km in: %1$s</string>
     <string name="projection_runway_collision_months_early">⚠️ %1$d months before contract maturity</string>
-    <string name="projection_runway_safe_description">You have enough mileage allowance to cover the entire contract.</string>
+    <string name="projection_runway_safe_headline">Full coverage guaranteed</string>
+    <string name="projection_runway_safe_description">Your mileage covers 100% of the remaining contract days.</string>
     <string name="projection_runway_progress_label">%1$d%% Runway exhausted</string>
     <string name="projection_runway_free_teaser_title">CRITICAL COLLISION DATE</string>
     <string name="projection_runway_free_teaser_desc">Your habits indicate you will exhaust your km before delivery. Discover the exact month with KmSafe Premium.</string>

@@ -71,35 +71,30 @@ fun PaceSimulatorCard(
             ) {
                 PresetChip(
                     label = stringResource(R.string.projection_sandbox_preset_minus_20),
-                    multiplier = 0.8f,
                     isSelected = (simulatedDailyKm - (realDailyAverage * 0.8f)).let { kotlin.math.abs(it) < 0.5f },
                     onClick = { onPresetSelected(0.8f) },
                     modifier = Modifier.weight(1f)
                 )
                 PresetChip(
                     label = stringResource(R.string.projection_sandbox_preset_minus_10),
-                    multiplier = 0.9f,
                     isSelected = (simulatedDailyKm - (realDailyAverage * 0.9f)).let { kotlin.math.abs(it) < 0.5f },
                     onClick = { onPresetSelected(0.9f) },
                     modifier = Modifier.weight(1f)
                 )
                 PresetChip(
                     label = stringResource(R.string.projection_sandbox_preset_normal),
-                    multiplier = 1.0f,
                     isSelected = (simulatedDailyKm - realDailyAverage).let { kotlin.math.abs(it) < 0.5f },
                     onClick = { onPresetSelected(1.0f) },
                     modifier = Modifier.weight(1f)
                 )
                 PresetChip(
                     label = stringResource(R.string.projection_sandbox_preset_plus_10),
-                    multiplier = 1.1f,
                     isSelected = (simulatedDailyKm - (realDailyAverage * 1.1f)).let { kotlin.math.abs(it) < 0.5f },
                     onClick = { onPresetSelected(1.1f) },
                     modifier = Modifier.weight(1f)
                 )
                 PresetChip(
                     label = stringResource(R.string.projection_sandbox_preset_plus_20),
-                    multiplier = 1.2f,
                     isSelected = (simulatedDailyKm - (realDailyAverage * 1.2f)).let { kotlin.math.abs(it) < 0.5f },
                     onClick = { onPresetSelected(1.2f) },
                     modifier = Modifier.weight(1f)
@@ -155,7 +150,6 @@ fun PaceSimulatorCard(
 @Composable
 private fun PresetChip(
     label: String,
-    multiplier: Float,
     isSelected: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
