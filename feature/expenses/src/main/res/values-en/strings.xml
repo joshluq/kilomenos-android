@@ -123,7 +123,7 @@
     <string name="expenses_radar_subtitle">My Stations</string>
     <string name="expenses_radar_locked_title">Regular Stations Radar</string>
     <string name="expenses_radar_locked_desc">Compare prices at your regular stations and spot savings opportunities with KiloMenos Premium.</string>
-    <string name="expenses_radar_unlock_action">Unlock with Premium 💎</string>
+    <string name="expenses_radar_unlock_action">Unlock with Premium</string>
     <string name="expenses_radar_opportunity">🟢 Opportunity (%1$.2f € vs. avg)</string>
     <string name="expenses_radar_expensive">🔴 High (+%1$.2f € vs. avg)</string>
     <string name="expenses_radar_average">⚪ On your usual average</string>

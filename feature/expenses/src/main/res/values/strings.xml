@@ -123,7 +123,7 @@
     <string name="expenses_radar_subtitle">Mis Estaciones</string>
     <string name="expenses_radar_locked_title">Radar de Estaciones Habituales</string>
     <string name="expenses_radar_locked_desc">Compara precios de tus gasolineras habituales y detecta oportunidades con KiloMenos Premium.</string>
-    <string name="expenses_radar_unlock_action">Desbloquear con Premium 💎</string>
+    <string name="expenses_radar_unlock_action">Desbloquear con Premium</string>
     <string name="expenses_radar_opportunity">🟢 Oportunidad (%1$.2f € vs media)</string>
     <string name="expenses_radar_expensive">🔴 Alto (+%1$.2f € vs media)</string>
     <string name="expenses_radar_average">⚪ En tu media habitual</string>

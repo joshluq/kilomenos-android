@@ -127,7 +127,6 @@ fun ProjectionAnalysisScreen(
                     isOverLimit = state.isOverLimit,
                     onAddTrip = { title, km -> onEvent(Event.OnAddPresetTrip(title, km)) },
                     onRemoveTrip = { onEvent(Event.OnRemoveTrip(it)) },
-                    onCustomTripChanged = { onEvent(Event.OnCustomTripChanged(it)) },
                     onUpgradeClick = { onEvent(Event.OnUpgradeToPremiumClicked) }
                 )
 

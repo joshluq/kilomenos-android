@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AutoAwesome
@@ -45,10 +44,9 @@ fun RemedialAdvisoryCard(
 ) {
     CanvasKitCard(
         modifier = modifier.fillMaxWidth(),
-        variant = if (isPremium) CanvasKitCardVariant.Elevated else CanvasKitCardVariant.Outlined
+        variant = CanvasKitCardVariant.Outlined
     ) {
         Column(
-            modifier = Modifier.padding(CanvasKitTheme.spacing.md),
             verticalArrangement = Arrangement.spacedBy(CanvasKitTheme.spacing.sm)
         ) {
             if (!isOverLimit) {

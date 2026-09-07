@@ -22,8 +22,6 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.Slider
-import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -67,7 +65,6 @@ fun TripPlannerCard(
     isOverLimit: Boolean,
     onAddTrip: (title: String, distanceKms: Int) -> Unit,
     onRemoveTrip: (tripId: String) -> Unit,
-    onCustomTripChanged: (distanceKms: Int) -> Unit,
     onUpgradeClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -182,17 +179,6 @@ fun TripPlannerCard(
                             fontWeight = FontWeight.Bold
                         )
                     }
-
-                    Slider(
-                        value = currentFreeKm.toFloat(),
-                        onValueChange = { onCustomTripChanged(it.toInt()) },
-                        valueRange = 0f..5000f,
-                        colors = SliderDefaults.colors(
-                            thumbColor = accentColor,
-                            activeTrackColor = accentColor,
-                            inactiveTrackColor = CanvasKitTheme.colors.borderSubtle
-                        )
-                    )
 
                     if (plannedTrips.isNotEmpty()) {
                         Spacer(modifier = Modifier.height(4.dp))
@@ -415,7 +401,6 @@ private fun PreviewTripPlannerCardPremium() {
             isOverLimit = false,
             onAddTrip = { _, _ -> },
             onRemoveTrip = {},
-            onCustomTripChanged = {},
             onUpgradeClick = {}
         )
     }
