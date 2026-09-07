@@ -63,7 +63,6 @@ fun ProjectionSentinelCard(
         variant = CanvasKitCardVariant.Elevated
     ) {
         Column(
-            modifier = Modifier.padding(CanvasKitTheme.spacing.md),
             verticalArrangement = Arrangement.spacedBy(CanvasKitTheme.spacing.md),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {

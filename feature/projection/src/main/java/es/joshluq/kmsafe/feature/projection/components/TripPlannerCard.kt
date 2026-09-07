@@ -6,6 +6,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -107,8 +108,9 @@ fun TripPlannerCard(
             verticalArrangement = Arrangement.spacedBy(CanvasKitTheme.spacing.md)
         ) {
             // Quick Add Chips: Escapada (350 km), Verano (1.500 km), Personalizado
-            Row(
+            FlowRow(
                 modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 TripPresetChip(
@@ -119,8 +121,7 @@ fun TripPlannerCard(
                         } else {
                             onAddTrip("Escapada", 350)
                         }
-                    },
-                    modifier = Modifier.weight(1f)
+                    }
                 )
                 TripPresetChip(
                     label = stringResource(R.string.projection_sandbox_preset_vacation),
@@ -130,8 +131,7 @@ fun TripPlannerCard(
                         } else {
                             onAddTrip("Vacaciones", 1500)
                         }
-                    },
-                    modifier = Modifier.weight(1f)
+                    }
                 )
                 TripPresetChip(
                     label = stringResource(R.string.projection_sandbox_preset_custom),
@@ -143,8 +143,7 @@ fun TripPlannerCard(
                             customTripDistance = ""
                             showCustomTripDialog = true
                         }
-                    },
-                    modifier = Modifier.weight(1f)
+                    }
                 )
             }
 

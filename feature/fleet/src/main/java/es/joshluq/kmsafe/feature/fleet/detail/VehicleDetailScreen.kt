@@ -139,7 +139,7 @@ fun VehicleDetailScreen(
                 centeredTitle = true
             )
         },
-        containerColor = CanvasKitTheme.colors.backgroundPrimary
+        containerColor = CanvasKitTheme.colors.backgroundSecondary
     ) { innerPadding ->
         Box(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
             state.renting?.let { contract ->
@@ -214,42 +214,6 @@ fun VehicleDetailScreen(
                         modifier = Modifier.fillMaxWidth()
                     )
 
-                    if (showBluetoothWarning) {
-                        Spacer(modifier = Modifier.height(12.dp))
-                        CanvasKitBanner(
-                            variant = CanvasKitAlertVariant.Warning,
-                            message = {
-                                Column {
-                                    Text(
-                                        text = stringResource(R.string.vehicle_detail_bt_permission_warning_title),
-                                        style = CanvasKitTheme.typography.bodyLarge,
-                                        fontWeight = FontWeight.Bold
-                                    )
-                                    Text(
-                                        text = stringResource(R.string.vehicle_detail_bt_permission_warning_desc),
-                                        style = CanvasKitTheme.typography.labelSmall
-                                    )
-                                }
-                            },
-                            action = {
-                                CanvasKitButton(
-                                    text = stringResource(R.string.vehicle_detail_bt_permission_warning_action),
-                                    onClick = safeClick {
-                                        @Suppress("KotlinConstantConditions")
-                                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                                            bluetoothPermissionLauncher.launch(Manifest.permission.BLUETOOTH_CONNECT)
-                                        }
-                                    },
-                                    variant = CanvasKitButtonVariant.Primary,
-                                    size = CanvasKitButtonSize.Small
-                                )
-                            },
-                            visible = true,
-                            onDismiss = null, // Non-dismissible until granted
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                    }
-
                     Spacer(modifier = Modifier.height(24.dp))
 
                     // Section: Advanced
@@ -295,13 +259,47 @@ fun VehicleDetailScreen(
 
                     Spacer(modifier = Modifier.height(32.dp))
                 }
+
+                if (showBluetoothWarning) {
+                    CanvasKitBanner(
+                        modifier = Modifier.align(Alignment.TopCenter),
+                        variant = CanvasKitAlertVariant.Warning,
+                        message = {
+                            Column {
+                                Text(
+                                    text = stringResource(R.string.vehicle_detail_bt_permission_warning_title),
+                                    style = CanvasKitTheme.typography.bodyLarge,
+                                    fontWeight = FontWeight.Bold
+                                )
+                                Text(
+                                    text = stringResource(R.string.vehicle_detail_bt_permission_warning_desc),
+                                    style = CanvasKitTheme.typography.labelSmall
+                                )
+                            }
+                        },
+                        action = {
+                            CanvasKitButton(
+                                text = stringResource(R.string.vehicle_detail_bt_permission_warning_action),
+                                onClick = safeClick {
+                                    @Suppress("KotlinConstantConditions")
+                                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                                        bluetoothPermissionLauncher.launch(Manifest.permission.BLUETOOTH_CONNECT)
+                                    }
+                                },
+                                variant = CanvasKitButtonVariant.Primary,
+                                size = CanvasKitButtonSize.Small
+                            )
+                        },
+                        visible = true,
+                        onDismiss = null
+                    )
+                }
             }
 
             // Error Banner
             CanvasKitBanner(
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
-                    .padding(16.dp)
                     .navigationBarsPadding(),
                 variant = CanvasKitAlertVariant.Error,
                 message = { Text(state.error?.asString() ?: "") },
@@ -368,6 +366,7 @@ fun VehicleDetailScreenPreview() {
                     currentOdometer = 1200.0,
                     isSelected = true,
                     bluetoothDeviceName = "My Tesla",
+                    bluetoothDeviceAddress = "My Tesla",
                     excessDistancePrice = 0.05,
                     courtesyMarginKms = 500.0
                 )
