@@ -110,5 +110,6 @@
     <string name="welcome_discovery_slide3_desc">Solo necesitas registrar tu odómetro actual para empezar a ver tu ahorro en tiempo real.</string>
     <string name="welcome_discovery_action_next">Siguiente</string>
     <string name="welcome_discovery_action_start">Configurar mi vehículo</string>
+    <string name="welcome_discovery_action_understood">Entendido</string>
     <string name="welcome_discovery_action_skip">Omitir</string>
 </resources>

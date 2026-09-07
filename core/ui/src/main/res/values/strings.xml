@@ -48,6 +48,7 @@
     <string name="error_invalid_metrics">Los valores de kilómetros y duración deben ser mayores a 0.</string>
     <string name="error_invalid_receipt_image">La imagen del ticket no es válida o no se pudo procesar.</string>
     <string name="error_receipt_scan_quota_exceeded">Has alcanzado el límite mensual de escaneos de tickets con IA.</string>
+    <string name="error_multi_vehicle_limit">La cuenta gratuita solo permite gestionar un vehículo activo. Pasa a Premium para gestionar una flota sin límites.</string>
 
     <!-- Accessibility -->
     <string name="acc_back">Volver</string>

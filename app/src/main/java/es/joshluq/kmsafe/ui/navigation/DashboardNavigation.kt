@@ -26,7 +26,7 @@ fun DashboardNavigation(
     onNavigateToPremiumPaywall: () -> Unit,
     onNavigateToPermissions: () -> Unit,
     onNavigateToAssistedPermissions: () -> Unit,
-    onNavigateToWelcomeDiscovery: () -> Unit,
+    onNavigateToWelcomeDiscovery: (Boolean) -> Unit,
     onNavigateToVehicleDetail: (String) -> Unit,
     backStackEntry: NavBackStackEntry
 ) {
@@ -46,7 +46,7 @@ fun DashboardNavigation(
                 onNavigateToAssistedPermissions = onNavigateToAssistedPermissions,
                 onNavigateToPremiumPaywall = onNavigateToPremiumPaywall,
                 onNavigateToPreferences = onNavigateToPreferences,
-                onNavigateToWelcomeDiscovery = onNavigateToWelcomeDiscovery,
+                onNavigateToWelcomeDiscovery = { onNavigateToWelcomeDiscovery(false) },
                 onNavigateToVehicleDetail = onNavigateToVehicleDetail,
                 backStackEntry = backStackEntry
             )
@@ -79,7 +79,7 @@ fun DashboardNavigation(
                 onNavigateToPreferences = onNavigateToPreferences,
                 onNavigateToLogin = onNavigateToLogin,
                 onNavigateToPremiumPaywall = onNavigateToPremiumPaywall,
-                onNavigateToWelcomeDiscovery = onNavigateToWelcomeDiscovery
+                onNavigateToWelcomeDiscovery = { onNavigateToWelcomeDiscovery(true) }
             )
         }
     }

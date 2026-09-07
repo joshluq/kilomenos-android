@@ -110,5 +110,6 @@
     <string name="welcome_discovery_slide3_desc">You only need to register your current odometer to start seeing your savings in real time.</string>
     <string name="welcome_discovery_action_next">Next</string>
     <string name="welcome_discovery_action_start">Setup my vehicle</string>
+    <string name="welcome_discovery_action_understood">Understood</string>
     <string name="welcome_discovery_action_skip">Skip</string>
 </resources>

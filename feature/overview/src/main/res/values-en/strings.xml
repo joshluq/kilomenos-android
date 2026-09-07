@@ -51,7 +51,7 @@
     <string name="tracking_card_active_mode">SMARTCOPILOT ACTIVE</string>
     <string name="tracking_card_idle_mode">COPILOT ON STANDBY</string>
     <string name="tracking_card_kms_label">KILOMETERS TRAVELED</string>
-    <string name="tracking_card_save_action">Settle</string>
+    <string name="tracking_card_save_action">Save</string>
     <string name="tracking_card_cancel_action">Discard</string>
     <string name="tracking_card_start_action">START</string>
     <string name="tracking_card_stop_action">FINISH</string>

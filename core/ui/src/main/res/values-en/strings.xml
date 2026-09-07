@@ -48,6 +48,7 @@
     <string name="error_invalid_metrics">Kilometers and duration values must be greater than 0.</string>
     <string name="error_invalid_receipt_image">The receipt image is invalid or could not be processed.</string>
     <string name="error_receipt_scan_quota_exceeded">You have reached the monthly limit for AI receipt scans.</string>
+    <string name="error_multi_vehicle_limit">Free accounts are limited to one active vehicle. Upgrade to Premium to manage unlimited fleet vehicles.</string>
 
     <!-- Accessibility -->
     <string name="acc_back">Back</string>

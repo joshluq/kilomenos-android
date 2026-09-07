@@ -58,7 +58,10 @@ data class State(
     val excessDistancePrice: String = "",
     val courtesyMarginKms: String = "",
     val excessDistancePriceError: TextProvider? = null,
-    val courtesyMarginError: TextProvider? = null
+    val courtesyMarginError: TextProvider? = null,
+    val showPremiumLimit: Boolean = false,
+    val isMultiVehicleAllowed: Boolean = true,
+    val hasExistingVehicles: Boolean = false
 ) : UiState
 
 sealed interface Event : UiEvent {
@@ -67,6 +70,8 @@ sealed interface Event : UiEvent {
     data object OnSkipStepClicked : Event
     data object OnDismissError : Event
     data object OnToggleBluetoothPicker : Event
+    data object OnUpgradeClicked : Event
+    data object OnDismissPremiumLimit : Event
 
     // Input Changes
     data class OnVehicleNameChanged(val value: String) : Event
@@ -86,5 +91,6 @@ sealed interface Event : UiEvent {
 sealed interface Effect : UiEffect {
     data object NavigateBack : Effect
     data object NavigateToDashboard : Effect
+    data object NavigateToPremiumPaywall : Effect
     data class NavigateToCropper(val uri: String) : Effect
 }

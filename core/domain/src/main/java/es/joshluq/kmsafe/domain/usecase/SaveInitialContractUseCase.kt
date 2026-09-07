@@ -4,10 +4,12 @@ import es.joshluq.foundationkit.log.LoggerKit
 import es.joshluq.foundationkit.usecase.FlowUseCase
 import es.joshluq.foundationkit.usecase.UseCaseInput
 import es.joshluq.foundationkit.usecase.UseCaseOutput
+import es.joshluq.kmsafe.domain.model.Feature
 import es.joshluq.kmsafe.domain.model.KmError
 import es.joshluq.kmsafe.domain.model.OdometerRecord
 import es.joshluq.kmsafe.domain.model.RentingContract
 import es.joshluq.kmsafe.domain.repository.AuthRepository
+import es.joshluq.kmsafe.domain.repository.EntitlementsRepository
 import es.joshluq.kmsafe.domain.repository.HistoryRepository
 import es.joshluq.kmsafe.domain.repository.RentingRepository
 import kotlinx.coroutines.flow.Flow
@@ -35,6 +37,7 @@ class SaveInitialContractUseCaseImpl @Inject constructor(
     private val rentingRepository: RentingRepository,
     private val historyRepository: HistoryRepository,
     private val authRepository: AuthRepository,
+    private val entitlementsRepository: EntitlementsRepository,
     private val logger: LoggerKit
 ) : SaveInitialContractUseCase {
 
@@ -50,7 +53,18 @@ class SaveInitialContractUseCaseImpl @Inject constructor(
             return@flow
         }
 
-        // 2. Domain Validation
+        // 2. Entitlement Check: Multi-vehicle restriction for free users
+        val existingContracts = rentingRepository.getAllContracts().first()
+        if (existingContracts.isNotEmpty()) {
+            val entitlements = entitlementsRepository.observeEntitlements().first()
+            if (!entitlements.isFeatureActive(Feature.MULTI_VEHICLE)) {
+                logger.w("SaveInitialContractUseCase", "Aborting: Multi-vehicle fleet not allowed for free user with existing contracts")
+                emit(SaveInitialContractUseCase.Output.Failure(KmError.MultiVehicleLimitReached))
+                return@flow
+            }
+        }
+
+        // 3. Domain Validation
         val contract = input.contract
         if (contract.vehicleName.isBlank()) {
             logger.w("SaveInitialContractUseCase", "Aborting: Vehicle name is blank")

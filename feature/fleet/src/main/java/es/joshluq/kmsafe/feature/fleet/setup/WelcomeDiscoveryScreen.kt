@@ -41,8 +41,10 @@ import kotlinx.coroutines.launch
 
 @Composable
 fun WelcomeDiscoveryScreen(
+    isGuideMode: Boolean = false,
     onNavigateToRentingSetup: () -> Unit,
-    onSkip: () -> Unit
+    onSkip: () -> Unit,
+    onFinishGuide: () -> Unit = onSkip
 ) {
     val pagerState = rememberPagerState(pageCount = { 3 })
     val scope = rememberCoroutineScope()
@@ -135,8 +137,11 @@ fun WelcomeDiscoveryScreen(
                     )
                 } else {
                     CanvasKitButton(
-                        text = stringResource(R.string.welcome_discovery_action_start),
-                        onClick = onNavigateToRentingSetup,
+                        text = stringResource(
+                            if (isGuideMode) R.string.welcome_discovery_action_understood
+                            else R.string.welcome_discovery_action_start
+                        ),
+                        onClick = if (isGuideMode) onFinishGuide else onNavigateToRentingSetup,
                         modifier = Modifier.fillMaxWidth()
                     )
                 }

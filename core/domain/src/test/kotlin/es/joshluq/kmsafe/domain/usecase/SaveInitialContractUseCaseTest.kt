@@ -1,11 +1,15 @@
 package es.joshluq.kmsafe.domain.usecase
 
 import es.joshluq.foundationkit.log.LoggerKit
+import es.joshluq.kmsafe.domain.model.Entitlements
+import es.joshluq.kmsafe.domain.model.Feature
 import es.joshluq.kmsafe.domain.model.KmError
 import es.joshluq.kmsafe.domain.model.OdometerRecord
 import es.joshluq.kmsafe.domain.model.RentingContract
+import es.joshluq.kmsafe.domain.model.SubscriptionLevel
 import es.joshluq.kmsafe.domain.model.User
 import es.joshluq.kmsafe.domain.repository.AuthRepository
+import es.joshluq.kmsafe.domain.repository.EntitlementsRepository
 import es.joshluq.kmsafe.domain.repository.HistoryRepository
 import es.joshluq.kmsafe.domain.repository.RentingRepository
 import io.mockk.clearAllMocks
@@ -27,16 +31,20 @@ class SaveInitialContractUseCaseTest {
     private val rentingRepository: RentingRepository = mockk()
     private val historyRepository: HistoryRepository = mockk(relaxed = true)
     private val authRepository: AuthRepository = mockk()
+    private val entitlementsRepository: EntitlementsRepository = mockk()
     private val logger: LoggerKit = mockk(relaxed = true)
 
     private lateinit var useCase: SaveInitialContractUseCase
 
     @Before
     fun setUp() {
+        every { rentingRepository.getAllContracts() } returns flowOf(emptyList())
+        every { entitlementsRepository.observeEntitlements() } returns flowOf(Entitlements.Default)
         useCase = SaveInitialContractUseCaseImpl(
             rentingRepository = rentingRepository,
             historyRepository = historyRepository,
             authRepository = authRepository,
+            entitlementsRepository = entitlementsRepository,
             logger = logger
         )
     }
@@ -166,5 +174,42 @@ class SaveInitialContractUseCaseTest {
         assertTrue(emissions[0] is SaveInitialContractUseCase.Output.Progress)
         val failure = emissions[1] as SaveInitialContractUseCase.Output.Failure
         assertEquals(KmError.UnknownError, failure.error)
+    }
+
+    @Test
+    fun `given existing contract and free tier without MULTI_VEHICLE when invoke then emits Failure MultiVehicleLimitReached`() = runTest {
+        val user = User(id = "user-1", email = "test@example.com", name = "Test User")
+        val existingContract = createContract(id = "existing-contract")
+        every { authRepository.getCurrentUser() } returns flowOf(user)
+        every { rentingRepository.getAllContracts() } returns flowOf(listOf(existingContract))
+        every { entitlementsRepository.observeEntitlements() } returns flowOf(Entitlements.Default) // Default has no MULTI_VEHICLE
+
+        val emissions = useCase(SaveInitialContractUseCase.Input(createContract(id = "new-contract"))).toList()
+
+        assertEquals(2, emissions.size)
+        assertTrue(emissions[0] is SaveInitialContractUseCase.Output.Progress)
+        val failure = emissions[1] as SaveInitialContractUseCase.Output.Failure
+        assertEquals(KmError.MultiVehicleLimitReached, failure.error)
+    }
+
+    @Test
+    fun `given existing contract and premium tier with MULTI_VEHICLE when invoke then allows saving and emits Success`() = runTest {
+        val user = User(id = "user-1", email = "test@example.com", name = "Test User")
+        val existingContract = createContract(id = "existing-contract")
+        val premiumEntitlements = Entitlements.Default.copy(
+            subscriptionLevel = SubscriptionLevel.PREMIUM
+        )
+        every { authRepository.getCurrentUser() } returns flowOf(user)
+        every { rentingRepository.getAllContracts() } returns flowOf(listOf(existingContract))
+        every { entitlementsRepository.observeEntitlements() } returns flowOf(premiumEntitlements)
+        every { rentingRepository.saveContract(any()) } returns flowOf("new-contract")
+        every { rentingRepository.selectContract("new-contract") } returns flowOf(Unit)
+
+        val emissions = useCase(SaveInitialContractUseCase.Input(createContract(id = "new-contract"))).toList()
+
+        assertEquals(2, emissions.size)
+        assertTrue(emissions[0] is SaveInitialContractUseCase.Output.Progress)
+        val success = emissions[1] as SaveInitialContractUseCase.Output.Success
+        assertEquals("new-contract", success.contractId)
     }
 }

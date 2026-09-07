@@ -62,9 +62,10 @@ sealed interface Destination {
 
     /**
      * Welcome Discovery destination.
+     * @param isGuideMode True when opened as an informative guide from profile/settings.
      */
     @Serializable
-    object WelcomeDiscovery : Destination
+    data class WelcomeDiscovery(val isGuideMode: Boolean = false) : Destination
 
     /**
      * EditContract destination.

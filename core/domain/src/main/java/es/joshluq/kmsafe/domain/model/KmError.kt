@@ -50,6 +50,9 @@ sealed interface KmError {
     /** The contract metrics (kms or months) are invalid. */
     data object InvalidContractMetrics : KmError
 
+    /** Multi-vehicle fleet management is only available for Premium users. */
+    data object MultiVehicleLimitReached : KmError
+
     /** An unexpected or unhandled error occurred. */
     data object UnknownError : KmError
 }

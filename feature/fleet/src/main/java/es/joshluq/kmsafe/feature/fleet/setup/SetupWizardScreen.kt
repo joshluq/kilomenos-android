@@ -30,6 +30,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Bluetooth
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -64,6 +65,7 @@ import es.joshluq.canvaskit.components.chips.CanvasKitChip
 import es.joshluq.canvaskit.components.chips.CanvasKitChipVariant
 import es.joshluq.canvaskit.components.feedback.CanvasKitAlertVariant
 import es.joshluq.canvaskit.components.feedback.CanvasKitBanner
+import es.joshluq.canvaskit.components.feedback.CanvasKitConfirmDialog
 import es.joshluq.canvaskit.components.inputs.CanvasKitDatePickerField
 import es.joshluq.canvaskit.components.inputs.CanvasKitTextField
 import es.joshluq.canvaskit.components.layout.CanvasKitLoadingScaffold
@@ -90,6 +92,7 @@ fun SetupWizardRoute(
     onNavigateBack: () -> Unit,
     onNavigateToDashboard: () -> Unit,
     onNavigateToCropper: (String) -> Unit,
+    onNavigateToPremiumPaywall: () -> Unit = {},
     backStackEntry: NavBackStackEntry
 ) {
     val viewModel: SetupWizardViewModel = hiltViewModel()
@@ -112,6 +115,7 @@ fun SetupWizardRoute(
             when (effect) {
                 Effect.NavigateBack -> onNavigateBack()
                 Effect.NavigateToDashboard -> onNavigateToDashboard()
+                Effect.NavigateToPremiumPaywall -> onNavigateToPremiumPaywall()
                 is Effect.NavigateToCropper -> onNavigateToCropper(effect.uri)
             }
         }
@@ -216,6 +220,18 @@ fun SetupWizardScreen(
                         )
                     }
                 }
+            }
+
+            if (state.showPremiumLimit) {
+                CanvasKitConfirmDialog(
+                    title = stringResource(R.string.premium_limit_vehicle_title),
+                    message = stringResource(R.string.premium_limit_vehicle_message),
+                    confirmText = stringResource(CoreR.string.premium_upgrade_confirm),
+                    cancelText = stringResource(R.string.premium_upgrade_cancel),
+                    onConfirm = { onEvent(Event.OnUpgradeClicked) },
+                    onDismissRequest = { onEvent(Event.OnDismissPremiumLimit) },
+                    icon = Icons.Default.Info
+                )
             }
         }
     }

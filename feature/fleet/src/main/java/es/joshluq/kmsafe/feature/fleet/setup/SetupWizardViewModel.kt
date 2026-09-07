@@ -8,8 +8,11 @@ import es.joshluq.foundationkit.log.LoggerKit
 import es.joshluq.foundationkit.text.TextProvider
 import es.joshluq.foundationkit.viewmodel.ScreenViewModel
 import es.joshluq.kmsafe.core.ui.util.toText
+import es.joshluq.kmsafe.domain.model.Feature
 import es.joshluq.kmsafe.domain.model.RentingContract
 import es.joshluq.kmsafe.domain.model.SyncStatus
+import es.joshluq.kmsafe.domain.usecase.CheckFeatureAccessUseCase
+import es.joshluq.kmsafe.domain.usecase.GetAllContractsUseCase
 import es.joshluq.kmsafe.domain.usecase.GetEntitlementsUseCase
 import es.joshluq.kmsafe.domain.usecase.GetImageBytesUseCase
 import es.joshluq.kmsafe.domain.usecase.SaveInitialContractUseCase
@@ -18,6 +21,7 @@ import es.joshluq.kmsafe.feature.fleet.R
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.launchIn
@@ -33,6 +37,8 @@ import javax.inject.Inject
 class SetupWizardViewModel @Inject constructor(
     private val saveInitialContractUseCase: SaveInitialContractUseCase,
     private val getEntitlementsUseCase: GetEntitlementsUseCase,
+    private val checkFeatureAccessUseCase: CheckFeatureAccessUseCase,
+    private val getAllContractsUseCase: GetAllContractsUseCase,
     private val uploadVehicleImage: UploadVehicleImageUseCase,
     private val getImageBytesUseCase: GetImageBytesUseCase,
     private val analytics: AnalyticskitManager,
@@ -43,6 +49,7 @@ class SetupWizardViewModel @Inject constructor(
 
     init {
         loadEntitlements()
+        checkMultiVehicleEligibility()
     }
 
     override fun createInitialState(): State = State()
@@ -108,6 +115,14 @@ class SetupWizardViewModel @Inject constructor(
                 updateState { copy(showBluetoothPicker = newState) }
             }
             Event.OnDismissError -> updateState { copy(error = null) }
+            Event.OnUpgradeClicked -> {
+                updateState { copy(showPremiumLimit = false) }
+                launchEffect(Effect.NavigateToPremiumPaywall)
+            }
+            Event.OnDismissPremiumLimit -> {
+                updateState { copy(showPremiumLimit = false) }
+                launchEffect(Effect.NavigateBack)
+            }
         }
     }
 
@@ -277,8 +292,36 @@ class SetupWizardViewModel @Inject constructor(
             }.launchIn(viewModelScope)
     }
 
+    private fun checkMultiVehicleEligibility() {
+        combine(
+            checkFeatureAccessUseCase(CheckFeatureAccessUseCase.Input(Feature.MULTI_VEHICLE)),
+            getAllContractsUseCase(GetAllContractsUseCase.Input)
+        ) { accessOutput, contractsOutput ->
+            val isMultiVehicleGranted = (accessOutput as? CheckFeatureAccessUseCase.Output.Success)?.isGranted ?: false
+            val contracts = (contractsOutput as? GetAllContractsUseCase.Output.Success)?.contracts ?: emptyList()
+            Pair(isMultiVehicleGranted, contracts.isNotEmpty())
+        }.onEach { (isMultiVehicleGranted, hasExisting) ->
+            updateState {
+                copy(
+                    isMultiVehicleAllowed = isMultiVehicleGranted,
+                    hasExistingVehicles = hasExisting,
+                    showPremiumLimit = !isMultiVehicleGranted && hasExisting
+                )
+            }
+            if (!isMultiVehicleGranted && hasExisting) {
+                logger.w("SetupWizardViewModel", "Multi-vehicle limit reached for free user")
+                analytics.track(AnalyticsEvent.Custom("multi_vehicle_limit_reached"))
+            }
+        }.launchIn(viewModelScope)
+    }
+
     @OptIn(ExperimentalCoroutinesApi::class)
     private fun saveContract() {
+        if (!state.value.isMultiVehicleAllowed && state.value.hasExistingVehicles) {
+            logger.w("SetupWizardViewModel", "Blocking saveContract: multi-vehicle limit reached")
+            updateState { copy(showPremiumLimit = true) }
+            return
+        }
         val s = state.value
         val sdf = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).apply {
             timeZone = TimeZone.getTimeZone("UTC")

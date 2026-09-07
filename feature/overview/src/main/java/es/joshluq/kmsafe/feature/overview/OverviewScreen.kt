@@ -6,6 +6,7 @@ import android.content.res.Configuration
 import android.net.Uri
 import android.os.Build
 import android.provider.Settings
+import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
@@ -78,6 +79,7 @@ import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
 import es.joshluq.canvaskit.components.buttons.CanvasKitButton
+import es.joshluq.canvaskit.components.buttons.CanvasKitButtonSize
 import es.joshluq.canvaskit.components.buttons.CanvasKitButtonVariant
 import es.joshluq.canvaskit.components.cards.CanvasKitCard
 import es.joshluq.canvaskit.components.cards.CanvasKitCardVariant
@@ -443,8 +445,10 @@ private fun TripCompletedCard(
 ) {
     val kms = distanceMeters / 1000.0
     CanvasKitCard(
-        modifier = Modifier.fillMaxWidth(),
-        variant = CanvasKitCardVariant.Elevated
+        modifier = Modifier
+            .fillMaxWidth()
+            .animateContentSize(animationSpec = tween(durationMillis = 250)),
+        variant = CanvasKitCardVariant.Outlined
     ) {
         Column(
             modifier = Modifier.fillMaxWidth(),
@@ -457,8 +461,8 @@ private fun TripCompletedCard(
             ) {
                 Text(
                     text = stringResource(R.string.overview_trip_completed_title),
-                    style = CanvasKitTheme.typography.labelSmall,
-                    color = CanvasKitTheme.colors.brandAccent,
+                    style = CanvasKitTheme.typography.labelLarge,
+                    fontWeight = FontWeight.Bold,
                     letterSpacing = 1.sp
                 )
                 Text(
@@ -481,14 +485,16 @@ private fun TripCompletedCard(
             ) {
                 CanvasKitButton(
                     text = stringResource(R.string.tracking_card_cancel_action),
-                    variant = CanvasKitButtonVariant.Ghost,
+                    variant = CanvasKitButtonVariant.Secondary,
                     modifier = Modifier.weight(1f),
+                    size = CanvasKitButtonSize.Small,
                     onClick = safeClick { onCancel() }
                 )
                 CanvasKitButton(
                     text = stringResource(R.string.tracking_card_save_action),
                     variant = CanvasKitButtonVariant.Primary,
                     modifier = Modifier.weight(1f),
+                    size = CanvasKitButtonSize.Small,
                     onClick = safeClick { onConfirm() }
                 )
             }
@@ -874,7 +880,9 @@ private fun EmptyState(
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     CanvasKitButton(
                         onClick = safeClick { onRegisterClick() },
-                        modifier = Modifier.fillMaxWidth().testTag("overview_register_renting_button")
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .testTag("overview_register_renting_button")
                     ) { contentColor ->
                         Text(
                             stringResource(R.string.overview_register_renting_button),
@@ -903,6 +911,8 @@ internal class OverviewStateProvider : PreviewParameterProvider<State> {
         State(
             isLoading = false,
             isPremium = false,
+            isTracking = false,
+            trackedDistance = 30.0,
             renting = RentingContract(
                 id = "1",
                 vehicleName = "Volkswagen ID.3",

@@ -4,6 +4,10 @@ import es.joshluq.analyticskit.sdk.AnalyticskitManager
 import es.joshluq.foundationkit.log.LoggerKit
 import es.joshluq.kmsafe.domain.model.Entitlements
 import es.joshluq.kmsafe.domain.model.SubscriptionLevel
+import es.joshluq.kmsafe.domain.model.Feature
+import es.joshluq.kmsafe.domain.model.RentingContract
+import es.joshluq.kmsafe.domain.usecase.CheckFeatureAccessUseCase
+import es.joshluq.kmsafe.domain.usecase.GetAllContractsUseCase
 import es.joshluq.kmsafe.domain.usecase.GetEntitlementsUseCase
 import es.joshluq.kmsafe.domain.usecase.GetImageBytesUseCase
 import es.joshluq.kmsafe.domain.usecase.SaveInitialContractUseCase
@@ -39,6 +43,8 @@ class SetupWizardViewModelTest {
 
     private val saveInitialContractUseCase: SaveInitialContractUseCase = mockk()
     private val getEntitlementsUseCase: GetEntitlementsUseCase = mockk()
+    private val checkFeatureAccessUseCase: CheckFeatureAccessUseCase = mockk()
+    private val getAllContractsUseCase: GetAllContractsUseCase = mockk()
     private val uploadVehicleImageUseCase: UploadVehicleImageUseCase = mockk()
     private val getImageBytesUseCase: GetImageBytesUseCase = mockk()
     private val analytics: AnalyticskitManager = mockk(relaxed = true)
@@ -49,6 +55,12 @@ class SetupWizardViewModelTest {
         Dispatchers.setMain(testDispatcher)
         every { getEntitlementsUseCase(any()) } returns flowOf(
             GetEntitlementsUseCase.Output.Success(Entitlements.Default.copy(subscriptionLevel = SubscriptionLevel.PREMIUM))
+        )
+        every { checkFeatureAccessUseCase(any()) } returns flowOf(
+            CheckFeatureAccessUseCase.Output.Success(true)
+        )
+        every { getAllContractsUseCase(any()) } returns flowOf(
+            GetAllContractsUseCase.Output.Success(emptyList())
         )
     }
 
@@ -63,6 +75,8 @@ class SetupWizardViewModelTest {
         return SetupWizardViewModel(
             saveInitialContractUseCase = saveInitialContractUseCase,
             getEntitlementsUseCase = getEntitlementsUseCase,
+            checkFeatureAccessUseCase = checkFeatureAccessUseCase,
+            getAllContractsUseCase = getAllContractsUseCase,
             uploadVehicleImage = uploadVehicleImageUseCase,
             getImageBytesUseCase = getImageBytesUseCase,
             analytics = analytics,
@@ -184,5 +198,114 @@ class SetupWizardViewModelTest {
 
         assertEquals(1, effects.size)
         assertEquals(Effect.NavigateBack, effects.first())
+    }
+
+    @Test
+    fun `given free user with existing contract when initialized then showPremiumLimit is true`() = runTest(testDispatcher) {
+        val existingContract = mockk<RentingContract>()
+        every { checkFeatureAccessUseCase(any()) } returns flowOf(
+            CheckFeatureAccessUseCase.Output.Success(false)
+        )
+        every { getAllContractsUseCase(any()) } returns flowOf(
+            GetAllContractsUseCase.Output.Success(listOf(existingContract))
+        )
+
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        assertTrue(viewModel.state.value.showPremiumLimit)
+        assertFalse(viewModel.state.value.isMultiVehicleAllowed)
+        assertTrue(viewModel.state.value.hasExistingVehicles)
+    }
+
+    @Test
+    fun `given showPremiumLimit true when upgrade clicked then emits NavigateToPremiumPaywall`() = runTest(testDispatcher) {
+        val existingContract = mockk<RentingContract>()
+        every { checkFeatureAccessUseCase(any()) } returns flowOf(
+            CheckFeatureAccessUseCase.Output.Success(false)
+        )
+        every { getAllContractsUseCase(any()) } returns flowOf(
+            GetAllContractsUseCase.Output.Success(listOf(existingContract))
+        )
+
+        val effects = mutableListOf<Effect>()
+        val viewModel = createViewModel()
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
+            viewModel.effects.collect { effects.add(it) }
+        }
+        advanceUntilIdle()
+
+        viewModel.sendEvent(Event.OnUpgradeClicked)
+        advanceUntilIdle()
+
+        assertFalse(viewModel.state.value.showPremiumLimit)
+        assertEquals(Effect.NavigateToPremiumPaywall, effects.first())
+    }
+
+    @Test
+    fun `given showPremiumLimit true when dismiss clicked then emits NavigateBack`() = runTest(testDispatcher) {
+        val existingContract = mockk<RentingContract>()
+        every { checkFeatureAccessUseCase(any()) } returns flowOf(
+            CheckFeatureAccessUseCase.Output.Success(false)
+        )
+        every { getAllContractsUseCase(any()) } returns flowOf(
+            GetAllContractsUseCase.Output.Success(listOf(existingContract))
+        )
+
+        val effects = mutableListOf<Effect>()
+        val viewModel = createViewModel()
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
+            viewModel.effects.collect { effects.add(it) }
+        }
+        advanceUntilIdle()
+
+        viewModel.sendEvent(Event.OnDismissPremiumLimit)
+        advanceUntilIdle()
+
+        assertFalse(viewModel.state.value.showPremiumLimit)
+        assertEquals(Effect.NavigateBack, effects.first())
+    }
+
+    @Test
+    fun `given free user with existing contract when save attempted then blocked and does not call saveUseCase`() = runTest(testDispatcher) {
+        val existingContract = mockk<RentingContract>()
+        every { checkFeatureAccessUseCase(any()) } returns flowOf(
+            CheckFeatureAccessUseCase.Output.Success(false)
+        )
+        every { getAllContractsUseCase(any()) } returns flowOf(
+            GetAllContractsUseCase.Output.Success(listOf(existingContract))
+        )
+
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        // Step 1
+        viewModel.sendEvent(Event.OnVehicleNameChanged("Second Car"))
+        viewModel.sendEvent(Event.OnNextClicked)
+        advanceUntilIdle()
+
+        // Step 2
+        viewModel.sendEvent(Event.OnStartDateChanged("01/01/2024"))
+        viewModel.sendEvent(Event.OnDurationMonthsChanged("12"))
+        viewModel.sendEvent(Event.OnNextClicked)
+        advanceUntilIdle()
+
+        // Step 3
+        viewModel.sendEvent(Event.OnTotalKmsChanged("10000"))
+        viewModel.sendEvent(Event.OnStartOdometerChanged("0"))
+        viewModel.sendEvent(Event.OnCurrentOdometerChanged("0"))
+        viewModel.sendEvent(Event.OnNextClicked)
+        advanceUntilIdle()
+
+        // Step 4
+        viewModel.sendEvent(Event.OnSkipStepClicked)
+        advanceUntilIdle()
+
+        // Step 5 (attempt save)
+        viewModel.sendEvent(Event.OnSkipStepClicked)
+        advanceUntilIdle()
+
+        coVerify(exactly = 0) { saveInitialContractUseCase(any()) }
+        assertTrue(viewModel.state.value.showPremiumLimit)
     }
 }

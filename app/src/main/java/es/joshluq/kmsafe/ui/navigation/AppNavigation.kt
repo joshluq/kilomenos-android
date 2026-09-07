@@ -84,7 +84,7 @@ fun AppNavigation(
                     }
                 },
                 onNavigateToWelcomeDiscovery = {
-                    navController.navigate(Destination.WelcomeDiscovery) {
+                    navController.navigate(Destination.WelcomeDiscovery(isGuideMode = false)) {
                         popUpTo(Destination.Login) { inclusive = true }
                     }
                 },
@@ -97,13 +97,22 @@ fun AppNavigation(
             )
         }
 
-        composable<Destination.WelcomeDiscovery> {
+        composable<Destination.WelcomeDiscovery> { backStackEntry ->
+            val destination = backStackEntry.toRoute<Destination.WelcomeDiscovery>()
             WelcomeDiscoveryScreen(
+                isGuideMode = destination.isGuideMode,
                 onNavigateToRentingSetup = {
                     navController.navigate(Destination.Dashboard) {
                         popUpTo(Destination.WelcomeDiscovery) { inclusive = true }
                     }
                     navController.navigate(Destination.SetupWizard)
+                },
+                onFinishGuide = {
+                    if (!navController.popBackStack()) {
+                        navController.navigate(Destination.Dashboard) {
+                            popUpTo(Destination.WelcomeDiscovery) { inclusive = true }
+                        }
+                    }
                 },
                 onSkip = {
                     if (!navController.popBackStack()) {
@@ -173,8 +182,8 @@ fun AppNavigation(
                         onNavigateToAssistedPermissions = {
                             navController.navigate(Destination.AssistedTrackingPermissions)
                         },
-                        onNavigateToWelcomeDiscovery = {
-                            navController.navigate(Destination.WelcomeDiscovery)
+                        onNavigateToWelcomeDiscovery = { isGuideMode ->
+                            navController.navigate(Destination.WelcomeDiscovery(isGuideMode = isGuideMode))
                         },
                         onNavigateToVehicleDetail = { vehicleId ->
                             navController.navigate(Destination.VehicleDetail(vehicleId))
@@ -276,6 +285,9 @@ fun AppNavigation(
                 },
                 onNavigateToCropper = { uri ->
                     navController.navigate(Destination.ImageCropper(uri))
+                },
+                onNavigateToPremiumPaywall = {
+                    navController.navigate(Destination.PremiumPaywall)
                 },
                 backStackEntry = backStackEntry
             )
