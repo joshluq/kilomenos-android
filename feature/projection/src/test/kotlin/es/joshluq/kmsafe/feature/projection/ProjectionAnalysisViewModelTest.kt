@@ -17,7 +17,9 @@ import io.mockk.mockk
 import io.mockk.unmockkAll
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -202,5 +204,54 @@ class ProjectionAnalysisViewModelTest {
         assertTrue(effects.first() is Effect.NavigateToPremiumPaywall)
 
         job.cancel()
+    }
+
+    @Test
+    fun `given vehicle switch then resets simulation pace planned trips and multiplier`() = runTest(testDispatcher) {
+        val contractFlow = MutableStateFlow(sampleContract)
+        val projectionFlow = MutableStateFlow(sampleProjection.copy(contractId = sampleContract.id))
+        val overviewFlow = MutableStateFlow(
+            GetOverviewDataUseCase.Output.Success(
+                contract = sampleContract,
+                actualKmsDrivenSinceStart = 1500.0,
+                isSyncPending = false,
+                metrics = null
+            )
+        )
+
+        every { getRentingContractUseCase(GetRentingContractUseCase.Input) } returns contractFlow.map { GetRentingContractUseCase.Output.Success(it) }
+        every { getTripProjectionUseCase(GetTripProjectionUseCase.Input) } returns projectionFlow.map { GetTripProjectionUseCase.Output.Success(it) }
+        every { getOverviewDataUseCase(GetOverviewDataUseCase.Input) } returns overviewFlow
+
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        // User alters simulation on vehicle 1
+        viewModel.sendEvent(Event.OnSimulatedKmChanged(80f))
+        viewModel.sendEvent(Event.OnAddPresetTrip("Viaje", 300))
+        advanceUntilIdle()
+
+        assertEquals(80f, viewModel.state.value.simulatedDailyKm)
+        assertEquals(1, viewModel.state.value.plannedTrips.size)
+
+        // Switch to vehicle 2
+        val contract2 = sampleContract.copy(id = "contract-proj-2", vehicleName = "Audi Q3")
+        val projection2 = sampleProjection.copy(contractId = "contract-proj-2", dailyAverage = 20.0)
+        val overview2 = GetOverviewDataUseCase.Output.Success(
+            contract = contract2,
+            actualKmsDrivenSinceStart = 500.0,
+            isSyncPending = false,
+            metrics = null
+        )
+
+        contractFlow.value = contract2
+        overviewFlow.value = overview2
+        projectionFlow.value = projection2
+        advanceUntilIdle()
+
+        assertEquals(20f, viewModel.state.value.simulatedDailyKm)
+        assertEquals(1.0f, viewModel.state.value.paceMultiplier)
+        assertTrue(viewModel.state.value.plannedTrips.isEmpty())
+        assertEquals(0, viewModel.state.value.totalPlannedTripsKm)
     }
 }

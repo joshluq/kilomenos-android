@@ -77,8 +77,8 @@
     <string name="projection_card_projected_total">Lectura al entregar</string>
     <string name="projection_card_daily_average">Tu ritmo actual</string>
     <string name="projection_card_not_enough_data">Dibujando tu futuro (faltan %1$d días de datos)&#8230;</string>
-    <string name="projection_card_status_safe">¡Todo bajo control! Te sobrarían %1$s km.</string>
-    <string name="projection_card_status_over">⚠️ Atención: superarás tu límite por %1$s km.</string>
+    <string name="projection_card_status_safe">Copilot: Ritmo seguro (+%1$s km al vencer)</string>
+    <string name="projection_card_status_over">Copilot: Exceso proyectado (+%1$s km al vencer)</string>
     <string name="projection_analysis_financial_impact_title">PROTECCIÓN DE TU BOLSILLO</string>
     <string name="projection_analysis_penalty_price_label">Coste pactado por KM extra</string>
     <string name="projection_analysis_estimated_penalty">Gasto evitable estimado</string>

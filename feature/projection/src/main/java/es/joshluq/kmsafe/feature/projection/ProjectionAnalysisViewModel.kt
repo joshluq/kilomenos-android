@@ -78,6 +78,15 @@ class ProjectionAnalysisViewModel @Inject constructor(
                 val projection = projectionOutput.projection
                 val isPremium = (accessOutput is CheckFeatureAccessUseCase.Output.Success) && accessOutput.isGranted
 
+                val overviewContract = overviewOutput.contract
+                // Guard against intermediate race conditions during vehicle switch: ensure contract IDs match
+                if (overviewContract != null && overviewContract.id != contract.id) {
+                    return@combine
+                }
+                if (projection != null && projection.contractId.isNotEmpty() && projection.contractId != contract.id) {
+                    return@combine
+                }
+
                 val totalDays = (contract.durationMonths * DAYS_IN_MONTH).toLong()
                 val elapsedMillis = (System.currentTimeMillis() - contract.startDate).coerceAtLeast(0L)
                 val elapsedDays = (elapsedMillis / MILLIS_IN_DAY.toDouble()).coerceAtLeast(0.0)
@@ -87,11 +96,16 @@ class ProjectionAnalysisViewModel @Inject constructor(
                 val realDailyAvg = projection?.dailyAverage?.toFloat() ?: 0f
                 val defaultPenaltyPrice = contract.excessDistancePrice?.toFloat() ?: 0.05f
 
+                val isVehicleChanged = currentContract != null && currentContract?.id != contract.id
                 currentContract = contract
                 actualKmsDrivenSinceStart = overviewOutput.actualKmsDrivenSinceStart
 
-                // If simulated daily km is not yet set (initial load), default to real daily avg
-                val initialSimDailyKm = if (state.value.simulatedDailyKm == 0f) realDailyAvg else state.value.simulatedDailyKm
+                // Reset simulation variables when vehicle changes or on initial load
+                val initialSimDailyKm = if (isVehicleChanged || state.value.simulatedDailyKm == 0f) {
+                    realDailyAvg
+                } else {
+                    state.value.simulatedDailyKm
+                }
 
                 updateState {
                     copy(
@@ -104,7 +118,10 @@ class ProjectionAnalysisViewModel @Inject constructor(
                         penaltyPricePerKm = defaultPenaltyPrice,
                         baselineProjection = projection,
                         realDailyAverage = realDailyAvg,
-                        simulatedDailyKm = initialSimDailyKm
+                        simulatedDailyKm = initialSimDailyKm,
+                        paceMultiplier = if (isVehicleChanged) 1.0f else paceMultiplier,
+                        plannedTrips = if (isVehicleChanged) emptyList() else plannedTrips,
+                        totalPlannedTripsKm = if (isVehicleChanged) 0 else totalPlannedTripsKm
                     )
                 }
 

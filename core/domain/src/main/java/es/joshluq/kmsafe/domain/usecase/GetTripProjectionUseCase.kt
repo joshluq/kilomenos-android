@@ -72,6 +72,7 @@ class GetTripProjectionUseCaseImpl @Inject constructor(
                 val expectedBalance = contractedLimitKms - projectedFinalKms
 
                 val projection = TripProjection(
+                    contractId = contract.id,
                     projectedTotalKms = projectedFinalKms,
                     expectedFinalBalance = expectedBalance,
                     isOverLimit = expectedBalance < 0,

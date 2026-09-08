@@ -69,10 +69,10 @@ fun DashboardNavigation(
         },
         modifier = Modifier.fillMaxSize(),
         transitionSpec = {
-            fadeIn(animationSpec = tween(150)) togetherWith fadeOut(animationSpec = tween(100))
+            fadeIn(animationSpec = tween(250)) togetherWith fadeOut(animationSpec = tween(150))
         },
         popTransitionSpec = {
-            fadeIn(animationSpec = tween(150)) togetherWith fadeOut(animationSpec = tween(100))
+            fadeIn(animationSpec = tween(250)) togetherWith fadeOut(animationSpec = tween(150))
         },
         entryProvider = { key ->
             when (key) {

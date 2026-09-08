@@ -72,6 +72,7 @@ class OverviewViewModel @Inject constructor(
     private val logger: LoggerKit
 ) : ScreenViewModel<State, Event, Effect>() {
 
+    private var projectionJob: Job? = null
     private var bannerAlertJob: Job? = null
     private var bluetoothJob: Job? = null
 
@@ -144,8 +145,15 @@ class OverviewViewModel @Inject constructor(
                     val hasBluetooth = contract.bluetoothDeviceAddress != null
                     val showBluetoothSuggestion = isPremium && isAutoTrackingEnabled && !hasBluetooth
 
+                    val isVehicleSwitching = state.value.renting != null && state.value.renting?.id != contract.id
+                    val currentProjection = if (isVehicleSwitching || (newState.projection?.contractId?.isNotEmpty() == true && newState.projection.contractId != contract.id)) {
+                        null
+                    } else {
+                        newState.projection
+                    }
+
                     val capsule = resolveStatusCapsule(
-                        projection = newState.projection,
+                        projection = currentProjection,
                         showProjectionBanner = newState.showProjectionBanner,
                         renting = contract,
                         isPremium = isPremium,
@@ -163,6 +171,7 @@ class OverviewViewModel @Inject constructor(
                         kmsPercentage = metrics.kmsPercentage,
                         differencePercentage = metrics.differencePercentage,
                         showBluetoothSuggestionBanner = showBluetoothSuggestion,
+                        projection = currentProjection,
                         statusCapsule = capsule,
                         isSyncPending = metrics.isSyncPending,
                         isLoading = false
@@ -389,12 +398,41 @@ class OverviewViewModel @Inject constructor(
     }
 
     private fun loadProjection() {
-        getTripProjectionUseCase(GetTripProjectionUseCase.Input)
+        projectionJob?.cancel()
+        projectionJob = getTripProjectionUseCase(GetTripProjectionUseCase.Input)
             .onEach { output ->
                 if (output is GetTripProjectionUseCase.Output.Success) {
-                    val currentOverLimit = output.projection?.isOverLimit ?: false
-                    updateState { copy(projection = output.projection) }
-                    checkBannerAlert(currentOverLimit)
+                    val projection = output.projection
+                    val currentRenting = state.value.renting
+                    if (projection != null && currentRenting != null &&
+                        (projection.contractId.isEmpty() || projection.contractId == currentRenting.id)
+                    ) {
+                        val currentOverLimit = projection.isOverLimit
+                        val capsule = resolveStatusCapsule(
+                            projection = projection,
+                            showProjectionBanner = true,
+                            renting = currentRenting,
+                            isPremium = state.value.isPremium ?: false,
+                            isAutoTrackingEnabled = state.value.autoTrackingEnabled
+                        )
+                        updateState {
+                            copy(
+                                projection = projection,
+                                showProjectionBanner = true,
+                                statusCapsule = capsule
+                            )
+                        }
+                        checkBannerAlert(currentOverLimit)
+                    } else if (projection == null) {
+                        val capsule = resolveStatusCapsule(
+                            projection = null,
+                            showProjectionBanner = state.value.showProjectionBanner,
+                            renting = currentRenting,
+                            isPremium = state.value.isPremium ?: false,
+                            isAutoTrackingEnabled = state.value.autoTrackingEnabled
+                        )
+                        updateState { copy(projection = null, statusCapsule = capsule) }
+                    }
                 }
             }
             .launchIn(viewModelScope)
@@ -406,31 +444,21 @@ class OverviewViewModel @Inject constructor(
             .onEach { output ->
                 if (output is GetPreferencesUseCase.Output.Success) {
                     val prefs = output.preferences
-                    if (prefs.showProjectionBanner) {
-                        val lastState = prefs.lastKnownOverLimit
-                        if (lastState == null || lastState != currentOverLimit) {
-                            val capsule = resolveStatusCapsule(
-                                projection = state.value.projection,
-                                showProjectionBanner = true,
-                                renting = state.value.renting,
-                                isPremium = state.value.isPremium ?: false,
-                                isAutoTrackingEnabled = state.value.autoTrackingEnabled
-                            )
-                            updateState { copy(showProjectionBanner = true, statusCapsule = capsule) }
-                            updatePreferencesUseCase(
-                                UpdatePreferencesUseCase.Input(lastKnownOverLimit = currentOverLimit)
-                            )
-                                .launchIn(viewModelScope)
-                        }
-                    } else {
-                        val capsule = resolveStatusCapsule(
-                            projection = state.value.projection,
-                            showProjectionBanner = false,
-                            renting = state.value.renting,
-                            isPremium = state.value.isPremium ?: false,
-                            isAutoTrackingEnabled = state.value.autoTrackingEnabled
-                        )
-                        updateState { copy(showProjectionBanner = false, statusCapsule = capsule) }
+                    val shouldShow = prefs.showProjectionBanner
+                    val lastState = prefs.lastKnownOverLimit
+                    val capsule = resolveStatusCapsule(
+                        projection = state.value.projection,
+                        showProjectionBanner = shouldShow,
+                        renting = state.value.renting,
+                        isPremium = state.value.isPremium ?: false,
+                        isAutoTrackingEnabled = state.value.autoTrackingEnabled
+                    )
+                    updateState { copy(showProjectionBanner = shouldShow, statusCapsule = capsule) }
+
+                    if (shouldShow && (lastState == null || lastState != currentOverLimit)) {
+                        updatePreferencesUseCase(
+                            UpdatePreferencesUseCase.Input(lastKnownOverLimit = currentOverLimit)
+                        ).launchIn(viewModelScope)
                     }
                 }
             }.launchIn(viewModelScope)

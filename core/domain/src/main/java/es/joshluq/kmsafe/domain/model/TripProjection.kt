@@ -10,6 +10,7 @@ package es.joshluq.kmsafe.domain.model
  * @property hasEnoughData True if there is enough historical data to provide a reliable projection.
  */
 data class TripProjection(
+    val contractId: String = "",
     val projectedTotalKms: Double,
     val expectedFinalBalance: Double,
     val isOverLimit: Boolean,

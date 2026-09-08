@@ -77,8 +77,8 @@
     <string name="projection_card_projected_total">Reading at delivery</string>
     <string name="projection_card_daily_average">Your current pace</string>
     <string name="projection_card_not_enough_data">Drawing your future (need %1$d more days of data)&#8230;</string>
-    <string name="projection_card_status_safe">Everything under control! You would have %1$s km left.</string>
-    <string name="projection_card_status_over">⚠️ Attention: you will exceed your limit by %1$s km.</string>
+    <string name="projection_card_status_safe">Copilot: Safe pace (+%1$s km at expiry)</string>
+    <string name="projection_card_status_over">Copilot: Projected excess (+%1$s km at expiry)</string>
     <string name="projection_analysis_financial_impact_title">PROTECTING YOUR POCKET</string>
     <string name="projection_analysis_penalty_price_label">Agreed cost per extra KM</string>
     <string name="projection_analysis_estimated_penalty">Estimated avoidable expense</string>

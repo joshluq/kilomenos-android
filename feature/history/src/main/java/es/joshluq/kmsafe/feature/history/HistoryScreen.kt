@@ -111,7 +111,9 @@ fun HistoryScreen(
         containerColor = CanvasKitTheme.colors.backgroundSecondary,
         contentWindowInsets = WindowInsets()
     ) { innerPadding ->
-        Box(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
+        Box(modifier = Modifier
+            .fillMaxSize()
+            .padding(innerPadding)) {
             Column(modifier = Modifier.fillMaxSize()) {
                 if (!state.isPremium) {
                     AdMobBanner(
@@ -150,7 +152,6 @@ fun HistoryScreen(
                                 state.filteredGroups.forEach { (title, records) ->
                                     val isExpanded = state.expandedGroups.contains(title)
                                     val totalGroupKms = records.sumOf { it.record.odometerValue }
-
                                     item(key = "header_$title") {
                                         CanvasKitAccordion(
                                             expanded = isExpanded,
@@ -170,7 +171,9 @@ fun HistoryScreen(
                                             },
                                             content = {}
                                         )
-                                        Spacer(modifier = Modifier.height(12.dp))
+                                        if (!isExpanded) {
+                                            Spacer(modifier = Modifier.height(12.dp))
+                                        }
                                     }
 
                                     if (isExpanded) {
@@ -350,7 +353,7 @@ private fun GroupHeader(title: String) {
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
-            text = title.uppercase(),
+            text = title.replaceFirstChar { it.uppercase() },
             style = CanvasKitTheme.typography.bodyLarge,
             color = CanvasKitTheme.colors.textSecondary,
             modifier = Modifier.weight(1f)
@@ -446,6 +449,7 @@ fun HistoryScreenPreview() {
             state = HistoryState(
                 totalKms = 1500.51,
                 totalRecordsCount = 12,
+                expandedGroups = setOf("OCTUBRE 2023"),
                 filteredGroups = mapOf(
                     "OCTUBRE 2023" to listOf(
                         RecordWithIndicator(
@@ -453,7 +457,7 @@ fun HistoryScreenPreview() {
                                 "2",
                                 "1",
                                 System.currentTimeMillis(),
-                                1500.45,
+                                1500.0000004,
                                 false,
                                 label = "Viaje Trabajo"
                             ),

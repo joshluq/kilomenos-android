@@ -4,7 +4,7 @@
     <!-- Common -->
     <string name="common_processing">Processing&#8230;</string>
     <string name="common_fuel_consumption_format">%.1f L/100km</string>
-    <string name="common_km_suffix">%1$s km</string>
+    <string name="common_km_suffix">%.2f km</string>
     <string name="common_km_positive_suffix">+ %1$s km</string>
     <string name="common_km_negative_suffix">- %1$s km</string>
     <string name="common_ratio_label">%1$s/%2$s</string>

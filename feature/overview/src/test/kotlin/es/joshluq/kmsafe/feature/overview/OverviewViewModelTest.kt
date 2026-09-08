@@ -477,4 +477,27 @@ class OverviewViewModelTest {
 
         assertEquals(null, viewModel.state.value.statusCapsule)
     }
+
+    @Test
+    fun `given projection loaded for contract then resolves and displays CriticalRisk statusCapsule`() = runTest(testDispatcher) {
+        val testProjection = TripProjection(
+            contractId = "contract-1",
+            projectedTotalKms = 18000.0,
+            expectedFinalBalance = -3000.0,
+            isOverLimit = true,
+            dailyAverage = 50.0,
+            hasEnoughData = true
+        )
+        every { getTripProjectionUseCase(any()) } returns flowOf(
+            GetTripProjectionUseCase.Output.Success(testProjection)
+        )
+
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        val capsule = viewModel.state.value.statusCapsule
+        assertTrue(capsule is StatusCapsuleUiModel.CriticalRisk)
+        assertTrue((capsule as StatusCapsuleUiModel.CriticalRisk).isOverLimit)
+        assertEquals(testProjection, viewModel.state.value.projection)
+    }
 }
