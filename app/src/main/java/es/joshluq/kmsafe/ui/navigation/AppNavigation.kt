@@ -1,14 +1,23 @@
 package es.joshluq.kmsafe.ui.navigation
 
+import androidx.activity.compose.BackHandler
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
-import androidx.navigation.NavHostController
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
-import androidx.navigation.compose.rememberNavController
-import androidx.navigation.navDeepLink
-import androidx.navigation.toRoute
-import es.joshluq.kmsafe.core.navigation.DeepLinkConfig
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Modifier
+import androidx.navigation3.runtime.NavEntry
+import androidx.navigation3.ui.NavDisplay
 import es.joshluq.kmsafe.core.navigation.Destination
+import es.joshluq.kmsafe.core.navigation.LocalNavigationResultStore
+import es.joshluq.kmsafe.core.navigation.NavigationResultStore
 import es.joshluq.kmsafe.feature.auth.launch.LaunchRoute
 import es.joshluq.kmsafe.feature.auth.login.LoginRoute
 import es.joshluq.kmsafe.feature.auth.signup.SignupRoute
@@ -23,350 +32,356 @@ import es.joshluq.kmsafe.feature.fleet.setup.WelcomeDiscoveryScreen
 import es.joshluq.kmsafe.feature.fleet.vehicles.VehicleListRoute
 import es.joshluq.kmsafe.feature.history.detail.RecordDetailRoute
 import es.joshluq.kmsafe.feature.premium.paywall.PremiumPaywallRoute
+import es.joshluq.kmsafe.feature.profile.datamanagement.DataManagementRoute
 import es.joshluq.kmsafe.feature.profile.preferences.PreferencesRoute
 import es.joshluq.kmsafe.ui.common.cropper.CropImageScreen
 import es.joshluq.kmsafe.ui.common.permissions.AssistedTrackingPermissionsScreen
 import es.joshluq.kmsafe.ui.common.permissions.AutoTrackingPermissionsScreen
-import es.joshluq.kmsafe.feature.profile.datamanagement.DataManagementRoute
 
+/**
+ * Root navigation host of the application implemented with Navigation 3 [NavDisplay].
+ */
 @Composable
 fun AppNavigation(
-    navController: NavHostController = rememberNavController(),
+    initialDestination: Destination = Destination.Launch,
+    resultStore: NavigationResultStore,
     onLaunchBilling: () -> Unit = {},
     onShowPrivacyOptions: () -> Unit = {}
 ) {
-    NavHost(
-        navController = navController,
-        startDestination = Destination.Launch
-    ) {
-        composable<Destination.Launch> {
-            LaunchRoute(
-                onNavigateToLogin = {
-                    navController.navigate(Destination.Login) {
-                        popUpTo(Destination.Launch) { inclusive = true }
-                    }
-                },
-                onNavigateToDashboard = {
-                    navController.navigate(Destination.Dashboard) {
-                        popUpTo(Destination.Launch) { inclusive = true }
-                    }
-                }
-            )
-        }
+    val backStack = remember { mutableStateListOf<Destination>(initialDestination) }
 
-        composable<Destination.Login> {
-            LoginRoute(
-                onNavigateToDashboard = {
-                    navController.navigate(Destination.Dashboard) {
-                        popUpTo(Destination.Login) { inclusive = true }
-                    }
-                },
-                onNavigateToPremiumPaywall = {
-                    navController.navigate(Destination.Dashboard) {
-                        popUpTo(Destination.Login) { inclusive = true }
-                    }
-                    navController.navigate(Destination.PremiumPaywall)
-                },
-                onNavigateToSignup = {
-                    navController.navigate(Destination.Signup)
-                }
-            )
-        }
+    val onNavigate: (Destination) -> Unit = { dest ->
+        backStack.add(dest)
+    }
 
-        composable<Destination.Signup> {
-            SignupRoute(
-                onNavigateBack = {
-                    navController.popBackStack()
-                },
-                onNavigateToDashboard = {
-                    navController.navigate(Destination.Dashboard) {
-                        popUpTo(Destination.Login) { inclusive = true }
-                    }
-                },
-                onNavigateToWelcomeDiscovery = {
-                    navController.navigate(Destination.WelcomeDiscovery(isGuideMode = false)) {
-                        popUpTo(Destination.Login) { inclusive = true }
-                    }
-                },
-                onNavigateToPremiumPaywall = {
-                    navController.navigate(Destination.Dashboard) {
-                        popUpTo(Destination.Login) { inclusive = true }
-                    }
-                    navController.navigate(Destination.PremiumPaywall)
-                }
-            )
+    val onBack: () -> Unit = {
+        if (backStack.size > 1) {
+            backStack.removeAt(backStack.lastIndex)
         }
+    }
 
-        composable<Destination.WelcomeDiscovery> { backStackEntry ->
-            val destination = backStackEntry.toRoute<Destination.WelcomeDiscovery>()
-            WelcomeDiscoveryScreen(
-                isGuideMode = destination.isGuideMode,
-                onNavigateToRentingSetup = {
-                    navController.navigate(Destination.Dashboard) {
-                        popUpTo(Destination.WelcomeDiscovery) { inclusive = true }
-                    }
-                    navController.navigate(Destination.SetupWizard)
-                },
-                onFinishGuide = {
-                    if (!navController.popBackStack()) {
-                        navController.navigate(Destination.Dashboard) {
-                            popUpTo(Destination.WelcomeDiscovery) { inclusive = true }
-                        }
-                    }
-                },
-                onSkip = {
-                    if (!navController.popBackStack()) {
-                        navController.navigate(Destination.Dashboard) {
-                            popUpTo(Destination.WelcomeDiscovery) { inclusive = true }
-                        }
-                    }
-                }
-            )
-        }
+    BackHandler(enabled = backStack.size > 1) {
+        onBack()
+    }
 
-        composable<Destination.PremiumPaywall> {
-            PremiumPaywallRoute(
-                onNavigateToDashboard = {
-                    navController.navigate(Destination.Dashboard) {
-                        popUpTo(Destination.Login) { inclusive = true }
-                    }
-                },
-                onNavigateBack = {
-                    navController.popBackStack()
-                },
-                onLaunchBilling = onLaunchBilling
-            )
-        }
-
-        composable<Destination.Dashboard> { backStackEntry ->
-            DashboardRoute(
-                navigationContent = { selectedTab, onSelectTab ->
-                    DashboardNavigation(
-                        selectedTab = selectedTab,
-                        onSelectTab = onSelectTab,
-                        onNavigateToOnboarding = { vehicleId, isEdit ->
-                            if (isEdit && vehicleId != null) {
-                                navController.navigate(Destination.EditContract(vehicleId))
-                            } else {
-                                navController.navigate(Destination.SetupWizard)
+    CompositionLocalProvider(LocalNavigationResultStore provides resultStore) {
+        NavDisplay(
+            backStack = backStack,
+            onBack = onBack,
+            modifier = Modifier.fillMaxSize(),
+            transitionSpec = {
+                (slideInHorizontally(animationSpec = tween(300)) { it } + fadeIn(animationSpec = tween(200)))
+                    .togetherWith(slideOutHorizontally(animationSpec = tween(300)) { -it / 3 } + fadeOut(animationSpec = tween(200)))
+            },
+            popTransitionSpec = {
+                (slideInHorizontally(animationSpec = tween(300)) { -it / 3 } + fadeIn(animationSpec = tween(200)))
+                    .togetherWith(slideOutHorizontally(animationSpec = tween(300)) { it } + fadeOut(animationSpec = tween(200)))
+            },
+            entryProvider = { key ->
+                when (key) {
+                    Destination.Launch -> NavEntry(key) {
+                        LaunchRoute(
+                            onNavigateToLogin = {
+                                backStack.clear()
+                                backStack.add(Destination.Login)
+                            },
+                            onNavigateToDashboard = {
+                                backStack.clear()
+                                backStack.add(Destination.Dashboard)
                             }
-                        },
-                        onNavigateToVehicles = {
-                            navController.navigate(Destination.VehicleList)
-                        },
-                        onNavigateToDataManagement = {
-                            navController.navigate(Destination.DataManagement)
-                        },
-                        onNavigateToLogin = {
-                            navController.navigate(Destination.Login) {
-                                popUpTo(Destination.Dashboard) { inclusive = true }
-                            }
-                        },
-                        onNavigateToPremiumPaywall = {
-                            navController.navigate(Destination.PremiumPaywall)
-                        },
-                        onNavigateToPreferences = {
-                            navController.navigate(Destination.Preferences)
-                        },
-                        onNavigateToRecordDetail = { recordId ->
-                            navController.navigate(Destination.RecordDetail(recordId))
-                        },
-                        onNavigateToStations = {
-                            navController.navigate(Destination.StationManagement)
-                        },
-                        onNavigateToStationDetail = { stationId ->
-                            navController.navigate(Destination.StationDetail(stationId))
-                        },
-                        onNavigateToPermissions = {
-                            navController.navigate(Destination.AutoTrackingPermissions)
-                        },
-                        onNavigateToAssistedPermissions = {
-                            navController.navigate(Destination.AssistedTrackingPermissions)
-                        },
-                        onNavigateToWelcomeDiscovery = { isGuideMode ->
-                            navController.navigate(Destination.WelcomeDiscovery(isGuideMode = isGuideMode))
-                        },
-                        onNavigateToVehicleDetail = { vehicleId ->
-                            navController.navigate(Destination.VehicleDetail(vehicleId))
-                        },
-                        backStackEntry = backStackEntry
-                    )
-                }
-            )
-        }
-
-        composable<Destination.VehicleList> {
-            VehicleListRoute(
-                onNavigateBack = {
-                    navController.popBackStack()
-                },
-                onNavigateToVehicleDetails = { vehicleId ->
-                    navController.navigate(Destination.VehicleDetail(vehicleId))
-                },
-                onNavigateToAddVehicle = {
-                    navController.navigate(Destination.SetupWizard)
-                },
-                onNavigateToPremiumPaywall = {
-                    navController.navigate(Destination.PremiumPaywall)
-                }
-            )
-        }
-
-        composable<Destination.DataManagement> {
-            DataManagementRoute(
-                onNavigateBack = {
-                    navController.popBackStack()
-                },
-                onNavigateToPremiumPaywall = {
-                    navController.navigate(Destination.PremiumPaywall)
-                }
-            )
-        }
-
-        composable<Destination.Preferences> { backStackEntry ->
-            PreferencesRoute(
-                onNavigateBack = {
-                    navController.popBackStack()
-                },
-                onShowPrivacyOptions = onShowPrivacyOptions,
-                onNavigateToPermissions = {
-                    navController.navigate(Destination.AutoTrackingPermissions)
-                },
-                backStackEntry = backStackEntry
-            )
-        }
-
-        composable<Destination.AutoTrackingPermissions> {
-            AutoTrackingPermissionsScreen(
-                onAllPermissionsGranted = {
-                    navController.previousBackStackEntry?.savedStateHandle?.set("permissions_granted", true)
-                    navController.popBackStack()
-                },
-                onDismiss = {
-                    navController.previousBackStackEntry?.savedStateHandle?.set("permissions_granted", false)
-                    navController.popBackStack()
-                }
-            )
-        }
-
-        composable<Destination.AssistedTrackingPermissions> {
-            AssistedTrackingPermissionsScreen(
-                onAllPermissionsGranted = {
-                    navController.previousBackStackEntry?.savedStateHandle?.set("permissions_granted", true)
-                    navController.popBackStack()
-                },
-                onDismiss = {
-                    navController.previousBackStackEntry?.savedStateHandle?.set("permissions_granted", false)
-                    navController.popBackStack()
-                }
-            )
-        }
-
-        composable<Destination.EditContract> { backStackEntry ->
-            EditContractRoute(
-                onNavigateBack = {
-                    navController.popBackStack()
-                },
-                onNavigateToCropper = { uri ->
-                    navController.navigate(Destination.ImageCropper(uri))
-                },
-                backStackEntry = backStackEntry
-            )
-        }
-
-        composable<Destination.SetupWizard> { backStackEntry ->
-            SetupWizardRoute(
-                onNavigateBack = {
-                    navController.popBackStack()
-                },
-                onNavigateToDashboard = {
-                    navController.navigate(Destination.Dashboard) {
-                        popUpTo(Destination.Dashboard) { inclusive = true }
+                        )
                     }
-                },
-                onNavigateToCropper = { uri ->
-                    navController.navigate(Destination.ImageCropper(uri))
-                },
-                onNavigateToPremiumPaywall = {
-                    navController.navigate(Destination.PremiumPaywall)
-                },
-                backStackEntry = backStackEntry
-            )
-        }
 
-        composable<Destination.VehicleDetail> {
-            VehicleDetailRoute(
-                onNavigateBack = {
-                    navController.popBackStack()
-                },
-                onNavigateToEdit = { vehicleId ->
-                    navController.navigate(Destination.EditContract(vehicleId))
-                }
-            )
-        }
+                    Destination.Login -> NavEntry(key) {
+                        LoginRoute(
+                            onNavigateToDashboard = {
+                                backStack.clear()
+                                backStack.add(Destination.Dashboard)
+                            },
+                            onNavigateToPremiumPaywall = {
+                                backStack.clear()
+                                backStack.add(Destination.Dashboard)
+                                backStack.add(Destination.PremiumPaywall)
+                            },
+                            onNavigateToSignup = {
+                                onNavigate(Destination.Signup)
+                            }
+                        )
+                    }
 
-        composable<Destination.RecordDetail> {
-            RecordDetailRoute(
-                onNavigateBack = {
-                    navController.popBackStack()
-                },
-                onNavigateToPremiumPaywall = {
-                    navController.navigate(Destination.PremiumPaywall)
-                }
-            )
-        }
+                    Destination.Signup -> NavEntry(key) {
+                        SignupRoute(
+                            onNavigateBack = onBack,
+                            onNavigateToDashboard = {
+                                backStack.clear()
+                                backStack.add(Destination.Dashboard)
+                            },
+                            onNavigateToWelcomeDiscovery = {
+                                backStack.clear()
+                                backStack.add(Destination.Dashboard)
+                                backStack.add(Destination.WelcomeDiscovery(isGuideMode = false))
+                            },
+                            onNavigateToPremiumPaywall = {
+                                backStack.clear()
+                                backStack.add(Destination.Dashboard)
+                                backStack.add(Destination.PremiumPaywall)
+                            }
+                        )
+                    }
 
-        composable<Destination.ImageCropper> { backStackEntry ->
-            val destination: Destination.ImageCropper = backStackEntry.toRoute()
-            CropImageScreen(
-                uri = destination.uri,
-                onCropSuccess = { croppedUri ->
-                    navController.previousBackStackEntry
-                        ?.savedStateHandle
-                        ?.set("cropped_uri", croppedUri)
-                    navController.popBackStack()
-                },
-                onCancel = {
-                    navController.popBackStack()
-                }
-            )
-        }
+                    is Destination.WelcomeDiscovery -> NavEntry(key) {
+                        WelcomeDiscoveryScreen(
+                            isGuideMode = key.isGuideMode,
+                            onNavigateToRentingSetup = {
+                                val hasDashboard = backStack.contains(Destination.Dashboard)
+                                if (!hasDashboard) {
+                                    backStack.add(0, Destination.Dashboard)
+                                }
+                                onNavigate(Destination.SetupWizard)
+                            },
+                            onFinishGuide = {
+                                if (backStack.size > 1) {
+                                    onBack()
+                                } else {
+                                    backStack.clear()
+                                    backStack.add(Destination.Dashboard)
+                                }
+                            },
+                            onSkip = {
+                                if (backStack.size > 1) {
+                                    onBack()
+                                } else {
+                                    backStack.clear()
+                                    backStack.add(Destination.Dashboard)
+                                }
+                            }
+                        )
+                    }
 
-        composable<Destination.Expenses>(
-            deepLinks = listOf(
-                navDeepLink<Destination.Expenses>(basePath = "${DeepLinkConfig.BASE_URL}/expenses")
-            )
-        ) {
-            ExpensesRoute(
-                onNavigateToUpgrade = {
-                    navController.navigate(Destination.PremiumPaywall)
-                },
-                onNavigateToStations = {
-                    navController.navigate(Destination.StationManagement)
-                },
-                onNavigateToStationDetail = { stationId ->
-                    navController.navigate(Destination.StationDetail(stationId))
-                }
-            )
-        }
+                    Destination.PremiumPaywall -> NavEntry(key) {
+                        PremiumPaywallRoute(
+                            onNavigateToDashboard = {
+                                backStack.clear()
+                                backStack.add(Destination.Dashboard)
+                            },
+                            onNavigateBack = onBack,
+                            onLaunchBilling = onLaunchBilling
+                        )
+                    }
 
-        composable<Destination.StationManagement> {
-            StationManagementRoute(
-                onNavigateBack = {
-                    navController.popBackStack()
-                },
-                onNavigateToDetail = { stationId ->
-                    navController.navigate(Destination.StationDetail(stationId))
-                }
-            )
-        }
+                    Destination.Dashboard -> NavEntry(key) {
+                        DashboardRoute(
+                            navigationContent = { selectedTab, onSelectTab ->
+                                DashboardNavigation(
+                                    selectedTab = selectedTab,
+                                    onSelectTab = onSelectTab,
+                                    onNavigateToOnboarding = { vehicleId, isEdit ->
+                                        if (isEdit && vehicleId != null) {
+                                            onNavigate(Destination.EditContract(vehicleId))
+                                        } else {
+                                            onNavigate(Destination.SetupWizard)
+                                        }
+                                    },
+                                    onNavigateToVehicles = {
+                                        onNavigate(Destination.VehicleList)
+                                    },
+                                    onNavigateToDataManagement = {
+                                        onNavigate(Destination.DataManagement)
+                                    },
+                                    onNavigateToLogin = {
+                                        backStack.clear()
+                                        backStack.add(Destination.Login)
+                                    },
+                                    onNavigateToPremiumPaywall = {
+                                        onNavigate(Destination.PremiumPaywall)
+                                    },
+                                    onNavigateToPreferences = {
+                                        onNavigate(Destination.Preferences)
+                                    },
+                                    onNavigateToRecordDetail = { recordId ->
+                                        onNavigate(Destination.RecordDetail(recordId))
+                                    },
+                                    onNavigateToStations = {
+                                        onNavigate(Destination.StationManagement)
+                                    },
+                                    onNavigateToStationDetail = { stationId ->
+                                        onNavigate(Destination.StationDetail(stationId))
+                                    },
+                                    onNavigateToPermissions = {
+                                        onNavigate(Destination.AutoTrackingPermissions)
+                                    },
+                                    onNavigateToAssistedPermissions = {
+                                        onNavigate(Destination.AssistedTrackingPermissions)
+                                    },
+                                    onNavigateToWelcomeDiscovery = { isGuideMode ->
+                                        onNavigate(Destination.WelcomeDiscovery(isGuideMode = isGuideMode))
+                                    },
+                                    onNavigateToVehicleDetail = { vehicleId ->
+                                        onNavigate(Destination.VehicleDetail(vehicleId))
+                                    }
+                                )
+                            }
+                        )
+                    }
 
-        composable<Destination.StationDetail> {
-            StationDetailRoute(
-                onNavigateBack = {
-                    navController.popBackStack()
+                    Destination.VehicleList -> NavEntry(key) {
+                        VehicleListRoute(
+                            onNavigateBack = onBack,
+                            onNavigateToVehicleDetails = { vehicleId ->
+                                onNavigate(Destination.VehicleDetail(vehicleId))
+                            },
+                            onNavigateToAddVehicle = {
+                                onNavigate(Destination.SetupWizard)
+                            },
+                            onNavigateToPremiumPaywall = {
+                                onNavigate(Destination.PremiumPaywall)
+                            }
+                        )
+                    }
+
+                    Destination.DataManagement -> NavEntry(key) {
+                        DataManagementRoute(
+                            onNavigateBack = onBack,
+                            onNavigateToPremiumPaywall = {
+                                onNavigate(Destination.PremiumPaywall)
+                            }
+                        )
+                    }
+
+                    Destination.Preferences -> NavEntry(key) {
+                        PreferencesRoute(
+                            onNavigateBack = onBack,
+                            onShowPrivacyOptions = onShowPrivacyOptions,
+                            onNavigateToPermissions = {
+                                onNavigate(Destination.AutoTrackingPermissions)
+                            }
+                        )
+                    }
+
+                    Destination.AutoTrackingPermissions -> NavEntry(key) {
+                        AutoTrackingPermissionsScreen(
+                            onAllPermissionsGranted = {
+                                resultStore.setResult("permissions_granted", true)
+                                onBack()
+                            },
+                            onDismiss = {
+                                resultStore.setResult("permissions_granted", false)
+                                onBack()
+                            }
+                        )
+                    }
+
+                    Destination.AssistedTrackingPermissions -> NavEntry(key) {
+                        AssistedTrackingPermissionsScreen(
+                            onAllPermissionsGranted = {
+                                resultStore.setResult("permissions_granted", true)
+                                onBack()
+                            },
+                            onDismiss = {
+                                resultStore.setResult("permissions_granted", false)
+                                onBack()
+                            }
+                        )
+                    }
+
+                    is Destination.EditContract -> NavEntry(key) {
+                        EditContractRoute(
+                            vehicleId = key.vehicleId,
+                            onNavigateBack = onBack,
+                            onNavigateToCropper = { uri ->
+                                onNavigate(Destination.ImageCropper(uri))
+                            }
+                        )
+                    }
+
+                    Destination.SetupWizard -> NavEntry(key) {
+                        SetupWizardRoute(
+                            onNavigateBack = onBack,
+                            onNavigateToDashboard = {
+                                backStack.clear()
+                                backStack.add(Destination.Dashboard)
+                            },
+                            onNavigateToCropper = { uri ->
+                                onNavigate(Destination.ImageCropper(uri))
+                            },
+                            onNavigateToPremiumPaywall = {
+                                onNavigate(Destination.PremiumPaywall)
+                            }
+                        )
+                    }
+
+                    is Destination.VehicleDetail -> NavEntry(key) {
+                        VehicleDetailRoute(
+                            vehicleId = key.vehicleId,
+                            onNavigateBack = onBack,
+                            onNavigateToEdit = { vehicleId ->
+                                onNavigate(Destination.EditContract(vehicleId))
+                            }
+                        )
+                    }
+
+                    is Destination.RecordDetail -> NavEntry(key) {
+                        RecordDetailRoute(
+                            recordId = key.recordId,
+                            onNavigateBack = onBack,
+                            onNavigateToPremiumPaywall = {
+                                onNavigate(Destination.PremiumPaywall)
+                            }
+                        )
+                    }
+
+                    is Destination.ImageCropper -> NavEntry(key) {
+                        CropImageScreen(
+                            uri = key.uri,
+                            onCropSuccess = { croppedUri ->
+                                resultStore.setResult("cropped_uri", croppedUri)
+                                onBack()
+                            },
+                            onCancel = onBack
+                        )
+                    }
+
+                    is Destination.Expenses -> NavEntry(key) {
+                        ExpensesRoute(
+                            stationId = key.stationId,
+                            autoOpenAdd = key.autoOpenAdd,
+                            priceReportMode = key.priceReportMode,
+                            onNavigateToUpgrade = {
+                                onNavigate(Destination.PremiumPaywall)
+                            },
+                            onNavigateToStations = {
+                                onNavigate(Destination.StationManagement)
+                            },
+                            onNavigateToStationDetail = { stationId ->
+                                onNavigate(Destination.StationDetail(stationId))
+                            }
+                        )
+                    }
+
+                    Destination.StationManagement -> NavEntry(key) {
+                        StationManagementRoute(
+                            onNavigateBack = onBack,
+                            onNavigateToDetail = { stationId ->
+                                onNavigate(Destination.StationDetail(stationId))
+                            }
+                        )
+                    }
+
+                    is Destination.StationDetail -> NavEntry(key) {
+                        StationDetailRoute(
+                            stationId = key.stationId,
+                            onNavigateBack = onBack
+                        )
+                    }
+
+                    Destination.Overview,
+                    Destination.History,
+                    Destination.Profile,
+                    Destination.ProjectionAnalysis -> NavEntry(key) {
+                        // Handled internally by DashboardNavigation
+                    }
                 }
-            )
-        }
+            }
+        )
     }
 }

@@ -1,6 +1,5 @@
 package es.joshluq.kmsafe.feature.fleet.detail
 
-import androidx.lifecycle.SavedStateHandle
 import es.joshluq.analyticskit.sdk.AnalyticskitManager
 import es.joshluq.foundationkit.log.LoggerKit
 import es.joshluq.kmsafe.domain.model.Feature
@@ -72,9 +71,8 @@ class VehicleDetailViewModelTest {
     }
 
     private fun createViewModel(vehicleId: String = "vehicle-123"): VehicleDetailViewModel {
-        val savedStateHandle = SavedStateHandle(mapOf("vehicleId" to vehicleId))
         return VehicleDetailViewModel(
-            savedStateHandle = savedStateHandle,
+            vehicleId = vehicleId,
             getVehicleByIdUseCase = getVehicleByIdUseCase,
             deleteContractUseCase = deleteContractUseCase,
             checkFeatureAccessUseCase = checkFeatureAccessUseCase,

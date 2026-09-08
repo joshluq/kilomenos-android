@@ -31,7 +31,6 @@ class ProcessFuelReceiptUseCaseTest {
     private val receiptRepository: ReceiptRepository = mockk()
     private val authRepository: AuthRepository = mockk()
     private val entitlementsRepository: EntitlementsRepository = mockk()
-    private val expenseRepository: FuelExpenseRepository = mockk()
     private val logger: LoggerKit = mockk(relaxed = true)
 
     private lateinit var useCase: ProcessFuelReceiptUseCase
@@ -56,7 +55,6 @@ class ProcessFuelReceiptUseCaseTest {
             receiptRepository = receiptRepository,
             authRepository = authRepository,
             entitlementsRepository = entitlementsRepository,
-            expenseRepository = expenseRepository,
             logger = logger
         )
     }
@@ -79,29 +77,35 @@ class ProcessFuelReceiptUseCaseTest {
     }
 
     @Test
-    fun `given free user with 1 scan already this month when invoke then emits Failure ReceiptScanQuotaExceeded`() = runTest {
+    fun `given free user without active trial when invoke then emits Failure FuelExpensesPremiumOnly`() = runTest {
         every { authRepository.getCurrentUser() } returns flowOf(sampleUser)
-        every { entitlementsRepository.observeEntitlements() } returns flowOf(Entitlements.Default) // FREE tier
-        every { expenseRepository.getExpensesByVehicle("veh-1") } returns flowOf(
-            listOf(
-                FuelExpense(
-                    id = "exp-1",
-                    vehicleId = "veh-1",
-                    timestamp = System.currentTimeMillis(),
-                    fuelType = FuelType.DIESEL,
-                    unitPrice = 1.5,
-                    volumeQuantity = 40.0,
-                    totalCost = 60.0,
-                    receiptImagePath = "user-1/old-receipt.jpg"
-                )
-            )
-        )
+        every { entitlementsRepository.observeEntitlements() } returns flowOf(Entitlements.Default) // FREE tier, isTrialActive = false
 
         val emissions = useCase(ProcessFuelReceiptUseCase.Input("content://media/receipt.jpg", "veh-1")).toList()
 
         assertEquals(2, emissions.size)
         val failure = emissions[1] as ProcessFuelReceiptUseCase.Output.Failure
-        assertEquals(KmError.ReceiptScanQuotaExceeded, failure.error)
+        assertEquals(KmError.FuelExpensesPremiumOnly, failure.error)
+    }
+
+    @Test
+    fun `given active trial user when invoke then uploads and extracts receipt successfully`() = runTest {
+        val trialEntitlements = Entitlements.Default.copy(
+            subscriptionLevel = SubscriptionLevel.TRIAL,
+            isTrialActive = true
+        )
+        every { authRepository.getCurrentUser() } returns flowOf(sampleUser)
+        every { entitlementsRepository.observeEntitlements() } returns flowOf(trialEntitlements)
+        every { receiptRepository.uploadReceiptFromUri(sampleUser.id, any(), any()) } returns flowOf("user-1/receipt.jpg")
+        every { receiptRepository.processReceipt("user-1/receipt.jpg") } returns flowOf(sampleScanResult)
+
+        val emissions = useCase(ProcessFuelReceiptUseCase.Input("content://media/receipt.jpg", "veh-1")).toList()
+
+        assertEquals(2, emissions.size)
+        assertTrue(emissions[0] is ProcessFuelReceiptUseCase.Output.Progress)
+        val success = emissions[1] as ProcessFuelReceiptUseCase.Output.Success
+        assertEquals("Repsol", success.result.stationName)
+        assertEquals(60.0, success.result.totalAmount, 0.001)
     }
 
     @Test

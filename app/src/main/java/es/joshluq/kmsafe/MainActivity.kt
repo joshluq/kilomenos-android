@@ -10,9 +10,12 @@ import dagger.hilt.android.AndroidEntryPoint
 import es.joshluq.canvaskit.foundations.theme.CanvasKitTheme
 import es.joshluq.foundationkit.log.LoggerKit
 import es.joshluq.kmsafe.core.monetization.util.ConsentManager
+import es.joshluq.kmsafe.core.navigation.Destination
+import es.joshluq.kmsafe.core.navigation.NavigationResultStore
 import es.joshluq.kmsafe.infrastructure.remote.billing.BillingManager
 import es.joshluq.kmsafe.infrastructure.worker.SyncManager
 import es.joshluq.kmsafe.ui.navigation.AppNavigation
+import es.joshluq.kmsafe.ui.navigation.DeepLinkParser
 import es.joshluq.kmsafe.ui.util.NetworkConnectivityObserver
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.launchIn
@@ -34,6 +37,9 @@ class MainActivity : ComponentActivity() {
 
     @Inject
     lateinit var billingManager: BillingManager
+
+    @Inject
+    lateinit var resultStore: NavigationResultStore
 
     @Inject
     lateinit var logger: LoggerKit
@@ -62,9 +68,13 @@ class MainActivity : ComponentActivity() {
 
         enableEdgeToEdge()
 
+        val initialDestination = DeepLinkParser.parse(intent) ?: Destination.Launch
+
         setContent {
             CanvasKitTheme {
                 AppNavigation(
+                    initialDestination = initialDestination,
+                    resultStore = resultStore,
                     onLaunchBilling = { billingManager.launchBillingFlow(this) },
                     onShowPrivacyOptions = {
                         consentManager.gatherConsent(this) { canRequestAds ->

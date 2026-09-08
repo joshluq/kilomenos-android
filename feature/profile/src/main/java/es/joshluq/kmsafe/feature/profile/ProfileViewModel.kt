@@ -11,7 +11,9 @@ import es.joshluq.kmsafe.domain.usecase.GetCurrentUserUseCase
 import es.joshluq.kmsafe.domain.usecase.GetEntitlementsUseCase
 import es.joshluq.kmsafe.domain.usecase.SignOutUseCase
 import es.joshluq.kmsafe.feature.profile.domain.ProfileConfig
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import javax.inject.Inject
@@ -26,6 +28,9 @@ class ProfileViewModel @Inject constructor(
     private val profileConfig: ProfileConfig,
     private val logger: LoggerKit
 ) : ScreenViewModel<State, Event, Effect>() {
+
+    private var userJob: Job? = null
+    private var entitlementsJob: Job? = null
 
     init {
         observeUser()
@@ -43,6 +48,10 @@ class ProfileViewModel @Inject constructor(
     override fun handleEvent(event: Event) {
         logger.d("ProfileViewModel", "Event received: $event")
         when (event) {
+            Event.OnResume -> {
+                observeUser()
+                observeEntitlements()
+            }
             Event.OnVehiclesClicked -> {
                 logger.d("ProfileViewModel", "Effect launched: NavigateToVehicles")
                 launchEffect(Effect.NavigateToVehicles)
@@ -80,22 +89,27 @@ class ProfileViewModel @Inject constructor(
     }
 
     private fun observeUser() {
-        getCurrentUserUseCase(GetCurrentUserUseCase.Input)
+        userJob?.cancel()
+        userJob = getCurrentUserUseCase(GetCurrentUserUseCase.Input)
             .onEach { output ->
                 if (output is GetCurrentUserUseCase.Output.Success) {
                     updateState { copy(user = output.user) }
                 }
             }
+            .catch { logger.e("ProfileViewModel", "Error observing user", it) }
             .launchIn(viewModelScope)
     }
 
     private fun observeEntitlements() {
-        getEntitlementsUseCase(GetEntitlementsUseCase.Input("", forceRefresh = false))
+        entitlementsJob?.cancel()
+        entitlementsJob = getEntitlementsUseCase(GetEntitlementsUseCase.Input("", forceRefresh = false))
             .onEach { output ->
                 if (output is GetEntitlementsUseCase.Output.Success) {
                     updateState { copy(entitlements = output.entitlements) }
                 }
-            }.launchIn(viewModelScope)
+            }
+            .catch { logger.e("ProfileViewModel", "Error observing entitlements", it) }
+            .launchIn(viewModelScope)
     }
 
     private fun handleLogout() {
@@ -111,7 +125,13 @@ class ProfileViewModel @Inject constructor(
                     logger.e("ProfileViewModel", "Logout failed: ${output.message}")
                 }
                 SignOutUseCase.Output.Success -> {
-                    logger.i("ProfileViewModel", "Logout success, navigating to Login")
+                    logger.i("ProfileViewModel", "Logout success, resetting state and navigating to Login")
+                    updateState {
+                        createInitialState().copy(
+                            termsUrl = profileConfig.getTermsUrl(),
+                            privacyUrl = profileConfig.getPrivacyUrl()
+                        )
+                    }
                     launchEffect(Effect.NavigateToLogin)
                 }
             }
@@ -148,6 +168,12 @@ class ProfileViewModel @Inject constructor(
                     updateState { copy(deletionMessage = TextProvider.Resource(R.string.profile_delete_account_step_welcome_back)) }
                     delay(2000.milliseconds)
 
+                    updateState {
+                        createInitialState().copy(
+                            termsUrl = profileConfig.getTermsUrl(),
+                            privacyUrl = profileConfig.getPrivacyUrl()
+                        )
+                    }
                     launchEffect(Effect.NavigateToLogin)
                 }
             }

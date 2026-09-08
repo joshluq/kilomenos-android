@@ -10,7 +10,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.navigation.NavBackStackEntry
 import androidx.navigation3.runtime.NavEntry
 import androidx.navigation3.ui.NavDisplay
 import es.joshluq.kmsafe.core.navigation.Destination
@@ -37,8 +36,7 @@ fun DashboardNavigation(
     onNavigateToPermissions: () -> Unit,
     onNavigateToAssistedPermissions: () -> Unit,
     onNavigateToWelcomeDiscovery: (Boolean) -> Unit,
-    onNavigateToVehicleDetail: (String) -> Unit,
-    backStackEntry: NavBackStackEntry
+    onNavigateToVehicleDetail: (String) -> Unit
 ) {
     val destinationForTab: (DashboardTab) -> Destination = { tab ->
         when (tab) {
@@ -85,8 +83,7 @@ fun DashboardNavigation(
                         onNavigateToPremiumPaywall = onNavigateToPremiumPaywall,
                         onNavigateToPreferences = onNavigateToPreferences,
                         onNavigateToWelcomeDiscovery = { onNavigateToWelcomeDiscovery(false) },
-                        onNavigateToVehicleDetail = onNavigateToVehicleDetail,
-                        backStackEntry = backStackEntry
+                        onNavigateToVehicleDetail = onNavigateToVehicleDetail
                     )
                 }
                 Destination.History -> NavEntry(key) {

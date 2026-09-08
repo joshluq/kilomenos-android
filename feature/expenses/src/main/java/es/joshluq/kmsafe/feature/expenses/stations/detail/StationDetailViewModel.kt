@@ -1,7 +1,9 @@
 package es.joshluq.kmsafe.feature.expenses.stations.detail
 
-import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import es.joshluq.foundationkit.log.LoggerKit
 import es.joshluq.foundationkit.text.TextProvider
@@ -16,14 +18,13 @@ import es.joshluq.kmsafe.domain.usecase.SyncStationsUseCase
 import es.joshluq.kmsafe.feature.expenses.R
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
-import javax.inject.Inject
 
 /**
  * ViewModel for viewing service station statistics and history.
  */
-@HiltViewModel
-class StationDetailViewModel @Inject constructor(
-    savedStateHandle: SavedStateHandle,
+@HiltViewModel(assistedFactory = StationDetailViewModel.Factory::class)
+class StationDetailViewModel @AssistedInject constructor(
+    @Assisted val stationId: String,
     private val getServiceStationDetailUseCase: GetServiceStationDetailUseCase,
     private val getStationVolatilityUseCase: GetStationVolatilityUseCase,
     private val setFavoriteStationUseCase: SetFavoriteStationUseCase,
@@ -32,7 +33,10 @@ class StationDetailViewModel @Inject constructor(
     private val logger: LoggerKit
 ) : ScreenViewModel<StationDetailState, StationDetailEvent, StationDetailEffect>() {
 
-    private val stationId: String = checkNotNull(savedStateHandle["stationId"])
+    @AssistedFactory
+    interface Factory {
+        fun create(stationId: String): StationDetailViewModel
+    }
 
     init {
         updateState { copy(stationId = stationId) }

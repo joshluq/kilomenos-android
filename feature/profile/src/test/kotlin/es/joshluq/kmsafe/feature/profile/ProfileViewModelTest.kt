@@ -147,8 +147,22 @@ class ProfileViewModelTest {
         testScheduler.advanceUntilIdle()
 
         assertFalse(viewModel.state.value.showLogoutConfirmation)
+        assertFalse(viewModel.state.value.isLoading)
+        assertNull(viewModel.state.value.user)
         assertEquals(listOf(Effect.NavigateToLogin), effects)
         verify { signOutUseCase(SignOutUseCase.Input(clearLocalData = true)) }
+    }
+
+    @Test
+    fun `OnResume re-triggers observation of user and entitlements`() = runTest(testDispatcher) {
+        val viewModel = createViewModel()
+        testScheduler.advanceUntilIdle()
+
+        viewModel.sendEvent(Event.OnResume)
+        testScheduler.advanceUntilIdle()
+
+        verify(atLeast = 2) { getCurrentUserUseCase(any()) }
+        verify(atLeast = 2) { getEntitlementsUseCase(any()) }
     }
 
     @Test

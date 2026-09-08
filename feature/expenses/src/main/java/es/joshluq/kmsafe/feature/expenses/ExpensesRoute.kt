@@ -13,10 +13,21 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
  */
 @Composable
 fun ExpensesRoute(
+    stationId: String? = null,
+    autoOpenAdd: Boolean = false,
+    priceReportMode: Boolean = false,
     onNavigateToUpgrade: () -> Unit = {},
     onNavigateToStations: () -> Unit = {},
     onNavigateToStationDetail: (String) -> Unit = {},
-    viewModel: ExpensesViewModel = hiltViewModel()
+    viewModel: ExpensesViewModel = hiltViewModel(
+        creationCallback = { factory: ExpensesViewModel.Factory ->
+            factory.create(
+                stationId = stationId,
+                autoOpenAdd = autoOpenAdd,
+                priceReportMode = priceReportMode
+            )
+        }
+    )
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
 

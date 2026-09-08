@@ -4,7 +4,9 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import es.joshluq.foundationkit.log.LoggerKit
 import es.joshluq.foundationkit.viewmodel.ScreenViewModel
+import es.joshluq.kmsafe.domain.usecase.GetCurrentUserUseCase
 import es.joshluq.kmsafe.domain.usecase.GetRentingContractUseCase
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import javax.inject.Inject
@@ -15,13 +17,17 @@ import javax.inject.Inject
 @HiltViewModel
 class DashboardViewModel @Inject constructor(
     private val getRentingContractUseCase: GetRentingContractUseCase,
+    private val getCurrentUserUseCase: GetCurrentUserUseCase,
     private val logger: LoggerKit
 ) : ScreenViewModel<State, Event, Effect>() {
+
+    private var lastUserId: String? = null
 
     override fun createInitialState(): State = State.Empty
 
     init {
         observeRentingContract()
+        observeCurrentUser()
     }
 
     override fun handleEvent(event: Event) {
@@ -29,6 +35,9 @@ class DashboardViewModel @Inject constructor(
         when (event) {
             is Event.OnTabSelected -> handleTabSelected(event.tab)
             is Event.OnTabSynced -> handleTabSynced(event.tab)
+            Event.ResetToOverview -> {
+                updateState { copy(selectedTab = DashboardTab.OVERVIEW) }
+            }
             Event.OnOdometerClicked -> {
                 updateState { copy(showUpdateDialog = true, currentMileageInput = "") }
             }
@@ -39,6 +48,24 @@ class DashboardViewModel @Inject constructor(
                 updateState { copy(currentMileageInput = event.mileage) }
             }
         }
+    }
+
+    private fun observeCurrentUser() {
+        getCurrentUserUseCase(GetCurrentUserUseCase.Input)
+            .onEach { output ->
+                when (output) {
+                    is GetCurrentUserUseCase.Output.Success -> {
+                        val currentUserId = output.user?.id
+                        if (currentUserId != lastUserId) {
+                            logger.d("DashboardViewModel", "User session changed ($lastUserId -> $currentUserId), resetting tab to OVERVIEW")
+                            lastUserId = currentUserId
+                            updateState { copy(selectedTab = DashboardTab.OVERVIEW) }
+                        }
+                    }
+                }
+            }
+            .catch { logger.e("DashboardViewModel", "Error observing current user", it) }
+            .launchIn(viewModelScope)
     }
 
     private fun observeRentingContract() {

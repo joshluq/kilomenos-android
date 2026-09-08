@@ -77,15 +77,17 @@ Esta funcionalidad elimina por completo la fricción de tener que buscar o elegi
    - El conductor solo tiene que pulsar un preset de importe (ej. `[ 50 € ]`) y confirmar. Tiempo total: **menos de 4 segundos**.
 6. **Modo Free (Fallback Core):** Para usuarios sin suscripción activa, la detección en segundo plano permanece inactiva; el usuario debe buscar y seleccionar su estación manualmente en el formulario desplegable.
 
-### 4.2 Captura de Recibo con IA (Gemini 2.5 Flash OCR)
-1. **Captura:** El usuario toma una foto del ticket desde la app o la selecciona de la galería.
-2. **Pre-procesamiento en Dispositivo:** Compresión local a JPEG (calidad 80-85%, < 2000x2000px, payload ~300-500 KB).
-3. **Procesamiento en Nube:** Subida a Supabase Storage (`receipts/{user_id}/...`) e invocación de la Edge Function `/process-receipt`.
-4. **Revisión "Human-in-the-Loop":** La app abre el formulario con los datos pre-rellenados y el odómetro actual.
+### 4.2 Captura de Recibo con IA (Gemini 2.5 Flash OCR - Exclusivo Premium / Trial)
+1. **Gating de Acceso:** Funcionalidad exclusiva para usuarios con suscripción **PREMIUM o TRIAL activo**. En usuarios FREE, pulsar la acción abre el Paywall/conversión.
+2. **Captura:** El usuario toma una foto del ticket desde la app o la selecciona de la galería.
+3. **Pre-procesamiento en Dispositivo:** Compresión local a JPEG (calidad ~82%, max 1920px, payload ~200-450 KB).
+4. **Procesamiento Efímero en Nube (Zero-Retention):** Subida transitoria a Supabase Storage (`receipts/{user_id}/...`) e invocación de la Edge Function `/process-receipt`.
+5. **Inferencia y Destrucción Inmediata:** La Edge Function descarga el archivo en memoria, invoca Gemini 2.5 Flash y en su bloque `finally` **elimina inmediatamente la imagen de Storage**.
+6. **Revisión "Human-in-the-Loop":** La app abre el formulario con los datos pre-rellenados y el odómetro actual.
    - Si `confidence_score < 0.75` o `arithmetic_check.valid == false`, los campos dudosos se resaltan en ámbar para atención del usuario.
-5. **Confirmación o Descarte:**
-   - **Guardar:** Persistencia local en Room (`fuel_expenses` y `fuel_logs`) con referencia a `receipt_image_path`.
-   - **Descartar:** La app móvil borra proactivamente la imagen de Storage. Si ocurre un fallo, el cron de backend limpia los archivos huérfanos a las 24 horas.
+7. **Confirmación o Descarte:**
+   - **Guardar:** Persistencia en Room con referencia a la URI de imagen local en el dispositivo. En backend, no se almacena imagen remota (0 MB permanentes).
+   - **Descartar:** El archivo remoto ya fue destruido por la Edge Function; el cliente limpia su estado y referencias temporales locales. Fallback de recolección de basura purga cualquier archivo con más de 1 hora en `receipts`.
 
 ### 4.3 Actualización Rápida de Precio "Estilo Waze" (Quick Price Check)
 - Si el usuario pasa por delante de su gasolinera habitual pero no reposta:
@@ -298,8 +300,8 @@ La automatización mediante sensores y el procesamiento inteligente en la nube c
 | **Detección y Notificación de Estación** | **Desactivada** (sin monitorización de fondo). | **Automática en segundo plano** al apagar motor por Bluetooth o geofence. | Ahorro masivo de tiempo y fricción contextual en el momento del repostaje. |
 | **Selección de Estación en Registro** | **Manual obligatoria** (búsqueda en desplegable). | **100% Automática (Smart Auto-Fill)**: estación fijada y bloqueada sin tocar nada. | Cero esfuerzo cognitivo para el usuario de pago; registro en < 4 segundos. |
 | **Radar de Precios & Volatilidad** | **Desactivado** (solo lista plana de gastos). | **Radar completo**, semáforo de volatilidad y predicción de mejor día semanal. | Inteligencia de decisión previa para ahorrar en cada llenado de depósito. |
-| **Escaneo de Recibos con IA (Gemini 2.5)** | **1 escaneo de prueba al mes** (muestra de valor). | **Escaneos ilimitados** con comprobación aritmética automática. | Financia el coste marginal de inferencia de la API de IA. |
-| **Almacenamiento de Recibos Auditados** | **Solo local en dispositivo** (sin respaldo). | **Almacenamiento en la nube** (`receipts` bucket) para auditoría fiscal y renting. | Deducción de IVA y justificación de gastos para flotas y autónomos. |
+| **Escaneo de Recibos con IA (Gemini 2.5)** | **Bloqueado (0 escaneos)**. Conversión directa a Paywall con presets manuales rápidos como alternativa. | **Escaneos ilimitados** (en Premium o Trial) con comprobación aritmética automática. | Financia el coste marginal de inferencia de la API de IA, garantizando coste $0 en Free. |
+| **Almacenamiento de Recibos Auditados** | **Sin escaneo**. | **Procesamiento efímero (Zero-Retention)** en la nube con respaldo visual exclusivo en almacenamiento local del móvil. | Almacenamiento ocupado en Supabase Storage = 0 MB permanentes, cumplimiento GDPR y coste de Storage nulo. |
 
 ---
 

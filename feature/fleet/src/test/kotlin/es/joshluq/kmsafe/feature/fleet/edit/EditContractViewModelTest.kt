@@ -1,6 +1,5 @@
 package es.joshluq.kmsafe.feature.fleet.edit
 
-import androidx.lifecycle.SavedStateHandle
 import es.joshluq.analyticskit.sdk.AnalyticskitManager
 import es.joshluq.foundationkit.log.LoggerKit
 import es.joshluq.kmsafe.domain.model.Feature
@@ -78,9 +77,8 @@ class EditContractViewModelTest {
     }
 
     private fun createViewModel(vehicleId: String = "v-edit-1"): EditContractViewModel {
-        val savedStateHandle = SavedStateHandle(mapOf("vehicleId" to vehicleId))
         return EditContractViewModel(
-            savedStateHandle = savedStateHandle,
+            vehicleId = vehicleId,
             getVehicleByIdUseCase = getVehicleByIdUseCase,
             updateContractUseCase = updateContractUseCase,
             uploadVehicleImageUseCase = uploadVehicleImageUseCase,

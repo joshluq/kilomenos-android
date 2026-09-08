@@ -33,6 +33,7 @@ sealed interface Event : UiEvent {
     object OnDeleteAccountCancelled : Event
     object OnWelcomeGuideClicked : Event
     object OnDismissError : Event
+    data object OnResume : Event
 }
 
 sealed interface Effect : UiEffect {

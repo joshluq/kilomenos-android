@@ -152,4 +152,13 @@
     <string name="expenses_scan_source_gallery">Choose from gallery</string>
     <string name="expenses_scanning_banner_title">Analyzing receipt with AI…</string>
     <string name="expenses_scanning_banner_desc">Extracting station, liters, price, and total with AI</string>
+
+    <!-- OCR Rate Limiting & Validation Errors -->
+    <string name="expenses_error_rate_limit_burst">Please wait %1$d seconds before scanning another receipt.</string>
+    <string name="expenses_error_rate_limit_daily">You have reached the daily limit of 20 scans. You can continue logging your expenses manually using the quick presets.</string>
+    <string name="expenses_error_rate_limit_invalid_docs">Multiple invalid documents detected. Please wait %1$d minutes and ensure you capture a legible fuel receipt.</string>
+    <string name="expenses_error_not_fuel_receipt">The scanned document does not appear to be a fuel receipt. Review the photo or enter the details manually.</string>
+    <string name="expenses_error_unsupported_media">Unsupported image format. Please use JPEG, PNG, or WebP.</string>
+    <string name="expenses_error_unauthorized_access">Unauthorized access to receipt image file.</string>
+    <string name="expenses_error_ocr_server_down">Could not process receipt at this time. Quickly enter details using the presets [20€] [30€] [50€].</string>
 </resources>

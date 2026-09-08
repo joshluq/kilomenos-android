@@ -10,14 +10,12 @@ import es.joshluq.kmsafe.domain.model.ReceiptScanResult
 import es.joshluq.kmsafe.domain.model.SubscriptionLevel
 import es.joshluq.kmsafe.domain.repository.AuthRepository
 import es.joshluq.kmsafe.domain.repository.EntitlementsRepository
-import es.joshluq.kmsafe.domain.repository.FuelExpenseRepository
 import es.joshluq.kmsafe.domain.repository.ReceiptRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.onStart
-import java.util.Calendar
 import java.util.UUID
 import javax.inject.Inject
 
@@ -42,7 +40,6 @@ class ProcessFuelReceiptUseCaseImpl @Inject constructor(
     private val receiptRepository: ReceiptRepository,
     private val authRepository: AuthRepository,
     private val entitlementsRepository: EntitlementsRepository,
-    private val expenseRepository: FuelExpenseRepository,
     private val logger: LoggerKit
 ) : ProcessFuelReceiptUseCase {
 
@@ -57,25 +54,12 @@ class ProcessFuelReceiptUseCaseImpl @Inject constructor(
         }
 
         val entitlements = entitlementsRepository.observeEntitlements().first()
-        val isPremium = entitlements.subscriptionLevel == SubscriptionLevel.PREMIUM
+        val hasAccess = entitlements.subscriptionLevel == SubscriptionLevel.PREMIUM || entitlements.isTrialActive
 
-        if (!isPremium) {
-            val expenses = expenseRepository.getExpensesByVehicle(input.vehicleId).first()
-            val calendar = Calendar.getInstance()
-            val currentYear = calendar.get(Calendar.YEAR)
-            val currentMonth = calendar.get(Calendar.MONTH)
-
-            val scansThisMonth = expenses.count { expense ->
-                if (expense.receiptImagePath.isNullOrBlank()) return@count false
-                calendar.timeInMillis = expense.timestamp
-                calendar.get(Calendar.YEAR) == currentYear && calendar.get(Calendar.MONTH) == currentMonth
-            }
-
-            if (scansThisMonth >= 1) {
-                logger.w("ProcessFuelReceiptUseCase", "Monthly free tier quota exceeded: $scansThisMonth/1")
-                emit(ProcessFuelReceiptUseCase.Output.Failure(KmError.ReceiptScanQuotaExceeded))
-                return@flow
-            }
+        if (!hasAccess) {
+            logger.w("ProcessFuelReceiptUseCase", "Non-premium user attempting receipt scan without active trial")
+            emit(ProcessFuelReceiptUseCase.Output.Failure(KmError.FuelExpensesPremiumOnly))
+            return@flow
         }
 
         val timestamp = System.currentTimeMillis()

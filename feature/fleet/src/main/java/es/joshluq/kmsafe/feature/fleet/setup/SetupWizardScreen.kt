@@ -58,7 +58,7 @@ import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.navigation.NavBackStackEntry
+import es.joshluq.kmsafe.core.navigation.LocalNavigationResultStore
 import es.joshluq.canvaskit.components.buttons.CanvasKitButton
 import es.joshluq.canvaskit.components.buttons.CanvasKitButtonVariant
 import es.joshluq.canvaskit.components.chips.CanvasKitChip
@@ -92,21 +92,18 @@ fun SetupWizardRoute(
     onNavigateBack: () -> Unit,
     onNavigateToDashboard: () -> Unit,
     onNavigateToCropper: (String) -> Unit,
-    onNavigateToPremiumPaywall: () -> Unit = {},
-    backStackEntry: NavBackStackEntry
+    onNavigateToPremiumPaywall: () -> Unit = {}
 ) {
     val viewModel: SetupWizardViewModel = hiltViewModel()
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val resultStore = LocalNavigationResultStore.current
 
-    val croppedUri by backStackEntry.savedStateHandle.getStateFlow<String?>(
-        "cropped_uri",
-        null
-    ).collectAsStateWithLifecycle()
+    val croppedUri by resultStore.getResult<String>("cropped_uri").collectAsStateWithLifecycle()
 
     LaunchedEffect(croppedUri) {
         croppedUri?.let { uri ->
             viewModel.sendEvent(Event.OnImageSelected(uri.toUri()))
-            backStackEntry.savedStateHandle.remove<String>("cropped_uri")
+            resultStore.clearResult("cropped_uri")
         }
     }
 

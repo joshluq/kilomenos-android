@@ -55,7 +55,7 @@ import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.navigation.NavBackStackEntry
+import es.joshluq.kmsafe.core.navigation.LocalNavigationResultStore
 import es.joshluq.canvaskit.components.buttons.CanvasKitButton
 import es.joshluq.canvaskit.components.cards.CanvasKitCard
 import es.joshluq.canvaskit.components.chips.CanvasKitChip
@@ -79,22 +79,24 @@ import es.joshluq.kmsafe.core.ui.R as CoreR
 
 @Composable
 fun EditContractRoute(
+    vehicleId: String,
     onNavigateBack: () -> Unit,
-    onNavigateToCropper: (String) -> Unit,
-    backStackEntry: NavBackStackEntry
+    onNavigateToCropper: (String) -> Unit
 ) {
-    val viewModel: EditContractViewModel = hiltViewModel()
+    val viewModel: EditContractViewModel = hiltViewModel(
+        creationCallback = { factory: EditContractViewModel.Factory ->
+            factory.create(vehicleId)
+        }
+    )
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val resultStore = LocalNavigationResultStore.current
 
-    val croppedUri by backStackEntry.savedStateHandle.getStateFlow<String?>(
-        "cropped_uri",
-        null
-    ).collectAsStateWithLifecycle()
+    val croppedUri by resultStore.getResult<String>("cropped_uri").collectAsStateWithLifecycle()
 
     LaunchedEffect(croppedUri) {
         croppedUri?.let { uri ->
             viewModel.sendEvent(Event.OnImageSelected(uri.toUri()))
-            backStackEntry.savedStateHandle.remove<String>("cropped_uri")
+            resultStore.clearResult("cropped_uri")
         }
     }
 

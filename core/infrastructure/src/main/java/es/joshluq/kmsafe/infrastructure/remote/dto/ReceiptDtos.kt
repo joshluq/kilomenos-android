@@ -102,5 +102,7 @@ data class ExtractedReceiptDataDto(
 data class ProcessReceiptResponse(
     @JsonProperty("success") val success: Boolean = false,
     @JsonProperty("data") val data: ExtractedReceiptDataDto? = null,
-    @JsonProperty("error") val error: String? = null
+    @JsonProperty("error") val error: String? = null,
+    @JsonProperty("message") val message: String? = null,
+    @JsonProperty("retry_after_seconds") val retryAfterSeconds: Int? = null
 )

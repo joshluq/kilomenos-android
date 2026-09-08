@@ -1,7 +1,9 @@
 package es.joshluq.kmsafe.feature.fleet.detail
 
-import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import es.joshluq.analyticskit.domain.model.AnalyticsEvent
 import es.joshluq.analyticskit.sdk.AnalyticskitManager
@@ -15,12 +17,11 @@ import es.joshluq.kmsafe.domain.usecase.GetVehicleByIdUseCase
 import es.joshluq.kmsafe.feature.fleet.R
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
-import javax.inject.Inject
 import es.joshluq.kmsafe.core.ui.R as CoreR
 
-@HiltViewModel
-class VehicleDetailViewModel @Inject constructor(
-    savedStateHandle: SavedStateHandle,
+@HiltViewModel(assistedFactory = VehicleDetailViewModel.Factory::class)
+class VehicleDetailViewModel @AssistedInject constructor(
+    @Assisted val vehicleId: String,
     private val getVehicleByIdUseCase: GetVehicleByIdUseCase,
     private val deleteContractUseCase: DeleteContractUseCase,
     private val checkFeatureAccessUseCase: CheckFeatureAccessUseCase,
@@ -28,7 +29,10 @@ class VehicleDetailViewModel @Inject constructor(
     private val logger: LoggerKit
 ) : ScreenViewModel<State, Event, Effect>() {
 
-    private val vehicleId: String = checkNotNull(savedStateHandle["vehicleId"])
+    @AssistedFactory
+    interface Factory {
+        fun create(vehicleId: String): VehicleDetailViewModel
+    }
 
     init {
         checkPremium()

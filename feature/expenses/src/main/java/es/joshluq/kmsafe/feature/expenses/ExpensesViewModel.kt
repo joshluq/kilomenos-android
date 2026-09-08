@@ -2,8 +2,10 @@ package es.joshluq.kmsafe.feature.expenses
 
 import android.net.Uri
 import androidx.core.net.toUri
-import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import es.joshluq.foundationkit.log.LoggerKit
 import es.joshluq.foundationkit.text.TextProvider
@@ -13,6 +15,7 @@ import es.joshluq.kmsafe.domain.model.EnergyCategory
 import es.joshluq.kmsafe.domain.model.Feature
 import es.joshluq.kmsafe.domain.model.FuelExpense
 import es.joshluq.kmsafe.domain.model.FuelType
+import es.joshluq.kmsafe.domain.model.KmError
 import es.joshluq.kmsafe.domain.usecase.CalculateCostPerHundredKmUseCase
 import es.joshluq.kmsafe.domain.usecase.CheckFeatureAccessUseCase
 import es.joshluq.kmsafe.domain.usecase.DeleteFuelExpenseUseCase
@@ -31,14 +34,15 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
-import javax.inject.Inject
 
 /**
  * MVI ViewModel for managing vehicle fuel and electric expenses.
  */
-@HiltViewModel
-class ExpensesViewModel @Inject constructor(
-    savedStateHandle: SavedStateHandle,
+@HiltViewModel(assistedFactory = ExpensesViewModel.Factory::class)
+class ExpensesViewModel @AssistedInject constructor(
+    @Assisted("stationId") val initialStationId: String?,
+    @Assisted("autoOpenAdd") val autoOpenAdd: Boolean,
+    @Assisted("priceReportMode") val priceReportMode: Boolean,
     private val getExpensesByVehicleUseCase: GetExpensesByVehicleUseCase,
     private val saveFuelExpenseUseCase: SaveFuelExpenseUseCase,
     private val deleteFuelExpenseUseCase: DeleteFuelExpenseUseCase,
@@ -55,29 +59,30 @@ class ExpensesViewModel @Inject constructor(
     private val logger: LoggerKit
 ) : ScreenViewModel<ExpensesState, ExpensesEvent, ExpensesEffect>() {
 
+    @AssistedFactory
+    interface Factory {
+        fun create(
+            @Assisted("stationId") stationId: String?,
+            @Assisted("autoOpenAdd") autoOpenAdd: Boolean,
+            @Assisted("priceReportMode") priceReportMode: Boolean
+        ): ExpensesViewModel
+    }
+
     init {
         checkSubscription()
         loadExpenses()
         loadStations()
-        handleInitialParams(savedStateHandle)
-        updateState { copy(adUnitId = monetizationConfig.getExpensesBannerAdUnitId()) }
-    }
-
-    private fun handleInitialParams(handle: SavedStateHandle) {
-        val autoOpen: Boolean = handle["autoOpenAdd"] ?: false
-        val stationId: String? = handle["stationId"]
-        val priceMode: Boolean = handle["priceReportMode"] ?: false
-        
-        if (autoOpen) {
+        if (autoOpenAdd) {
             updateState { 
                 copy(
                     isAddExpenseSheetOpen = true,
-                    initialStationId = stationId,
-                    priceReportMode = priceMode,
-                    isStationAutoDetected = stationId != null
+                    initialStationId = initialStationId,
+                    priceReportMode = priceReportMode,
+                    isStationAutoDetected = initialStationId != null
                 ) 
             }
         }
+        updateState { copy(adUnitId = monetizationConfig.getExpensesBannerAdUnitId()) }
     }
 
     override fun createInitialState(): ExpensesState = ExpensesState.Empty
@@ -321,13 +326,25 @@ class ExpensesViewModel @Inject constructor(
         updateState { copy(isSaving = true) }
         logger.d("ExpensesViewModel", "Starting save flow for vehicle: $currentVehicleId")
 
-        // Logic to handle station: if name is provided but no ID, create/save station first
-        val stationFlow = if (event.stationId == null && event.stationName != null) {
-            logger.d("ExpensesViewModel", "Station ID missing, creating/saving station: ${event.stationName}")
+        val trimmedStationName = event.stationName?.trim()
+        val matchingStation = if (event.stationId == null && !trimmedStationName.isNullOrEmpty()) {
+            state.value.stations.firstOrNull { station ->
+                station.name.trim().equals(trimmedStationName, ignoreCase = true) ||
+                station.brand.trim().equals(trimmedStationName, ignoreCase = true)
+            }
+        } else {
+            null
+        }
+
+        val resolvedStationId = event.stationId ?: matchingStation?.id
+
+        // Logic to handle station: if resolved ID exists, reuse it; otherwise, create/save station if name is provided
+        val stationFlow = if (resolvedStationId == null && !trimmedStationName.isNullOrEmpty()) {
+            logger.d("ExpensesViewModel", "Station not found in existing list, creating/saving station: $trimmedStationName")
             saveServiceStationUseCase(
                 SaveServiceStationUseCase.Input(
-                    name = event.stationName,
-                    brand = event.stationName, // Use name as brand for new manual entries
+                    name = trimmedStationName,
+                    brand = trimmedStationName, // Use name as brand for new manual entries
                     latitude = state.value.currentLat ?: 0.0,
                     longitude = state.value.currentLng ?: 0.0,
                     address = "",
@@ -352,8 +369,8 @@ class ExpensesViewModel @Inject constructor(
                 }
             }
         } else {
-            logger.d("ExpensesViewModel", "Using existing station ID: ${event.stationId}")
-            flowOf(event.stationId)
+            logger.d("ExpensesViewModel", "Using existing or matched station ID: $resolvedStationId")
+            flowOf(resolvedStationId)
         }
 
         stationFlow.flatMapLatest { finalStationId ->
@@ -430,6 +447,13 @@ class ExpensesViewModel @Inject constructor(
             return
         }
 
+        if (!state.value.isPremium) {
+            logger.w("ExpensesViewModel", "Receipt scan blocked: user is not premium")
+            updateState { copy(error = KmError.FuelExpensesPremiumOnly.toText()) }
+            launchEffect(ExpensesEffect.NavigateToUpgrade)
+            return
+        }
+
         updateState { copy(isScanningReceipt = true) }
 
         processFuelReceiptUseCase(
@@ -447,7 +471,7 @@ class ExpensesViewModel @Inject constructor(
                         copy(
                             isScanningReceipt = false,
                             scannedReceiptResult = output.result,
-                            receiptImagePath = output.result.storageFilePath,
+                            receiptImagePath = uri.toString(),
                             isAddExpenseSheetOpen = true
                         )
                     }
@@ -459,13 +483,16 @@ class ExpensesViewModel @Inject constructor(
                             error = output.error.toText()
                         )
                     }
+                    if (output.error is KmError.FuelExpensesPremiumOnly) {
+                        launchEffect(ExpensesEffect.NavigateToUpgrade)
+                    }
                 }
             }
         }.launchIn(viewModelScope)
     }
 
     private fun handleDiscardReceiptScan() {
-        val path = state.value.receiptImagePath
+        val path = state.value.scannedReceiptResult?.storageFilePath
         if (path != null) {
             discardReceiptScanUseCase(DiscardReceiptScanUseCase.Input(filePath = path))
                 .launchIn(viewModelScope)

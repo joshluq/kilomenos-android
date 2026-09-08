@@ -41,6 +41,24 @@ sealed interface KmError {
     /** The uploaded file is not a valid receipt image or document. */
     data object InvalidReceiptImage : KmError
 
+    /** The burst rate limit for AI receipt scans has been exceeded. */
+    data class ReceiptScanRateLimitBurst(val retryAfterSeconds: Int) : KmError
+
+    /** The daily rate limit (e.g. 20 scans) for AI receipt scans has been exceeded. */
+    data object ReceiptScanRateLimitDaily : KmError
+
+    /** Cooldown applied after consecutive invalid receipt uploads. */
+    data class ReceiptScanRateLimitInvalidDocs(val retryAfterSeconds: Int) : KmError
+
+    /** The uploaded image format is not supported by OCR. */
+    data object UnsupportedImageFormat : KmError
+
+    /** The user does not have permission to access the specified receipt file path. */
+    data object UnauthorizedFileAccess : KmError
+
+    /** Server-side OCR processing failure or temporary service unavailability. */
+    data object ReceiptScanServerError : KmError
+
     /** User is not logged in or session has expired. */
     data object Unauthenticated : KmError
 

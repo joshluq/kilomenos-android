@@ -1,7 +1,6 @@
 package es.joshluq.kmsafe.feature.expenses
 
 import android.net.Uri
-import androidx.lifecycle.SavedStateHandle
 import es.joshluq.kmsafe.core.monetization.domain.MonetizationConfig
 import es.joshluq.foundationkit.log.LoggerKit
 import es.joshluq.kmsafe.domain.model.ArithmeticCheck
@@ -159,9 +158,15 @@ class ExpensesViewModelTest {
         unmockkAll()
     }
 
-    private fun createViewModel(handle: SavedStateHandle = SavedStateHandle()): ExpensesViewModel {
+    private fun createViewModel(
+        stationId: String? = null,
+        autoOpenAdd: Boolean = false,
+        priceReportMode: Boolean = false
+    ): ExpensesViewModel {
         return ExpensesViewModel(
-            savedStateHandle = handle,
+            initialStationId = stationId,
+            autoOpenAdd = autoOpenAdd,
+            priceReportMode = priceReportMode,
             getExpensesByVehicleUseCase = getExpensesByVehicleUseCase,
             saveFuelExpenseUseCase = saveFuelExpenseUseCase,
             deleteFuelExpenseUseCase = deleteFuelExpenseUseCase,
@@ -343,15 +348,15 @@ class ExpensesViewModelTest {
         assertFalse(viewModel.state.value.isScanningReceipt)
         assertTrue(viewModel.state.value.isAddExpenseSheetOpen)
         assertEquals("Shell Express", viewModel.state.value.scannedReceiptResult?.stationName)
-        assertEquals("receipts/receipt_1.jpg", viewModel.state.value.receiptImagePath)
+        assertEquals("content://media/receipt_1.jpg", viewModel.state.value.receiptImagePath)
     }
 
     @Test
-    fun `given receipt image captured when quota exceeded then state has error and isScanningReceipt false`() = runTest(testDispatcher) {
+    fun `given receipt image captured when scanning fails then state has error and isScanningReceipt false`() = runTest(testDispatcher) {
         val mockUri = mockk<Uri>()
         every { mockUri.toString() } returns "content://media/receipt_2.jpg"
         every { processFuelReceiptUseCase(any()) } returns flowOf(
-            ProcessFuelReceiptUseCase.Output.Failure(KmError.ReceiptScanQuotaExceeded)
+            ProcessFuelReceiptUseCase.Output.Failure(KmError.InvalidReceiptImage)
         )
 
         val viewModel = createViewModel()
@@ -362,6 +367,70 @@ class ExpensesViewModelTest {
 
         assertFalse(viewModel.state.value.isScanningReceipt)
         assertNotNull(viewModel.state.value.error)
+    }
+
+    @Test
+    fun `given free user when receipt uri selected then blocks scan and emits NavigateToUpgrade`() = runTest(testDispatcher) {
+        every { checkFeatureAccessUseCase(any()) } returns flowOf(
+            CheckFeatureAccessUseCase.Output.Success(isGranted = false)
+        )
+        val effects = mutableListOf<ExpensesEffect>()
+        val mockUri = mockk<Uri>()
+        val viewModel = createViewModel()
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
+            viewModel.effects.collect { effects.add(it) }
+        }
+        advanceUntilIdle()
+
+        assertFalse(viewModel.state.value.isPremium)
+
+        viewModel.sendEvent(ExpensesEvent.OnReceiptUriSelected(mockUri))
+        advanceUntilIdle()
+
+        assertFalse(viewModel.state.value.isScanningReceipt)
+        assertNotNull(viewModel.state.value.error)
+        assertEquals(1, effects.size)
+        assertEquals(ExpensesEffect.NavigateToUpgrade, effects.first())
+    }
+
+    @Test
+    fun `given receipt scanning fails with burst limit then state has error and isScanningReceipt false`() = runTest(testDispatcher) {
+        val mockUri = mockk<Uri>()
+        every { mockUri.toString() } returns "content://media/receipt_burst.jpg"
+        every { processFuelReceiptUseCase(any()) } returns flowOf(
+            ProcessFuelReceiptUseCase.Output.Failure(KmError.ReceiptScanRateLimitBurst(45))
+        )
+
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        viewModel.sendEvent(ExpensesEvent.OnReceiptUriSelected(mockUri))
+        advanceUntilIdle()
+
+        assertFalse(viewModel.state.value.isScanningReceipt)
+        assertNotNull(viewModel.state.value.error)
+    }
+
+    @Test
+    fun `given receipt scanning fails with premium only from usecase then emits NavigateToUpgrade`() = runTest(testDispatcher) {
+        val mockUri = mockk<Uri>()
+        every { mockUri.toString() } returns "content://media/receipt_prem.jpg"
+        every { processFuelReceiptUseCase(any()) } returns flowOf(
+            ProcessFuelReceiptUseCase.Output.Failure(KmError.FuelExpensesPremiumOnly)
+        )
+
+        val effects = mutableListOf<ExpensesEffect>()
+        val viewModel = createViewModel()
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
+            viewModel.effects.collect { effects.add(it) }
+        }
+        advanceUntilIdle()
+
+        viewModel.sendEvent(ExpensesEvent.OnReceiptUriSelected(mockUri))
+        advanceUntilIdle()
+
+        assertFalse(viewModel.state.value.isScanningReceipt)
+        assertEquals(ExpensesEffect.NavigateToUpgrade, effects.first())
     }
 
     @Test
@@ -441,5 +510,97 @@ class ExpensesViewModelTest {
         }
         assertFalse(viewModel.state.value.isAddExpenseSheetOpen)
         assertNull(viewModel.state.value.receiptImagePath)
+    }
+
+    @Test
+    fun `given save expense with null stationId but matching stationName then reuses existing stationId without creating new station`() = runTest(testDispatcher) {
+        val existingStation = ServiceStation(
+            id = "st-existing",
+            name = "Repsol Diagonal",
+            brand = "Repsol",
+            latitude = 41.38,
+            longitude = 2.17,
+            address = "Diagonal 123"
+        )
+        every { getAllServiceStationsUseCase(any()) } returns flowOf(
+            GetAllServiceStationsUseCase.Output.Success(listOf(existingStation))
+        )
+        every { saveFuelExpenseUseCase(any()) } returns flowOf(
+            SaveFuelExpenseUseCase.Output.Success("exp-1")
+        )
+
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        viewModel.sendEvent(
+            ExpensesEvent.OnSaveExpense(
+                fuelType = FuelType.GASOLINE_95,
+                unitPrice = 1.65,
+                volumeQuantity = 40.0,
+                totalCost = 66.0,
+                stationId = null,
+                stationName = "  repsol diagonal  ",
+                odometerAtExpense = 15500.0,
+                isFullTank = true,
+                notes = null,
+                lastRefuelTimestamp = null,
+                receiptImagePath = null
+            )
+        )
+        advanceUntilIdle()
+
+        coVerify(exactly = 0) { saveServiceStationUseCase(any()) }
+        coVerify {
+            saveFuelExpenseUseCase(
+                match { input ->
+                    input.stationId == "st-existing"
+                }
+            )
+        }
+    }
+
+    @Test
+    fun `given save expense with null stationId and unknown stationName then creates new station and saves expense`() = runTest(testDispatcher) {
+        every { saveServiceStationUseCase(any()) } returns flowOf(
+            SaveServiceStationUseCase.Output.Success("st-brand-new")
+        )
+        every { saveFuelExpenseUseCase(any()) } returns flowOf(
+            SaveFuelExpenseUseCase.Output.Success("exp-2")
+        )
+
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        viewModel.sendEvent(
+            ExpensesEvent.OnSaveExpense(
+                fuelType = FuelType.GASOLINE_95,
+                unitPrice = 1.65,
+                volumeQuantity = 40.0,
+                totalCost = 66.0,
+                stationId = null,
+                stationName = "Gasolinera Nueva",
+                odometerAtExpense = 15500.0,
+                isFullTank = true,
+                notes = null,
+                lastRefuelTimestamp = null,
+                receiptImagePath = null
+            )
+        )
+        advanceUntilIdle()
+
+        coVerify(exactly = 1) {
+            saveServiceStationUseCase(
+                match { input ->
+                    input.name == "Gasolinera Nueva"
+                }
+            )
+        }
+        coVerify {
+            saveFuelExpenseUseCase(
+                match { input ->
+                    input.stationId == "st-brand-new"
+                }
+            )
+        }
     }
 }

@@ -192,7 +192,18 @@ fun AddExpenseBottomSheet(
 
     LaunchedEffect(scannedReceiptResult) {
         if (scannedReceiptResult != null) {
-            stationNameInput = scannedReceiptResult.stationName
+            val extractedName = scannedReceiptResult.stationName.trim()
+            val matchedStation = stations.firstOrNull {
+                it.name.trim().equals(extractedName, ignoreCase = true) ||
+                it.brand.trim().equals(extractedName, ignoreCase = true)
+            }
+            if (matchedStation != null) {
+                selectedStation = matchedStation
+                stationNameInput = matchedStation.name
+            } else {
+                selectedStation = null
+                stationNameInput = extractedName
+            }
             if (scannedReceiptResult.pricePerLiter > 0.0) {
                 unitPriceText = String.format(Locale.getDefault(), "%.3f", scannedReceiptResult.pricePerLiter)
             }
@@ -408,13 +419,22 @@ fun AddExpenseBottomSheet(
                         }
                     }
                 } else {
-                    if (stations.isNotEmpty()) {
+                    val visibleStations = remember(stations, selectedStation) {
+                        val current = selectedStation
+                        if (current != null && stations.indexOfFirst { it.id == current.id } >= 4) {
+                            listOf(current) + stations.filter { it.id != current.id }.take(3)
+                        } else {
+                            stations.take(4)
+                        }
+                    }
+
+                    if (visibleStations.isNotEmpty()) {
                         FlowRow(
                             horizontalArrangement = Arrangement.spacedBy(8.dp),
                             verticalArrangement = Arrangement.spacedBy(8.dp),
                             modifier = Modifier.fillMaxWidth()
                         ) {
-                            stations.take(4).forEach { station ->
+                            visibleStations.forEach { station ->
                                 val isSelected = selectedStation?.id == station.id
                                 CanvasKitChip(
                                     selected = isSelected,
@@ -432,7 +452,17 @@ fun AddExpenseBottomSheet(
                     if (selectedStation == null) {
                         CanvasKitTextField(
                             value = stationNameInput,
-                            onValueChange = { stationNameInput = it },
+                            onValueChange = { input ->
+                                stationNameInput = input
+                                val trimmed = input.trim()
+                                val match = stations.firstOrNull {
+                                    it.name.trim().equals(trimmed, ignoreCase = true) ||
+                                    it.brand.trim().equals(trimmed, ignoreCase = true)
+                                }
+                                if (match != null) {
+                                    selectedStation = match
+                                }
+                            },
                             placeholder = if (isElectric) {
                                 stringResource(R.string.expenses_sheet_station_ev)
                             } else {

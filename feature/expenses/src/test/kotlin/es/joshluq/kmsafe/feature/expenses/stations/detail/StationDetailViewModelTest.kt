@@ -1,6 +1,5 @@
 package es.joshluq.kmsafe.feature.expenses.stations.detail
 
-import androidx.lifecycle.SavedStateHandle
 import es.joshluq.foundationkit.log.LoggerKit
 import es.joshluq.kmsafe.domain.model.Feature
 import es.joshluq.kmsafe.domain.model.FuelExpense
@@ -111,9 +110,8 @@ class StationDetailViewModelTest {
     }
 
     private fun createViewModel(stationId: String = "st-1"): StationDetailViewModel {
-        val handle = SavedStateHandle(mapOf("stationId" to stationId))
         return StationDetailViewModel(
-            savedStateHandle = handle,
+            stationId = stationId,
             getServiceStationDetailUseCase = getServiceStationDetailUseCase,
             getStationVolatilityUseCase = getStationVolatilityUseCase,
             setFavoriteStationUseCase = setFavoriteStationUseCase,

@@ -1,7 +1,9 @@
 package es.joshluq.kmsafe.feature.fleet.edit
 
-import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import es.joshluq.analyticskit.domain.model.AnalyticsEvent
 import es.joshluq.analyticskit.sdk.AnalyticskitManager
@@ -23,12 +25,11 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 import es.joshluq.kmsafe.core.ui.R as CoreR
 
-@HiltViewModel
-class EditContractViewModel @Inject constructor(
-    savedStateHandle: SavedStateHandle,
+@HiltViewModel(assistedFactory = EditContractViewModel.Factory::class)
+class EditContractViewModel @AssistedInject constructor(
+    @Assisted val vehicleId: String,
     private val getVehicleByIdUseCase: GetVehicleByIdUseCase,
     private val updateContractUseCase: UpdateContractUseCase,
     private val uploadVehicleImageUseCase: UploadVehicleImageUseCase,
@@ -38,7 +39,10 @@ class EditContractViewModel @Inject constructor(
     private val logger: LoggerKit
 ) : ScreenViewModel<State, Event, Effect>() {
 
-    private val vehicleId: String = checkNotNull(savedStateHandle["vehicleId"])
+    @AssistedFactory
+    interface Factory {
+        fun create(vehicleId: String): EditContractViewModel
+    }
 
     init {
         checkPremiumStatus()

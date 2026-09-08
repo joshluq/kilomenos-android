@@ -74,7 +74,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.navigation.NavBackStackEntry
+import es.joshluq.kmsafe.core.navigation.LocalNavigationResultStore
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
@@ -121,15 +121,15 @@ fun OverviewRoute(
     onNavigateToPremiumPaywall: () -> Unit,
     onNavigateToPreferences: () -> Unit,
     onNavigateToWelcomeDiscovery: () -> Unit,
-    onNavigateToVehicleDetail: (String) -> Unit,
-    backStackEntry: NavBackStackEntry
+    onNavigateToVehicleDetail: (String) -> Unit
 ) {
     val viewModel: OverviewViewModel = hiltViewModel()
     val state = viewModel.state.collectAsStateWithLifecycle()
+    val resultStore = LocalNavigationResultStore.current
 
-    // Observe navigation results from SavedStateHandle (Coordinator Pattern)
-    val permissionResult by backStackEntry.savedStateHandle
-        .getStateFlow<Boolean?>("permissions_granted", null)
+    // Observe navigation results from NavigationResultStore (Coordinator Pattern)
+    val permissionResult by resultStore
+        .getResult<Boolean>("permissions_granted")
         .collectAsStateWithLifecycle()
 
     LaunchedEffect(permissionResult) {
@@ -143,7 +143,7 @@ fun OverviewRoute(
             } else {
                 viewModel.sendEvent(Event.OnPermissionsResult(false))
             }
-            backStackEntry.savedStateHandle["permissions_granted"] = null
+            resultStore.clearResult("permissions_granted")
         }
     }
 

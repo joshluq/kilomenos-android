@@ -38,6 +38,7 @@ sealed interface Event : UiEvent {
     data object OnOdometerClicked : Event
     data object OnDismissOdometerDialog : Event
     data class OnOdometerChanged(val mileage: String) : Event
+    data object ResetToOverview : Event
 }
 
 /**

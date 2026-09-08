@@ -207,7 +207,13 @@ fun ExpensesScreen(
                     verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
                     FloatingActionButton(
-                        onClick = safeClick { showReceiptSourcePicker = true },
+                        onClick = safeClick {
+                            if (state.isPremium) {
+                                showReceiptSourcePicker = true
+                            } else {
+                                onEvent(ExpensesEvent.OnUpgradeToUnlockRadarClicked)
+                            }
+                        },
                         containerColor = CanvasKitTheme.colors.brandAccent,
                         contentColor = CanvasKitTheme.colors.onBrandAccent,
                         shape = CircleShape

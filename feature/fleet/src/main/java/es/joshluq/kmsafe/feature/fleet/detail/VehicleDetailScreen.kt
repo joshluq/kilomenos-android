@@ -68,10 +68,15 @@ import es.joshluq.kmsafe.core.ui.R as CoreR
 
 @Composable
 fun VehicleDetailRoute(
+    vehicleId: String,
     onNavigateBack: () -> Unit,
     onNavigateToEdit: (String) -> Unit
 ) {
-    val viewModel: VehicleDetailViewModel = hiltViewModel()
+    val viewModel: VehicleDetailViewModel = hiltViewModel(
+        creationCallback = { factory: VehicleDetailViewModel.Factory ->
+            factory.create(vehicleId)
+        }
+    )
     val state by viewModel.state.collectAsStateWithLifecycle()
 
     LaunchedEffect(viewModel.effects) {

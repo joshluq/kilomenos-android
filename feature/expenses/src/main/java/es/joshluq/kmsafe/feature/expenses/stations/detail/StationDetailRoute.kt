@@ -10,8 +10,13 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
  */
 @Composable
 fun StationDetailRoute(
+    stationId: String,
     onNavigateBack: () -> Unit,
-    viewModel: StationDetailViewModel = hiltViewModel()
+    viewModel: StationDetailViewModel = hiltViewModel(
+        creationCallback = { factory: StationDetailViewModel.Factory ->
+            factory.create(stationId)
+        }
+    )
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
 

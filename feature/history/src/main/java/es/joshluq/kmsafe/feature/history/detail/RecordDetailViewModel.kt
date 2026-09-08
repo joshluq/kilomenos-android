@@ -1,7 +1,9 @@
 package es.joshluq.kmsafe.feature.history.detail
 
-import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import es.joshluq.analyticskit.domain.model.AnalyticsEvent
 import es.joshluq.analyticskit.sdk.AnalyticskitManager
@@ -18,11 +20,10 @@ import es.joshluq.kmsafe.domain.usecase.GetRouteUseCase
 import es.joshluq.kmsafe.domain.usecase.UpdateOdometerRecordUseCase
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
-import javax.inject.Inject
 
-@HiltViewModel
-class RecordDetailViewModel @Inject constructor(
-    savedStateHandle: SavedStateHandle,
+@HiltViewModel(assistedFactory = RecordDetailViewModel.Factory::class)
+class RecordDetailViewModel @AssistedInject constructor(
+    @Assisted val recordId: String,
     private val getOdometerRecordUseCase: GetOdometerRecordUseCase,
     private val deleteOdometerRecordUseCase: DeleteOdometerRecordUseCase,
     private val updateOdometerRecordUseCase: UpdateOdometerRecordUseCase,
@@ -32,7 +33,10 @@ class RecordDetailViewModel @Inject constructor(
     private val logger: LoggerKit
 ) : ScreenViewModel<RecordDetailState, RecordDetailEvent, RecordDetailEffect>() {
 
-    private val recordId: String = checkNotNull(savedStateHandle["recordId"])
+    @AssistedFactory
+    interface Factory {
+        fun create(recordId: String): RecordDetailViewModel
+    }
 
     init {
         checkSubscription()

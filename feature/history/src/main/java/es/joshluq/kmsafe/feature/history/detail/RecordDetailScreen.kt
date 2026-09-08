@@ -87,10 +87,15 @@ import java.util.TimeZone
 
 @Composable
 fun RecordDetailRoute(
+    recordId: String,
     onNavigateBack: () -> Unit,
-    onNavigateToPremiumPaywall: () -> Unit
+    onNavigateToPremiumPaywall: () -> Unit = {}
 ) {
-    val viewModel: RecordDetailViewModel = hiltViewModel()
+    val viewModel: RecordDetailViewModel = hiltViewModel(
+        creationCallback = { factory: RecordDetailViewModel.Factory ->
+            factory.create(recordId)
+        }
+    )
     val state by viewModel.state.collectAsStateWithLifecycle()
 
     LaunchedEffect(viewModel.effects) {

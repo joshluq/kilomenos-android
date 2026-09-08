@@ -152,4 +152,13 @@
     <string name="expenses_scan_source_gallery">Elegir de la galería</string>
     <string name="expenses_scanning_banner_title">Analizando ticket con IA…</string>
     <string name="expenses_scanning_banner_desc">Extrayendo estación, litros, precio e importe con IA</string>
+
+    <!-- OCR Rate Limiting & Validation Errors -->
+    <string name="expenses_error_rate_limit_burst">Por favor, espera %1$d segundos antes de escanear otro ticket.</string>
+    <string name="expenses_error_rate_limit_daily">Has alcanzado el límite diario de 20 escaneos. Puedes seguir registrando tus gastos manualmente con los presets rápidos.</string>
+    <string name="expenses_error_rate_limit_invalid_docs">Se detectaron múltiples documentos no válidos. Por favor, espera %1$d minutos y asegúrate de enfocar un ticket de gasolinera legible.</string>
+    <string name="expenses_error_not_fuel_receipt">El documento escaneado no parece un recibo de combustible. Revisa la foto o introduce los datos manualmente.</string>
+    <string name="expenses_error_unsupported_media">Formato de imagen no compatible. Usa JPEG, PNG o WebP.</string>
+    <string name="expenses_error_unauthorized_access">Acceso no autorizado al archivo de imagen.</string>
+    <string name="expenses_error_ocr_server_down">No se pudo procesar el ticket en este momento. Introduce los datos rápidamente con los presets [20€] [30€] [50€].</string>
 </resources>

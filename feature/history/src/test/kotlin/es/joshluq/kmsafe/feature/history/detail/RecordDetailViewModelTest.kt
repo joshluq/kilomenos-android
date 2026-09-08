@@ -1,6 +1,5 @@
 package es.joshluq.kmsafe.feature.history.detail
 
-import androidx.lifecycle.SavedStateHandle
 import es.joshluq.analyticskit.sdk.AnalyticskitManager
 import es.joshluq.foundationkit.log.LoggerKit
 import es.joshluq.kmsafe.domain.model.Feature
@@ -82,9 +81,8 @@ class RecordDetailViewModelTest {
     }
 
     private fun createViewModel(recordId: String = "rec-target"): RecordDetailViewModel {
-        val savedStateHandle = SavedStateHandle(mapOf("recordId" to recordId))
         return RecordDetailViewModel(
-            savedStateHandle = savedStateHandle,
+            recordId = recordId,
             getOdometerRecordUseCase = getOdometerRecordUseCase,
             deleteOdometerRecordUseCase = deleteOdometerRecordUseCase,
             updateOdometerRecordUseCase = updateOdometerRecordUseCase,

@@ -2,6 +2,8 @@ package es.joshluq.kmsafe.feature.dashboard
 
 import es.joshluq.foundationkit.log.LoggerKit
 import es.joshluq.kmsafe.domain.model.RentingContract
+import es.joshluq.kmsafe.domain.model.User
+import es.joshluq.kmsafe.domain.usecase.GetCurrentUserUseCase
 import es.joshluq.kmsafe.domain.usecase.GetRentingContractUseCase
 import io.mockk.clearAllMocks
 import io.mockk.every
@@ -9,6 +11,7 @@ import io.mockk.mockk
 import io.mockk.unmockkAll
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -29,11 +32,13 @@ class DashboardViewModelTest {
     private val testDispatcher = StandardTestDispatcher()
 
     private val getRentingContractUseCase: GetRentingContractUseCase = mockk(relaxed = true)
+    private val getCurrentUserUseCase: GetCurrentUserUseCase = mockk(relaxed = true)
     private val logger: LoggerKit = mockk(relaxed = true)
 
     @Before
     fun setUp() {
         Dispatchers.setMain(testDispatcher)
+        every { getCurrentUserUseCase(any()) } returns flowOf(GetCurrentUserUseCase.Output.Success(null))
     }
 
     @After
@@ -46,6 +51,7 @@ class DashboardViewModelTest {
     private fun createViewModel(): DashboardViewModel {
         return DashboardViewModel(
             getRentingContractUseCase = getRentingContractUseCase,
+            getCurrentUserUseCase = getCurrentUserUseCase,
             logger = logger
         )
     }
@@ -134,4 +140,51 @@ class DashboardViewModelTest {
 
         assertFalse(viewModel.state.value.showUpdateDialog)
     }
+
+    @Test
+    fun `given ResetToOverview event then resets selectedTab to OVERVIEW`() = runTest(testDispatcher) {
+        val viewModel = createViewModel()
+        viewModel.sendEvent(Event.OnTabSelected(DashboardTab.PROFILE))
+        advanceUntilIdle()
+        assertEquals(DashboardTab.PROFILE, viewModel.state.value.selectedTab)
+
+        viewModel.sendEvent(Event.ResetToOverview)
+        advanceUntilIdle()
+
+        assertEquals(DashboardTab.OVERVIEW, viewModel.state.value.selectedTab)
+    }
+
+    @Test
+    fun `given user session change then automatically resets selectedTab to OVERVIEW`() = runTest(testDispatcher) {
+        val userFlow = MutableSharedFlow<GetCurrentUserUseCase.Output>()
+        every { getCurrentUserUseCase(any()) } returns userFlow
+
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        // User logs in as user1
+        userFlow.emit(GetCurrentUserUseCase.Output.Success(User(id = "user1", email = "u1@test.com", name = "User 1")))
+        advanceUntilIdle()
+        assertEquals(DashboardTab.OVERVIEW, viewModel.state.value.selectedTab)
+
+        // User navigates to PROFILE
+        viewModel.sendEvent(Event.OnTabSelected(DashboardTab.PROFILE))
+        advanceUntilIdle()
+        assertEquals(DashboardTab.PROFILE, viewModel.state.value.selectedTab)
+
+        // User logs out (user becomes null)
+        userFlow.emit(GetCurrentUserUseCase.Output.Success(null))
+        advanceUntilIdle()
+        assertEquals(DashboardTab.OVERVIEW, viewModel.state.value.selectedTab)
+
+        // User logs back in as user1 again
+        viewModel.sendEvent(Event.OnTabSelected(DashboardTab.PROFILE))
+        advanceUntilIdle()
+        assertEquals(DashboardTab.PROFILE, viewModel.state.value.selectedTab)
+
+        userFlow.emit(GetCurrentUserUseCase.Output.Success(User(id = "user1", email = "u1@test.com", name = "User 1")))
+        advanceUntilIdle()
+        assertEquals(DashboardTab.OVERVIEW, viewModel.state.value.selectedTab)
+    }
 }
+

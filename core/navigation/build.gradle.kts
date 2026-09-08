@@ -2,6 +2,8 @@ import com.android.build.api.dsl.LibraryExtension
 
 plugins {
     alias(libs.plugins.pluginkit.android.library)
+    alias(libs.plugins.pluginkit.android.compose)
+    alias(libs.plugins.pluginkit.android.testing)
     alias(libs.plugins.kotlin.serialization)
 }
 
@@ -11,4 +13,5 @@ configure<LibraryExtension> {
 
 dependencies {
     implementation(libs.kotlinx.serialization.json)
+    implementation(deps.javax.inject)
 }
