@@ -292,6 +292,8 @@ class SetupWizardViewModel @Inject constructor(
             }.launchIn(viewModelScope)
     }
 
+    private var hadExistingVehiclesAtStart: Boolean? = null
+
     private fun checkMultiVehicleEligibility() {
         combine(
             checkFeatureAccessUseCase(CheckFeatureAccessUseCase.Input(Feature.MULTI_VEHICLE)),
@@ -299,16 +301,21 @@ class SetupWizardViewModel @Inject constructor(
         ) { accessOutput, contractsOutput ->
             val isMultiVehicleGranted = (accessOutput as? CheckFeatureAccessUseCase.Output.Success)?.isGranted ?: false
             val contracts = (contractsOutput as? GetAllContractsUseCase.Output.Success)?.contracts ?: emptyList()
-            Pair(isMultiVehicleGranted, contracts.isNotEmpty())
-        }.onEach { (isMultiVehicleGranted, hasExisting) ->
+            if (hadExistingVehiclesAtStart == null && contractsOutput is GetAllContractsUseCase.Output.Success) {
+                hadExistingVehiclesAtStart = contracts.isNotEmpty()
+            }
+            val hasExistingAtStart = hadExistingVehiclesAtStart ?: false
+            Pair(isMultiVehicleGranted, hasExistingAtStart)
+        }.onEach { (isMultiVehicleGranted, hasExistingAtStart) ->
+            val shouldBlock = !isMultiVehicleGranted && hasExistingAtStart && !state.value.isLoading
             updateState {
                 copy(
                     isMultiVehicleAllowed = isMultiVehicleGranted,
-                    hasExistingVehicles = hasExisting,
-                    showPremiumLimit = !isMultiVehicleGranted && hasExisting
+                    hasExistingVehicles = hasExistingAtStart,
+                    showPremiumLimit = shouldBlock
                 )
             }
-            if (!isMultiVehicleGranted && hasExisting) {
+            if (shouldBlock) {
                 logger.w("SetupWizardViewModel", "Multi-vehicle limit reached for free user")
                 analytics.track(AnalyticsEvent.Custom("multi_vehicle_limit_reached"))
             }

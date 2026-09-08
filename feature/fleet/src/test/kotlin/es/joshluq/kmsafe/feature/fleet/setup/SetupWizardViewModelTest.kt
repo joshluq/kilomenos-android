@@ -19,7 +19,9 @@ import io.mockk.mockk
 import io.mockk.unmockkAll
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
@@ -307,5 +309,56 @@ class SetupWizardViewModelTest {
 
         coVerify(exactly = 0) { saveInitialContractUseCase(any()) }
         assertTrue(viewModel.state.value.showPremiumLimit)
+    }
+
+    @Test
+    fun `given free user registering first vehicle when saved then showPremiumLimit remains false`() = runTest(testDispatcher) {
+        val contractsFlow = MutableStateFlow<List<RentingContract>>(emptyList())
+        every { checkFeatureAccessUseCase(any()) } returns flowOf(
+            CheckFeatureAccessUseCase.Output.Success(false)
+        )
+        every { getAllContractsUseCase(any()) } returns contractsFlow.map {
+            GetAllContractsUseCase.Output.Success(it)
+        }
+        every { saveInitialContractUseCase(any()) } returns flowOf(
+            SaveInitialContractUseCase.Output.Success("new-car-id")
+        )
+
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        assertFalse(viewModel.state.value.showPremiumLimit)
+
+        // Step 1
+        viewModel.sendEvent(Event.OnVehicleNameChanged("First Car"))
+        viewModel.sendEvent(Event.OnNextClicked)
+        advanceUntilIdle()
+
+        // Step 2
+        viewModel.sendEvent(Event.OnStartDateChanged("01/01/2024"))
+        viewModel.sendEvent(Event.OnDurationMonthsChanged("12"))
+        viewModel.sendEvent(Event.OnNextClicked)
+        advanceUntilIdle()
+
+        // Step 3
+        viewModel.sendEvent(Event.OnTotalKmsChanged("10000"))
+        viewModel.sendEvent(Event.OnStartOdometerChanged("0"))
+        viewModel.sendEvent(Event.OnCurrentOdometerChanged("0"))
+        viewModel.sendEvent(Event.OnNextClicked)
+        advanceUntilIdle()
+
+        // Step 4
+        viewModel.sendEvent(Event.OnSkipStepClicked)
+        advanceUntilIdle()
+
+        // Step 5 (save)
+        viewModel.sendEvent(Event.OnSkipStepClicked)
+
+        // Simulate Room emitting the newly saved contract
+        val newContract = mockk<RentingContract>()
+        contractsFlow.value = listOf(newContract)
+        advanceUntilIdle()
+
+        assertFalse(viewModel.state.value.showPremiumLimit)
     }
 }
