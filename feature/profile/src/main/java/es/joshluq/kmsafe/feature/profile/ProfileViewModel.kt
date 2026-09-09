@@ -6,9 +6,11 @@ import es.joshluq.foundationkit.log.LoggerKit
 import es.joshluq.foundationkit.text.TextProvider
 import es.joshluq.foundationkit.viewmodel.ScreenViewModel
 import es.joshluq.kmsafe.domain.model.SubscriptionLevel
+import es.joshluq.kmsafe.domain.model.AppOverlayState
 import es.joshluq.kmsafe.domain.usecase.DeleteAccountUseCase
 import es.joshluq.kmsafe.domain.usecase.GetCurrentUserUseCase
 import es.joshluq.kmsafe.domain.usecase.GetEntitlementsUseCase
+import es.joshluq.kmsafe.domain.usecase.SetAppOverlayUseCase
 import es.joshluq.kmsafe.domain.usecase.SignOutUseCase
 import es.joshluq.kmsafe.feature.profile.domain.ProfileConfig
 import kotlinx.coroutines.Job
@@ -25,6 +27,7 @@ class ProfileViewModel @Inject constructor(
     private val getCurrentUserUseCase: GetCurrentUserUseCase,
     private val deleteAccountUseCase: DeleteAccountUseCase,
     private val getEntitlementsUseCase: GetEntitlementsUseCase,
+    private val setAppOverlayUseCase: SetAppOverlayUseCase,
     private val profileConfig: ProfileConfig,
     private val logger: LoggerKit
 ) : ScreenViewModel<State, Event, Effect>() {
@@ -142,9 +145,12 @@ class ProfileViewModel @Inject constructor(
         deleteAccountUseCase(DeleteAccountUseCase.Input).onEach { output ->
             when (output) {
                 DeleteAccountUseCase.Output.Progress -> {
-                    updateState { copy(isDeleting = true, deletionMessage = TextProvider.Resource(R.string.profile_delete_account_step_cleaning)) }
+                    val msg = TextProvider.Resource(R.string.profile_delete_account_step_cleaning)
+                    updateState { copy(isDeleting = true, deletionMessage = msg) }
+                    setAppOverlayUseCase(SetAppOverlayUseCase.Input(AppOverlayState.AccountDeletion(stepMessage = msg, progress = 0.15f))).launchIn(viewModelScope)
                 }
                 is DeleteAccountUseCase.Output.Failure -> {
+                    setAppOverlayUseCase(SetAppOverlayUseCase.Input(AppOverlayState.None)).launchIn(viewModelScope)
                     updateState {
                         copy(
                             isDeleting = false,
@@ -156,18 +162,27 @@ class ProfileViewModel @Inject constructor(
                 DeleteAccountUseCase.Output.Success -> {
                     logger.i("ProfileViewModel", "Account deletion success, showing farewell messages")
                     
-                    updateState { copy(deletionMessage = TextProvider.Resource(R.string.profile_delete_account_step_cloud)) }
+                    val msg1 = TextProvider.Resource(R.string.profile_delete_account_step_cloud)
+                    updateState { copy(deletionMessage = msg1) }
+                    setAppOverlayUseCase(SetAppOverlayUseCase.Input(AppOverlayState.AccountDeletion(stepMessage = msg1, progress = 0.40f))).launchIn(viewModelScope)
                     delay(1500.milliseconds)
                     
-                    updateState { copy(deletionMessage = TextProvider.Resource(R.string.profile_delete_account_step_farewell)) }
+                    val msg2 = TextProvider.Resource(R.string.profile_delete_account_step_farewell)
+                    updateState { copy(deletionMessage = msg2) }
+                    setAppOverlayUseCase(SetAppOverlayUseCase.Input(AppOverlayState.AccountDeletion(stepMessage = msg2, progress = 0.70f))).launchIn(viewModelScope)
                     delay(2000.milliseconds)
                     
-                    updateState { copy(deletionMessage = TextProvider.Resource(R.string.profile_delete_account_step_final)) }
+                    val msg3 = TextProvider.Resource(R.string.profile_delete_account_step_final)
+                    updateState { copy(deletionMessage = msg3) }
+                    setAppOverlayUseCase(SetAppOverlayUseCase.Input(AppOverlayState.AccountDeletion(stepMessage = msg3, progress = 0.90f))).launchIn(viewModelScope)
                     delay(1500.milliseconds)
                     
-                    updateState { copy(deletionMessage = TextProvider.Resource(R.string.profile_delete_account_step_welcome_back)) }
+                    val msg4 = TextProvider.Resource(R.string.profile_delete_account_step_welcome_back)
+                    updateState { copy(deletionMessage = msg4) }
+                    setAppOverlayUseCase(SetAppOverlayUseCase.Input(AppOverlayState.AccountDeletion(stepMessage = msg4, progress = 1.0f))).launchIn(viewModelScope)
                     delay(2000.milliseconds)
 
+                    setAppOverlayUseCase(SetAppOverlayUseCase.Input(AppOverlayState.None)).launchIn(viewModelScope)
                     updateState {
                         createInitialState().copy(
                             termsUrl = profileConfig.getTermsUrl(),

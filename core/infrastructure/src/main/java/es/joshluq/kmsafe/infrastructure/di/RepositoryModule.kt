@@ -140,4 +140,10 @@ abstract class RepositoryModule {
     abstract fun bindReceiptRepository(
         repository: ReceiptRepositoryImpl
     ): ReceiptRepository
+
+    @Singleton
+    @Binds
+    abstract fun bindAppOverlayRepository(
+        repository: es.joshluq.kmsafe.infrastructure.repository.AppOverlayRepositoryImpl
+    ): es.joshluq.kmsafe.domain.repository.AppOverlayRepository
 }

@@ -408,7 +408,7 @@ class OverviewViewModel @Inject constructor(
                 isLoading = true
             )
         }
-        selectContractUseCase(SelectContractUseCase.Input(id))
+        selectContractUseCase(SelectContractUseCase.Input(id = id, targetVehicleName = targetVehicleName))
             .onEach { output ->
                 when (output) {
                     is SelectContractUseCase.Output.Success -> {

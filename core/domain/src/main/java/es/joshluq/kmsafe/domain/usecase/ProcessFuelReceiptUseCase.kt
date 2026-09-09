@@ -4,10 +4,12 @@ import es.joshluq.foundationkit.log.LoggerKit
 import es.joshluq.foundationkit.usecase.FlowUseCase
 import es.joshluq.foundationkit.usecase.UseCaseInput
 import es.joshluq.foundationkit.usecase.UseCaseOutput
+import es.joshluq.kmsafe.domain.model.AppOverlayState
 import es.joshluq.kmsafe.domain.model.KmError
 import es.joshluq.kmsafe.domain.model.KmException
 import es.joshluq.kmsafe.domain.model.ReceiptScanResult
 import es.joshluq.kmsafe.domain.model.SubscriptionLevel
+import es.joshluq.kmsafe.domain.repository.AppOverlayRepository
 import es.joshluq.kmsafe.domain.repository.AuthRepository
 import es.joshluq.kmsafe.domain.repository.EntitlementsRepository
 import es.joshluq.kmsafe.domain.repository.ReceiptRepository
@@ -40,6 +42,7 @@ class ProcessFuelReceiptUseCaseImpl @Inject constructor(
     private val receiptRepository: ReceiptRepository,
     private val authRepository: AuthRepository,
     private val entitlementsRepository: EntitlementsRepository,
+    private val appOverlayRepository: AppOverlayRepository,
     private val logger: LoggerKit
 ) : ProcessFuelReceiptUseCase {
 
@@ -62,33 +65,38 @@ class ProcessFuelReceiptUseCaseImpl @Inject constructor(
             return@flow
         }
 
-        val timestamp = System.currentTimeMillis()
-        val suffix = UUID.randomUUID().toString().take(8)
-        val fileName = "receipt-$timestamp-$suffix.jpg"
+        appOverlayRepository.setOverlay(AppOverlayState.AiReceiptScanning())
+        try {
+            val timestamp = System.currentTimeMillis()
+            val suffix = UUID.randomUUID().toString().take(8)
+            val fileName = "receipt-$timestamp-$suffix.jpg"
 
-        logger.d("ProcessFuelReceiptUseCase", "Uploading image from URI: ${input.uriPath}")
-        val filePath = receiptRepository.uploadReceiptFromUri(
-            userId = user.id,
-            fileName = fileName,
-            uriPath = input.uriPath
-        ).first()
+            logger.d("ProcessFuelReceiptUseCase", "Uploading image from URI: ${input.uriPath}")
+            val filePath = receiptRepository.uploadReceiptFromUri(
+                userId = user.id,
+                fileName = fileName,
+                uriPath = input.uriPath
+            ).first()
 
-        logger.d("ProcessFuelReceiptUseCase", "Extracting OCR data from filePath: $filePath")
-        val scanResult = receiptRepository.processReceipt(filePath).first()
+            logger.d("ProcessFuelReceiptUseCase", "Extracting OCR data from filePath: $filePath")
+            val scanResult = receiptRepository.processReceipt(filePath).first()
 
-        if (!scanResult.isFuelReceipt) {
-            logger.w("ProcessFuelReceiptUseCase", "Uploaded document is not a valid fuel receipt: ${scanResult.stationName}")
-            try {
-                receiptRepository.deleteReceiptImage(filePath).first()
-            } catch (e: Exception) {
-                logger.w("ProcessFuelReceiptUseCase", "Failed to purge non-fuel receipt image", e)
+            if (!scanResult.isFuelReceipt) {
+                logger.w("ProcessFuelReceiptUseCase", "Uploaded document is not a valid fuel receipt: ${scanResult.stationName}")
+                try {
+                    receiptRepository.deleteReceiptImage(filePath).first()
+                } catch (e: Exception) {
+                    logger.w("ProcessFuelReceiptUseCase", "Failed to purge non-fuel receipt image", e)
+                }
+                emit(ProcessFuelReceiptUseCase.Output.Failure(KmError.InvalidReceiptImage))
+                return@flow
             }
-            emit(ProcessFuelReceiptUseCase.Output.Failure(KmError.InvalidReceiptImage))
-            return@flow
-        }
 
-        logger.i("ProcessFuelReceiptUseCase", "Receipt extracted successfully for ${scanResult.stationName}, total=${scanResult.totalAmount}")
-        emit(ProcessFuelReceiptUseCase.Output.Success(scanResult))
+            logger.i("ProcessFuelReceiptUseCase", "Receipt extracted successfully for ${scanResult.stationName}, total=${scanResult.totalAmount}")
+            emit(ProcessFuelReceiptUseCase.Output.Success(scanResult))
+        } finally {
+            appOverlayRepository.clearOverlay()
+        }
     }
         .onStart { emit(ProcessFuelReceiptUseCase.Output.Progress) }
         .catch { e ->

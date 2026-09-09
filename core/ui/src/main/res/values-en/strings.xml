@@ -91,4 +91,16 @@
     <string name="fuel_type_ethanol_e85">Ethanol (E85)</string>
     <string name="fuel_type_adblue">AdBlue</string>
     <string name="fuel_type_other">Other</string>
+
+    <!-- Fleet Switching Overlay -->
+    <string name="fleet_switching_vehicle_subtitle">Switching to %1$s…</string>
+    <string name="fleet_switching_vehicle_description">Syncing odometer, history, and vehicle expenses</string>
+    <string name="fleet_switching_vehicle_default">selected vehicle</string>
+
+    <!-- Global Executive HUD Overlay -->
+    <string name="hud_logout_title">Signing out…</string>
+    <string name="hud_logout_subtitle">Securing your data and signing out safely</string>
+    <string name="hud_account_deletion_title">Account Deletion (GDPR)</string>
+    <string name="hud_ocr_scanning_title">Analyzing receipt with AI ✨</string>
+    <string name="hud_ocr_scanning_subtitle">Extracting station, liters, amount, and date…</string>
 </resources>

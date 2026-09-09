@@ -106,7 +106,6 @@ import es.joshluq.kmsafe.domain.model.SubscriptionLevel
 import es.joshluq.kmsafe.domain.model.TripProjection
 import es.joshluq.kmsafe.feature.overview.components.AeroRunwayPacingBar
 import es.joshluq.kmsafe.feature.overview.components.CopilotRadarSection
-import es.joshluq.kmsafe.feature.overview.components.FleetSwitchingOverlay
 import es.joshluq.kmsafe.feature.overview.components.FloatingTelemetryPill
 import es.joshluq.kmsafe.feature.overview.components.StatusCapsule
 import es.joshluq.kmsafe.feature.overview.model.MonthlyUsageUiModel
@@ -338,12 +337,6 @@ fun OverviewScreen(
                 modifier = Modifier
                     .align(Alignment.TopCenter)
                     .padding(top = 8.dp)
-            )
-
-            // Fleet Switching Overlay (Blocking HUD displayed during active vehicle switching)
-            FleetSwitchingOverlay(
-                isVisible = state.isSwitchingVehicle,
-                vehicleName = state.switchingVehicleName
             )
         }
 

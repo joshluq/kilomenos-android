@@ -88,6 +88,8 @@ import es.joshluq.kmsafe.domain.usecase.ImportDataUseCase
 import es.joshluq.kmsafe.domain.usecase.ImportDataUseCaseImpl
 import es.joshluq.kmsafe.domain.usecase.MigrateLocalDataToRemoteUseCase
 import es.joshluq.kmsafe.domain.usecase.MigrateLocalDataToRemoteUseCaseImpl
+import es.joshluq.kmsafe.domain.usecase.ObserveFleetSwitchingUseCase
+import es.joshluq.kmsafe.domain.usecase.ObserveFleetSwitchingUseCaseImpl
 import es.joshluq.kmsafe.domain.usecase.ObserveStationRadarUseCase
 import es.joshluq.kmsafe.domain.usecase.ObserveStationRadarUseCaseImpl
 import es.joshluq.kmsafe.domain.usecase.ObserveTrackingStateUseCase
@@ -367,4 +369,17 @@ abstract class UseCaseModule {
 
     @Binds
     abstract fun bindUpdateBluetoothConnectionStateUseCase(impl: UpdateBluetoothConnectionStateUseCaseImpl): UpdateBluetoothConnectionStateUseCase
+
+    @Binds
+    abstract fun bindObserveFleetSwitchingUseCase(impl: ObserveFleetSwitchingUseCaseImpl): ObserveFleetSwitchingUseCase
+
+    @Binds
+    abstract fun bindObserveAppOverlayUseCase(
+        impl: es.joshluq.kmsafe.domain.usecase.ObserveAppOverlayUseCaseImpl
+    ): es.joshluq.kmsafe.domain.usecase.ObserveAppOverlayUseCase
+
+    @Binds
+    abstract fun bindSetAppOverlayUseCase(
+        impl: es.joshluq.kmsafe.domain.usecase.SetAppOverlayUseCaseImpl
+    ): es.joshluq.kmsafe.domain.usecase.SetAppOverlayUseCase
 }

@@ -1,5 +1,6 @@
 package es.joshluq.kmsafe.domain.repository
 
+import es.joshluq.kmsafe.domain.model.FleetSwitchingState
 import es.joshluq.kmsafe.domain.model.RentingContract
 import kotlinx.coroutines.flow.Flow
 
@@ -95,4 +96,14 @@ interface RentingRepository {
      * Clears all local application data (DB).
      */
     fun clearAllLocalData(): Flow<Unit>
+
+    /**
+     * Observes the active fleet vehicle switching state.
+     */
+    fun observeFleetSwitching(): Flow<FleetSwitchingState>
+
+    /**
+     * Updates the active fleet vehicle switching state.
+     */
+    suspend fun setFleetSwitching(state: FleetSwitchingState)
 }

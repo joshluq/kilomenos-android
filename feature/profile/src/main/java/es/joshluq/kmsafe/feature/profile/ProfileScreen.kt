@@ -103,109 +103,96 @@ fun ProfileScreen(
     CanvasKitLoadingScaffold(
         isLoading = state.isLoading && !state.isDeleting,
         topBar = {
-            if (!state.isDeleting) {
-                CanvasKitTopBar(
-                    title = {
-                        Text(
-                            text = stringResource(R.string.profile_title),
-                            style = CanvasKitTheme.typography.headingMedium,
-                            color = CanvasKitTheme.colors.textPrimary
-                        )
-                    },
-                    centeredTitle = true
-                )
-            }
+            CanvasKitTopBar(
+                title = {
+                    Text(
+                        text = stringResource(R.string.profile_title),
+                        style = CanvasKitTheme.typography.headingMedium,
+                        color = CanvasKitTheme.colors.textPrimary
+                    )
+                },
+                centeredTitle = true
+            )
         },
         containerColor = CanvasKitTheme.colors.backgroundSecondary,
         contentWindowInsets = WindowInsets(0, 0, 0, 0)
     ) { innerPadding ->
         Box(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
-            if (!state.isDeleting) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(horizontal = CanvasKitTheme.spacing.md)
-                        .verticalScroll(rememberScrollState()),
-                    verticalArrangement = Arrangement.spacedBy(CanvasKitTheme.spacing.sm)
-                ) {
-                    Spacer(modifier = Modifier.height(CanvasKitTheme.spacing.md))
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = CanvasKitTheme.spacing.md)
+                    .verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(CanvasKitTheme.spacing.sm)
+            ) {
+                Spacer(modifier = Modifier.height(CanvasKitTheme.spacing.md))
 
-                    state.user?.let { user ->
-                        UserHeader(user)
-                        SubscriptionCard(state.entitlements?.subscriptionLevel ?: SubscriptionLevel.FREE, onEvent)
-                    }
-
-                    Spacer(modifier = Modifier.height(CanvasKitTheme.spacing.sm))
-
-                    SettingsItem(
-                        label = stringResource(R.string.profile_vehicles_option),
-                        icon = Icons.Default.CarRental,
-                        onClick = safeClick { onEvent(Event.OnVehiclesClicked) }
-                    )
-
-                    SettingsItem(
-                        label = stringResource(R.string.profile_preferences_option),
-                        icon = Icons.Default.Settings,
-                        onClick = safeClick { onEvent(Event.OnPreferencesClicked) }
-                    )
-
-                    Spacer(modifier = Modifier.height(CanvasKitTheme.spacing.md))
-
-                    Text(
-                        text = stringResource(R.string.profile_data_management_title),
-                        style = CanvasKitTheme.typography.labelSmall,
-                        color = CanvasKitTheme.colors.textSecondary,
-                        modifier = Modifier.padding(start = CanvasKitTheme.spacing.xs)
-                    )
-
-                    SettingsItem(
-                        label = stringResource(R.string.profile_data_management_option),
-                        icon = Icons.Default.SdCard,
-                        onClick = safeClick { onEvent(Event.OnDataManagementClicked) }
-                    )
-
-                    Spacer(modifier = Modifier.height(CanvasKitTheme.spacing.md))
-
-                    // Privacy & Legal Section
-                    Text(
-                        text = stringResource(R.string.profile_privacy_section),
-                        style = CanvasKitTheme.typography.labelSmall,
-                        color = CanvasKitTheme.colors.textSecondary,
-                        modifier = Modifier.padding(start = CanvasKitTheme.spacing.xs)
-                    )
-
-                    SettingsItem(
-                        label = stringResource(R.string.profile_welcome_guide_option),
-                        icon = Icons.AutoMirrored.Filled.HelpOutline,
-                        onClick = safeClick { onEvent(Event.OnWelcomeGuideClicked) }
-                    )
-
-                    SettingsItem(
-                        label = stringResource(R.string.profile_privacy_policy),
-                        icon = Icons.Default.PrivacyTip,
-                        onClick = safeClick { uriHandler.openUri(state.privacyUrl) }
-                    )
-
-                    SettingsItem(
-                        label = stringResource(R.string.profile_delete_account),
-                        icon = Icons.Default.DeleteForever,
-                        onClick = safeClick { onEvent(Event.OnDeleteAccountClicked) },
-                        modifier = Modifier.testTag("profile_delete_account_button")
-                    )
-
-                    Spacer(modifier = Modifier.weight(1f))
-
-                    CanvasKitButton(
-                        text = stringResource(R.string.profile_logout_button),
-                        onClick = safeClick { onEvent(Event.OnLogoutClicked) },
-                        variant = CanvasKitButtonVariant.Secondary,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-
-                    Spacer(modifier = Modifier.height(CanvasKitTheme.spacing.xl))
+                state.user?.let { user ->
+                    UserHeader(user)
+                    SubscriptionCard(state.entitlements?.subscriptionLevel ?: SubscriptionLevel.FREE, onEvent)
                 }
-            } else {
-                DeletionOverlay(state.deletionMessage?.asString() ?: "")
+
+                Spacer(modifier = Modifier.height(CanvasKitTheme.spacing.sm))
+
+                SettingsItem(
+                    label = stringResource(R.string.profile_vehicles_option),
+                    icon = Icons.Default.CarRental,
+                    onClick = safeClick { onEvent(Event.OnVehiclesClicked) },
+                    modifier = Modifier.testTag("profile_vehicles_button")
+                )
+
+                SettingsItem(
+                    label = stringResource(R.string.profile_data_management_option),
+                    icon = Icons.Default.SdCard,
+                    onClick = safeClick { onEvent(Event.OnDataManagementClicked) },
+                    modifier = Modifier.testTag("profile_data_management_button")
+                )
+
+                SettingsItem(
+                    label = stringResource(R.string.profile_preferences_option),
+                    icon = Icons.Default.Settings,
+                    onClick = safeClick { onEvent(Event.OnPreferencesClicked) },
+                    modifier = Modifier.testTag("profile_preferences_button")
+                )
+
+                Spacer(modifier = Modifier.height(CanvasKitTheme.spacing.xs))
+
+                Text(
+                    text = stringResource(R.string.profile_privacy_section),
+                    style = CanvasKitTheme.typography.labelSmall,
+                    color = CanvasKitTheme.colors.textSecondary,
+                    modifier = Modifier.padding(start = CanvasKitTheme.spacing.xs)
+                )
+
+                SettingsItem(
+                    label = stringResource(R.string.profile_welcome_guide_option),
+                    icon = Icons.AutoMirrored.Filled.HelpOutline,
+                    onClick = safeClick { onEvent(Event.OnWelcomeGuideClicked) }
+                )
+
+                SettingsItem(
+                    label = stringResource(R.string.profile_privacy_policy),
+                    icon = Icons.Default.PrivacyTip,
+                    onClick = safeClick { uriHandler.openUri(state.privacyUrl) }
+                )
+
+                SettingsItem(
+                    label = stringResource(R.string.profile_delete_account),
+                    icon = Icons.Default.DeleteForever,
+                    onClick = safeClick { onEvent(Event.OnDeleteAccountClicked) },
+                    modifier = Modifier.testTag("profile_delete_account_button")
+                )
+
+                Spacer(modifier = Modifier.weight(1f))
+
+                CanvasKitButton(
+                    text = stringResource(R.string.profile_logout_button),
+                    onClick = safeClick { onEvent(Event.OnLogoutClicked) },
+                    variant = CanvasKitButtonVariant.Secondary,
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                Spacer(modifier = Modifier.height(CanvasKitTheme.spacing.xl))
             }
 
             // Toast-style Banner (Error)
@@ -370,36 +357,6 @@ private fun SettingsItem(
                 contentDescription = null,
                 tint = CanvasKitTheme.colors.textSecondary,
                 modifier = Modifier.size(20.dp)
-            )
-        }
-    }
-}
-
-@Composable
-private fun DeletionOverlay(message: String) {
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(CanvasKitTheme.spacing.xl),
-        contentAlignment = Alignment.Center
-    ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(CanvasKitTheme.spacing.lg)
-        ) {
-            Icon(
-                imageVector = Icons.Default.DeleteForever,
-                contentDescription = null,
-                tint = CanvasKitTheme.colors.error.copy(alpha = 0.6f),
-                modifier = Modifier.size(64.dp)
-            )
-
-            Text(
-                text = message,
-                style = CanvasKitTheme.typography.bodyLarge,
-                color = CanvasKitTheme.colors.textPrimary,
-                textAlign = androidx.compose.ui.text.style.TextAlign.Center,
-                fontWeight = FontWeight.Medium
             )
         }
     }

@@ -26,7 +26,10 @@ import es.joshluq.canvaskit.foundations.theme.CanvasKitTheme
 import es.joshluq.foundationkit.text.TextProvider
 import es.joshluq.foundationkit.text.asString
 import es.joshluq.kmsafe.core.ui.R as CoreR
+import es.joshluq.kmsafe.core.ui.components.AppExecutiveHudOverlay
+import es.joshluq.kmsafe.core.ui.components.FleetSwitchingOverlay
 import es.joshluq.kmsafe.core.ui.util.safeClick
+import es.joshluq.kmsafe.domain.model.AppOverlayState
 
 /**
  * Route Composable connecting the ViewModel to the DashboardScreen.
@@ -54,26 +57,39 @@ fun DashboardScreen(
     onEvent: (Event) -> Unit,
     navigationContent: @Composable (selectedTab: DashboardTab, onSelectTab: (DashboardTab) -> Unit) -> Unit
 ) {
-    BackHandler(enabled = state.selectedTab != DashboardTab.OVERVIEW) {
+    BackHandler(enabled = state.selectedTab != DashboardTab.OVERVIEW && !state.isNavigationBlocked) {
         onEvent(Event.OnTabSelected(DashboardTab.OVERVIEW))
     }
 
-    Scaffold(
-        bottomBar = {
-            DashboardNavigationBar(state, onEvent)
-        },
-        containerColor = CanvasKitTheme.colors.backgroundPrimary,
-        contentWindowInsets = WindowInsets.navigationBars
-    ) { innerPadding ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-        ) {
-            navigationContent(state.selectedTab) { tab ->
-                onEvent(Event.OnTabSelected(tab))
+    Box(modifier = Modifier.fillMaxSize()) {
+        Scaffold(
+            bottomBar = {
+                DashboardNavigationBar(state, onEvent)
+            },
+            containerColor = CanvasKitTheme.colors.backgroundPrimary,
+            contentWindowInsets = WindowInsets.navigationBars
+        ) { innerPadding ->
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding)
+            ) {
+                navigationContent(state.selectedTab) { tab ->
+                    onEvent(Event.OnTabSelected(tab))
+                }
             }
         }
+
+        val activeOverlay = if (state.hudOverlayState !is AppOverlayState.None) {
+            state.hudOverlayState
+        } else if (state.isSwitchingVehicle) {
+            AppOverlayState.VehicleSwitching(state.switchingVehicleName)
+        } else {
+            AppOverlayState.None
+        }
+
+        // Executive HUD Overlay (Elevated at Dashboard root level to block Scaffold & NavigationBar)
+        AppExecutiveHudOverlay(state = activeOverlay)
     }
 }
 

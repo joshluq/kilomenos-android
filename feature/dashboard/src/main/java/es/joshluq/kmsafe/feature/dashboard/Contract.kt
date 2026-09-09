@@ -4,6 +4,7 @@ import es.joshluq.foundationkit.text.TextProvider
 import es.joshluq.foundationkit.viewmodel.UiEffect
 import es.joshluq.foundationkit.viewmodel.UiEvent
 import es.joshluq.foundationkit.viewmodel.UiState
+import es.joshluq.kmsafe.domain.model.AppOverlayState
 
 /**
  * Represents the UI state for the Dashboard screen.
@@ -13,9 +14,14 @@ data class State(
     val showUpdateDialog: Boolean = false,
     val currentMileageInput: String = "",
     val hasRentingContract: Boolean = false,
+    val hudOverlayState: AppOverlayState = AppOverlayState.None,
+    val isSwitchingVehicle: Boolean = false,
+    val switchingVehicleName: String? = null,
     val isLoading: Boolean = false,
     val error: TextProvider? = null
 ) : UiState {
+    val isNavigationBlocked: Boolean
+        get() = hudOverlayState !is AppOverlayState.None || isSwitchingVehicle
     companion object {
         val Empty = State()
     }

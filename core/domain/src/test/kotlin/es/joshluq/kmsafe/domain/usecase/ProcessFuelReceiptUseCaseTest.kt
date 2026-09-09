@@ -9,14 +9,19 @@ import es.joshluq.kmsafe.domain.model.KmError
 import es.joshluq.kmsafe.domain.model.ReceiptScanResult
 import es.joshluq.kmsafe.domain.model.SubscriptionLevel
 import es.joshluq.kmsafe.domain.model.User
+import es.joshluq.kmsafe.domain.model.AppOverlayState
+import es.joshluq.kmsafe.domain.repository.AppOverlayRepository
 import es.joshluq.kmsafe.domain.repository.AuthRepository
 import es.joshluq.kmsafe.domain.repository.EntitlementsRepository
 import es.joshluq.kmsafe.domain.repository.FuelExpenseRepository
 import es.joshluq.kmsafe.domain.repository.ReceiptRepository
 import io.mockk.clearAllMocks
+import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
+import io.mockk.just
 import io.mockk.mockk
+import io.mockk.Runs
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
@@ -31,6 +36,7 @@ class ProcessFuelReceiptUseCaseTest {
     private val receiptRepository: ReceiptRepository = mockk()
     private val authRepository: AuthRepository = mockk()
     private val entitlementsRepository: EntitlementsRepository = mockk()
+    private val appOverlayRepository: AppOverlayRepository = mockk()
     private val logger: LoggerKit = mockk(relaxed = true)
 
     private lateinit var useCase: ProcessFuelReceiptUseCase
@@ -51,10 +57,13 @@ class ProcessFuelReceiptUseCaseTest {
 
     @Before
     fun setUp() {
+        coEvery { appOverlayRepository.setOverlay(any()) } just Runs
+        coEvery { appOverlayRepository.clearOverlay() } just Runs
         useCase = ProcessFuelReceiptUseCaseImpl(
             receiptRepository = receiptRepository,
             authRepository = authRepository,
             entitlementsRepository = entitlementsRepository,
+            appOverlayRepository = appOverlayRepository,
             logger = logger
         )
     }

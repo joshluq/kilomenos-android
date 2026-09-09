@@ -307,7 +307,7 @@ class OverviewViewModelTest {
 
     @Test
     fun `given switch vehicle clicked then immediately closes switcher and invokes selectContractUseCase`() = runTest(testDispatcher) {
-        every { selectContractUseCase(SelectContractUseCase.Input("c2")) } returns flowOf(
+        every { selectContractUseCase(any()) } returns flowOf(
             SelectContractUseCase.Output.Success
         )
 
@@ -325,7 +325,7 @@ class OverviewViewModelTest {
         advanceUntilIdle()
         assertFalse(viewModel.state.value.showVehicleSwitcher)
         assertFalse(viewModel.state.value.isLoading)
-        coVerify(exactly = 1) { selectContractUseCase(SelectContractUseCase.Input("c2")) }
+        coVerify(exactly = 1) { selectContractUseCase(match { it.id == "c2" }) }
     }
 
     @Test
@@ -525,6 +525,6 @@ class OverviewViewModelTest {
 
         assertFalse(viewModel.state.value.isSwitchingVehicle)
         assertEquals(null, viewModel.state.value.switchingVehicleName)
-        coVerify(exactly = 1) { selectContractUseCase(SelectContractUseCase.Input("contract-2")) }
+        coVerify(exactly = 1) { selectContractUseCase(SelectContractUseCase.Input(id = "contract-2", targetVehicleName = "Peugeot 3008")) }
     }
 }

@@ -1,11 +1,16 @@
 package es.joshluq.kmsafe.domain.usecase
 
 import es.joshluq.foundationkit.log.LoggerKit
+import es.joshluq.kmsafe.domain.model.AppOverlayState
+import es.joshluq.kmsafe.domain.repository.AppOverlayRepository
 import es.joshluq.kmsafe.domain.repository.AuthRepository
 import io.mockk.clearAllMocks
+import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
+import io.mockk.just
 import io.mockk.mockk
+import io.mockk.Runs
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.toList
@@ -19,13 +24,16 @@ import org.junit.Test
 class SignOutUseCaseTest {
 
     private val repository: AuthRepository = mockk()
+    private val appOverlayRepository: AppOverlayRepository = mockk()
     private val logger: LoggerKit = mockk(relaxed = true)
 
     private lateinit var useCase: SignOutUseCase
 
     @Before
     fun setUp() {
-        useCase = SignOutUseCaseImpl(repository, logger)
+        coEvery { appOverlayRepository.setOverlay(any()) } just Runs
+        coEvery { appOverlayRepository.clearOverlay() } just Runs
+        useCase = SignOutUseCaseImpl(repository, appOverlayRepository, logger)
     }
 
     @After
@@ -44,6 +52,8 @@ class SignOutUseCaseTest {
         assertTrue(emissions[1] is SignOutUseCase.Output.Success)
 
         coVerify(exactly = 1) { repository.signOut(true) }
+        coVerify(exactly = 1) { appOverlayRepository.setOverlay(AppOverlayState.LoggingOut) }
+        coVerify(exactly = 1) { appOverlayRepository.clearOverlay() }
     }
 
     @Test
@@ -56,5 +66,7 @@ class SignOutUseCaseTest {
         assertTrue(emissions[0] is SignOutUseCase.Output.Progress)
         val failure = emissions[1] as SignOutUseCase.Output.Failure
         assertEquals("Logout failed", failure.message)
+        coVerify(exactly = 1) { appOverlayRepository.setOverlay(AppOverlayState.LoggingOut) }
+        coVerify(exactly = 1) { appOverlayRepository.clearOverlay() }
     }
 }

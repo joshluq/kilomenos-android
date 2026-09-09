@@ -71,7 +71,7 @@ class LaunchViewModel @Inject constructor(
     private fun handleInconsistentSession() {
         viewModelScope.launch {
             // Force sign out to clear tokens and any orphan data
-            signOutUseCase(SignOutUseCase.Input(clearLocalData = true)).collect()
+            signOutUseCase(SignOutUseCase.Input(clearLocalData = true, minHoldDurationMs = 0L)).collect()
             delay(500.milliseconds)
             launchEffect(LaunchEffect.NavigateToLogin)
         }

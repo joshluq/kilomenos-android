@@ -115,7 +115,7 @@ class LaunchViewModelTest {
         every { checkSessionUseCase(CheckSessionUseCase.Input) } returns flowOf(
             CheckSessionUseCase.Output.InconsistentSession
         )
-        every { signOutUseCase(SignOutUseCase.Input(clearLocalData = true)) } returns flowOf(
+        every { signOutUseCase(SignOutUseCase.Input(clearLocalData = true, minHoldDurationMs = 0L)) } returns flowOf(
             SignOutUseCase.Output.Success
         )
 
@@ -127,7 +127,7 @@ class LaunchViewModelTest {
         }
         advanceUntilIdle()
 
-        coVerify { signOutUseCase(SignOutUseCase.Input(clearLocalData = true)) }
+        coVerify { signOutUseCase(SignOutUseCase.Input(clearLocalData = true, minHoldDurationMs = 0L)) }
         assertEquals(1, effects.size)
         assertEquals(LaunchEffect.NavigateToLogin, effects.first())
     }

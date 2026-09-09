@@ -7,6 +7,7 @@ import es.joshluq.kmsafe.domain.model.User
 import es.joshluq.kmsafe.domain.usecase.DeleteAccountUseCase
 import es.joshluq.kmsafe.domain.usecase.GetCurrentUserUseCase
 import es.joshluq.kmsafe.domain.usecase.GetEntitlementsUseCase
+import es.joshluq.kmsafe.domain.usecase.SetAppOverlayUseCase
 import es.joshluq.kmsafe.domain.usecase.SignOutUseCase
 import es.joshluq.kmsafe.feature.profile.domain.ProfileConfig
 import io.mockk.every
@@ -39,6 +40,7 @@ class ProfileViewModelTest {
     private val getCurrentUserUseCase: GetCurrentUserUseCase = mockk()
     private val deleteAccountUseCase: DeleteAccountUseCase = mockk()
     private val getEntitlementsUseCase: GetEntitlementsUseCase = mockk()
+    private val setAppOverlayUseCase: SetAppOverlayUseCase = mockk(relaxed = true)
     private val profileConfig: ProfileConfig = mockk()
     private val logger: LoggerKit = mockk(relaxed = true)
 
@@ -65,6 +67,7 @@ class ProfileViewModelTest {
         every { profileConfig.getPrivacyUrl() } returns "https://example.com/privacy"
         every { getCurrentUserUseCase(any()) } returns flowOf(GetCurrentUserUseCase.Output.Success(sampleUser))
         every { getEntitlementsUseCase(any()) } returns flowOf(GetEntitlementsUseCase.Output.Success(sampleEntitlements))
+        every { setAppOverlayUseCase(any()) } returns flowOf(SetAppOverlayUseCase.Output.Success)
     }
 
     @After
@@ -78,6 +81,7 @@ class ProfileViewModelTest {
             getCurrentUserUseCase = getCurrentUserUseCase,
             deleteAccountUseCase = deleteAccountUseCase,
             getEntitlementsUseCase = getEntitlementsUseCase,
+            setAppOverlayUseCase = setAppOverlayUseCase,
             profileConfig = profileConfig,
             logger = logger
         )
@@ -200,6 +204,7 @@ class ProfileViewModelTest {
 
         assertFalse(viewModel.state.value.showDeleteConfirmation)
         assertEquals(listOf(Effect.NavigateToLogin), effects)
+        verify(atLeast = 1) { setAppOverlayUseCase(any()) }
     }
 
     @Test
@@ -216,6 +221,7 @@ class ProfileViewModelTest {
 
         assertFalse(viewModel.state.value.isDeleting)
         assertTrue(viewModel.state.value.error != null)
+        verify(atLeast = 1) { setAppOverlayUseCase(any()) }
 
         viewModel.sendEvent(Event.OnDismissError)
         assertNull(viewModel.state.value.error)

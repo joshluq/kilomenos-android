@@ -23,11 +23,13 @@ import es.joshluq.kmsafe.infrastructure.remote.request.UpdateRentingContractRequ
 import es.joshluq.kmsafe.infrastructure.repository.util.SyncIdHandler
 import es.joshluq.kmsafe.infrastructure.worker.SyncManager
 import es.joshluq.kmsafe.domain.model.Feature
+import es.joshluq.kmsafe.domain.model.FleetSwitchingState
 import es.joshluq.kmsafe.domain.model.KmError
 import es.joshluq.kmsafe.domain.model.KmException
 import es.joshluq.kmsafe.domain.model.RentingContract
 import es.joshluq.kmsafe.domain.model.SyncStatus
 import es.joshluq.kmsafe.domain.repository.RentingRepository
+import es.joshluq.kmsafe.infrastructure.local.datasource.FleetSwitchingDataSource
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
@@ -50,6 +52,7 @@ class RentingRepositoryImpl @Inject constructor(
     private val apiService: RentingApiService,
     private val storageApiService: StorageApiService,
     private val sessionDataSource: UserSessionDataSource,
+    private val fleetSwitchingDataSource: FleetSwitchingDataSource,
     private val syncIdHandler: SyncIdHandler,
     private val syncManager: SyncManager,
     private val errorMapper: ErrorMapper,
@@ -346,4 +349,11 @@ class RentingRepositoryImpl @Inject constructor(
         appDatabase.tripRouteDao().clearAllRoutes()
         emit(Unit)
     }.flowOn(dispatchers.io)
+
+    override fun observeFleetSwitching(): Flow<FleetSwitchingState> =
+        fleetSwitchingDataSource.observeSwitchingState()
+
+    override suspend fun setFleetSwitching(state: FleetSwitchingState) {
+        fleetSwitchingDataSource.updateSwitchingState(state)
+    }
 }
