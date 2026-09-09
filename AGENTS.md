@@ -243,4 +243,44 @@ graph TD
 - **Glanceable Safety**: Since drivers may glance at the app before or after operating a vehicle, interactive elements must adhere to minimum 48dp touch targets and high-contrast typography.
 - **Strict Separation**: ViewModels must never calculate averages, percentages, or layout states internally. All metrics displayed in Layers 1–4 are delivered as immutable state via dedicated Domain UseCases.
 
+---
+
+## 20. Navigation 3 & ViewModelStore Scoping Lifecycle (Anti-Leak & State Isolation)
+Under Navigation 3 (`NavDisplay`), navigation is managed via a flat backstack without automatic per-destination `ViewModelStoreOwner` boundaries. By default, `hiltViewModel()` calls resolve to the host `Activity`'s `ViewModelStore`. ViewModels are retained in memory across navigation transitions unless explicitly scoped or purged.
+
+To avoid data corruption, cross-entity pollution, and residual effect playback, all future features MUST adhere to the following 4 rules:
+
+### 20.1 Parametrized Screens (Entity-Scoped Key Mandate):
+Every screen that displays or edits a specific entity identified by an argument (e.g., `vehicleId`, `recordId`, `stationId`) MUST supply a deterministic unique key to `hiltViewModel()`:
+```kotlin
+val viewModel: RecordDetailViewModel = hiltViewModel(
+    key = "record_detail_$recordId",
+    creationCallback = { factory: RecordDetailViewModel.Factory ->
+        factory.create(recordId)
+    }
+)
+```
+- **Anti-Pattern**: Omitting `key` causes `hiltViewModel()` to reuse the existing instance created for a previous entity, bypassing `creationCallback` and displaying/persisting incorrect data.
+
+### 20.2 Ephemeral Flows, Wizards & Paywalls (Session Key Mandate):
+Screens with transient lifecycles (e.g., `SetupWizard`, `PremiumPaywall`, `DataManagement`, `Preferences`) MUST generate a fresh session ID saved across configuration changes:
+```kotlin
+val sessionId = rememberSaveable { UUID.randomUUID().toString() }
+val viewModel: SetupWizardViewModel = hiltViewModel(key = wizardSessionId)
+```
+- **Rule**: This guarantees a clean state every time the user enters the flow, preventing retained validation errors, active loading spinners, or open dialogs from leaking between visits.
+
+### 20.3 Session Boundary & Logout Purge:
+Whenever the user session terminates (Logout, Account Deletion, Inconsistent Session recovery), the root navigation coordinator (`AppNavigation.kt`) MUST explicitly clear the activity's `ViewModelStore`:
+```kotlin
+viewModelStoreOwner?.viewModelStore?.clear()
+backStack.clear()
+backStack.add(Destination.Login)
+```
+- **Rule**: Eliminates pending `Channel`/`Flow` effects (e.g., `Effect.NavigateToPremiumPaywall` from a previous login) and flushes any retained sensitive domain data before the next authentication.
+
+### 20.4 Persistent Dashboard Tabs:
+Top-level tabs (`Overview`, `History`, `Expenses`, `Projection`) rely on reactive Room flows (`RentingRepository.getContract()`). They MUST NOT use randomized session keys so that their state is preserved during tab switches and automatically refreshes when the active vehicle or database changes.
+
+
 

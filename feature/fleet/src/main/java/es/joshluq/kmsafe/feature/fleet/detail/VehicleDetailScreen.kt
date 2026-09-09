@@ -73,6 +73,7 @@ fun VehicleDetailRoute(
     onNavigateToEdit: (String) -> Unit
 ) {
     val viewModel: VehicleDetailViewModel = hiltViewModel(
+        key = "vehicle_detail_$vehicleId",
         creationCallback = { factory: VehicleDetailViewModel.Factory ->
             factory.create(vehicleId)
         }

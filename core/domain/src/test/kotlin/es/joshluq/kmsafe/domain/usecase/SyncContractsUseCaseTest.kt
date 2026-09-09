@@ -77,9 +77,28 @@ class SyncContractsUseCaseTest {
     }
 
     @Test
-    fun `given no active contract when invoke then completes sync without history sync and emits Success`() = runTest {
+    fun `given no active contract but available contracts when invoke then selects first contract as fallback and deep syncs`() = runTest {
         val inactiveContract = createContract("c1", isSelected = false)
         every { repository.syncContracts() } returns flowOf(listOf(inactiveContract))
+        every { stationRepository.syncStations() } returns flowOf(emptyList())
+        every { repository.selectContract("c1") } returns flowOf(Unit)
+        every { historyRepository.syncHistory("c1") } returns flowOf(Unit)
+        every { fuelRepository.syncFuelExpenses("c1") } returns flowOf(emptyList())
+
+        val emissions = useCase(SyncContractsUseCase.Input).toList()
+
+        assertEquals(2, emissions.size)
+        assertTrue(emissions[0] is SyncContractsUseCase.Output.Progress)
+        assertTrue(emissions[1] is SyncContractsUseCase.Output.Success)
+
+        coVerify(exactly = 1) { repository.selectContract("c1") }
+        coVerify(exactly = 1) { historyRepository.syncHistory("c1") }
+        coVerify(exactly = 1) { fuelRepository.syncFuelExpenses("c1") }
+    }
+
+    @Test
+    fun `given empty contracts list when invoke then completes sync without history sync and emits Success`() = runTest {
+        every { repository.syncContracts() } returns flowOf(emptyList())
         every { stationRepository.syncStations() } returns flowOf(emptyList())
 
         val emissions = useCase(SyncContractsUseCase.Input).toList()
@@ -89,6 +108,7 @@ class SyncContractsUseCaseTest {
         assertTrue(emissions[1] is SyncContractsUseCase.Output.Success)
 
         coVerify(exactly = 0) { historyRepository.syncHistory(any()) }
+        coVerify(exactly = 0) { fuelRepository.syncFuelExpenses(any()) }
     }
 
     @Test

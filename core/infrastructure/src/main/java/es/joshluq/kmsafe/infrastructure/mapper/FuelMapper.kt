@@ -15,7 +15,7 @@ fun FuelExpense.toRequest(): FuelExpenseRequest {
     return FuelExpenseRequest(
         id = id,
         timestamp = timestamp.toIsoString(),
-        odometerValue = odometerAtExpense,
+        odometerValue = (odometerAtExpense ?: 0.0).coerceAtLeast(0.0),
         volumeQuantity = volumeQuantity,
         pricePerUnit = unitPrice,
         totalCost = totalCost,

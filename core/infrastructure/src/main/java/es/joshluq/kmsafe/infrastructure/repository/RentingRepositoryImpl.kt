@@ -114,15 +114,18 @@ class RentingRepositoryImpl @Inject constructor(
                         }
                     } else {
                         val errorBody = response.errorBody()?.string() ?: ""
-                        if (errorBody.contains("duplicate key", ignoreCase = true)) {
-                            logger.w("RentingRepository", "Remote sync conflict: Duplicate key. Marking as SYNCED.")
+                        logger.e("RentingRepository", "Remote contract creation failed with code ${response.code()}: $errorBody")
+                        if (response.code() == 409 || errorBody.contains("duplicate key", ignoreCase = true) || errorBody.contains("already exists", ignoreCase = true)) {
+                            logger.w("RentingRepository", "Remote sync conflict: Duplicate key or already exists. Marking as SYNCED.")
                             rentingDao.updateSyncStatus(contract.id, SyncStatus.SYNCED.name)
                         } else {
                             syncManager.scheduleSync()
                         }
                     }
                 }
-            }.onFailure {
+            }.onFailure { e ->
+                if (e is kotlinx.coroutines.CancellationException) throw e
+                logger.e("RentingRepository", "Error during remote contract save", e)
                 syncManager.scheduleSync()
             }
         }
@@ -161,11 +164,13 @@ class RentingRepositoryImpl @Inject constructor(
                     // Success: Mark as SYNCED locally. Use partial update to avoid CASCADE.
                     rentingDao.updateSyncStatus(contract.id, SyncStatus.SYNCED.name)
                 } else {
-                    logger.e("RentingRepository", "Remote update failed: ${response.code()}")
+                    val errorBody = response.errorBody()?.string() ?: ""
+                    logger.e("RentingRepository", "Remote update failed with code ${response.code()}: $errorBody")
                     syncManager.scheduleSync()
                 }
-            }.onFailure {
-                logger.e("RentingRepository", "Error during remote update", it)
+            }.onFailure { e ->
+                if (e is kotlinx.coroutines.CancellationException) throw e
+                logger.e("RentingRepository", "Error during remote update", e)
                 syncManager.scheduleSync()
             }
         }
@@ -222,11 +227,13 @@ class RentingRepositoryImpl @Inject constructor(
                         rentingDao.updateSyncStatus(id, SyncStatus.SYNCED.name)
                     }
                 } else {
-                    logger.e("RentingRepository", "Remote selection failed with code: ${response.code()}")
+                    val errorBody = response.errorBody()?.string() ?: ""
+                    logger.e("RentingRepository", "Remote selection failed with code ${response.code()}: $errorBody")
                     syncManager.scheduleSync()
                 }
-            }.onFailure {
-                logger.e("RentingRepository", "Error during remote selection sync", it)
+            }.onFailure { e ->
+                if (e is kotlinx.coroutines.CancellationException) throw e
+                logger.e("RentingRepository", "Error during remote selection sync", e)
                 syncManager.scheduleSync()
             }
         }
@@ -247,10 +254,12 @@ class RentingRepositoryImpl @Inject constructor(
                 if (response.isSuccessful) {
                     logger.i("RentingRepository", "Remote deletion sync successful")
                 } else {
-                    logger.e("RentingRepository", "Remote deletion failed with code: ${response.code()}")
+                    val errorBody = response.errorBody()?.string() ?: ""
+                    logger.e("RentingRepository", "Remote deletion failed with code ${response.code()}: $errorBody")
                 }
-            }.onFailure {
-                logger.e("RentingRepository", "Error during remote deletion sync", it)
+            }.onFailure { e ->
+                if (e is kotlinx.coroutines.CancellationException) throw e
+                logger.e("RentingRepository", "Error during remote deletion sync", e)
             }
         }
         emit(Unit)

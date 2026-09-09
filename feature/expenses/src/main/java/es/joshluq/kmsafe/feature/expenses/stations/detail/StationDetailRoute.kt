@@ -13,6 +13,7 @@ fun StationDetailRoute(
     stationId: String,
     onNavigateBack: () -> Unit,
     viewModel: StationDetailViewModel = hiltViewModel(
+        key = "station_detail_$stationId",
         creationCallback = { factory: StationDetailViewModel.Factory ->
             factory.create(stationId)
         }

@@ -109,15 +109,18 @@ class HistoryRepositoryImpl @Inject constructor(
                         }
                     } else {
                         val errorBody = response.errorBody()?.string() ?: ""
-                        if (errorBody.contains("duplicate key", ignoreCase = true)) {
-                            logger.w("HistoryRepository", "Remote sync conflict: Duplicate key. Marking as SYNCED.")
+                        logger.e("HistoryRepository", "Remote record creation failed with code ${response.code()}: $errorBody")
+                        if (response.code() == 409 || errorBody.contains("duplicate key", ignoreCase = true) || errorBody.contains("already exists", ignoreCase = true)) {
+                            logger.w("HistoryRepository", "Remote sync conflict: Duplicate key or already exists. Marking as SYNCED.")
                             dao.insertRecord(record.copy(syncStatus = SyncStatus.SYNCED).toEntity())
                         } else {
                             syncManager.scheduleSync()
                         }
                     }
                 }
-            }.onFailure {
+            }.onFailure { e ->
+                if (e is kotlinx.coroutines.CancellationException) throw e
+                logger.e("HistoryRepository", "Remote record creation failed", e)
                 syncManager.scheduleSync()
             }
         }
@@ -149,11 +152,13 @@ class HistoryRepositoryImpl @Inject constructor(
                     // Success: Mark as SYNCED locally
                     dao.insertRecord(record.copy(syncStatus = SyncStatus.SYNCED).toEntity())
                 } else {
-                    logger.e("HistoryRepository", "Remote update failed with code: ${response.code()}")
+                    val errorBody = response.errorBody()?.string() ?: ""
+                    logger.e("HistoryRepository", "Remote update failed with code ${response.code()}: $errorBody")
                     syncManager.scheduleSync()
                 }
-            }.onFailure {
-                logger.e("HistoryRepository", "Error during remote update sync", it)
+            }.onFailure { e ->
+                if (e is kotlinx.coroutines.CancellationException) throw e
+                logger.e("HistoryRepository", "Error during remote update sync", e)
                 syncManager.scheduleSync()
             }
         }
@@ -174,10 +179,12 @@ class HistoryRepositoryImpl @Inject constructor(
                 if (response.isSuccessful) {
                     logger.i("HistoryRepository", "Remote deletion successful")
                 } else {
-                    logger.e("HistoryRepository", "Remote deletion failed with code: ${response.code()}")
+                    val errorBody = response.errorBody()?.string() ?: ""
+                    logger.e("HistoryRepository", "Remote deletion failed with code ${response.code()}: $errorBody")
                 }
-            }.onFailure {
-                logger.e("HistoryRepository", "Error during remote deletion sync", it)
+            }.onFailure { e ->
+                if (e is kotlinx.coroutines.CancellationException) throw e
+                logger.e("HistoryRepository", "Error during remote deletion sync", e)
             }
         }
     }
@@ -195,8 +202,10 @@ class HistoryRepositoryImpl @Inject constructor(
             val records = response.body()?.records?.map { it.toDomainFromApi() } ?: emptyList()
             logger.i("HistoryRepository", "Sync successful: Found ${records.size} remote records")
 
-            records.forEach { record ->
-                dao.insertRecord(record.toEntity())
+            if (records.isNotEmpty()) {
+                appDatabase.withTransaction {
+                    dao.insertRecords(records.map { it.toEntity() })
+                }
             }
             emit(Unit)
         } else {
@@ -224,9 +233,13 @@ class HistoryRepositoryImpl @Inject constructor(
                 )
                 val response = apiService.uploadRoute(route.recordId, request)
                 if (!response.isSuccessful) {
+                    val errorBody = response.errorBody()?.string() ?: ""
+                    logger.e("HistoryRepository", "Upload route failed with code ${response.code()}: $errorBody")
                     syncManager.scheduleSync()
                 }
-            }.onFailure {
+            }.onFailure { e ->
+                if (e is kotlinx.coroutines.CancellationException) throw e
+                logger.e("HistoryRepository", "Error during route upload", e)
                 syncManager.scheduleSync()
             }
         }
@@ -257,8 +270,9 @@ class HistoryRepositoryImpl @Inject constructor(
                         emit(remoteRoute)
                     }
                 }
-            }.onFailure {
-                logger.e("HistoryRepository", "Failed to fetch remote route for record $recordId", it)
+            }.onFailure { e ->
+                if (e is kotlinx.coroutines.CancellationException) throw e
+                logger.e("HistoryRepository", "Failed to fetch remote route for record $recordId", e)
             }
         }
     }.flowOn(dispatchers.io)
@@ -273,9 +287,13 @@ class HistoryRepositoryImpl @Inject constructor(
             runCatching {
                 val response = apiService.deleteRoute(recordId)
                 if (!response.isSuccessful) {
+                    val errorBody = response.errorBody()?.string() ?: ""
+                    logger.e("HistoryRepository", "Delete route failed with code ${response.code()}: $errorBody")
                     syncManager.scheduleSync()
                 }
-            }.onFailure {
+            }.onFailure { e ->
+                if (e is kotlinx.coroutines.CancellationException) throw e
+                logger.e("HistoryRepository", "Error during route delete", e)
                 syncManager.scheduleSync()
             }
         }

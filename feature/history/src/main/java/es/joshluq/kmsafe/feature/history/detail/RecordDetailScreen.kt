@@ -92,6 +92,7 @@ fun RecordDetailRoute(
     onNavigateToPremiumPaywall: () -> Unit = {}
 ) {
     val viewModel: RecordDetailViewModel = hiltViewModel(
+        key = "record_detail_$recordId",
         creationCallback = { factory: RecordDetailViewModel.Factory ->
             factory.create(recordId)
         }

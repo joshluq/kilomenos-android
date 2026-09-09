@@ -13,6 +13,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
 import androidx.navigation3.runtime.NavEntry
 import androidx.navigation3.ui.NavDisplay
 import es.joshluq.kmsafe.core.navigation.Destination
@@ -48,6 +49,7 @@ fun AppNavigation(
     onLaunchBilling: () -> Unit = {},
     onShowPrivacyOptions: () -> Unit = {}
 ) {
+    val viewModelStoreOwner = LocalViewModelStoreOwner.current
     val backStack = remember { mutableStateListOf<Destination>(initialDestination) }
 
     val onNavigate: (Destination) -> Unit = { dest ->
@@ -82,6 +84,7 @@ fun AppNavigation(
                     Destination.Launch -> NavEntry(key) {
                         LaunchRoute(
                             onNavigateToLogin = {
+                                viewModelStoreOwner?.viewModelStore?.clear()
                                 backStack.clear()
                                 backStack.add(Destination.Login)
                             },
@@ -189,6 +192,7 @@ fun AppNavigation(
                                         onNavigate(Destination.DataManagement)
                                     },
                                     onNavigateToLogin = {
+                                        viewModelStoreOwner?.viewModelStore?.clear()
                                         backStack.clear()
                                         backStack.add(Destination.Login)
                                     },
@@ -298,8 +302,15 @@ fun AppNavigation(
                         SetupWizardRoute(
                             onNavigateBack = onBack,
                             onNavigateToDashboard = {
-                                backStack.clear()
-                                backStack.add(Destination.Dashboard)
+                                if (backStack.contains(Destination.VehicleList)) {
+                                    val targetIndex = backStack.lastIndexOf(Destination.VehicleList)
+                                    while (backStack.lastIndex > targetIndex) {
+                                        backStack.removeAt(backStack.lastIndex)
+                                    }
+                                } else {
+                                    backStack.clear()
+                                    backStack.add(Destination.Dashboard)
+                                }
                             },
                             onNavigateToCropper = { uri ->
                                 onNavigate(Destination.ImageCropper(uri))

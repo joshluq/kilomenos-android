@@ -65,7 +65,7 @@ class AuthRepositoryImpl @Inject constructor(
                 val user = body.user.toDomain()
 
                 // Seed initial entitlements from login response
-                val initialLevelStr = body.subscriptionLevel?.uppercase()
+                val initialLevelStr = (body.subscriptionLevel ?: body.user.userMetadata?.subscriptionLevel)?.uppercase()
                 logger.i("AuthRepository", "Sign in success. User: ${user.email}, Level: $initialLevelStr")
                 
                 val initialLevel = when (initialLevelStr) {
@@ -117,7 +117,7 @@ class AuthRepositoryImpl @Inject constructor(
                 val user = body.user.toDomain()
 
                 // Seed initial entitlements from login response
-                val initialLevelStr = body.subscriptionLevel?.uppercase()
+                val initialLevelStr = (body.subscriptionLevel ?: body.user.userMetadata?.subscriptionLevel)?.uppercase()
                 logger.i("AuthRepository", "Google sign in success. Level: $initialLevelStr")
 
                 val initialLevel = when (initialLevelStr) {

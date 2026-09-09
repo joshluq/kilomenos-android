@@ -76,7 +76,7 @@ class VehicleListViewModel @Inject constructor(
                     is GetAllContractsUseCase.Output.Success -> updateState {
                         copy(
                             isLoading = false,
-                            vehicles = output.contracts
+                            vehicles = output.contracts.reversed()
                         )
                     }
                     is GetAllContractsUseCase.Output.Failure -> updateState {

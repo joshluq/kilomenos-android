@@ -306,7 +306,7 @@ class OverviewViewModelTest {
     }
 
     @Test
-    fun `given switch vehicle clicked when success then closes switcher`() = runTest(testDispatcher) {
+    fun `given switch vehicle clicked then immediately closes switcher and invokes selectContractUseCase`() = runTest(testDispatcher) {
         every { selectContractUseCase(SelectContractUseCase.Input("c2")) } returns flowOf(
             SelectContractUseCase.Output.Success
         )
@@ -318,9 +318,14 @@ class OverviewViewModelTest {
         assertTrue(viewModel.state.value.showVehicleSwitcher)
 
         viewModel.sendEvent(Event.OnSwitchVehicleClicked("c2"))
-        advanceUntilIdle()
 
+        // Switcher must close immediately upon click without waiting for coroutine completion
         assertFalse(viewModel.state.value.showVehicleSwitcher)
+
+        advanceUntilIdle()
+        assertFalse(viewModel.state.value.showVehicleSwitcher)
+        assertFalse(viewModel.state.value.isLoading)
+        coVerify(exactly = 1) { selectContractUseCase(SelectContractUseCase.Input("c2")) }
     }
 
     @Test
@@ -499,5 +504,27 @@ class OverviewViewModelTest {
         assertTrue(capsule is StatusCapsuleUiModel.CriticalRisk)
         assertTrue((capsule as StatusCapsuleUiModel.CriticalRisk).isOverLimit)
         assertEquals(testProjection, viewModel.state.value.projection)
+    }
+
+    @Test
+    fun `given OnSwitchVehicleClicked when contract exists then triggers switch with overlay state and completes`() = runTest(testDispatcher) {
+        val targetVehicle = sampleContract.copy(id = "contract-2", vehicleName = "Peugeot 3008")
+        every { getAllContractsUseCase(any()) } returns flowOf(
+            GetAllContractsUseCase.Output.Success(listOf(sampleContract, targetVehicle))
+        )
+        every { selectContractUseCase(any()) } returns flowOf(
+            SelectContractUseCase.Output.Progress,
+            SelectContractUseCase.Output.Success
+        )
+
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        viewModel.sendEvent(Event.OnSwitchVehicleClicked("contract-2"))
+        advanceUntilIdle()
+
+        assertFalse(viewModel.state.value.isSwitchingVehicle)
+        assertEquals(null, viewModel.state.value.switchingVehicleName)
+        coVerify(exactly = 1) { selectContractUseCase(SelectContractUseCase.Input("contract-2")) }
     }
 }

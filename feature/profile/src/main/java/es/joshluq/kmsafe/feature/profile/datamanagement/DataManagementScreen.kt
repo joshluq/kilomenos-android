@@ -30,6 +30,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -50,6 +51,7 @@ import es.joshluq.foundationkit.text.asString
 import es.joshluq.kmsafe.core.ui.util.safeClick
 import es.joshluq.kmsafe.domain.usecase.ExportDataUseCase
 import es.joshluq.kmsafe.feature.profile.R
+import java.util.UUID
 import es.joshluq.kmsafe.core.ui.R as CoreR
 
 @Composable
@@ -57,7 +59,8 @@ fun DataManagementRoute(
     onNavigateBack: () -> Unit,
     onNavigateToPremiumPaywall: () -> Unit
 ) {
-    val viewModel: DataManagementViewModel = hiltViewModel()
+    val sessionId = rememberSaveable { UUID.randomUUID().toString() }
+    val viewModel: DataManagementViewModel = hiltViewModel(key = sessionId)
     val state = viewModel.state.collectAsStateWithLifecycle()
     val context = LocalContext.current
 

@@ -28,6 +28,9 @@ interface FuelExpenseDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertExpense(expense: FuelExpenseEntity)
 
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertExpenses(expenses: List<FuelExpenseEntity>)
+
     @Query("DELETE FROM fuel_expenses WHERE id = :id")
     suspend fun deleteExpense(id: String)
 

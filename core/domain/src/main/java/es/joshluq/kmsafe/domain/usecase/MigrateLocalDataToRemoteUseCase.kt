@@ -53,6 +53,8 @@ class MigrateLocalDataToRemoteUseCaseImpl @Inject constructor(
             return@flow
         }
 
+        var hasFailures = false
+
         // 1. Migrate Stations First (Expenses depend on them)
         try {
             val allStations = stationRepository.getAllStations().first()
@@ -62,7 +64,9 @@ class MigrateLocalDataToRemoteUseCaseImpl @Inject constructor(
                 stationRepository.syncStationBatch(pendingStations).first()
             }
         } catch (e: Exception) {
+            if (e is kotlinx.coroutines.CancellationException) throw e
             logger.e("MigrateLocalData", "Failed to migrate stations", e)
+            hasFailures = true
         }
 
         // 2. Migrate ALL Contracts
@@ -106,14 +110,22 @@ class MigrateLocalDataToRemoteUseCaseImpl @Inject constructor(
                     }
                 }
             } catch (e: Exception) {
+                if (e is kotlinx.coroutines.CancellationException) throw e
                 logger.e("MigrateLocalData", "Failed to migrate contract ${contract.vehicleName}", e)
+                hasFailures = true
             }
         }
 
-        logger.i("MigrateLocalData", "Migration process completed")
-        emit(MigrateLocalDataToRemoteUseCase.Output.Success as MigrateLocalDataToRemoteUseCase.Output)
+        if (hasFailures) {
+            logger.w("MigrateLocalData", "Migration process completed with partial failures")
+            emit(MigrateLocalDataToRemoteUseCase.Output.Failure as MigrateLocalDataToRemoteUseCase.Output)
+        } else {
+            logger.i("MigrateLocalData", "Migration process completed successfully")
+            emit(MigrateLocalDataToRemoteUseCase.Output.Success as MigrateLocalDataToRemoteUseCase.Output)
+        }
     }.onStart { emit(MigrateLocalDataToRemoteUseCase.Output.Progress as MigrateLocalDataToRemoteUseCase.Output) }
         .catch {
+            if (it is kotlinx.coroutines.CancellationException) throw it
             logger.e("MigrateLocalData", "Critical failure during migration", it)
             emit(MigrateLocalDataToRemoteUseCase.Output.Failure as MigrateLocalDataToRemoteUseCase.Output)
         }

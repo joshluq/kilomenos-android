@@ -46,7 +46,7 @@ class SyncManager @Inject constructor(
 
         workManager.enqueueUniqueWork(
             SYNC_WORK_NAME,
-            ExistingWorkPolicy.REPLACE,
+            ExistingWorkPolicy.KEEP,
             syncRequest
         )
     }

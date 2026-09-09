@@ -34,6 +34,9 @@ class UserResponse {
 class UserMetadataResponse {
     @JsonProperty("name")
     val name: String? = null
+
+    @JsonProperty("subscription_level")
+    val subscriptionLevel: String? = null
 }
 
 @JsonIgnoreProperties(ignoreUnknown = true)

@@ -35,6 +35,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -56,6 +57,7 @@ import es.joshluq.canvaskit.components.navigation.CanvasKitTopBar
 import es.joshluq.canvaskit.foundations.theme.CanvasKitTheme
 import es.joshluq.foundationkit.text.asString
 import es.joshluq.kmsafe.feature.profile.R
+import java.util.UUID
 import es.joshluq.kmsafe.core.ui.R as CoreR
 import es.joshluq.kmsafe.core.ui.util.safeClick
 
@@ -65,7 +67,8 @@ fun PreferencesRoute(
     onShowPrivacyOptions: () -> Unit,
     onNavigateToPermissions: () -> Unit
 ) {
-    val viewModel: PreferencesViewModel = hiltViewModel()
+    val sessionId = rememberSaveable { UUID.randomUUID().toString() }
+    val viewModel: PreferencesViewModel = hiltViewModel(key = sessionId)
     val state by viewModel.state.collectAsStateWithLifecycle()
     val resultStore = LocalNavigationResultStore.current
 

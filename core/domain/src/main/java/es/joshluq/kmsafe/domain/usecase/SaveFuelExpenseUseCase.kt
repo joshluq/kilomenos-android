@@ -67,6 +67,12 @@ class SaveFuelExpenseUseCaseImpl @Inject constructor(
             return@flow
         }
 
+        if (input.odometerAtExpense != null && input.odometerAtExpense < 0.0) {
+            logger.w("SaveFuelExpenseUseCase", "Invalid negative odometer value: ${input.odometerAtExpense}")
+            emit(SaveFuelExpenseUseCase.Output.InvalidInput(KmError.InvalidFuelExpenseValues))
+            return@flow
+        }
+
         // Hybrid A+C: infer km driven since last full refuel from OdometerRecord history
         val (kmSinceLastRefuel, consumptionPer100km) = calculateConsumption(input)
 

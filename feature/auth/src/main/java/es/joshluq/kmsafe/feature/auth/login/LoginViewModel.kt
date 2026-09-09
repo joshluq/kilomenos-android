@@ -23,9 +23,12 @@ import es.joshluq.kmsafe.domain.usecase.SyncContractsUseCase
 import es.joshluq.kmsafe.domain.usecase.UpdatePreferencesUseCase
 import es.joshluq.kmsafe.domain.usecase.ValidateCredentialsUseCase
 import es.joshluq.kmsafe.core.ui.util.toText
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
+import kotlin.time.Duration.Companion.milliseconds
 import es.joshluq.kmsafe.feature.auth.domain.AuthConfig
 import javax.inject.Inject
 
@@ -242,11 +245,16 @@ class LoginViewModel @Inject constructor(
     }
 
     private fun clearLocalDataAndProceed() {
-        clearLocalDataUseCase(ClearLocalDataUseCase.Input).onEach { output ->
-            if (output is ClearLocalDataUseCase.Output.Success) {
-                proceedWithPostLogin()
+        viewModelScope.launch {
+            try {
+                clearLocalDataUseCase(ClearLocalDataUseCase.Input)
+                    .first { it !is ClearLocalDataUseCase.Output.Progress }
+                logger.i("LoginViewModel", "Local data cleared successfully.")
+            } catch (e: Exception) {
+                logger.e("LoginViewModel", "Clear local data failed: ${e.message}")
             }
-        }.launchIn(viewModelScope)
+            proceedWithPostLogin()
+        }
     }
 
     private fun saveEmailPreference(email: String) {
@@ -262,36 +270,40 @@ class LoginViewModel @Inject constructor(
         logger.d("LoginViewModel", "Proceeding with mandatory sync before navigation")
         updateState { copy(isLoading = true) }
 
-        val fingerprint = fingerprintProvider.getFingerprint()
+        viewModelScope.launch {
+            val fingerprint = fingerprintProvider.getFingerprint()
 
-        // 1. Fetch Entitlements FIRST
-        getEntitlementsUseCase(GetEntitlementsUseCase.Input(fingerprint, forceRefresh = true))
-            .onEach { output ->
-                when (output) {
-                    is GetEntitlementsUseCase.Output.Success -> {
-                        logger.i("LoginViewModel", "Entitlements synced. Starting contract sync.")
-                        syncContracts(output.entitlements.subscriptionLevel)
-                    }
-                    is GetEntitlementsUseCase.Output.Failure -> {
-                        logger.w("LoginViewModel", "Entitlements sync failed. Proceeding as FREE.")
-                        syncContracts(SubscriptionLevel.FREE)
-                    }
-                }
-            }.launchIn(viewModelScope)
-    }
+            // 1. Fetch Entitlements FIRST (Linearized)
+            var subscriptionLevel = SubscriptionLevel.FREE
+            try {
+                val entitlementsOutput = getEntitlementsUseCase(
+                    GetEntitlementsUseCase.Input(fingerprint, forceRefresh = true)
+                ).first()
 
-    private fun syncContracts(level: SubscriptionLevel) {
-        syncContractsUseCase(SyncContractsUseCase.Input).onEach { syncOutput ->
-            when (syncOutput) {
-                SyncContractsUseCase.Output.Progress -> Unit
-                is SyncContractsUseCase.Output.Failure,
-                SyncContractsUseCase.Output.Success -> {
-                    logger.i("LoginViewModel", "Post-login sync complete. Navigating.")
-                    updateState { copy(isLoading = false) }
-                    handlePostLoginNavigation(level)
+                if (entitlementsOutput is GetEntitlementsUseCase.Output.Success) {
+                    subscriptionLevel = entitlementsOutput.entitlements.subscriptionLevel
+                    logger.i("LoginViewModel", "Entitlements synced. Level: $subscriptionLevel")
+                } else {
+                    logger.w("LoginViewModel", "Entitlements sync output not Success. Proceeding as FREE.")
                 }
+            } catch (e: Exception) {
+                logger.e("LoginViewModel", "Entitlements sync failed: ${e.message}. Proceeding as FREE.")
             }
-        }.launchIn(viewModelScope)
+
+            // 2. Fetch Contracts, Stations, History, and Fuel Expenses SECOND (Linearized)
+            try {
+                syncContractsUseCase(SyncContractsUseCase.Input)
+                    .first { it !is SyncContractsUseCase.Output.Progress }
+                logger.i("LoginViewModel", "Initial contract and expense data sync complete.")
+            } catch (e: Exception) {
+                logger.e("LoginViewModel", "Contract sync failed: ${e.message}")
+            }
+
+            // 3. Grace delay for DB settlement & safe navigation
+            delay(500.milliseconds)
+            updateState { copy(isLoading = false) }
+            handlePostLoginNavigation(subscriptionLevel)
+        }
     }
 
     private fun handlePostLoginNavigation(level: SubscriptionLevel) {

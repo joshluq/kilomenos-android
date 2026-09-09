@@ -32,6 +32,9 @@ interface OdometerRecordDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertRecord(record: OdometerRecordEntity)
 
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertRecords(records: List<OdometerRecordEntity>)
+
     @Delete
     suspend fun deleteRecord(record: OdometerRecordEntity)
 

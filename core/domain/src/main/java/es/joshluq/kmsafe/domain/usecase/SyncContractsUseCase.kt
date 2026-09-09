@@ -51,19 +51,29 @@ class SyncContractsUseCaseImpl @Inject constructor(
         ) { contracts, _ ->
             contracts
         }.flatMapConcat { contracts ->
-            // 2. Sync history for the active contract
+            // 2. Sync history and fuel expenses for the active contract
             val activeContract = contracts.find { it.isSelected }
             if (activeContract != null) {
                 logger.i("SyncContractsUseCase", "Active contract found: ${activeContract.id}. Syncing history and fuel expenses.")
-                
                 combine(
                     historyRepository.syncHistory(activeContract.id),
                     fuelRepository.syncFuelExpenses(activeContract.id)
                 ) { _, _ ->
                     SyncContractsUseCase.Output.Success as SyncContractsUseCase.Output
                 }
+            } else if (contracts.isNotEmpty()) {
+                val fallbackContract = contracts.first()
+                logger.w("SyncContractsUseCase", "No active contract found after sync. Selecting first contract as fallback: ${fallbackContract.id}")
+                repository.selectContract(fallbackContract.id).flatMapConcat {
+                    combine(
+                        historyRepository.syncHistory(fallbackContract.id),
+                        fuelRepository.syncFuelExpenses(fallbackContract.id)
+                    ) { _, _ ->
+                        SyncContractsUseCase.Output.Success as SyncContractsUseCase.Output
+                    }
+                }
             } else {
-                logger.w("SyncContractsUseCase", "No active contract found after sync")
+                logger.w("SyncContractsUseCase", "No contracts found after sync")
                 flowOf(SyncContractsUseCase.Output.Success as SyncContractsUseCase.Output)
             }
         }

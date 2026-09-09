@@ -20,6 +20,7 @@ fun ExpensesRoute(
     onNavigateToStations: () -> Unit = {},
     onNavigateToStationDetail: (String) -> Unit = {},
     viewModel: ExpensesViewModel = hiltViewModel(
+        key = "expenses_${stationId ?: "default"}_${autoOpenAdd}_$priceReportMode",
         creationCallback = { factory: ExpensesViewModel.Factory ->
             factory.create(
                 stationId = stationId,

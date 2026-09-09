@@ -35,6 +35,7 @@ class SyncWorker @AssistedInject constructor(
                 Result.retry()
             }
         } catch (e: Exception) {
+            if (e is kotlinx.coroutines.CancellationException) throw e
             logger.e("SyncWorker", "Critical error during synchronization", e)
             Result.failure()
         }

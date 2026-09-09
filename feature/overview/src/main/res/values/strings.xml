@@ -102,4 +102,9 @@
     <!-- Trip Completed Card -->
     <string name="overview_trip_completed_title">VIAJE COMPLETADO</string>
     <string name="overview_trip_completed_question">¿Registrar estos kilómetros en tu odómetro?</string>
+
+    <!-- Vehicle Switching Overlay -->
+    <string name="overview_switching_vehicle_subtitle">Cambiando de vehículo…</string>
+    <string name="overview_switching_vehicle_description">Sincronizando garaje y telemetría del contrato…</string>
+    <string name="overview_switching_vehicle_default">Vehículo</string>
 </resources>

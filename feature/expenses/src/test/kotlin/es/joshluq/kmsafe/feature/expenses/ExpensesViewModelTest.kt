@@ -197,7 +197,7 @@ class ExpensesViewModelTest {
         advanceUntilIdle()
 
         assertFalse(viewModel.state.value.isLoading)
-        assertTrue(viewModel.state.value.isPremium)
+        assertEquals(true, viewModel.state.value.isPremium)
         assertEquals("v1", viewModel.state.value.vehicleId)
         assertEquals("Audi A3", viewModel.state.value.vehicleName)
         assertEquals(1, viewModel.state.value.expenses.size)
@@ -382,7 +382,7 @@ class ExpensesViewModelTest {
         }
         advanceUntilIdle()
 
-        assertFalse(viewModel.state.value.isPremium)
+        assertEquals(false, viewModel.state.value.isPremium)
 
         viewModel.sendEvent(ExpensesEvent.OnReceiptUriSelected(mockUri))
         advanceUntilIdle()

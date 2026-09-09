@@ -447,7 +447,7 @@ class ExpensesViewModel @AssistedInject constructor(
             return
         }
 
-        if (!state.value.isPremium) {
+        if (state.value.isPremium != true) {
             logger.w("ExpensesViewModel", "Receipt scan blocked: user is not premium")
             updateState { copy(error = KmError.FuelExpensesPremiumOnly.toText()) }
             launchEffect(ExpensesEffect.NavigateToUpgrade)

@@ -90,10 +90,13 @@ class ServiceStationRepositoryImpl @Inject constructor(
                             finalId = remoteStation.id
                         }
                     } else {
+                        val errorBody = response.errorBody()?.string() ?: ""
+                        logger.e("ServiceStationRepository", "Remote station sync failed with code ${response.code()}: $errorBody")
                         syncManager.scheduleSync()
                     }
                 }
             }.onFailure { e ->
+                if (e is kotlinx.coroutines.CancellationException) throw e
                 logger.e("ServiceStationRepository", "Remote station sync failed", e)
                 syncManager.scheduleSync()
             }
@@ -118,8 +121,15 @@ class ServiceStationRepositoryImpl @Inject constructor(
         if (sessionDataSource.getSessionState().first() is AuthSessionState.Active) {
             if (sessionDataSource.hasFeature(Feature.CLOUD_SYNC.id)) {
                 runCatching {
-                    apiService.deleteStation(id)
-                }.onFailure {
+                    val response = apiService.deleteStation(id)
+                    if (!response.isSuccessful) {
+                        val errorBody = response.errorBody()?.string() ?: ""
+                        logger.e("ServiceStationRepository", "Remote station delete failed with code ${response.code()}: $errorBody")
+                        syncManager.scheduleSync()
+                    }
+                }.onFailure { e ->
+                    if (e is kotlinx.coroutines.CancellationException) throw e
+                    logger.e("ServiceStationRepository", "Remote station delete failed", e)
                     syncManager.scheduleSync()
                 }
             }

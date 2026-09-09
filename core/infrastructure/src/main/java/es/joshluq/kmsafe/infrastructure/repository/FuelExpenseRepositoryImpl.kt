@@ -78,32 +78,41 @@ class FuelExpenseRepositoryImpl @Inject constructor(
         var finalId = expense.id
 
         // 2. Remote Sync (Creation)
-        if (sessionDataSource.getSessionState().first() is AuthSessionState.Active) {
-            runCatching {
-                if (sessionDataSource.hasFeature(Feature.CLOUD_SYNC.id)) {
-                    val response = apiService.createFuelExpense(
-                        contractId = expense.vehicleId,
-                        request = expense.toRequest()
-                    )
-                    if (response.isSuccessful) {
-                        logger.i("FuelExpenseRepository", "Remote expense creation successful")
-                        val remoteExpense = response.body()?.expense?.toDomainFromApi()
-                        if (remoteExpense != null) {
-                            syncIdHandler.resolveFuelExpenseId(expense, remoteExpense)
-                            finalId = remoteExpense.id
-                        }
+        if (sessionDataSource.getSessionState().first() is AuthSessionState.Active &&
+            sessionDataSource.hasFeature(Feature.CLOUD_SYNC.id)
+        ) {
+            try {
+                val response = apiService.createFuelExpense(
+                    contractId = expense.vehicleId,
+                    request = expense.toRequest()
+                )
+                if (response.isSuccessful) {
+                    logger.i("FuelExpenseRepository", "Remote expense creation successful")
+                    val remoteExpense = response.body()?.expense?.toDomainFromApi()
+                    if (remoteExpense != null) {
+                        syncIdHandler.resolveFuelExpenseId(expense, remoteExpense)
+                        finalId = remoteExpense.id
+                    }
+                } else {
+                    val errorBody = response.errorBody()?.string() ?: ""
+                    logger.e("FuelExpenseRepository", "Remote expense creation failed with code ${response.code()}: $errorBody")
+                    if (response.code() == 409 || errorBody.contains("duplicate key", ignoreCase = true) || errorBody.contains("already exists", ignoreCase = true)) {
+                        logger.w("FuelExpenseRepository", "Remote sync conflict: Duplicate key or already exists. Marking as SYNCED.")
+                        dao.insertExpense(expense.copy(syncStatus = SyncStatus.SYNCED).toEntity())
+                    } else if (response.code() in 400..499) {
+                        logger.e("FuelExpenseRepository", "Server rejected expense with client error ${response.code()}. Rolling back local record.")
+                        dao.deleteExpense(expense.id)
+                        throw KmException(KmError.InvalidFuelExpenseValues)
                     } else {
-                        val errorBody = response.errorBody()?.string() ?: ""
-                        if (errorBody.contains("duplicate key", ignoreCase = true)) {
-                            logger.w("FuelExpenseRepository", "Remote sync conflict: Duplicate key. Marking as SYNCED.")
-                            dao.insertExpense(expense.copy(syncStatus = SyncStatus.SYNCED).toEntity())
-                        } else {
-                            syncManager.scheduleSync()
-                        }
+                        syncManager.scheduleSync()
                     }
                 }
-            }.onFailure { e ->
-                logger.e("FuelExpenseRepository", "Remote expense creation failed", e)
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                throw e
+            } catch (e: KmException) {
+                throw e
+            } catch (e: Exception) {
+                logger.e("FuelExpenseRepository", "Remote expense creation failed with network/server exception", e)
                 syncManager.scheduleSync()
             }
         }
@@ -136,10 +145,13 @@ class FuelExpenseRepositoryImpl @Inject constructor(
                             syncIdHandler.resolveFuelExpenseId(expense, remoteExpense)
                         }
                     } else {
+                        val errorBody = response.errorBody()?.string() ?: ""
+                        logger.e("FuelExpenseRepository", "Remote expense update failed with code ${response.code()}: $errorBody")
                         syncManager.scheduleSync()
                     }
                 }
             }.onFailure { e ->
+                if (e is kotlinx.coroutines.CancellationException) throw e
                 logger.e("FuelExpenseRepository", "Remote expense update failed", e)
                 syncManager.scheduleSync()
             }
@@ -159,7 +171,9 @@ class FuelExpenseRepositoryImpl @Inject constructor(
             if (sessionDataSource.hasFeature(Feature.CLOUD_SYNC.id)) {
                 runCatching {
                     apiService.deleteFuelExpense(id)
-                }.onFailure {
+                }.onFailure { e ->
+                    if (e is kotlinx.coroutines.CancellationException) throw e
+                    logger.e("FuelExpenseRepository", "Remote expense delete failed", e)
                     syncManager.scheduleSync()
                 }
             }
@@ -194,8 +208,10 @@ class FuelExpenseRepositoryImpl @Inject constructor(
             val expenses = response.body()?.expenses?.map { it.toDomainFromApi() } ?: emptyList()
             logger.i("FuelExpenseRepository", "Sync successful: Found ${expenses.size} remote expenses")
 
-            expenses.forEach { expense ->
-                dao.insertExpense(expense.copy(syncStatus = SyncStatus.SYNCED).toEntity())
+            if (expenses.isNotEmpty()) {
+                dao.insertExpenses(expenses.map { expense ->
+                    expense.copy(syncStatus = SyncStatus.SYNCED).toEntity()
+                })
             }
             emit(expenses)
         } else {

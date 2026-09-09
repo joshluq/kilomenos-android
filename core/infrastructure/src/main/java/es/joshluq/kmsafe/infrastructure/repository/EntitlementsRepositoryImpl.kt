@@ -1,5 +1,6 @@
 package es.joshluq.kmsafe.infrastructure.repository
 
+import es.joshluq.foundationkit.log.LoggerKit
 import es.joshluq.kmsafe.domain.model.AuthSessionState
 import es.joshluq.kmsafe.domain.model.KmException
 import es.joshluq.kmsafe.infrastructure.mapper.ErrorMapper
@@ -33,7 +34,8 @@ import javax.inject.Singleton
 class EntitlementsRepositoryImpl @Inject constructor(
     private val apiService: EntitlementsApiService,
     private val authRepository: AuthRepository,
-    private val errorMapper: ErrorMapper
+    private val errorMapper: ErrorMapper,
+    private val logger: LoggerKit
 ) : EntitlementsRepository {
 
     companion object {
@@ -67,13 +69,22 @@ class EntitlementsRepositoryImpl @Inject constructor(
     override fun getEntitlements(deviceFingerprint: String, forceRefresh: Boolean): Flow<Entitlements> = flow {
         val currentTime = System.currentTimeMillis()
         if (forceRefresh || currentTime - lastFetchTime > CACHE_TTL_MILLIS) {
-            runCatching {
-                val response = apiService.getEntitlements(deviceFingerprint)
-                if (response.isSuccessful) {
-                    val domainEntitlements = response.body()?.toDomain() ?: Entitlements.Default
-                    authRepository.updateEntitlements(domainEntitlements)
-                    lastFetchTime = currentTime
-                }
+            val responseResult = runCatching {
+                apiService.getEntitlements(deviceFingerprint)
+            }
+            val response = responseResult.getOrNull()
+            if (response != null && response.isSuccessful) {
+                val domainEntitlements = response.body()?.toDomain() ?: Entitlements.Default
+                logger.i("EntitlementsRepository", "Remote entitlements fetched successfully: $domainEntitlements")
+                authRepository.updateEntitlements(domainEntitlements)
+                lastFetchTime = currentTime
+                emit(domainEntitlements)
+                return@flow
+            } else {
+                logger.e(
+                    "EntitlementsRepository",
+                    "Failed to fetch remote entitlements: isSuccessful=${response?.isSuccessful}, code=${response?.code()}, exception=${responseResult.exceptionOrNull()?.message}"
+                )
             }
         }
         emitAll(authRepository.getEntitlements())

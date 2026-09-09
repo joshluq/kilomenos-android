@@ -7,8 +7,10 @@ import android.net.Uri
 import android.os.Build
 import android.provider.Settings
 import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
@@ -104,6 +106,7 @@ import es.joshluq.kmsafe.domain.model.SubscriptionLevel
 import es.joshluq.kmsafe.domain.model.TripProjection
 import es.joshluq.kmsafe.feature.overview.components.AeroRunwayPacingBar
 import es.joshluq.kmsafe.feature.overview.components.CopilotRadarSection
+import es.joshluq.kmsafe.feature.overview.components.FleetSwitchingOverlay
 import es.joshluq.kmsafe.feature.overview.components.FloatingTelemetryPill
 import es.joshluq.kmsafe.feature.overview.components.StatusCapsule
 import es.joshluq.kmsafe.feature.overview.model.MonthlyUsageUiModel
@@ -336,6 +339,12 @@ fun OverviewScreen(
                     .align(Alignment.TopCenter)
                     .padding(top = 8.dp)
             )
+
+            // Fleet Switching Overlay (Blocking HUD displayed during active vehicle switching)
+            FleetSwitchingOverlay(
+                isVisible = state.isSwitchingVehicle,
+                vehicleName = state.switchingVehicleName
+            )
         }
 
         if (state.showBottomSheet) {
@@ -372,7 +381,8 @@ private fun RentingState(
         modifier = Modifier
             .fillMaxSize()
             .padding(horizontal = CanvasKitTheme.spacing.screenHorizontal)
-            .verticalScroll(rememberScrollState()),
+            .verticalScroll(rememberScrollState())
+            .animateContentSize(),
         verticalArrangement = Arrangement.spacedBy(CanvasKitTheme.spacing.md)
     ) {
         Spacer(modifier = Modifier.height(2.dp))
@@ -563,8 +573,20 @@ fun MonthlyBarChart(monthlyUsage: List<MonthlyUsageUiModel>) {
                     val maxOverall = monthlyUsage.maxOfOrNull { maxOf(it.barPercentage, it.budgetPercentage) }?.coerceAtLeast(1f) ?: 1f
 
                     monthlyUsage.takeLast(6).forEach { usage ->
-                        val usageHeightFraction = (usage.barPercentage / maxOverall).coerceIn(0.05f, 1f)
-                        val budgetHeightFraction = (usage.budgetPercentage / maxOverall).coerceIn(0.05f, 1f)
+                        val targetUsageFraction = (usage.barPercentage / maxOverall).coerceIn(0.05f, 1f)
+                        val targetBudgetFraction = (usage.budgetPercentage / maxOverall).coerceIn(0.05f, 1f)
+
+                        val animatedUsageHeight by animateFloatAsState(
+                            targetValue = targetUsageFraction,
+                            animationSpec = tween(durationMillis = 400, easing = FastOutSlowInEasing),
+                            label = "monthly_bar_usage_${usage.monthName}"
+                        )
+                        val animatedBudgetHeight by animateFloatAsState(
+                            targetValue = targetBudgetFraction,
+                            animationSpec = tween(durationMillis = 400, easing = FastOutSlowInEasing),
+                            label = "monthly_bar_budget_${usage.monthName}"
+                        )
+
                         val barColor = if (usage.limitState == MonthlyUsageUiModel.LimitState.SAFE) CanvasKitTheme.colors.brandAccent else CanvasKitTheme.colors.error
 
                         Column(
@@ -595,7 +617,7 @@ fun MonthlyBarChart(monthlyUsage: List<MonthlyUsageUiModel>) {
                                 Box(
                                     Modifier
                                         .width(20.dp)
-                                        .fillMaxHeight(budgetHeightFraction)
+                                        .fillMaxHeight(animatedBudgetHeight)
                                         .background(
                                             CanvasKitTheme.colors.borderSubtle,
                                             RoundedCornerShape(4.dp)
@@ -604,7 +626,7 @@ fun MonthlyBarChart(monthlyUsage: List<MonthlyUsageUiModel>) {
                                 Box(
                                     Modifier
                                         .width(20.dp)
-                                        .fillMaxHeight(usageHeightFraction)
+                                        .fillMaxHeight(animatedUsageHeight)
                                         .background(
                                             barColor,
                                             RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp)
@@ -616,7 +638,7 @@ fun MonthlyBarChart(monthlyUsage: List<MonthlyUsageUiModel>) {
                                         .height(2.dp)
                                         .align(Alignment.BottomCenter)
                                         .padding(
-                                            bottom = (200 * budgetHeightFraction).dp
+                                            bottom = (200 * animatedBudgetHeight).dp
                                         )
                                         .background(CanvasKitTheme.colors.textSecondary)
                                 )

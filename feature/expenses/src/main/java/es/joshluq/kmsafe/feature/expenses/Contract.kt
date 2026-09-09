@@ -45,10 +45,10 @@ data class ExpensesState(
     /** Habitual service stations displayed in the Layer 2 price radar. */
     val radarItems: List<StationRadarItem> = emptyList(),
     /** True if the station price radar is locked (Core free tier). */
-    val isRadarLocked: Boolean = true,
+    val isRadarLocked: Boolean = false,
     val isAddExpenseSheetOpen: Boolean = false,
     val selectedVolatility: StationPriceVolatility? = null,
-    val isPremium: Boolean = false,
+    val isPremium: Boolean? = null,
     val adUnitId: String? = null,
     val isLoading: Boolean = false,
     val isSaving: Boolean = false,

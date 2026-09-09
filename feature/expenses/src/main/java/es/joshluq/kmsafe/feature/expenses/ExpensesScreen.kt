@@ -208,7 +208,7 @@ fun ExpensesScreen(
                 ) {
                     FloatingActionButton(
                         onClick = safeClick {
-                            if (state.isPremium) {
+                            if (state.isPremium == true) {
                                 showReceiptSourcePicker = true
                             } else {
                                 onEvent(ExpensesEvent.OnUpgradeToUnlockRadarClicked)
@@ -259,9 +259,10 @@ fun ExpensesScreen(
                     }
 
                     item(key = "station_radar") {
+                        val isLocked = state.isPremium == false && state.isRadarLocked
                         StationRadarCarousel(
                             items = state.radarItems,
-                            isLocked = state.isRadarLocked,
+                            isLocked = isLocked,
                             onUpgradeClick = { onEvent(ExpensesEvent.OnUpgradeToUnlockRadarClicked) }
                         )
                     }
@@ -312,7 +313,7 @@ fun ExpensesScreen(
                         }
                     }
 
-                    if (!state.isPremium && state.adUnitId != null) {
+                    if (state.isPremium == false && state.adUnitId != null) {
                         item(key = "expenses_ad_banner") {
                             AdMobBanner(
                                 adUnitId = state.adUnitId,
@@ -330,7 +331,7 @@ fun ExpensesScreen(
                     .fillMaxSize()
                     .padding(paddingValues)
             ) {
-                if (state.isPremium) {
+                if (state.isPremium == true) {
                     PullToRefreshBox(
                         isRefreshing = state.isLoading,
                         onRefresh = { onEvent(ExpensesEvent.OnRefresh) },

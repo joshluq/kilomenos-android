@@ -133,7 +133,7 @@ fun AddExpenseBottomSheet(
     }
     var isFullTank by remember { mutableStateOf(true) }
     var odometerText by remember {
-        mutableStateOf(if (currentOdometer > 0.0) String.format(Locale.getDefault(), "%.2f", currentOdometer) else "")
+        mutableStateOf(if (currentOdometer > 0.0) String.format(Locale.getDefault(), "%.0f", currentOdometer) else "0")
     }
     var selectedStation by remember { 
         mutableStateOf(stations.find { it.id == initialStationId }) 
@@ -621,13 +621,11 @@ fun AddExpenseBottomSheet(
                             label = stringResource(R.string.expenses_sheet_odometer),
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                         )
-                        if (currentOdometer > 0.0) {
-                            Text(
-                                text = stringResource(R.string.expenses_sheet_odometer_hint, currentOdometer),
-                                style = CanvasKitTheme.typography.labelSmall,
-                                color = CanvasKitTheme.colors.brandAccent
-                            )
-                        }
+                        Text(
+                            text = stringResource(R.string.expenses_sheet_odometer_hint, currentOdometer.coerceAtLeast(0.0)),
+                            style = CanvasKitTheme.typography.labelSmall,
+                            color = CanvasKitTheme.colors.brandAccent
+                        )
                     }
                 }
 
@@ -648,6 +646,7 @@ fun AddExpenseBottomSheet(
                 modifier = Modifier.fillMaxWidth().testTag("expense_save_button"),
                 onClick = safeClick {
                     if (unitPrice > 0.0 && (priceReportMode || volume > 0.0)) {
+                        val parsedOdo = if (priceReportMode) null else (odometerText.normalizeDecimal().toDoubleOrNull() ?: currentOdometer.coerceAtLeast(0.0))
                         onSave(
                             effectiveFuelType,
                             unitPrice,
@@ -655,7 +654,7 @@ fun AddExpenseBottomSheet(
                             if (priceReportMode) 0.0 else computedTotal,
                             selectedStation?.id,
                             selectedStation?.name ?: stationNameInput.takeIf { it.isNotBlank() },
-                            if (priceReportMode) null else odometerText.normalizeDecimal().toDoubleOrNull(),
+                            parsedOdo,
                             if (priceReportMode) false else isFullTank,
                             null, // notes: removed from this version
                             null, // lastRefuelTimestamp injected via state in ExpensesScreen

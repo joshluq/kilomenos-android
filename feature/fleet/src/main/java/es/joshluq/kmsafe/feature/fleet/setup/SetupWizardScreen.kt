@@ -41,6 +41,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import java.util.UUID
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusDirection
@@ -94,7 +96,8 @@ fun SetupWizardRoute(
     onNavigateToCropper: (String) -> Unit,
     onNavigateToPremiumPaywall: () -> Unit = {}
 ) {
-    val viewModel: SetupWizardViewModel = hiltViewModel()
+    val wizardSessionId = rememberSaveable { UUID.randomUUID().toString() }
+    val viewModel: SetupWizardViewModel = hiltViewModel(key = wizardSessionId)
     val state by viewModel.state.collectAsStateWithLifecycle()
     val resultStore = LocalNavigationResultStore.current
 

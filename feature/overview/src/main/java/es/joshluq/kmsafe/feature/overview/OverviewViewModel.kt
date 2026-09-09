@@ -72,8 +72,6 @@ class OverviewViewModel @Inject constructor(
     private val logger: LoggerKit
 ) : ScreenViewModel<State, Event, Effect>() {
 
-    private var projectionJob: Job? = null
-    private var bannerAlertJob: Job? = null
     private var bluetoothJob: Job? = null
 
     init {
@@ -97,16 +95,33 @@ class OverviewViewModel @Inject constructor(
             .distinctUntilChanged()
         val allContractsFlow = getAllContractsUseCase(GetAllContractsUseCase.Input)
             .distinctUntilChanged()
+        val monthlyUsageFlow = getMonthlyUsageUseCase(GetMonthlyUsageUseCase.Input)
+            .distinctUntilChanged()
+        val projectionFlow = getTripProjectionUseCase(GetTripProjectionUseCase.Input)
+            .distinctUntilChanged()
 
         combine(
             entitlementsFlow,
             preferencesFlow,
             overviewDataFlow,
-            allContractsFlow
-        ) { entitlementsOutput, preferencesOutput, overviewOutput, allContractsOutput ->
+            allContractsFlow,
+            monthlyUsageFlow,
+            projectionFlow
+        ) { flows: Array<Any> ->
+            val entitlementsOutput = flows[0] as GetEntitlementsUseCase.Output
+            val preferencesOutput = flows[1] as GetPreferencesUseCase.Output
+            val overviewOutput = flows[2] as GetOverviewDataUseCase.Output
+            val allContractsOutput = flows[3] as GetAllContractsUseCase.Output
+            val monthlyUsageOutput = flows[4] as GetMonthlyUsageUseCase.Output
+            val projectionOutput = flows[5] as GetTripProjectionUseCase.Output
+
+            var newState = state.value
 
             // 1. Process Entitlements & Preferences
-            var newState = state.value
+            var showProjBanner = newState.showProjectionBanner
+            if (preferencesOutput is GetPreferencesUseCase.Output.Success) {
+                showProjBanner = preferencesOutput.preferences.showProjectionBanner
+            }
 
             if (entitlementsOutput is GetEntitlementsUseCase.Output.Success &&
                 preferencesOutput is GetPreferencesUseCase.Output.Success
@@ -117,8 +132,6 @@ class OverviewViewModel @Inject constructor(
                 val isTrialable = entitlements.isFeatureTrialable(Feature.AUTO_TRACKING)
                 val isAutoTrackEnabled = prefs.autoTrackingEnabled
                 val isPromoDismissed = prefs.autoTrackingPromotionDismissed
-
-                val shouldShowPromo = false
 
                 if (isAutoTrackEnabled) {
                     logger.d("OverviewViewModel", "Auto-tracking is enabled in preferences. Ensuring registration.")
@@ -131,11 +144,34 @@ class OverviewViewModel @Inject constructor(
                     subscriptionLevel = entitlements.subscriptionLevel,
                     autoTrackingEnabled = isAutoTrackEnabled,
                     autoTrackingPromotionDismissed = isPromoDismissed,
-                    showAutoTrackingPromotion = shouldShowPromo
+                    showAutoTrackingPromotion = false,
+                    showProjectionBanner = showProjBanner
                 )
             }
 
-            // 2. Process Contract Data
+            // 2. Process Monthly Usage
+            if (monthlyUsageOutput is GetMonthlyUsageUseCase.Output.Success) {
+                val uiModels = monthlyUsageOutput.aggregations.map { it.toUiModel() }
+                newState = newState.copy(monthlyUsage = uiModels)
+            }
+
+            // 3. Process Trip Projection
+            val activeContract = if (overviewOutput is GetOverviewDataUseCase.Output.Success) {
+                overviewOutput.contract
+            } else {
+                newState.renting
+            }
+
+            val currentProjection = if (projectionOutput is GetTripProjectionUseCase.Output.Success) {
+                val proj = projectionOutput.projection
+                if (proj != null && activeContract != null && (proj.contractId.isEmpty() || proj.contractId == activeContract.id)) {
+                    proj
+                } else null
+            } else {
+                newState.projection
+            }
+
+            // 4. Process Contract & Metrics Data
             if (overviewOutput is GetOverviewDataUseCase.Output.Success) {
                 val contract = overviewOutput.contract
                 val metrics = overviewOutput.metrics
@@ -145,16 +181,9 @@ class OverviewViewModel @Inject constructor(
                     val hasBluetooth = contract.bluetoothDeviceAddress != null
                     val showBluetoothSuggestion = isPremium && isAutoTrackingEnabled && !hasBluetooth
 
-                    val isVehicleSwitching = state.value.renting != null && state.value.renting?.id != contract.id
-                    val currentProjection = if (isVehicleSwitching || (newState.projection?.contractId?.isNotEmpty() == true && newState.projection.contractId != contract.id)) {
-                        null
-                    } else {
-                        newState.projection
-                    }
-
                     val capsule = resolveStatusCapsule(
                         projection = currentProjection,
-                        showProjectionBanner = newState.showProjectionBanner,
+                        showProjectionBanner = showProjBanner,
                         renting = contract,
                         isPremium = isPremium,
                         isAutoTrackingEnabled = isAutoTrackingEnabled
@@ -180,32 +209,33 @@ class OverviewViewModel @Inject constructor(
                     newState = newState.copy(isLoading = false, renting = null)
                 }
             } else if (overviewOutput is GetOverviewDataUseCase.Output.Progress) {
-                // To avoid flickering, we only show loading if it takes too long
-                // or if we explicitly want to force a loader when there's no data.
-                // For now, we only set it if we don't have a vehicle.
                 if (newState.renting == null && state.value.renting == null) {
                     newState = newState.copy(isLoading = true)
                 }
             }
 
-            // 3. Process Available Vehicles
+            // 5. Process Available Vehicles
             if (allContractsOutput is GetAllContractsUseCase.Output.Success) {
-                newState = newState.copy(availableVehicles = allContractsOutput.contracts)
+                newState = newState.copy(availableVehicles = allContractsOutput.contracts.reversed())
             }
 
-            // Atomically update the state once per combine emission
-            val oldRentingId = state.value.renting?.id
-            val newRentingId = newState.renting?.id
+            // 6. Check Projection Alert Preference Sync
+            if (currentProjection != null && showProjBanner && preferencesOutput is GetPreferencesUseCase.Output.Success) {
+                val currentOverLimit = currentProjection.isOverLimit
+                val lastKnown = preferencesOutput.preferences.lastKnownOverLimit
+                if (lastKnown == null || lastKnown != currentOverLimit) {
+                    updatePreferencesUseCase(
+                        UpdatePreferencesUseCase.Input(lastKnownOverLimit = currentOverLimit)
+                    ).launchIn(viewModelScope)
+                }
+            }
+
+            // 7. Atomic State Update
             val oldMac = state.value.renting?.bluetoothDeviceAddress
             val newMac = newState.renting?.bluetoothDeviceAddress
 
             if (newState != state.value) {
                 updateState { newState }
-
-                if (newRentingId != null && newRentingId != oldRentingId) {
-                    loadMonthlyUsage()
-                    loadProjection()
-                }
             }
 
             if (newMac != oldMac || bluetoothJob == null) {
@@ -369,99 +399,42 @@ class OverviewViewModel @Inject constructor(
     }
 
     private fun handleOnSwitchVehicle(id: String) {
+        val targetVehicleName = state.value.availableVehicles.find { it.id == id }?.vehicleName
+        updateState {
+            copy(
+                showVehicleSwitcher = false,
+                isSwitchingVehicle = true,
+                switchingVehicleName = targetVehicleName,
+                isLoading = true
+            )
+        }
         selectContractUseCase(SelectContractUseCase.Input(id))
             .onEach { output ->
                 when (output) {
-                    is SelectContractUseCase.Output.Success -> updateState {
-                        copy(showVehicleSwitcher = false)
-                    }
-                    is SelectContractUseCase.Output.Progress -> updateState { copy(isLoading = true) }
-                    is SelectContractUseCase.Output.Failure -> updateState { copy(isLoading = false) }
-                }
-            }
-            .launchIn(viewModelScope)
-    }
-
-    private fun loadMonthlyUsage() {
-        getMonthlyUsageUseCase(GetMonthlyUsageUseCase.Input)
-            .onEach { output ->
-                when (output) {
-                    is GetMonthlyUsageUseCase.Output.Success -> {
-                        val uiModels = output.aggregations.map { it.toUiModel() }
-                        updateState { copy(monthlyUsage = uiModels, isLoading = false) }
-                    }
-                    is GetMonthlyUsageUseCase.Output.Failure -> updateState { copy(isLoading = false) }
-                    else -> { }
-                }
-            }
-            .launchIn(viewModelScope)
-    }
-
-    private fun loadProjection() {
-        projectionJob?.cancel()
-        projectionJob = getTripProjectionUseCase(GetTripProjectionUseCase.Input)
-            .onEach { output ->
-                if (output is GetTripProjectionUseCase.Output.Success) {
-                    val projection = output.projection
-                    val currentRenting = state.value.renting
-                    if (projection != null && currentRenting != null &&
-                        (projection.contractId.isEmpty() || projection.contractId == currentRenting.id)
-                    ) {
-                        val currentOverLimit = projection.isOverLimit
-                        val capsule = resolveStatusCapsule(
-                            projection = projection,
-                            showProjectionBanner = true,
-                            renting = currentRenting,
-                            isPremium = state.value.isPremium ?: false,
-                            isAutoTrackingEnabled = state.value.autoTrackingEnabled
-                        )
+                    is SelectContractUseCase.Output.Success -> {
                         updateState {
                             copy(
-                                projection = projection,
-                                showProjectionBanner = true,
-                                statusCapsule = capsule
+                                isLoading = false,
+                                isSwitchingVehicle = false,
+                                switchingVehicleName = null
                             )
                         }
-                        checkBannerAlert(currentOverLimit)
-                    } else if (projection == null) {
-                        val capsule = resolveStatusCapsule(
-                            projection = null,
-                            showProjectionBanner = state.value.showProjectionBanner,
-                            renting = currentRenting,
-                            isPremium = state.value.isPremium ?: false,
-                            isAutoTrackingEnabled = state.value.autoTrackingEnabled
-                        )
-                        updateState { copy(projection = null, statusCapsule = capsule) }
+                    }
+                    is SelectContractUseCase.Output.Progress -> {
+                        updateState { copy(isLoading = true, isSwitchingVehicle = true) }
+                    }
+                    is SelectContractUseCase.Output.Failure -> {
+                        updateState {
+                            copy(
+                                isLoading = false,
+                                isSwitchingVehicle = false,
+                                switchingVehicleName = null
+                            )
+                        }
                     }
                 }
             }
             .launchIn(viewModelScope)
-    }
-
-    private fun checkBannerAlert(currentOverLimit: Boolean) {
-        bannerAlertJob?.cancel()
-        bannerAlertJob = getPreferencesUseCase(GetPreferencesUseCase.Input)
-            .onEach { output ->
-                if (output is GetPreferencesUseCase.Output.Success) {
-                    val prefs = output.preferences
-                    val shouldShow = prefs.showProjectionBanner
-                    val lastState = prefs.lastKnownOverLimit
-                    val capsule = resolveStatusCapsule(
-                        projection = state.value.projection,
-                        showProjectionBanner = shouldShow,
-                        renting = state.value.renting,
-                        isPremium = state.value.isPremium ?: false,
-                        isAutoTrackingEnabled = state.value.autoTrackingEnabled
-                    )
-                    updateState { copy(showProjectionBanner = shouldShow, statusCapsule = capsule) }
-
-                    if (shouldShow && (lastState == null || lastState != currentOverLimit)) {
-                        updatePreferencesUseCase(
-                            UpdatePreferencesUseCase.Input(lastKnownOverLimit = currentOverLimit)
-                        ).launchIn(viewModelScope)
-                    }
-                }
-            }.launchIn(viewModelScope)
     }
 
     private fun handleDismissPromotion() {

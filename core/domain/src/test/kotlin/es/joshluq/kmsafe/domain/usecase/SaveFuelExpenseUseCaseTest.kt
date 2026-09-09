@@ -57,6 +57,25 @@ class SaveFuelExpenseUseCaseTest {
     }
 
     @Test
+    fun `given invalid negative odometer when invoke then emits Progress and InvalidInput`() = runTest {
+        val input = SaveFuelExpenseUseCase.Input(
+            vehicleId = "veh-1",
+            fuelType = FuelType.GASOLINE_95,
+            unitPrice = 1.5,
+            volumeQuantity = 10.0,
+            totalCost = 15.0,
+            odometerAtExpense = -10.0
+        )
+
+        val emissions = useCase(input).toList()
+
+        assertEquals(2, emissions.size)
+        assertTrue(emissions[0] is SaveFuelExpenseUseCase.Output.Progress)
+        val invalid = emissions[1] as SaveFuelExpenseUseCase.Output.InvalidInput
+        assertEquals(KmError.InvalidFuelExpenseValues, invalid.error)
+    }
+
+    @Test
     fun `given valid expense with isFullTank false when invoke then skips consumption calculation and emits Success`() = runTest {
         val input = SaveFuelExpenseUseCase.Input(
             vehicleId = "veh-1",

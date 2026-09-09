@@ -84,6 +84,7 @@ fun EditContractRoute(
     onNavigateToCropper: (String) -> Unit
 ) {
     val viewModel: EditContractViewModel = hiltViewModel(
+        key = "edit_contract_$vehicleId",
         creationCallback = { factory: EditContractViewModel.Factory ->
             factory.create(vehicleId)
         }

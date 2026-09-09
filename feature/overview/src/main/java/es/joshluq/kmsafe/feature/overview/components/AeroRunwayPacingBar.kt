@@ -1,6 +1,9 @@
 package es.joshluq.kmsafe.feature.overview.components
 
 import android.content.res.Configuration
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -23,6 +26,7 @@ import androidx.compose.material.icons.filled.DirectionsCar
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -83,6 +87,17 @@ fun AeroRunwayPacingBar(
     // Normalize percentages if passed as 0..100
     val normalizedTime = if (timePercentage > 1f) (timePercentage / 100f).coerceIn(0f, 1f) else timePercentage.coerceIn(0f, 1f)
     val normalizedKm = if (kmsPercentage > 1f) (kmsPercentage / 100f).coerceIn(0f, 1f) else kmsPercentage.coerceIn(0f, 1f)
+
+    val animatedTime by animateFloatAsState(
+        targetValue = normalizedTime,
+        animationSpec = tween(durationMillis = 400, easing = FastOutSlowInEasing),
+        label = "aero_runway_time"
+    )
+    val animatedKm by animateFloatAsState(
+        targetValue = normalizedKm,
+        animationSpec = tween(durationMillis = 400, easing = FastOutSlowInEasing),
+        label = "aero_runway_km"
+    )
 
     val isSafe = balance >= 0.0
     val kmBarColor = if (isSafe) CanvasKitTheme.colors.brandAccent else CanvasKitTheme.colors.error
@@ -267,7 +282,7 @@ fun AeroRunwayPacingBar(
                         )
                     }
                     RunwayProgressBar(
-                        fraction = normalizedTime,
+                        fraction = animatedTime,
                         fillColor = CanvasKitTheme.colors.textSecondary.copy(alpha = 0.5f),
                         backgroundColor = CanvasKitTheme.colors.borderSubtle
                     )
@@ -294,7 +309,7 @@ fun AeroRunwayPacingBar(
                         )
                     }
                     RunwayProgressBar(
-                        fraction = normalizedKm,
+                        fraction = animatedKm,
                         fillColor = kmBarColor,
                         backgroundColor = CanvasKitTheme.colors.borderSubtle
                     )

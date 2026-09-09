@@ -1,7 +1,6 @@
 package es.joshluq.kmsafe.infrastructure.mapper
 
 import es.joshluq.kmsafe.domain.model.KmError
-import okhttp3.Headers.Companion.toHeaders
 import okhttp3.ResponseBody.Companion.toResponseBody
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue

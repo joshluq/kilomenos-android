@@ -55,7 +55,8 @@ class UserSessionDataSourceImpl @Inject constructor(
     private val _sessionDataUpdates = MutableSharedFlow<UserSessionModel?>(replay = 1)
 
     override suspend fun getCurrentUserSession(): UserSessionModel? {
-        val session = authKit.session.getSessionData<UserSessionModel>()
+        val session = _sessionDataUpdates.replayCache.firstOrNull()
+            ?: authKit.session.getSessionData<UserSessionModel>()
         logger.d("UserSessionDataSource", "getCurrentUserSession called -> $session")
         return session
     }
@@ -63,11 +64,15 @@ class UserSessionDataSourceImpl @Inject constructor(
     override fun observeUserSession(): Flow<UserSessionModel?> {
         return combine(
             authKit.session.state,
-            _sessionDataUpdates.onStart { emit(null) }
+            _sessionDataUpdates.onStart {
+                if (_sessionDataUpdates.replayCache.isEmpty()) {
+                    emit(null)
+                }
+            }
         ) { state, localUpdate ->
             logger.d("UserSessionDataSource", "observeUserSession triggered: authKitState=$state, localUpdate=$localUpdate")
             val sessionModel = if (state == SessionState.Active || state == SessionState.ExpiringSoon) {
-                val fetched = localUpdate ?: authKit.session.getSessionData<UserSessionModel>()
+                val fetched = localUpdate ?: _sessionDataUpdates.replayCache.firstOrNull() ?: authKit.session.getSessionData<UserSessionModel>()
                 logger.d("UserSessionDataSource", "observeUserSession: fetched sessionModel=$fetched")
                 fetched
             } else {
