@@ -63,10 +63,14 @@ class DashboardViewModel @Inject constructor(
                 when (output) {
                     is GetCurrentUserUseCase.Output.Success -> {
                         val currentUserId = output.user?.id
-                        if (currentUserId != lastUserId) {
+                        if (currentUserId != null && currentUserId != lastUserId) {
                             logger.d("DashboardViewModel", "User session changed ($lastUserId -> $currentUserId), resetting tab to OVERVIEW")
                             lastUserId = currentUserId
-                            updateState { copy(selectedTab = DashboardTab.OVERVIEW) }
+                            if (!state.value.isNavigationBlocked) {
+                                updateState { copy(selectedTab = DashboardTab.OVERVIEW) }
+                            }
+                        } else if (currentUserId == null) {
+                            lastUserId = null
                         }
                     }
                 }

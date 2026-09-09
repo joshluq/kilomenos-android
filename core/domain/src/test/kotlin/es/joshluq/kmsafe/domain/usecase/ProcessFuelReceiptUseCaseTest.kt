@@ -3,17 +3,14 @@ package es.joshluq.kmsafe.domain.usecase
 import es.joshluq.foundationkit.log.LoggerKit
 import es.joshluq.kmsafe.domain.model.ArithmeticCheck
 import es.joshluq.kmsafe.domain.model.Entitlements
-import es.joshluq.kmsafe.domain.model.FuelExpense
 import es.joshluq.kmsafe.domain.model.FuelType
 import es.joshluq.kmsafe.domain.model.KmError
 import es.joshluq.kmsafe.domain.model.ReceiptScanResult
 import es.joshluq.kmsafe.domain.model.SubscriptionLevel
 import es.joshluq.kmsafe.domain.model.User
-import es.joshluq.kmsafe.domain.model.AppOverlayState
 import es.joshluq.kmsafe.domain.repository.AppOverlayRepository
 import es.joshluq.kmsafe.domain.repository.AuthRepository
 import es.joshluq.kmsafe.domain.repository.EntitlementsRepository
-import es.joshluq.kmsafe.domain.repository.FuelExpenseRepository
 import es.joshluq.kmsafe.domain.repository.ReceiptRepository
 import io.mockk.clearAllMocks
 import io.mockk.coEvery

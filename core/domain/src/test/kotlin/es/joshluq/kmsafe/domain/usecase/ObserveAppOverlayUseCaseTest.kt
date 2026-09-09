@@ -1,6 +1,5 @@
 package es.joshluq.kmsafe.domain.usecase
 
-import es.joshluq.foundationkit.log.LoggerKit
 import es.joshluq.kmsafe.domain.model.AppOverlayState
 import es.joshluq.kmsafe.domain.repository.AppOverlayRepository
 import io.mockk.clearAllMocks

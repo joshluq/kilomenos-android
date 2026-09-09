@@ -186,10 +186,10 @@ class DashboardViewModelTest {
         advanceUntilIdle()
         assertEquals(DashboardTab.PROFILE, viewModel.state.value.selectedTab)
 
-        // User logs out (user becomes null)
+        // User logs out (user becomes null) - tab must NOT be flipped to OVERVIEW so logout navigation can complete
         userFlow.emit(GetCurrentUserUseCase.Output.Success(null))
         advanceUntilIdle()
-        assertEquals(DashboardTab.OVERVIEW, viewModel.state.value.selectedTab)
+        assertEquals(DashboardTab.PROFILE, viewModel.state.value.selectedTab)
 
         // User logs back in as user1 again
         viewModel.sendEvent(Event.OnTabSelected(DashboardTab.PROFILE))
@@ -292,4 +292,3 @@ class DashboardViewModelTest {
         assertFalse(viewModel.state.value.isNavigationBlocked)
     }
 }
-

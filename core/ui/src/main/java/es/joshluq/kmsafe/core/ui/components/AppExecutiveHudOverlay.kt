@@ -1,6 +1,5 @@
 package es.joshluq.kmsafe.core.ui.components
 
-import android.content.res.Configuration
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
