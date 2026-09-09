@@ -27,7 +27,7 @@ interface SimulateContractProjectionUseCase :
         val actualKmsDrivenSinceStart: Double,
         val simulatedDailyKm: Float,
         val plannedTrips: List<PlannedTrip> = emptyList(),
-        val penaltyPricePerKm: Float = 0.05f,
+        val penaltyPricePerKm: Float? = null,
         val currentTime: Long = System.currentTimeMillis()
     ) : UseCaseInput
 
@@ -56,11 +56,25 @@ class SimulateContractProjectionUseCaseImpl @Inject constructor() : SimulateCont
         val simulatedBalance = contractedLimitKms - totalProjectedKms
         val isOverLimit = simulatedBalance < 0.0
 
-        val estimatedPenalty = if (isOverLimit) {
-            simulatedBalance.absoluteValue * input.penaltyPricePerKm
+        // Financial Settlement Resolution: Check if contract has configured price/margin, else apply market defaults
+        val isUsingDefaultPrice = contract.excessDistancePrice == null || contract.excessDistancePrice <= 0.0
+        val effectivePricePerKm = input.penaltyPricePerKm
+            ?: contract.excessDistancePrice?.toFloat()
+            ?: RentingContract.DEFAULT_MARKET_EXCESS_PRICE
+
+        val isUsingDefaultCourtesyMargin = contract.courtesyMarginKms <= 0.0 && contract.excessDistancePrice == null
+        val effectiveCourtesyMargin = if (contract.courtesyMarginKms > 0.0) {
+            contract.courtesyMarginKms
+        } else if (contract.excessDistancePrice == null) {
+            RentingContract.DEFAULT_MARKET_COURTESY_MARGIN_KMS
         } else {
             0.0
         }
+
+        val grossExcessKms = if (isOverLimit) simulatedBalance.absoluteValue else 0.0
+        val billableExcessKms = (grossExcessKms - effectiveCourtesyMargin).coerceAtLeast(0.0)
+        val estimatedPenalty = billableExcessKms * effectivePricePerKm
+        val courtesySavingsAmount = kotlin.math.min(grossExcessKms, effectiveCourtesyMargin) * effectivePricePerKm
 
         // Exhaustion Date Calculation
         val availableRemainingKms = (contract.totalKms - input.actualKmsDrivenSinceStart - totalPlannedTripsKm).coerceAtLeast(0.0)
@@ -93,7 +107,14 @@ class SimulateContractProjectionUseCaseImpl @Inject constructor() : SimulateCont
             exhaustionDateMillis = exhaustionDateMillis,
             monthsAheadOrBehind = monthsAheadOrBehind,
             remedialDailyKm = remedialDailyKm,
-            isOverLimit = isOverLimit
+            isOverLimit = isOverLimit,
+            grossExcessKms = grossExcessKms,
+            courtesyMarginKms = effectiveCourtesyMargin,
+            billableExcessKms = billableExcessKms,
+            ratePerKm = effectivePricePerKm,
+            courtesySavingsAmount = courtesySavingsAmount,
+            isUsingDefaultPrice = isUsingDefaultPrice,
+            isUsingDefaultCourtesyMargin = isUsingDefaultCourtesyMargin
         )
 
         return Result.success(SimulateContractProjectionUseCase.Output.Success(result))

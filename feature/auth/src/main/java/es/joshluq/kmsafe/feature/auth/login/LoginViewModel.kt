@@ -93,7 +93,7 @@ class LoginViewModel @Inject constructor(
         getPreferencesUseCase(GetPreferencesUseCase.Input)
             .onEach { output ->
                 if (output is GetPreferencesUseCase.Output.Success) {
-                    if (output.preferences.rememberEmail && output.preferences.lastEmail.isNotEmpty()) {
+                    if (output.preferences.rememberEmail && output.preferences.lastEmail.isNotEmpty() && !state.value.isLoading) {
                         handleEmailChanged(output.preferences.lastEmail)
                     }
                 }

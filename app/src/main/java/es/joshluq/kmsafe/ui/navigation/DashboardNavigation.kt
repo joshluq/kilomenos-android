@@ -36,7 +36,8 @@ fun DashboardNavigation(
     onNavigateToPermissions: () -> Unit,
     onNavigateToAssistedPermissions: () -> Unit,
     onNavigateToWelcomeDiscovery: (Boolean) -> Unit,
-    onNavigateToVehicleDetail: (String) -> Unit
+    onNavigateToVehicleDetail: (String) -> Unit,
+    onNavigateToEditContract: (String) -> Unit = {}
 ) {
     val destinationForTab: (DashboardTab) -> Destination = { tab ->
         when (tab) {
@@ -93,7 +94,8 @@ fun DashboardNavigation(
                 }
                 Destination.ProjectionAnalysis -> NavEntry(key) {
                     ProjectionAnalysisRoute(
-                        onNavigateToUpgrade = onNavigateToPremiumPaywall
+                        onNavigateToUpgrade = onNavigateToPremiumPaywall,
+                        onNavigateToEditContract = onNavigateToEditContract
                     )
                 }
                 is Destination.Expenses -> NavEntry(key) {

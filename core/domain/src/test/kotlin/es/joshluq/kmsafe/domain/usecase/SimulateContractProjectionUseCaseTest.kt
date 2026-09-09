@@ -28,7 +28,9 @@ class SimulateContractProjectionUseCaseTest {
         startDate: Long = 1_000_000_000L,
         durationMonths: Int = 12,
         totalKms: Double = 12_000.0,
-        startOdometer: Double = 10_000.0
+        startOdometer: Double = 10_000.0,
+        excessDistancePrice: Double? = 0.08,
+        courtesyMarginKms: Double = 0.0
     ) = RentingContract(
         id = "contract-1",
         userId = "user-1",
@@ -37,7 +39,9 @@ class SimulateContractProjectionUseCaseTest {
         durationMonths = durationMonths,
         totalKms = totalKms,
         startOdometer = startOdometer,
-        currentOdometer = startOdometer
+        currentOdometer = startOdometer,
+        excessDistancePrice = excessDistancePrice,
+        courtesyMarginKms = courtesyMarginKms
     )
 
     @Test
@@ -187,4 +191,107 @@ class SimulateContractProjectionUseCaseTest {
         val output = result.getOrThrow() as SimulateContractProjectionUseCase.Output.Success
         assertNull(output.result.remedialDailyKm)
     }
+
+    @Test
+    fun `given unconfigured contract then applies market default rate and courtesy margin`() = runTest {
+        val startDate = 1_000_000_000L
+        val contract = createContract(
+            startDate = startDate,
+            durationMonths = 12,
+            totalKms = 12000.0,
+            excessDistancePrice = null,
+            courtesyMarginKms = 0.0
+        )
+        val currentTime = startDate + (60 * MILLIS_IN_DAY)
+
+        val result = useCase(
+            SimulateContractProjectionUseCase.Input(
+                contract = contract,
+                actualKmsDrivenSinceStart = 3000.0,
+                simulatedDailyKm = 50.0f,
+                penaltyPricePerKm = null, // Do not override
+                currentTime = currentTime
+            )
+        )
+
+        val sim = (result.getOrThrow() as SimulateContractProjectionUseCase.Output.Success).result
+        assertTrue(sim.isUsingDefaultPrice)
+        assertTrue(sim.isUsingDefaultCourtesyMargin)
+        assertEquals(RentingContract.DEFAULT_MARKET_EXCESS_PRICE, sim.ratePerKm, 0.0001f)
+        assertEquals(RentingContract.DEFAULT_MARKET_COURTESY_MARGIN_KMS, sim.courtesyMarginKms, 0.001)
+
+        val grossExcess = -sim.simulatedFinalBalance
+        assertEquals(grossExcess, sim.grossExcessKms, 0.01)
+        val expectedBillable = grossExcess - RentingContract.DEFAULT_MARKET_COURTESY_MARGIN_KMS
+        assertEquals(expectedBillable, sim.billableExcessKms, 0.01)
+        assertEquals(expectedBillable * RentingContract.DEFAULT_MARKET_EXCESS_PRICE, sim.estimatedPenalty, 0.01)
+        assertEquals(RentingContract.DEFAULT_MARKET_COURTESY_MARGIN_KMS * RentingContract.DEFAULT_MARKET_EXCESS_PRICE, sim.courtesySavingsAmount, 0.01)
+    }
+
+    @Test
+    fun `given excess fully covered by courtesy margin then penalty is zero and savings matches excess`() = runTest {
+        val startDate = 1_000_000_000L
+        // Setup contract where gross excess will be small (e.g. 200 km excess) with 500 km courtesy margin
+        val contract = createContract(
+            startDate = startDate,
+            durationMonths = 12,
+            totalKms = 12000.0,
+            excessDistancePrice = 0.08,
+            courtesyMarginKms = 500.0
+        )
+        val currentTime = startDate + (300 * MILLIS_IN_DAY) // 65.25 days remaining
+        // remaining days = 65.25. If driver does 34 km/day: 65.25 * 34 = 2218.5 km.
+        // driven so far = 10000 km. Total projected = 10000 + 2218.5 = 12218.5 km. Excess = 218.5 km < 500 km.
+        val result = useCase(
+            SimulateContractProjectionUseCase.Input(
+                contract = contract,
+                actualKmsDrivenSinceStart = 10000.0,
+                simulatedDailyKm = 34.0f,
+                penaltyPricePerKm = 0.08f,
+                currentTime = currentTime
+            )
+        )
+
+        val sim = (result.getOrThrow() as SimulateContractProjectionUseCase.Output.Success).result
+        assertTrue(sim.isOverLimit)
+        assertFalse(sim.isUsingDefaultPrice)
+        assertFalse(sim.isUsingDefaultCourtesyMargin)
+        assertEquals(0.0, sim.billableExcessKms, 0.001)
+        assertEquals(0.0, sim.estimatedPenalty, 0.001)
+        assertTrue(sim.grossExcessKms > 0.0 && sim.grossExcessKms < 500.0)
+        assertEquals(sim.grossExcessKms * 0.08, sim.courtesySavingsAmount, 0.01)
+    }
+
+    @Test
+    fun `given excess exceeding courtesy margin then penalty applies only to net billable excess`() = runTest {
+        val startDate = 1_000_000_000L
+        val contract = createContract(
+            startDate = startDate,
+            durationMonths = 12,
+            totalKms = 10000.0,
+            excessDistancePrice = 0.10,
+            courtesyMarginKms = 1000.0
+        )
+        val currentTime = startDate + (300 * MILLIS_IN_DAY)
+
+        // Driven so far: 11000 km + simulated remaining: 1500 km = 12500 km vs 10000 km limit.
+        // Gross excess = 2500 km. Courtesy margin = 1000 km. Billable = 1500 km. Penalty = 150.0 €
+        val result = useCase(
+            SimulateContractProjectionUseCase.Input(
+                contract = contract,
+                actualKmsDrivenSinceStart = 11000.0,
+                simulatedDailyKm = 22.9885f, // ~1500 km in 65.25 days
+                penaltyPricePerKm = 0.10f,
+                currentTime = currentTime
+            )
+        )
+
+        val sim = (result.getOrThrow() as SimulateContractProjectionUseCase.Output.Success).result
+        assertTrue(sim.isOverLimit)
+        assertEquals(1000.0, sim.courtesyMarginKms, 0.001)
+        assertEquals(sim.grossExcessKms - 1000.0, sim.billableExcessKms, 0.01)
+        assertEquals(sim.billableExcessKms * 0.10, sim.estimatedPenalty, 0.01)
+        assertEquals(1000.0 * 0.10, sim.courtesySavingsAmount, 0.01)
+    }
 }
+

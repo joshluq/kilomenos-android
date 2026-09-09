@@ -222,6 +222,9 @@ fun AppNavigation(
                                     },
                                     onNavigateToVehicleDetail = { vehicleId ->
                                         onNavigate(Destination.VehicleDetail(vehicleId))
+                                    },
+                                    onNavigateToEditContract = { vehicleId ->
+                                        onNavigate(Destination.EditContract(vehicleId))
                                     }
                                 )
                             }

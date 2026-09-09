@@ -54,6 +54,22 @@ class ProjectionAnalysisViewModel @Inject constructor(
             is Event.OnCustomTripChanged -> handleCustomTripChanged(event.distanceKms)
             is Event.OnPenaltyPriceChanged -> handlePenaltyPriceChanged(event.newPrice)
             Event.OnResetSimulation -> handleResetSimulation()
+            Event.OnConfigureContractClicked -> {
+                val vehicleId = state.value.activeVehicleId ?: currentContract?.id
+                if (!vehicleId.isNullOrEmpty()) {
+                    analytics.track(
+                        AnalyticsEvent.Custom(
+                            name = "projection_configure_contract_clicked",
+                            properties = mapOf(
+                                "vehicle_id" to vehicleId,
+                                "source" to "projection_analysis",
+                                "simulated_penalty" to state.value.estimatedPenalty.toString()
+                            )
+                        )
+                    )
+                    launchEffect(Effect.NavigateToEditContract(vehicleId))
+                }
+            }
             Event.OnUpgradeToPremiumClicked -> {
                 analytics.track(AnalyticsEvent.Custom("projection_upgrade_clicked"))
                 launchEffect(Effect.NavigateToPremiumPaywall)
@@ -94,7 +110,7 @@ class ProjectionAnalysisViewModel @Inject constructor(
                 val contractEndDate = contract.startDate + (totalDays * MILLIS_IN_DAY)
 
                 val realDailyAvg = projection?.dailyAverage?.toFloat() ?: 0f
-                val defaultPenaltyPrice = contract.excessDistancePrice?.toFloat() ?: 0.05f
+                val defaultPenaltyPrice = contract.excessDistancePrice?.toFloat() ?: RentingContract.DEFAULT_MARKET_EXCESS_PRICE
 
                 val isVehicleChanged = currentContract != null && currentContract?.id != contract.id
                 currentContract = contract
@@ -111,6 +127,7 @@ class ProjectionAnalysisViewModel @Inject constructor(
                     copy(
                         isLoading = false,
                         isPremium = isPremium,
+                        activeVehicleId = contract.id,
                         totalContractKms = contract.totalKms,
                         startOdometer = contract.startOdometer,
                         contractEndDateMillis = contractEndDate,
@@ -239,9 +256,29 @@ class ProjectionAnalysisViewModel @Inject constructor(
                         estimatedPenalty = sim.estimatedPenalty,
                         exhaustionDateMillis = sim.exhaustionDateMillis,
                         monthsAheadOrBehind = sim.monthsAheadOrBehind,
-                        remedialDailyKm = sim.remedialDailyKm
+                        remedialDailyKm = sim.remedialDailyKm,
+                        grossExcessKms = sim.grossExcessKms,
+                        courtesyMarginKms = sim.courtesyMarginKms,
+                        billableExcessKms = sim.billableExcessKms,
+                        ratePerKm = sim.ratePerKm,
+                        courtesySavingsAmount = sim.courtesySavingsAmount,
+                        isUsingDefaultPrice = sim.isUsingDefaultPrice,
+                        isUsingDefaultCourtesyMargin = sim.isUsingDefaultCourtesyMargin
                     )
                 }
+
+                analytics.track(
+                    AnalyticsEvent.Custom(
+                        name = "projection_financial_impact_viewed",
+                        properties = mapOf(
+                            "is_over_limit" to sim.isOverLimit.toString(),
+                            "is_using_default_price" to sim.isUsingDefaultPrice.toString(),
+                            "is_using_default_margin" to sim.isUsingDefaultCourtesyMargin.toString(),
+                            "estimated_penalty" to sim.estimatedPenalty.toString(),
+                            "billable_excess_kms" to sim.billableExcessKms.toString()
+                        )
+                    )
+                )
             }
         }
     }

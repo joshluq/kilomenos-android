@@ -86,4 +86,19 @@
     <string name="projection_advisory_free_teaser_title">COPILOT PRESCRIPTION</string>
     <string name="projection_advisory_free_teaser_desc">There is an exact daily pace to reverse this penalty and return the car at 0.00 €. Unlock it with Premium.</string>
     <string name="projection_advisory_free_teaser_cta">Unlock Remedial Pace</string>
+
+    <!-- Layer 2: Financial Settlement & Courtesy Breakdown -->
+    <string name="projection_settlement_card_title">SETTLEMENT &amp; PENALTY</string>
+    <string name="projection_settlement_badge_contract">CONTRACT RATE</string>
+    <string name="projection_settlement_badge_market_estimate">MARKET ESTIMATE</string>
+    <string name="projection_settlement_defaults_notice">Estimate based on average leasing terms (0.06 €/km and 500 km courtesy buffer). Calibrate your contract terms for an exact forecast.</string>
+    <string name="projection_settlement_configure_cta">Configure my contract</string>
+    <string name="projection_settlement_gross_excess_label">Projected gross excess</string>
+    <string name="projection_settlement_courtesy_margin_label">Courtesy buffer</string>
+    <string name="projection_settlement_courtesy_savings_chip">Save %1$s!</string>
+    <string name="projection_settlement_billable_excess_label">Billable excess</string>
+    <string name="projection_settlement_rate_applied_label">Excess rate applied</string>
+    <string name="projection_settlement_rate_format">%1$s / km</string>
+    <string name="projection_settlement_net_penalty_label">Estimated settlement</string>
+    <string name="projection_settlement_protected_notice">Excess protected by your courtesy buffer (%1$d km buffer remaining).</string>
 </resources>

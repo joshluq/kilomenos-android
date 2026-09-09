@@ -116,11 +116,13 @@ class ProjectionAnalysisViewModelTest {
 
         assertFalse(viewModel.state.value.isLoading)
         assertTrue(viewModel.state.value.isPremium)
+        assertEquals(sampleContract.id, viewModel.state.value.activeVehicleId)
         assertEquals(sampleProjection, viewModel.state.value.baselineProjection)
         assertEquals(45.0f, viewModel.state.value.realDailyAverage, 0.01f)
         assertEquals(45.0f, viewModel.state.value.simulatedDailyKm, 0.01f)
         assertEquals(15000.0, viewModel.state.value.totalContractKms, 0.01)
         assertEquals(0.08f, viewModel.state.value.penaltyPricePerKm, 0.001f)
+        assertEquals(0.08f, viewModel.state.value.ratePerKm, 0.001f)
         assertNotNull(viewModel.state.value.remedialDailyKm)
     }
 
@@ -254,4 +256,54 @@ class ProjectionAnalysisViewModelTest {
         assertTrue(viewModel.state.value.plannedTrips.isEmpty())
         assertEquals(0, viewModel.state.value.totalPlannedTripsKm)
     }
+
+    @Test
+    fun `given OnConfigureContractClicked event then emits NavigateToEditContract with active vehicle id`() = runTest(testDispatcher) {
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        val effects = mutableListOf<Effect>()
+        val job = launch(UnconfinedTestDispatcher()) {
+            viewModel.effects.toList(effects)
+        }
+
+        viewModel.sendEvent(Event.OnConfigureContractClicked)
+        advanceUntilIdle()
+
+        assertEquals(1, effects.size)
+        val effect = effects.first()
+        assertTrue(effect is Effect.NavigateToEditContract)
+        assertEquals(sampleContract.id, (effect as Effect.NavigateToEditContract).vehicleId)
+
+        job.cancel()
+    }
+
+    @Test
+    fun `given contract with null price and zero courtesy then uses market default rate and flags defaults`() = runTest(testDispatcher) {
+        val unconfiguredContract = sampleContract.copy(
+            excessDistancePrice = null,
+            courtesyMarginKms = 0.0
+        )
+        every { getRentingContractUseCase(GetRentingContractUseCase.Input) } returns flowOf(
+            GetRentingContractUseCase.Output.Success(unconfiguredContract)
+        )
+        every { getOverviewDataUseCase(GetOverviewDataUseCase.Input) } returns flowOf(
+            GetOverviewDataUseCase.Output.Success(
+                contract = unconfiguredContract,
+                actualKmsDrivenSinceStart = 1500.0,
+                isSyncPending = false,
+                metrics = null
+            )
+        )
+
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        assertEquals(RentingContract.DEFAULT_MARKET_EXCESS_PRICE, viewModel.state.value.penaltyPricePerKm, 0.0001f)
+        assertEquals(RentingContract.DEFAULT_MARKET_EXCESS_PRICE, viewModel.state.value.ratePerKm, 0.0001f)
+        assertTrue(viewModel.state.value.isUsingDefaultPrice)
+        assertTrue(viewModel.state.value.isUsingDefaultCourtesyMargin)
+        assertEquals(RentingContract.DEFAULT_MARKET_COURTESY_MARGIN_KMS, viewModel.state.value.courtesyMarginKms, 0.001)
+    }
 }
+

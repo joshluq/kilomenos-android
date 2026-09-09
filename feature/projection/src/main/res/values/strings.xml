@@ -86,4 +86,20 @@
     <string name="projection_advisory_free_teaser_title">RECETA DEL COPILOTO</string>
     <string name="projection_advisory_free_teaser_desc">Existe un ritmo diario exacto para revertir esta penalización y devolver el coche a 0,00 €. Desbloquéalo con Premium.</string>
     <string name="projection_advisory_free_teaser_cta">Desbloquear Ritmo Remedial</string>
+
+    <!-- Layer 2: Financial Settlement & Courtesy Breakdown -->
+    <string name="projection_settlement_card_title">LIQUIDACIÓN Y PENALIZACIÓN</string>
+    <string name="projection_settlement_badge_contract">TARIFA CONTRACTUAL</string>
+    <string name="projection_settlement_badge_market_estimate">ESTIMACIÓN MERCADO</string>
+    <string name="projection_settlement_defaults_notice">Estimación basada en la media de renting (0,06 €/km y 500 km cortesía). Calibra tus cifras para un pronóstico exacto.</string>
+    <string name="projection_settlement_configure_cta">Configurar mi contrato</string>
+    <string name="projection_settlement_gross_excess_label">Exceso bruto proyectado</string>
+    <string name="projection_settlement_courtesy_margin_label">Franquicia de cortesía</string>
+    <string name="projection_settlement_courtesy_savings_chip">¡Ahorras %1$s!</string>
+    <string name="projection_settlement_billable_excess_label">Kilómetros facturables</string>
+    <string name="projection_settlement_rate_applied_label">Tarifa por km extra</string>
+    <string name="projection_settlement_rate_format">%1$s / km</string>
+    <string name="projection_settlement_net_penalty_label">Liquidación estimada</string>
+    <string name="projection_settlement_protected_notice">Exceso protegido por tu margen de cortesía (te sobran %1$d km de franquicia).</string>
 </resources>
+

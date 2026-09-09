@@ -29,6 +29,7 @@ import es.joshluq.canvaskit.components.navigation.CanvasKitTopBar
 import es.joshluq.canvaskit.foundations.theme.CanvasKitTheme
 import es.joshluq.foundationkit.text.asString
 import es.joshluq.kmsafe.domain.model.PlannedTrip
+import es.joshluq.kmsafe.feature.projection.components.FinancialSettlementCard
 import es.joshluq.kmsafe.feature.projection.components.PaceSimulatorCard
 import es.joshluq.kmsafe.feature.projection.components.ProjectionSentinelCard
 import es.joshluq.kmsafe.feature.projection.components.RemedialAdvisoryCard
@@ -38,7 +39,8 @@ import es.joshluq.kmsafe.core.ui.R as CoreR
 
 @Composable
 fun ProjectionAnalysisRoute(
-    onNavigateToUpgrade: () -> Unit = {}
+    onNavigateToUpgrade: () -> Unit = {},
+    onNavigateToEditContract: (String) -> Unit = {}
 ) {
     val viewModel: ProjectionAnalysisViewModel = hiltViewModel()
     val state = viewModel.state.collectAsStateWithLifecycle()
@@ -47,6 +49,7 @@ fun ProjectionAnalysisRoute(
         viewModel.effects.collect { effect ->
             when (effect) {
                 Effect.NavigateToPremiumPaywall -> onNavigateToUpgrade()
+                is Effect.NavigateToEditContract -> onNavigateToEditContract(effect.vehicleId)
                 is Effect.ShowToast -> {
                     // Handled via state.error or feedback
                 }
@@ -102,7 +105,21 @@ fun ProjectionAnalysisScreen(
                     estimatedPenalty = state.estimatedPenalty
                 )
 
-                // Layer 2: Runway Timeline (Radar de Agotamiento)
+                // Layer 2A: Financial Settlement & Breakdown Card (Decision Radar)
+                FinancialSettlementCard(
+                    isOverLimit = state.isOverLimit,
+                    grossExcessKms = state.grossExcessKms,
+                    courtesyMarginKms = state.courtesyMarginKms,
+                    billableExcessKms = state.billableExcessKms,
+                    ratePerKm = state.ratePerKm,
+                    estimatedPenalty = state.estimatedPenalty,
+                    courtesySavingsAmount = state.courtesySavingsAmount,
+                    isUsingDefaultPrice = state.isUsingDefaultPrice,
+                    isUsingDefaultCourtesyMargin = state.isUsingDefaultCourtesyMargin,
+                    onConfigureContractClick = { onEvent(Event.OnConfigureContractClicked) }
+                )
+
+                // Layer 2B: Runway Timeline (Radar de Agotamiento)
                 RunwayTimelineCard(
                     isPremium = state.isPremium,
                     isOverLimit = state.isOverLimit,

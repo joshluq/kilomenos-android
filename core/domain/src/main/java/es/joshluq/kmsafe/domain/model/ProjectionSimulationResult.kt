@@ -21,5 +21,12 @@ data class ProjectionSimulationResult(
     val exhaustionDateMillis: Long?,
     val monthsAheadOrBehind: Int,
     val remedialDailyKm: Double?,
-    val isOverLimit: Boolean
+    val isOverLimit: Boolean,
+    val grossExcessKms: Double = 0.0,
+    val courtesyMarginKms: Double = 0.0,
+    val billableExcessKms: Double = 0.0,
+    val ratePerKm: Float = 0.06f,
+    val courtesySavingsAmount: Double = 0.0,
+    val isUsingDefaultPrice: Boolean = false,
+    val isUsingDefaultCourtesyMargin: Boolean = false
 )
