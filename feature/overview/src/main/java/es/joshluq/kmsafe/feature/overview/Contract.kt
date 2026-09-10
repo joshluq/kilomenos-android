@@ -1,5 +1,6 @@
 package es.joshluq.kmsafe.feature.overview
 
+import androidx.compose.runtime.Immutable
 import es.joshluq.foundationkit.text.TextProvider
 import es.joshluq.foundationkit.viewmodel.UiEffect
 import es.joshluq.foundationkit.viewmodel.UiEvent
@@ -12,6 +13,7 @@ import es.joshluq.kmsafe.feature.overview.model.MonthlyUsageUiModel
 /**
  * Represents the UI state for the Overview screen.
  */
+@Immutable
 data class State(
     val renting: RentingContract? = null,
     val balance: Double = 0.0,

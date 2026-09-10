@@ -1,5 +1,6 @@
 package es.joshluq.kmsafe.feature.auth.signup
 
+import androidx.compose.runtime.Immutable
 import es.joshluq.foundationkit.text.TextProvider
 import es.joshluq.foundationkit.viewmodel.UiEffect
 import es.joshluq.foundationkit.viewmodel.UiEvent
@@ -8,6 +9,7 @@ import es.joshluq.foundationkit.viewmodel.UiState
 /**
  * Represents the UI state for the Signup screen.
  */
+@Immutable
 data class State(
     val name: String = "",
     val email: String = "",

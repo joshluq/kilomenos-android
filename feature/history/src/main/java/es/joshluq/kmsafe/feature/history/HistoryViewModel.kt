@@ -138,25 +138,18 @@ class HistoryViewModel @Inject constructor(
                 }
             }
 
+            val timeZone = TimeZone.getDefault()
+            val dayFormat = SimpleDateFormat("dd MMMM yyyy", Locale.getDefault()).apply { this.timeZone = timeZone }
+            val monthFormat = SimpleDateFormat("MMMM yyyy", Locale.getDefault()).apply { this.timeZone = timeZone }
+            val yearFormat = SimpleDateFormat("yyyy", Locale.getDefault()).apply { this.timeZone = timeZone }
+            val reusableDate = Date()
+
             val grouped = filteredList.groupBy { item ->
-                val date = Date(item.record.timestamp)
-                val timeZone = TimeZone.getDefault()
+                reusableDate.time = item.record.timestamp
                 when (currentState.groupingMode) {
-                    HistoryGroupingMode.DAY -> {
-                        SimpleDateFormat("dd MMMM yyyy", Locale.getDefault()).apply {
-                            this.timeZone = timeZone
-                        }.format(date)
-                    }
-                    HistoryGroupingMode.MONTH -> {
-                        SimpleDateFormat("MMMM yyyy", Locale.getDefault()).apply {
-                            this.timeZone = timeZone
-                        }.format(date).replaceFirstChar { it.uppercase() }
-                    }
-                    HistoryGroupingMode.YEAR -> {
-                        SimpleDateFormat("yyyy", Locale.getDefault()).apply {
-                            this.timeZone = timeZone
-                        }.format(date)
-                    }
+                    HistoryGroupingMode.DAY -> dayFormat.format(reusableDate)
+                    HistoryGroupingMode.MONTH -> monthFormat.format(reusableDate).replaceFirstChar { it.uppercase() }
+                    HistoryGroupingMode.YEAR -> yearFormat.format(reusableDate)
                 }
             }
 

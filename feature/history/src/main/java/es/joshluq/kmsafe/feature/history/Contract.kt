@@ -1,5 +1,6 @@
 package es.joshluq.kmsafe.feature.history
 
+import androidx.compose.runtime.Immutable
 import es.joshluq.foundationkit.text.TextProvider
 import es.joshluq.foundationkit.viewmodel.UiEffect
 import es.joshluq.foundationkit.viewmodel.UiEvent
@@ -17,6 +18,7 @@ enum class HistoryGroupingMode {
 /**
  * Represents the UI state for the History screen.
  */
+@Immutable
 data class HistoryState(
     val initialRecord: OdometerRecord? = null,
     val allRecords: List<RecordWithIndicator> = emptyList(),

@@ -1,6 +1,7 @@
 package es.joshluq.kmsafe.infrastructure.local.entity
 
 import androidx.room.Entity
+import androidx.room.Index
 import androidx.room.PrimaryKey
 import es.joshluq.kmsafe.domain.model.OdometerRecord
 import es.joshluq.kmsafe.domain.model.SyncStatus
@@ -8,7 +9,15 @@ import es.joshluq.kmsafe.domain.model.SyncStatus
 /**
  * Room Entity representing an odometer record in the local database.
  */
-@Entity(tableName = "odometer_record")
+@Entity(
+    tableName = "odometer_record",
+    indices = [
+        Index("contractId"),
+        Index("timestamp"),
+        Index("syncStatus"),
+        Index(value = ["contractId", "timestamp"])
+    ]
+)
 data class OdometerRecordEntity(
     @PrimaryKey val id: String,
     val contractId: String,

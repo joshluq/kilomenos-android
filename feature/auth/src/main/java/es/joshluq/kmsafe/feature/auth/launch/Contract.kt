@@ -1,5 +1,6 @@
 package es.joshluq.kmsafe.feature.auth.launch
 
+import androidx.compose.runtime.Immutable
 import es.joshluq.foundationkit.viewmodel.UiEffect
 import es.joshluq.foundationkit.viewmodel.UiEvent
 import es.joshluq.foundationkit.viewmodel.UiState
@@ -9,6 +10,7 @@ import es.joshluq.foundationkit.viewmodel.UiState
  *
  * @property isLoading Whether the session validation is in progress.
  */
+@Immutable
 data class LaunchState(val isLoading: Boolean = true) : UiState
 
 /**

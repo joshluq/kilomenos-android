@@ -1,6 +1,7 @@
 package es.joshluq.kmsafe.feature.fleet.setup
 
 import android.net.Uri
+import androidx.compose.runtime.Immutable
 import es.joshluq.foundationkit.text.TextProvider
 import es.joshluq.foundationkit.viewmodel.UiEffect
 import es.joshluq.foundationkit.viewmodel.UiEvent
@@ -20,6 +21,7 @@ enum class SetupStep(val index: Int) {
     }
 }
 
+@Immutable
 data class State(
     val currentStep: SetupStep = SetupStep.VEHICLE_IDENTITY,
     val isLoading: Boolean = false,

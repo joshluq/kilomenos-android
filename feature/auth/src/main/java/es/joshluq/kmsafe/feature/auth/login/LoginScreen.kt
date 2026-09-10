@@ -67,7 +67,6 @@ import es.joshluq.kmsafe.feature.auth.R
 import es.joshluq.kmsafe.core.ui.R as CoreR
 import es.joshluq.kmsafe.feature.auth.login.components.BrandingSection
 import es.joshluq.kmsafe.core.ui.util.safeClick
-import kotlinx.coroutines.flow.Flow
 
 @Composable
 fun LoginRoute(
@@ -79,16 +78,22 @@ fun LoginRoute(
     val state by viewModel.state.collectAsStateWithLifecycle()
     val context = LocalContext.current
 
+    LaunchedEffect(viewModel.effects) {
+        viewModel.effects.collect { effect ->
+            when (effect) {
+                Effect.NavigateToDashboard -> onNavigateToDashboard()
+                Effect.NavigateToPremiumPaywall -> onNavigateToPremiumPaywall()
+                Effect.TriggerGoogleSignIn -> viewModel.triggerGoogleSignIn(context)
+            }
+        }
+    }
+
     LoginScreen(
         state = state,
-        effects = viewModel.effects,
         onEvent = viewModel::sendEvent,
         onNavigateToDashboard = onNavigateToDashboard,
         onNavigateToPremiumPaywall = onNavigateToPremiumPaywall,
-        onNavigateToSignup = onNavigateToSignup,
-        onTriggerGoogleSignIn = {
-            viewModel.triggerGoogleSignIn(context)
-        }
+        onNavigateToSignup = onNavigateToSignup
     )
 }
 
@@ -96,26 +101,14 @@ fun LoginRoute(
 @Composable
 fun LoginScreen(
     state: State,
-    effects: Flow<Effect>? = null,
     onEvent: (Event) -> Unit,
     onNavigateToDashboard: () -> Unit,
     onNavigateToPremiumPaywall: () -> Unit,
-    onNavigateToSignup: () -> Unit,
-    onTriggerGoogleSignIn: () -> Unit = {}
+    onNavigateToSignup: () -> Unit
 ) {
     val uriHandler = LocalUriHandler.current
     val focusManager = LocalFocusManager.current
     val keyboardController = LocalSoftwareKeyboardController.current
-
-    LaunchedEffect(effects) {
-        effects?.collect { effect ->
-            when (effect) {
-                Effect.NavigateToDashboard -> onNavigateToDashboard()
-                Effect.NavigateToPremiumPaywall -> onNavigateToPremiumPaywall()
-                Effect.TriggerGoogleSignIn -> onTriggerGoogleSignIn()
-            }
-        }
-    }
 
     CanvasKitLoadingScaffold(
         isLoading = false, // Disable global overlay

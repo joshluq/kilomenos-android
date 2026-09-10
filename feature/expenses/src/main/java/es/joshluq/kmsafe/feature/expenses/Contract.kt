@@ -1,5 +1,6 @@
 package es.joshluq.kmsafe.feature.expenses
 
+import androidx.compose.runtime.Immutable
 import es.joshluq.foundationkit.text.TextProvider
 import es.joshluq.foundationkit.viewmodel.UiEffect
 import es.joshluq.foundationkit.viewmodel.UiEvent
@@ -24,6 +25,7 @@ enum class ExpenseFilterMode {
 /**
  * UI state for the Expenses screen.
  */
+@Immutable
 data class ExpensesState(
     val vehicleId: String? = null,
     val vehicleName: String? = null,

@@ -1,5 +1,6 @@
 package es.joshluq.kmsafe.feature.projection
 
+import androidx.compose.runtime.Immutable
 import es.joshluq.foundationkit.text.TextProvider
 import es.joshluq.foundationkit.viewmodel.UiEffect
 import es.joshluq.foundationkit.viewmodel.UiEvent
@@ -7,6 +8,7 @@ import es.joshluq.foundationkit.viewmodel.UiState
 import es.joshluq.kmsafe.domain.model.PlannedTrip
 import es.joshluq.kmsafe.domain.model.TripProjection
 
+@Immutable
 data class State(
     val isLoading: Boolean = true,
     val isPremium: Boolean = false,

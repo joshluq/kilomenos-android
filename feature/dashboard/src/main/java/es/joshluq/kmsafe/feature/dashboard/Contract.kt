@@ -1,5 +1,6 @@
 package es.joshluq.kmsafe.feature.dashboard
 
+import androidx.compose.runtime.Immutable
 import es.joshluq.foundationkit.text.TextProvider
 import es.joshluq.foundationkit.viewmodel.UiEffect
 import es.joshluq.foundationkit.viewmodel.UiEvent
@@ -9,6 +10,7 @@ import es.joshluq.kmsafe.domain.model.AppOverlayState
 /**
  * Represents the UI state for the Dashboard screen.
  */
+@Immutable
 data class State(
     val selectedTab: DashboardTab = DashboardTab.OVERVIEW,
     val showUpdateDialog: Boolean = false,

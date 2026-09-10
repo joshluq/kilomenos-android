@@ -1,5 +1,6 @@
 package es.joshluq.kmsafe.feature.auth.login
 
+import androidx.compose.runtime.Immutable
 import es.joshluq.foundationkit.text.TextProvider
 import es.joshluq.foundationkit.viewmodel.UiEffect
 import es.joshluq.foundationkit.viewmodel.UiEvent
@@ -9,6 +10,7 @@ import es.joshluq.kmsafe.domain.model.User
 /**
  * Represents the UI state for the Login screen.
  */
+@Immutable
 data class State(
     val email: String = "",
     val emailError: TextProvider? = null,

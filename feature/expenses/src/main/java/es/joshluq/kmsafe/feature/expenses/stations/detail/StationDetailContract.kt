@@ -1,5 +1,6 @@
 package es.joshluq.kmsafe.feature.expenses.stations.detail
 
+import androidx.compose.runtime.Immutable
 import es.joshluq.foundationkit.text.TextProvider
 import es.joshluq.foundationkit.viewmodel.UiEffect
 import es.joshluq.foundationkit.viewmodel.UiEvent
@@ -10,6 +11,7 @@ import es.joshluq.kmsafe.domain.model.StationPriceVolatility
 /**
  * UI state for the Station Detail screen.
  */
+@Immutable
 data class StationDetailState(
     val stationId: String = "",
     val detail: ServiceStationDetail? = null,

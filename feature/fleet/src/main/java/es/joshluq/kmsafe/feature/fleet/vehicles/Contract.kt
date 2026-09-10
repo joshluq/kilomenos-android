@@ -1,5 +1,6 @@
 package es.joshluq.kmsafe.feature.fleet.vehicles
 
+import androidx.compose.runtime.Immutable
 import es.joshluq.foundationkit.text.TextProvider
 import es.joshluq.foundationkit.viewmodel.UiEffect
 import es.joshluq.foundationkit.viewmodel.UiEvent
@@ -9,6 +10,7 @@ import es.joshluq.kmsafe.domain.model.RentingContract
 /**
  * Represents the UI state for the Vehicle List screen.
  */
+@Immutable
 data class State(
     val isLoading: Boolean = false,
     val isPremium: Boolean = false,

@@ -1,5 +1,6 @@
 package es.joshluq.kmsafe.feature.premium.paywall
 
+import androidx.compose.runtime.Immutable
 import es.joshluq.foundationkit.text.TextProvider
 import es.joshluq.foundationkit.viewmodel.UiEffect
 import es.joshluq.foundationkit.viewmodel.UiEvent
@@ -16,6 +17,7 @@ enum class PremiumBillingPlan {
 /**
  * Represents the UI state for the Premium Paywall screen.
  */
+@Immutable
 data class State(
     val isLoading: Boolean = false,
     val isMigrating: Boolean = false,

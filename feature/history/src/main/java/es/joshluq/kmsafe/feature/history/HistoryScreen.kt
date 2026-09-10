@@ -124,6 +124,11 @@ fun HistoryScreen(
 
                 Box(modifier = Modifier.weight(1f)) {
                     val content = @Composable {
+                        val groupTotals = remember(state.filteredGroups) {
+                            state.filteredGroups.mapValues { (_, records) ->
+                                records.sumOf { it.record.odometerValue }
+                            }
+                        }
                         LazyColumn(
                             modifier = Modifier.fillMaxSize(),
                             contentPadding = PaddingValues(horizontal = CanvasKitTheme.spacing.screenHorizontal, vertical = 8.dp)
@@ -151,7 +156,7 @@ fun HistoryScreen(
                             } else {
                                 state.filteredGroups.forEach { (title, records) ->
                                     val isExpanded = state.expandedGroups.contains(title)
-                                    val totalGroupKms = records.sumOf { it.record.odometerValue }
+                                    val totalGroupKms = groupTotals[title] ?: 0.0
                                     item(key = "header_$title") {
                                         CanvasKitAccordion(
                                             expanded = isExpanded,

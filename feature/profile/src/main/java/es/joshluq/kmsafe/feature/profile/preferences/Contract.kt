@@ -1,10 +1,12 @@
 package es.joshluq.kmsafe.feature.profile.preferences
 
+import androidx.compose.runtime.Immutable
 import es.joshluq.foundationkit.text.TextProvider
 import es.joshluq.foundationkit.viewmodel.UiEffect
 import es.joshluq.foundationkit.viewmodel.UiEvent
 import es.joshluq.foundationkit.viewmodel.UiState
 
+@Immutable
 data class State(
     val rememberEmail: Boolean = true,
     val showProjectionBanner: Boolean = true,

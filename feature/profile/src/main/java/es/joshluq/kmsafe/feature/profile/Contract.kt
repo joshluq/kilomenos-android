@@ -1,5 +1,6 @@
 package es.joshluq.kmsafe.feature.profile
 
+import androidx.compose.runtime.Immutable
 import es.joshluq.foundationkit.text.TextProvider
 import es.joshluq.foundationkit.viewmodel.UiEffect
 import es.joshluq.foundationkit.viewmodel.UiEvent
@@ -7,6 +8,7 @@ import es.joshluq.foundationkit.viewmodel.UiState
 import es.joshluq.kmsafe.domain.model.Entitlements
 import es.joshluq.kmsafe.domain.model.User
 
+@Immutable
 data class State(
     val isLoading: Boolean = false,
     val isDeleting: Boolean = false,

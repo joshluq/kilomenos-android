@@ -26,7 +26,7 @@ import es.joshluq.kmsafe.infrastructure.local.entity.TripRouteEntity
         FuelExpenseEntity::class,
         ServiceStationEntity::class
     ],
-    version = 18,
+    version = 19,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -529,6 +529,19 @@ abstract class AppDatabase : RoomDatabase() {
         val MIGRATION_17_18 = object : Migration(17, 18) {
             override fun migrate(db: SupportSQLiteDatabase) {
                 db.execSQL("ALTER TABLE fuel_expenses ADD COLUMN receiptImagePath TEXT DEFAULT NULL")
+            }
+        }
+
+        /**
+         * Migration from version 18 to 19:
+         * - Adds indices on 'odometer_record' (contractId, timestamp, syncStatus, composite).
+         */
+        val MIGRATION_18_19 = object : Migration(18, 19) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_odometer_record_contractId ON odometer_record(contractId)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_odometer_record_timestamp ON odometer_record(timestamp)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_odometer_record_syncStatus ON odometer_record(syncStatus)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_odometer_record_contractId_timestamp ON odometer_record(contractId, timestamp)")
             }
         }
     }

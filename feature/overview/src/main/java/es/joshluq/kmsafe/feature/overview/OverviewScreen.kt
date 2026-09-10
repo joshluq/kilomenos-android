@@ -245,7 +245,7 @@ fun OverviewScreen(
             )
         },
         containerColor = CanvasKitTheme.colors.backgroundSecondary,
-        contentWindowInsets = WindowInsets(),
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
         floatingActionButton = {
             if (state.hasRenting) {
                 Column(
@@ -374,8 +374,7 @@ private fun RentingState(
         modifier = Modifier
             .fillMaxSize()
             .padding(horizontal = CanvasKitTheme.spacing.screenHorizontal)
-            .verticalScroll(rememberScrollState())
-            .animateContentSize(),
+            .verticalScroll(rememberScrollState()),
         verticalArrangement = Arrangement.spacedBy(CanvasKitTheme.spacing.md)
     ) {
         Spacer(modifier = Modifier.height(2.dp))

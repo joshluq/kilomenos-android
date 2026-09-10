@@ -65,7 +65,6 @@ import es.joshluq.kmsafe.feature.auth.R
 import es.joshluq.kmsafe.core.ui.R as CoreR
 import es.joshluq.kmsafe.feature.auth.login.components.BrandingSection
 import es.joshluq.kmsafe.core.ui.util.safeClick
-import kotlinx.coroutines.flow.Flow
 
 @Composable
 fun SignupRoute(
@@ -77,9 +76,19 @@ fun SignupRoute(
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
 
+    LaunchedEffect(viewModel.effects) {
+        viewModel.effects.collect { effect ->
+            when (effect) {
+                Effect.NavigateBack -> onNavigateBack()
+                Effect.NavigateToDashboard -> onNavigateToDashboard()
+                Effect.NavigateToWelcomeDiscovery -> onNavigateToWelcomeDiscovery()
+                Effect.NavigateToPremiumPaywall -> onNavigateToPremiumPaywall()
+            }
+        }
+    }
+
     SignupScreen(
         state = state,
-        effects = viewModel.effects,
         onEvent = viewModel::sendEvent,
         onNavigateBack = onNavigateBack,
         onNavigateToDashboard = onNavigateToDashboard,
@@ -92,7 +101,6 @@ fun SignupRoute(
 @Composable
 fun SignupScreen(
     state: State,
-    effects: Flow<Effect>? = null,
     onEvent: (Event) -> Unit,
     onNavigateBack: () -> Unit,
     onNavigateToDashboard: () -> Unit,
@@ -102,17 +110,6 @@ fun SignupScreen(
     val uriHandler = LocalUriHandler.current
     val focusManager = LocalFocusManager.current
     val keyboardController = LocalSoftwareKeyboardController.current
-
-    LaunchedEffect(effects) {
-        effects?.collect { effect ->
-            when (effect) {
-                Effect.NavigateBack -> onNavigateBack()
-                Effect.NavigateToDashboard -> onNavigateToDashboard()
-                Effect.NavigateToWelcomeDiscovery -> onNavigateToWelcomeDiscovery()
-                Effect.NavigateToPremiumPaywall -> onNavigateToPremiumPaywall()
-            }
-        }
-    }
 
     CanvasKitLoadingScaffold(
         isLoading = false,

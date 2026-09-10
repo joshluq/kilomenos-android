@@ -1,5 +1,6 @@
 package es.joshluq.kmsafe.feature.expenses.stations
 
+import androidx.compose.runtime.Immutable
 import es.joshluq.foundationkit.text.TextProvider
 import es.joshluq.foundationkit.viewmodel.UiEffect
 import es.joshluq.foundationkit.viewmodel.UiEvent
@@ -9,6 +10,7 @@ import es.joshluq.kmsafe.domain.model.ServiceStation
 /**
  * UI state for the Station Management screen.
  */
+@Immutable
 data class StationManagementState(
     val stations: List<ServiceStation> = emptyList(),
     val filteredStations: List<ServiceStation> = emptyList(),
