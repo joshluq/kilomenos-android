@@ -4,8 +4,8 @@ import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import es.joshluq.kmsafe.domain.repository.AppOverlayRepository
 import es.joshluq.kmsafe.infrastructure.repository.AuthRepositoryImpl
-import es.joshluq.kmsafe.infrastructure.repository.DataManagementRepositoryImpl
 import es.joshluq.kmsafe.infrastructure.repository.EntitlementsRepositoryImpl
 import es.joshluq.kmsafe.infrastructure.repository.FuelExpenseRepositoryImpl
 import es.joshluq.kmsafe.infrastructure.repository.HistoryRepositoryImpl
@@ -16,7 +16,6 @@ import es.joshluq.kmsafe.infrastructure.repository.ServiceStationRepositoryImpl
 import es.joshluq.kmsafe.infrastructure.repository.tracking.TrackingRepositoryImpl
 import es.joshluq.kmsafe.domain.repository.AuthRepository
 import es.joshluq.kmsafe.domain.repository.BluetoothRepository
-import es.joshluq.kmsafe.domain.repository.DataManagementRepository
 import es.joshluq.kmsafe.domain.repository.EntitlementsRepository
 import es.joshluq.kmsafe.domain.repository.FuelExpenseRepository
 import es.joshluq.kmsafe.domain.repository.HistoryRepository
@@ -26,6 +25,7 @@ import es.joshluq.kmsafe.domain.repository.ReceiptRepository
 import es.joshluq.kmsafe.domain.repository.RentingRepository
 import es.joshluq.kmsafe.domain.repository.ServiceStationRepository
 import es.joshluq.kmsafe.domain.repository.TrackingRepository
+import es.joshluq.kmsafe.infrastructure.repository.AppOverlayRepositoryImpl
 import es.joshluq.kmsafe.infrastructure.repository.BluetoothRepositoryImpl
 import es.joshluq.kmsafe.infrastructure.repository.ReceiptRepositoryImpl
 import javax.inject.Singleton
@@ -59,15 +59,6 @@ abstract class RepositoryModule {
     @Singleton
     @Binds
     abstract fun bindPreferencesRepository(repository: PreferencesRepositoryImpl): PreferencesRepository
-
-    /**
-     * Binds the [DataManagementRepositoryImpl] to the [DataManagementRepository] interface.
-     */
-    @Singleton
-    @Binds
-    abstract fun bindDataManagementRepository(
-        repository: DataManagementRepositoryImpl
-    ): DataManagementRepository
 
     /**
      * Binds the [AuthRepositoryImpl] to the [AuthRepository] interface.
@@ -144,6 +135,6 @@ abstract class RepositoryModule {
     @Singleton
     @Binds
     abstract fun bindAppOverlayRepository(
-        repository: es.joshluq.kmsafe.infrastructure.repository.AppOverlayRepositoryImpl
-    ): es.joshluq.kmsafe.domain.repository.AppOverlayRepository
+        repository: AppOverlayRepositoryImpl
+    ): AppOverlayRepository
 }

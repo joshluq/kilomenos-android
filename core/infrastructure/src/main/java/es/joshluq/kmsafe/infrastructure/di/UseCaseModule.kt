@@ -14,8 +14,6 @@ import es.joshluq.kmsafe.domain.usecase.CalculateContractMetricsUseCase
 import es.joshluq.kmsafe.domain.usecase.CalculateContractMetricsUseCaseImpl
 import es.joshluq.kmsafe.domain.usecase.CalculateCostPerHundredKmUseCase
 import es.joshluq.kmsafe.domain.usecase.CalculateCostPerHundredKmUseCaseImpl
-import es.joshluq.kmsafe.domain.usecase.CheckDatabaseOwnerUseCase
-import es.joshluq.kmsafe.domain.usecase.CheckDatabaseOwnerUseCaseImpl
 import es.joshluq.kmsafe.domain.usecase.CheckFeatureAccessUseCase
 import es.joshluq.kmsafe.domain.usecase.CheckFeatureAccessUseCaseImpl
 import es.joshluq.kmsafe.domain.usecase.CheckSessionUseCase
@@ -42,8 +40,6 @@ import es.joshluq.kmsafe.domain.usecase.DiscardReceiptScanUseCase
 import es.joshluq.kmsafe.domain.usecase.DiscardReceiptScanUseCaseImpl
 import es.joshluq.kmsafe.domain.usecase.EvaluateIdentityConflictUseCase
 import es.joshluq.kmsafe.domain.usecase.EvaluateIdentityConflictUseCaseImpl
-import es.joshluq.kmsafe.domain.usecase.ExportDataUseCase
-import es.joshluq.kmsafe.domain.usecase.ExportDataUseCaseImpl
 import es.joshluq.kmsafe.domain.usecase.GetAllContractsUseCase
 import es.joshluq.kmsafe.domain.usecase.GetAllContractsUseCaseImpl
 import es.joshluq.kmsafe.domain.usecase.GetAllServiceStationsUseCase
@@ -84,10 +80,10 @@ import es.joshluq.kmsafe.domain.usecase.SimulateContractProjectionUseCase
 import es.joshluq.kmsafe.domain.usecase.SimulateContractProjectionUseCaseImpl
 import es.joshluq.kmsafe.domain.usecase.GetVehicleByIdUseCase
 import es.joshluq.kmsafe.domain.usecase.GetVehicleByIdUseCaseImpl
-import es.joshluq.kmsafe.domain.usecase.ImportDataUseCase
-import es.joshluq.kmsafe.domain.usecase.ImportDataUseCaseImpl
 import es.joshluq.kmsafe.domain.usecase.MigrateLocalDataToRemoteUseCase
 import es.joshluq.kmsafe.domain.usecase.MigrateLocalDataToRemoteUseCaseImpl
+import es.joshluq.kmsafe.domain.usecase.ObserveAppOverlayUseCase
+import es.joshluq.kmsafe.domain.usecase.ObserveAppOverlayUseCaseImpl
 import es.joshluq.kmsafe.domain.usecase.ObserveFleetSwitchingUseCase
 import es.joshluq.kmsafe.domain.usecase.ObserveFleetSwitchingUseCaseImpl
 import es.joshluq.kmsafe.domain.usecase.ObserveStationRadarUseCase
@@ -108,6 +104,8 @@ import es.joshluq.kmsafe.domain.usecase.SaveServiceStationUseCase
 import es.joshluq.kmsafe.domain.usecase.SaveServiceStationUseCaseImpl
 import es.joshluq.kmsafe.domain.usecase.SelectContractUseCase
 import es.joshluq.kmsafe.domain.usecase.SelectContractUseCaseImpl
+import es.joshluq.kmsafe.domain.usecase.SetAppOverlayUseCase
+import es.joshluq.kmsafe.domain.usecase.SetAppOverlayUseCaseImpl
 import es.joshluq.kmsafe.domain.usecase.SetFavoriteStationUseCase
 import es.joshluq.kmsafe.domain.usecase.SetFavoriteStationUseCaseImpl
 import es.joshluq.kmsafe.domain.usecase.SignInUseCase
@@ -132,8 +130,6 @@ import es.joshluq.kmsafe.domain.usecase.StopTripTrackingUseCase
 import es.joshluq.kmsafe.domain.usecase.StopTripTrackingUseCaseImpl
 import es.joshluq.kmsafe.domain.usecase.SyncContractsUseCase
 import es.joshluq.kmsafe.domain.usecase.SyncContractsUseCaseImpl
-import es.joshluq.kmsafe.domain.usecase.SyncHistoryUseCase
-import es.joshluq.kmsafe.domain.usecase.SyncHistoryUseCaseImpl
 import es.joshluq.kmsafe.domain.usecase.SyncStationsUseCase
 import es.joshluq.kmsafe.domain.usecase.SyncStationsUseCaseImpl
 import es.joshluq.kmsafe.domain.usecase.UpdateContractUseCase
@@ -215,12 +211,6 @@ abstract class UseCaseModule {
     abstract fun bindSimulateContractProjectionUseCase(impl: SimulateContractProjectionUseCaseImpl): SimulateContractProjectionUseCase
 
     @Binds
-    abstract fun bindExportDataUseCase(impl: ExportDataUseCaseImpl): ExportDataUseCase
-
-    @Binds
-    abstract fun bindImportDataUseCase(impl: ImportDataUseCaseImpl): ImportDataUseCase
-
-    @Binds
     abstract fun bindGetAllContractsUseCase(impl: GetAllContractsUseCaseImpl): GetAllContractsUseCase
 
     @Binds
@@ -251,16 +241,10 @@ abstract class UseCaseModule {
     abstract fun bindCheckSessionUseCase(impl: CheckSessionUseCaseImpl): CheckSessionUseCase
 
     @Binds
-    abstract fun bindCheckDatabaseOwnerUseCase(impl: CheckDatabaseOwnerUseCaseImpl): CheckDatabaseOwnerUseCase
-
-    @Binds
     abstract fun bindClearLocalDataUseCase(impl: ClearLocalDataUseCaseImpl): ClearLocalDataUseCase
 
     @Binds
     abstract fun bindSyncContractsUseCase(impl: SyncContractsUseCaseImpl): SyncContractsUseCase
-
-    @Binds
-    abstract fun bindSyncHistoryUseCase(impl: SyncHistoryUseCaseImpl): SyncHistoryUseCase
 
     @Binds
     abstract fun bindSignOutUseCase(impl: SignOutUseCaseImpl): SignOutUseCase
@@ -374,12 +358,8 @@ abstract class UseCaseModule {
     abstract fun bindObserveFleetSwitchingUseCase(impl: ObserveFleetSwitchingUseCaseImpl): ObserveFleetSwitchingUseCase
 
     @Binds
-    abstract fun bindObserveAppOverlayUseCase(
-        impl: es.joshluq.kmsafe.domain.usecase.ObserveAppOverlayUseCaseImpl
-    ): es.joshluq.kmsafe.domain.usecase.ObserveAppOverlayUseCase
+    abstract fun bindObserveAppOverlayUseCase(impl: ObserveAppOverlayUseCaseImpl): ObserveAppOverlayUseCase
 
     @Binds
-    abstract fun bindSetAppOverlayUseCase(
-        impl: es.joshluq.kmsafe.domain.usecase.SetAppOverlayUseCaseImpl
-    ): es.joshluq.kmsafe.domain.usecase.SetAppOverlayUseCase
+    abstract fun bindSetAppOverlayUseCase(impl: SetAppOverlayUseCaseImpl): SetAppOverlayUseCase
 }
