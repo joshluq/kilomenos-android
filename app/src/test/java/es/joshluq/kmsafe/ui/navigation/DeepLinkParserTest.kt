@@ -117,19 +117,6 @@ class DeepLinkParserTest {
     }
 
     @Test
-    fun `given data uri then resolves to Destination DataManagement`() {
-        val uri: Uri = mockk {
-            every { scheme } returns "https"
-            every { host } returns "kmsafe.app"
-            every { pathSegments } returns listOf("data")
-        }
-        val intent: Intent = mockk { every { data } returns uri }
-
-        val dest = DeepLinkParser.parse(intent)
-        assertEquals(Destination.DataManagement, dest)
-    }
-
-    @Test
     fun `given preferences uri then resolves to Destination Preferences`() {
         val uri: Uri = mockk {
             every { scheme } returns "https"

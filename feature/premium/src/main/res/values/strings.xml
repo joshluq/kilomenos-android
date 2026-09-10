@@ -1,7 +1,8 @@
 <resources>
     <!-- Premium Paywall -->
-    <string name="premium_paywall_title">KiloMenos Premium</string>
-    <string name="premium_paywall_subtitle">Optimiza tu inversión con herramientas avanzadas de gestión</string>
+    <string name="premium_paywall_badge">ESCUDO DE PROTECCIÓN</string>
+    <string name="premium_paywall_title">Evita penalizaciones por exceso de km</string>
+    <string name="premium_paywall_subtitle">Protege tu contrato de renting y automatiza tus viajes sin tocar el móvil</string>
     <string name="premium_benefit_sync_title">Sincronización Total</string>
     <string name="premium_benefit_sync_desc">Backup automático en la nube y acceso desde múltiples dispositivos.</string>
     <string name="premium_benefit_fleet_title">Modo Flota</string>
@@ -10,11 +11,28 @@
     <string name="premium_benefit_reports_desc">Exportación completa y reportes listos para tu empresa de renting.</string>
     <string name="premium_benefit_roadmap_title">Hoja de Ruta</string>
     <string name="premium_benefit_roadmap_desc">Acceso prioritario a lectura OCR y tracking inteligente por GPS.</string>
-    <string name="premium_benefit_autotracking_title">Auto-Tracking Inteligente</string>
-    <string name="premium_benefit_autotracking_desc">Olvida darle al botón. La app detecta cuándo conduces y activa el GPS por ti.</string>
+    <string name="premium_benefit_autotracking_title">Auto-Tracking 100% Manos Libres</string>
+    <string name="premium_benefit_autotracking_desc">Arranca y olvídate. Tu vehículo y la app se vinculan por Bluetooth al instante. Cero trayectos olvidados.</string>
+    <string name="premium_benefit_sentinel_title">Centinela Antiexcesos en Tiempo Real</string>
+    <string name="premium_benefit_sentinel_desc">Proyección predictiva a fin de contrato y alertas antes de que cada km extra se convierta en una penalización.</string>
+    <string name="premium_benefit_fuel_radar_title">Radar de Precios &amp; Ahorro en Repostaje</string>
+    <string name="premium_benefit_fuel_radar_desc">Historial de volatilidad de tus estaciones habituales. Ahorra hasta 8 € por depósito y amortiza tu suscripción en el primer viaje.</string>
     <string name="premium_benefit_routes_title">Mapas de tus Rutas</string>
     <string name="premium_benefit_routes_desc">Visualiza el recorrido de cada viaje en un mapa interactivo para un control total de tu actividad.</string>
     <string name="premium_paywall_save_money_highlight">Ahorra en penalizaciones con un control total y automático.</string>
+    <string name="premium_roi_box_title">La suscripción se paga sola</string>
+    <string name="premium_roi_box_desc">Un exceso de apenas 100 km te costará ~25 € con tu compañía de renting. KiloMenos Premium cuesta menos de un café al mes.</string>
+    <string name="premium_plan_annual_title">Plan Anual</string>
+    <string name="premium_plan_annual_badge">7 DÍAS GRATIS · AHORRA 40%</string>
+    <string name="premium_plan_annual_price">24,99 € / año</string>
+    <string name="premium_plan_annual_period">Solo 2,08 € / mes tras la prueba</string>
+    <string name="premium_plan_monthly_title">Plan Mensual</string>
+    <string name="premium_plan_monthly_badge">Flexibilidad total</string>
+    <string name="premium_plan_monthly_price">3,49 € / mes</string>
+    <string name="premium_plan_monthly_period">Facturación mensual recurrente</string>
+    <string name="premium_cta_start_trial">Probar 7 días gratis</string>
+    <string name="premium_cta_monthly">Comenzar suscripción mensual</string>
+    <string name="premium_guarantee_notice">Sin permanencia. Cancela en 1 clic desde Google Play.</string>
     <string name="premium_upgrade_button">Subir a Premium ahora</string>
     <string name="premium_trial_offer_title">Prueba Premium Gratis</string>
     <string name="premium_trial_offer_message">Empieza hoy mismo tu periodo de prueba de 7 días y desbloquea funciones avanzadas diseñadas para ahorrarte tiempo y dinero. Sin compromisos.</string>

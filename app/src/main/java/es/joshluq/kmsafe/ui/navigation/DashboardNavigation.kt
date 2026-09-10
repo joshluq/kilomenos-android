@@ -26,7 +26,6 @@ fun DashboardNavigation(
     onSelectTab: (DashboardTab) -> Unit,
     onNavigateToOnboarding: (String?, Boolean) -> Unit,
     onNavigateToVehicles: () -> Unit,
-    onNavigateToDataManagement: () -> Unit,
     onNavigateToPreferences: () -> Unit,
     onNavigateToRecordDetail: (String) -> Unit,
     onNavigateToStations: () -> Unit,
@@ -107,7 +106,6 @@ fun DashboardNavigation(
                 }
                 Destination.Profile -> NavEntry(key) {
                     ProfileRoute(
-                        onNavigateToDataManagement = onNavigateToDataManagement,
                         onNavigateToVehicles = onNavigateToVehicles,
                         onNavigateToPreferences = onNavigateToPreferences,
                         onNavigateToLogin = onNavigateToLogin,

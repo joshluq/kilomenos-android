@@ -59,10 +59,6 @@ class ProfileViewModel @Inject constructor(
                 logger.d("ProfileViewModel", "Effect launched: NavigateToVehicles")
                 launchEffect(Effect.NavigateToVehicles)
             }
-            Event.OnDataManagementClicked -> {
-                logger.d("ProfileViewModel", "Effect launched: NavigateToDataManagement")
-                launchEffect(Effect.NavigateToDataManagement)
-            }
             Event.OnPreferencesClicked -> {
                 logger.d("ProfileViewModel", "Effect launched: NavigateToPreferences")
                 launchEffect(Effect.NavigateToPreferences)

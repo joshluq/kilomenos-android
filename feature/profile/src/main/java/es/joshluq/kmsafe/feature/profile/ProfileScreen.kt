@@ -22,7 +22,6 @@ import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.CarRental
 import androidx.compose.material.icons.filled.DeleteForever
 import androidx.compose.material.icons.filled.PrivacyTip
-import androidx.compose.material.icons.filled.SdCard
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.WorkspacePremium
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -58,7 +57,6 @@ import es.joshluq.kmsafe.core.ui.util.safeClick
 
 @Composable
 fun ProfileRoute(
-    onNavigateToDataManagement: () -> Unit,
     onNavigateToVehicles: () -> Unit,
     onNavigateToPreferences: () -> Unit,
     onNavigateToLogin: () -> Unit,
@@ -75,7 +73,6 @@ fun ProfileRoute(
     LaunchedEffect(viewModel.effects) {
         viewModel.effects.collect { effect ->
             when (effect) {
-                Effect.NavigateToDataManagement -> onNavigateToDataManagement()
                 Effect.NavigateToVehicles -> onNavigateToVehicles()
                 Effect.NavigateToPreferences -> onNavigateToPreferences()
                 Effect.NavigateToLogin -> onNavigateToLogin()
@@ -139,13 +136,6 @@ fun ProfileScreen(
                     icon = Icons.Default.CarRental,
                     onClick = safeClick { onEvent(Event.OnVehiclesClicked) },
                     modifier = Modifier.testTag("profile_vehicles_button")
-                )
-
-                SettingsItem(
-                    label = stringResource(R.string.profile_data_management_option),
-                    icon = Icons.Default.SdCard,
-                    onClick = safeClick { onEvent(Event.OnDataManagementClicked) },
-                    modifier = Modifier.testTag("profile_data_management_button")
                 )
 
                 SettingsItem(

@@ -22,7 +22,6 @@ data class State(
 
 sealed interface Event : UiEvent {
     object OnVehiclesClicked : Event
-    object OnDataManagementClicked : Event
     object OnPreferencesClicked : Event
     object OnLogoutClicked : Event
     object OnLogoutConfirmed : Event
@@ -38,7 +37,6 @@ sealed interface Event : UiEvent {
 
 sealed interface Effect : UiEffect {
     object NavigateToVehicles : Effect
-    object NavigateToDataManagement : Effect
     object NavigateToPreferences : Effect
     object NavigateToLogin : Effect
     object NavigateToPremiumPaywall : Effect

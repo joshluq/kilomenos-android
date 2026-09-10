@@ -1,7 +1,8 @@
 <resources>
     <!-- Premium Paywall -->
-    <string name="premium_paywall_title">KiloMenos Premium</string>
-    <string name="premium_paywall_subtitle">Optimize your investment with advanced management tools</string>
+    <string name="premium_paywall_badge">PROTECTION SHIELD</string>
+    <string name="premium_paywall_title">Avoid excess mileage penalties</string>
+    <string name="premium_paywall_subtitle">Protect your renting contract and automate trips without touching your phone</string>
     <string name="premium_benefit_sync_title">Total Synchronization</string>
     <string name="premium_benefit_sync_desc">Automatic cloud backup and access from multiple devices.</string>
     <string name="premium_benefit_fleet_title">Fleet Mode</string>
@@ -10,11 +11,28 @@
     <string name="premium_benefit_reports_desc">Full export and reports ready for your renting company.</string>
     <string name="premium_benefit_roadmap_title">Roadmap</string>
     <string name="premium_benefit_roadmap_desc">Priority access to OCR reading and smart GPS tracking.</string>
-    <string name="premium_benefit_autotracking_title">Smart Auto-Tracking</string>
-    <string name="premium_benefit_autotracking_desc">Forget about pressing the button. The app detects when you drive and activates GPS for you.</string>
+    <string name="premium_benefit_autotracking_title">100% Hands-Free Auto-Tracking</string>
+    <string name="premium_benefit_autotracking_desc">Start driving and forget it. Your car and the app connect via Bluetooth instantly. Zero missed trips.</string>
+    <string name="premium_benefit_sentinel_title">Real-Time Excess Sentinel</string>
+    <string name="premium_benefit_sentinel_desc">Predictive projection at contract end and smart alerts before extra km turn into a penalty.</string>
+    <string name="premium_benefit_fuel_radar_title">Station Price Radar &amp; Fuel Savings</string>
+    <string name="premium_benefit_fuel_radar_desc">Price volatility tracking at your usual stations. Save up to 8 € per refill and pay off your subscription on the first trip.</string>
     <string name="premium_benefit_routes_title">Your Route Maps</string>
     <string name="premium_benefit_routes_desc">Visualize the path of each trip on an interactive map for total control of your activity.</string>
     <string name="premium_paywall_save_money_highlight">Save on penalties with total and automatic control.</string>
+    <string name="premium_roi_box_title">The subscription pays for itself</string>
+    <string name="premium_roi_box_desc">An excess of just 100 km will cost you ~25 € with your leasing company. KiloMenos Premium costs less than a coffee a month.</string>
+    <string name="premium_plan_annual_title">Annual Plan</string>
+    <string name="premium_plan_annual_badge">7-DAY FREE TRIAL · SAVE 40%</string>
+    <string name="premium_plan_annual_price">24.99 € / year</string>
+    <string name="premium_plan_annual_period">Only 2.08 € / month after trial</string>
+    <string name="premium_plan_monthly_title">Monthly Plan</string>
+    <string name="premium_plan_monthly_badge">Total flexibility</string>
+    <string name="premium_plan_monthly_price">3.49 € / month</string>
+    <string name="premium_plan_monthly_period">Recurring monthly billing</string>
+    <string name="premium_cta_start_trial">Try 7 days free</string>
+    <string name="premium_cta_monthly">Start monthly subscription</string>
+    <string name="premium_guarantee_notice">No commitment. Cancel anytime in 1 click from Google Play.</string>
     <string name="premium_upgrade_button">Upgrade to Premium now</string>
     <string name="premium_trial_offer_title">Try Premium Free</string>
     <string name="premium_trial_offer_message">Start your 7-day trial today and unlock advanced features designed to save you time and money. No commitments.</string>

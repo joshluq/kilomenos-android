@@ -6,11 +6,20 @@ import es.joshluq.foundationkit.viewmodel.UiEvent
 import es.joshluq.foundationkit.viewmodel.UiState
 
 /**
+ * Available subscription billing plans on the paywall.
+ */
+enum class PremiumBillingPlan {
+    ANNUAL,
+    MONTHLY
+}
+
+/**
  * Represents the UI state for the Premium Paywall screen.
  */
 data class State(
     val isLoading: Boolean = false,
     val isMigrating: Boolean = false,
+    val selectedPlan: PremiumBillingPlan = PremiumBillingPlan.ANNUAL,
     val error: TextProvider? = null
 ) : UiState {
     companion object {
@@ -22,6 +31,7 @@ data class State(
  * Represents the UI events for the Premium Paywall screen.
  */
 sealed interface Event : UiEvent {
+    data class OnPlanSelected(val plan: PremiumBillingPlan) : Event
     object OnUpgradeClicked : Event
     object OnDismissClicked : Event
     object OnDismissError : Event

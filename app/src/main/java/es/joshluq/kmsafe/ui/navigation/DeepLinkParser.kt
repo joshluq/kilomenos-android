@@ -47,7 +47,6 @@ object DeepLinkParser {
                 Destination.StationDetail(stationId = pathSegments[1])
             }
             pathSegments[0] == "premium" -> Destination.PremiumPaywall
-            pathSegments[0] == "data" -> Destination.DataManagement
             pathSegments[0] == "preferences" -> Destination.Preferences
             else -> null
         }

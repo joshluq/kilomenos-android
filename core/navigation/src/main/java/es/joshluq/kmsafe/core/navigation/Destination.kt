@@ -98,12 +98,6 @@ sealed interface Destination {
     object ProjectionAnalysis : Destination
 
     /**
-     * DataManagement destination.
-     */
-    @Serializable
-    object DataManagement : Destination
-
-    /**
      * VehicleList destination.
      */
     @Serializable

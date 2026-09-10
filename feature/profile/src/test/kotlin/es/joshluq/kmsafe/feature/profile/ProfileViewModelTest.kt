@@ -109,7 +109,6 @@ class ProfileViewModelTest {
         }
 
         viewModel.sendEvent(Event.OnVehiclesClicked)
-        viewModel.sendEvent(Event.OnDataManagementClicked)
         viewModel.sendEvent(Event.OnPreferencesClicked)
         viewModel.sendEvent(Event.OnUpgradeClicked)
         viewModel.sendEvent(Event.OnWelcomeGuideClicked)
@@ -119,7 +118,6 @@ class ProfileViewModelTest {
         assertEquals(
             listOf(
                 Effect.NavigateToVehicles,
-                Effect.NavigateToDataManagement,
                 Effect.NavigateToPreferences,
                 Effect.NavigateToPremiumPaywall,
                 Effect.NavigateToWelcomeDiscovery

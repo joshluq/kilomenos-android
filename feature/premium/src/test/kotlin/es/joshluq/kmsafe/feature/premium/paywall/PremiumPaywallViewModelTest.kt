@@ -1,5 +1,6 @@
 package es.joshluq.kmsafe.feature.premium.paywall
 
+import es.joshluq.analyticskit.domain.model.AnalyticsEvent
 import es.joshluq.analyticskit.sdk.AnalyticskitManager
 import es.joshluq.foundationkit.log.LoggerKit
 import es.joshluq.kmsafe.domain.model.SubscriptionLevel
@@ -83,11 +84,24 @@ class PremiumPaywallViewModelTest {
         val state = viewModel.state.value
         assertFalse(state.isLoading)
         assertFalse(state.isMigrating)
+        assertEquals(PremiumBillingPlan.ANNUAL, state.selectedPlan)
         assertNull(state.error)
     }
 
     @Test
-    fun `on upgrade clicked emits launch billing flow effect`() = runTest(testDispatcher) {
+    fun `on plan selected updates state and tracks analytics`() = runTest(testDispatcher) {
+        val viewModel = createViewModel()
+        testScheduler.advanceUntilIdle()
+
+        viewModel.sendEvent(Event.OnPlanSelected(PremiumBillingPlan.MONTHLY))
+        testScheduler.advanceUntilIdle()
+
+        assertEquals(PremiumBillingPlan.MONTHLY, viewModel.state.value.selectedPlan)
+        verify { analytics.track(AnalyticsEvent.Custom("premium_plan_selected", mapOf("plan" to "MONTHLY"))) }
+    }
+
+    @Test
+    fun `on upgrade clicked emits launch billing flow effect and tracks plan`() = runTest(testDispatcher) {
         val viewModel = createViewModel()
         testScheduler.advanceUntilIdle()
 
@@ -100,6 +114,14 @@ class PremiumPaywallViewModelTest {
         testScheduler.advanceUntilIdle()
 
         assertEquals(listOf(Effect.LaunchBillingFlow), effects)
+        verify {
+            analytics.track(
+                AnalyticsEvent.Custom(
+                    "premium_upgrade_clicked",
+                    mapOf("selected_plan" to "ANNUAL")
+                )
+            )
+        }
     }
 
     @Test

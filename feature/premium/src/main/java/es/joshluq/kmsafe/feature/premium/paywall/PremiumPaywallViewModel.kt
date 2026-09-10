@@ -37,8 +37,22 @@ class PremiumPaywallViewModel @Inject constructor(
     override fun handleEvent(event: Event) {
         logger.d("PremiumPaywallViewModel", "Event received: $event")
         when (event) {
+            is Event.OnPlanSelected -> {
+                analytics.track(
+                    AnalyticsEvent.Custom(
+                        "premium_plan_selected",
+                        mapOf("plan" to event.plan.name)
+                    )
+                )
+                updateState { copy(selectedPlan = event.plan) }
+            }
             Event.OnUpgradeClicked -> {
-                analytics.track(AnalyticsEvent.Custom("premium_upgrade_clicked"))
+                analytics.track(
+                    AnalyticsEvent.Custom(
+                        "premium_upgrade_clicked",
+                        mapOf("selected_plan" to state.value.selectedPlan.name)
+                    )
+                )
                 launchEffect(Effect.LaunchBillingFlow)
             }
             Event.OnDismissClicked -> {
