@@ -16,4 +16,6 @@
     <string name="tracking_station_arrival_channel_desc">Avisos inteligentes para registrar repostajes y recargas al apagar el vehículo</string>
     <string name="tracking_station_arrival_title">¿Has repostado en %1$s?</string>
     <string name="tracking_station_arrival_desc">Toca para registrar tu gasto con estación y precios precargados.</string>
+    <string name="tracking_trip_finished_title">Viaje completado: %1$.2f km</string>
+    <string name="tracking_trip_finished_desc">Toca para registrar los kilómetros en tu contrato.</string>
 </resources>

@@ -142,16 +142,17 @@ graph TD
 Before recording any GPS point, `LocationTrackingService` performs three validations:
 1. **Premium Access**: Verifies via `CheckFeatureAccessUseCase` that the user has the `AUTO_TRACKING` entitlement.
 2. **Contract SSOT**: Verifies there is an active `RentingContract` in the local database.
-3. **Bluetooth Tethering (Optional but Recommended)**: If the active contract has a `bluetoothDeviceAddress`, the service will only start if that specific MAC is currently connected to the phone's audio (`A2DP`) or hands-free (`HEADSET`) profiles.
+3. **Bluetooth Tethering & Resilient Polling (Optional but Recommended)**: If the active contract has a `bluetoothDeviceAddress`, the service executes a resilient retry polling window (up to 15-20s, querying every 1.5s-2.0s) while keeping the foreground validation notification visible. This prevents premature service teardown while car infotainment systems finish booting and negotiating A2DP/HEADSET profiles.
 
 ---
 
-## 5. Implementation Phases
+## 5. Implementation Phases & Session Continuity
 
 | Phase | Scope | Status |
 | :--- | :--- | :--- |
 | **Phase 1** | **UI Indicators & Setup Optimization**: Live Bluetooth connection badge in `OverviewScreen`; "Connected now" badge and auto-sorting in `BluetoothDevicePicker`. | ✅ Implemented |
 | **Phase 2** | **Background Fast-Path & Notifications**: Silent local notification upon car Bluetooth connection; pre-activating location validation before Activity Recognition fires; instant trip stop on vehicle disconnect. | ✅ Implemented |
+| **Phase 3** | **Production Resiliency & Trip Continuity**: `BluetoothConnectionReceiver` exported in AndroidManifest; upgraded channel `location_tracking_channel_v2` to `IMPORTANCE_DEFAULT`; 15s Bluetooth polling window; continuous cumulative tracking across stops (`TrackingDataSource`). | ✅ Implemented |
 
 ---
 

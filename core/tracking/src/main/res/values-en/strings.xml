@@ -16,4 +16,6 @@
     <string name="tracking_station_arrival_channel_desc">Smart alerts to log refuels and EV charges when turning off the vehicle</string>
     <string name="tracking_station_arrival_title">Did you refuel at %1$s?</string>
     <string name="tracking_station_arrival_desc">Tap to log your expense with pre-filled station and prices.</string>
+    <string name="tracking_trip_finished_title">Trip completed: %1$.2f km</string>
+    <string name="tracking_trip_finished_desc">Tap to record distance to your contract.</string>
 </resources>

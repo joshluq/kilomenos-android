@@ -55,11 +55,19 @@ class TrackingDataSource @Inject constructor(
     }
 
     suspend fun startTracking(timestamp: Long) {
+        val existingDistance = storage.read<Double>(KEY_DISTANCE) ?: 0.0
+        val existingStartTime = storage.read<Long>(KEY_START_TIME)
+
         storage.save(KEY_IS_TRACKING, true)
-        storage.save(KEY_START_TIME, timestamp)
-        storage.save(KEY_DISTANCE, 0.0)
-        storage.delete(KEY_ROUTE_POLYLINE)
-        storage.save(KEY_POINT_COUNT, 0)
+        if (existingDistance <= 0.0 || existingStartTime == null) {
+            logger.i("TrackingDataSource", "startTracking: initializing new tracking session at $timestamp")
+            storage.save(KEY_START_TIME, timestamp)
+            storage.save(KEY_DISTANCE, 0.0)
+            storage.delete(KEY_ROUTE_POLYLINE)
+            storage.save(KEY_POINT_COUNT, 0)
+        } else {
+            logger.i("TrackingDataSource", "startTracking: resuming existing session with accumulated distance ${existingDistance}m")
+        }
         _updates.emit(Unit)
     }
 

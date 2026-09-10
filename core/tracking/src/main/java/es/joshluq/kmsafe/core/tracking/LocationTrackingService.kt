@@ -78,8 +78,9 @@ class LocationTrackingService : Service() {
     private var lastLocation: Location? = null
 
     companion object {
-        private const val CHANNEL_ID = "location_tracking_channel"
+        private const val CHANNEL_ID = "location_tracking_channel_v2"
         private const val NOTIFICATION_ID = 1001
+        private const val NOTIFICATION_ID_TRIP_FINISHED = 1002
 
         const val ACTION_START = "ACTION_START"
         const val ACTION_STOP = "ACTION_STOP"
@@ -192,8 +193,9 @@ class LocationTrackingService : Service() {
                 if (contractOutput is GetRentingContractUseCase.Output.Success) {
                     val mac = contractOutput.contract.bluetoothDeviceAddress
                     if (mac != null) {
-                        if (!isBluetoothDeviceConnected(this@LocationTrackingService, mac)) {
-                            logger.i("LocationService", "Validation failed: Vehicle Bluetooth ($mac) not found.")
+                        val isConnected = waitForBluetoothConnection(mac)
+                        if (!isConnected) {
+                            logger.i("LocationService", "Validation failed: Vehicle Bluetooth ($mac) not found after retry window.")
                             stopTrackingGracefully()
                             return@launch
                         }
@@ -248,7 +250,7 @@ class LocationTrackingService : Service() {
     }
 
     @SuppressLint("MissingPermission")
-    private suspend fun isBluetoothDeviceConnected(context: Context, macAddress: String): Boolean {
+    private suspend fun isBluetoothDeviceConnected(context: Context, macAddress: String, timeoutMillis: Long = 2500L): Boolean {
         // 1. Permission Guard for Android 12+ (API 31)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             val permission = android.Manifest.permission.BLUETOOTH_CONNECT
@@ -290,10 +292,27 @@ class LocationTrackingService : Service() {
             adapter.getProfileProxy(context, profileListener, BluetoothProfile.A2DP)
 
             serviceScope.launch {
-                delay(3000.milliseconds)
+                delay(timeoutMillis.milliseconds)
                 if (!continuation.isCompleted) continuation.resume(false)
             }
         }
+    }
+
+    private suspend fun waitForBluetoothConnection(macAddress: String): Boolean {
+        val maxAttempts = 6
+        val delayBetweenAttempts = 1500.milliseconds
+        for (attempt in 1..maxAttempts) {
+            logger.d("LocationService", "Checking Bluetooth connection attempt $attempt/$maxAttempts for $macAddress")
+            val isConnected = isBluetoothDeviceConnected(this, macAddress, timeoutMillis = 2000L)
+            if (isConnected) {
+                logger.i("LocationService", "Vehicle Bluetooth ($macAddress) confirmed connected on attempt $attempt")
+                return true
+            }
+            if (attempt < maxAttempts) {
+                delay(delayBetweenAttempts)
+            }
+        }
+        return false
     }
 
     private fun startTracking() {
@@ -399,7 +418,11 @@ class LocationTrackingService : Service() {
 
         serviceScope.launch {
             try {
+                val distance = trackingRepository.currentDistanceMeters.first()
                 trackingRepository.stopTracking()
+                if (distance >= 300.0) {
+                    showTripFinishedNotification(distance)
+                }
             } catch (e: Exception) {
                 logger.e("LocationService", "Error stopping tracking repository", e)
             } finally {
@@ -435,6 +458,7 @@ class LocationTrackingService : Service() {
             .setContentText(contentText)
             .setSmallIcon(android.R.drawable.ic_menu_mylocation)
             .setOngoing(true)
+            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
             .setContentIntent(pendingIntent)
             .addAction(
                 android.R.drawable.ic_menu_close_clear_cancel,
@@ -457,12 +481,45 @@ class LocationTrackingService : Service() {
         }
     }
 
+    @SuppressLint("MissingPermission")
+    private fun showTripFinishedNotification(distanceMeters: Double) {
+        val launchIntent = packageManager.getLaunchIntentForPackage(packageName)?.apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+        } ?: Intent()
+
+        val pendingIntent = PendingIntent.getActivity(
+            this,
+            NOTIFICATION_ID_TRIP_FINISHED,
+            launchIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
+        val kms = distanceMeters / 1000.0
+        val notification = NotificationCompat.Builder(this, CHANNEL_ID)
+            .setContentTitle(getString(R.string.tracking_trip_finished_title, kms))
+            .setContentText(getString(R.string.tracking_trip_finished_desc))
+            .setSmallIcon(android.R.drawable.ic_menu_mylocation)
+            .setAutoCancel(true)
+            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+            .setContentIntent(pendingIntent)
+            .build()
+
+        val notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED) {
+                notificationManager.notify(NOTIFICATION_ID_TRIP_FINISHED, notification)
+            }
+        } else {
+            notificationManager.notify(NOTIFICATION_ID_TRIP_FINISHED, notification)
+        }
+    }
+
     private fun createNotificationChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(
                 CHANNEL_ID,
                 getString(R.string.tracking_notification_title),
-                NotificationManager.IMPORTANCE_LOW
+                NotificationManager.IMPORTANCE_DEFAULT
             )
             val manager = getSystemService(NotificationManager::class.java)
             manager.createNotificationChannel(channel)
