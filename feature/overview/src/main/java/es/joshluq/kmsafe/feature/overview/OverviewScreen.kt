@@ -1,6 +1,8 @@
 package es.joshluq.kmsafe.feature.overview
 
 import android.Manifest
+import android.app.NotificationManager
+import android.content.Context
 import android.content.Intent
 import android.content.res.Configuration
 import android.net.Uri
@@ -175,6 +177,10 @@ fun OverviewRoute(
 
                 Effect.NavigateToWelcomeDiscovery -> onNavigateToWelcomeDiscovery()
                 is Effect.NavigateToVehicleDetail -> onNavigateToVehicleDetail(effect.id)
+                Effect.DismissTrackingNotifications -> {
+                    val nm = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+                    nm.cancel(1002) // NOTIFICATION_ID_TRIP_FINISHED
+                }
             }
         }
     }

@@ -478,6 +478,7 @@ class OverviewViewModel @Inject constructor(
                         }
                         updateState { copy(isSaving = false, showBottomSheet = false, isLoading = false) }
                         clearTrackingUseCase(ClearTrackingUseCase.Input).launchIn(viewModelScope)
+                        launchEffect(Effect.DismissTrackingNotifications)
                     }
                     is AddOdometerRecordUseCase.Output.Failure -> {
                         updateState {
@@ -568,6 +569,7 @@ class OverviewViewModel @Inject constructor(
     private fun handleCancelTrackedTrip() {
         analytics.track(AnalyticsEvent.Custom("tracking_cancelled"))
         clearTrackingUseCase(ClearTrackingUseCase.Input).launchIn(viewModelScope)
+        launchEffect(Effect.DismissTrackingNotifications)
     }
 
     private fun handleAutoTrackingToggled(enabled: Boolean) {

@@ -87,6 +87,11 @@ class BluetoothConnectionReceiver : BroadcastReceiver() {
         }
 
         val device = intent.getBluetoothDeviceExtra() ?: return
+
+        val deviceName = try { device.name } catch (_: SecurityException) { "unknown" }
+        val deviceAddr = try { device.address } catch (_: SecurityException) { "unknown" }
+        logger.i("BluetoothReceiver", "Bluetooth event: $action, device=$deviceName ($deviceAddr)")
+
         val pendingResult = goAsync()
 
         scope.launch {
@@ -112,11 +117,19 @@ class BluetoothConnectionReceiver : BroadcastReceiver() {
         val normalizedDeviceMac = normalizeAddress(deviceAddress)
 
         // 1. Fetch active contract
-        val contractOutput = getRentingContractUseCase(GetRentingContractUseCase.Input).first()
-        if (contractOutput !is GetRentingContractUseCase.Output.Success) return
+        val contractOutput = withTimeoutOrNull(5000L.milliseconds) {
+            getRentingContractUseCase(GetRentingContractUseCase.Input).first {
+                it !is GetRentingContractUseCase.Output.Progress
+            }
+        }
+        if (contractOutput !is GetRentingContractUseCase.Output.Success) {
+            logger.w("BluetoothReceiver", "No active renting contract found. Skipping Bluetooth connection.")
+            return
+        }
 
         val contract = contractOutput.contract
         val contractBluetoothMac = contract.bluetoothDeviceAddress
+
         if (contractBluetoothMac == null) {
             // Case A: No bluetooth linked to this contract yet -> suggest linking if premium
             val accessOutput = checkFeatureAccessUseCase(
@@ -124,15 +137,17 @@ class BluetoothConnectionReceiver : BroadcastReceiver() {
             ).first()
             val isPremium = (accessOutput is CheckFeatureAccessUseCase.Output.Success) && accessOutput.isGranted
             if (isPremium) {
-                logger.i("BluetoothReceiver", "New connection detected: $deviceAddress. Suggesting link.")
+                logger.i("BluetoothReceiver", "New device connected: $deviceAddress. Suggesting vehicle link.")
                 showSuggestionNotification(context)
             }
         } else {
             // Case B: Contract has linked MAC -> verify if it matches
             val normalizedContractMac = normalizeAddress(contractBluetoothMac)
-            if (normalizedDeviceMac == normalizedContractMac) {
+            val macMatch = normalizedDeviceMac == normalizedContractMac
+
+            if (macMatch) {
                 // Rule 16.2: Activate live connection pill immediately in OverviewScreen
-                logger.i("BluetoothReceiver", "Vehicle Bluetooth connected: ${contract.vehicleName}. Notifying state.")
+                logger.i("BluetoothReceiver", "Vehicle Bluetooth connected: ${contract.vehicleName}. Updating connection state.")
                 updateBluetoothConnectionStateUseCase(
                     UpdateBluetoothConnectionStateUseCase.Input(
                         macAddress = contractBluetoothMac,
@@ -151,10 +166,12 @@ class BluetoothConnectionReceiver : BroadcastReceiver() {
                         prefsOutput.preferences.autoTrackingEnabled
 
                     if (isAutoTrackingEnabled) {
-                        logger.i("BluetoothReceiver", "Showing feedback notification for ${contract.vehicleName}.")
+                        logger.i("BluetoothReceiver", "Showing vehicle connected notification for '${contract.vehicleName}'")
                         showConnectedNotification(context, contract.vehicleName)
                     }
                 }
+            } else {
+                logger.d("BluetoothReceiver", "MAC mismatch: connected=$normalizedDeviceMac != vehicle=$normalizedContractMac")
             }
         }
     }
@@ -167,7 +184,11 @@ class BluetoothConnectionReceiver : BroadcastReceiver() {
         } ?: return
         val normalizedDeviceMac = normalizeAddress(deviceAddress)
 
-        val contractOutput = getRentingContractUseCase(GetRentingContractUseCase.Input).first()
+        val contractOutput = withTimeoutOrNull(5000L.milliseconds) {
+            getRentingContractUseCase(GetRentingContractUseCase.Input).first {
+                it !is GetRentingContractUseCase.Output.Progress
+            }
+        }
         if (contractOutput !is GetRentingContractUseCase.Output.Success) return
 
         val contract = contractOutput.contract
@@ -203,13 +224,25 @@ class BluetoothConnectionReceiver : BroadcastReceiver() {
 
     @SuppressLint("MissingPermission")
     private fun showConnectedNotification(context: Context, vehicleName: String) {
+        logger.d("BluetoothReceiver", "showConnectedNotification START for '$vehicleName'")
         val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+
+        // Check POST_NOTIFICATIONS permission on Android 13+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            val hasPermission = ContextCompat.checkSelfPermission(
+                context, Manifest.permission.POST_NOTIFICATIONS
+            ) == PackageManager.PERMISSION_GRANTED
+            if (!hasPermission) {
+                logger.w("BluetoothReceiver", "POST_NOTIFICATIONS permission not granted. Cannot show notification.")
+                return
+            }
+        }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(
                 CHANNEL_CONNECTED_ID,
                 context.getString(R.string.tracking_bluetooth_connected_channel_name),
-                NotificationManager.IMPORTANCE_LOW
+                NotificationManager.IMPORTANCE_DEFAULT
             ).apply {
                 description = context.getString(R.string.tracking_bluetooth_connected_channel_desc)
             }
@@ -231,9 +264,10 @@ class BluetoothConnectionReceiver : BroadcastReceiver() {
             .setSmallIcon(android.R.drawable.stat_sys_data_bluetooth)
             .setContentTitle(context.getString(R.string.tracking_bluetooth_connected_title, vehicleName))
             .setContentText(context.getString(R.string.tracking_bluetooth_connected_desc))
-            .setPriority(NotificationCompat.PRIORITY_LOW)
-            .setOngoing(true)
-            .setAutoCancel(false)
+            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+            .setOnlyAlertOnce(true)
+            .setAutoCancel(true)
+            .setTimeoutAfter(8000L)
             .setContentIntent(pendingIntent)
             .build()
 

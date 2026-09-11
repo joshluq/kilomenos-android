@@ -43,6 +43,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.coroutines.suspendCancellableCoroutine
 import javax.inject.Inject
 import kotlin.coroutines.resume
@@ -78,9 +79,14 @@ class LocationTrackingService : Service() {
     private var lastLocation: Location? = null
 
     companion object {
-        private const val CHANNEL_ID = "location_tracking_channel_v2"
+        private const val CHANNEL_ID = "location_tracking_channel_v3"
         private const val NOTIFICATION_ID = 1001
         private const val NOTIFICATION_ID_TRIP_FINISHED = 1002
+        /**
+         * Bluetooth connected notification ID from [BluetoothConnectionReceiver].
+         * Cancelled here to avoid duplicate ongoing notifications.
+         */
+        private const val NOTIFICATION_ID_BT_CONNECTED = 2003
 
         const val ACTION_START = "ACTION_START"
         const val ACTION_STOP = "ACTION_STOP"
@@ -88,6 +94,15 @@ class LocationTrackingService : Service() {
         // BUSINESS RULE: To avoid false positives (e.g. drift when stationary)
         private const val MIN_SPEED_THRESHOLD_MPS = 1.5 // ~5.4 km/h
         private const val MAX_HORIZONTAL_ACCURACY_METERS = 30.0
+
+        /**
+         * Cancels the "Trip Finished" notification programmatically.
+         * Called from feature modules when the user saves or discards a tracked trip,
+         */
+        fun cancelTripFinishedNotification(context: Context) {
+            val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            notificationManager.cancel(NOTIFICATION_ID_TRIP_FINISHED)
+        }
     }
 
     override fun onCreate() {
@@ -173,9 +188,11 @@ class LocationTrackingService : Service() {
                 logger.d("LocationService", "Starting autostart validation flow...")
 
                 // 1. Check Access
-                val access = checkFeatureAccessUseCase(CheckFeatureAccessUseCase.Input(Feature.AUTO_TRACKING)).first()
+                val access = withTimeoutOrNull(5000L.milliseconds) {
+                    checkFeatureAccessUseCase(CheckFeatureAccessUseCase.Input(Feature.AUTO_TRACKING)).first()
+                }
                 if (access !is CheckFeatureAccessUseCase.Output.Success || !access.isGranted) {
-                    logger.w("LocationService", "Validation failed: User has no Premium access.")
+                    logger.w("LocationService", "Validation failed: User has no Premium access (access=$access).")
                     stopTrackingGracefully()
                     return@launch
                 }
@@ -187,8 +204,10 @@ class LocationTrackingService : Service() {
                 }
 
                 // 3. Check Bluetooth if linked
-                val contractOutput = getRentingContractUseCase(GetRentingContractUseCase.Input).first {
-                    it !is GetRentingContractUseCase.Output.Progress
+                val contractOutput = withTimeoutOrNull(5000L.milliseconds) {
+                    getRentingContractUseCase(GetRentingContractUseCase.Input).first {
+                        it !is GetRentingContractUseCase.Output.Progress
+                    }
                 }
                 if (contractOutput is GetRentingContractUseCase.Output.Success) {
                     val mac = contractOutput.contract.bluetoothDeviceAddress
@@ -223,6 +242,8 @@ class LocationTrackingService : Service() {
             .setContentText(getString(R.string.tracking_validation_content))
             .setSmallIcon(android.R.drawable.ic_menu_mylocation)
             .setOngoing(true)
+            .setSilent(true)
+            .setOnlyAlertOnce(true)
             .setPriority(NotificationCompat.PRIORITY_LOW)
             .build()
 
@@ -317,6 +338,12 @@ class LocationTrackingService : Service() {
 
     private fun startTracking() {
         logger.i("LocationService", "startTracking initiated")
+
+        // Clean up residual notifications from previous trip cycle
+        val notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
+        notificationManager.cancel(NOTIFICATION_ID_TRIP_FINISHED)
+        notificationManager.cancel(NOTIFICATION_ID_BT_CONNECTED)
+
         // Update notification synchronously on main thread to show active trip tracking
         val notification = createNotification(0.0)
         try {
@@ -458,7 +485,9 @@ class LocationTrackingService : Service() {
             .setContentText(contentText)
             .setSmallIcon(android.R.drawable.ic_menu_mylocation)
             .setOngoing(true)
-            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+            .setSilent(true)
+            .setOnlyAlertOnce(true)
+            .setPriority(NotificationCompat.PRIORITY_LOW)
             .setContentIntent(pendingIntent)
             .addAction(
                 android.R.drawable.ic_menu_close_clear_cancel,
@@ -519,8 +548,11 @@ class LocationTrackingService : Service() {
             val channel = NotificationChannel(
                 CHANNEL_ID,
                 getString(R.string.tracking_notification_title),
-                NotificationManager.IMPORTANCE_DEFAULT
-            )
+                NotificationManager.IMPORTANCE_LOW
+            ).apply {
+                setSound(null, null)
+                enableVibration(false)
+            }
             val manager = getSystemService(NotificationManager::class.java)
             manager.createNotificationChannel(channel)
         }

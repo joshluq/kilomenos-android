@@ -119,4 +119,9 @@ sealed interface Effect : UiEffect {
     data object NavigateToPremiumPaywall : Effect
     data object NavigateToPreferences : Effect
     data object NavigateToWelcomeDiscovery : Effect
+    /**
+     * Signals the Route to cancel any residual tracking notifications
+     * (e.g., "Trip Finished") after the user saves or discards a trip.
+     */
+    data object DismissTrackingNotifications : Effect
 }

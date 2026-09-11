@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
@@ -63,7 +64,7 @@ class UserSessionDataSourceImpl @Inject constructor(
 
     override fun observeUserSession(): Flow<UserSessionModel?> {
         return combine(
-            authKit.session.state,
+            authKit.session.state.filter { it != SessionState.Initializing },
             _sessionDataUpdates.onStart {
                 if (_sessionDataUpdates.replayCache.isEmpty()) {
                     emit(null)
