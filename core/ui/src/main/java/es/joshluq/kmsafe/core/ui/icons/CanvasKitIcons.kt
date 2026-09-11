@@ -301,16 +301,7 @@ object CanvasKitIcons {
                         curveTo(16.5f, 6f, 14.5f, 4f, 12f, 4f)
                         close()
                     }
-                    // Pilot Visor Slit
-                    path(
-                        stroke = SolidColor(Color.Black),
-                        strokeLineWidth = 2f,
-                        strokeLineCap = StrokeCap.Round,
-                        strokeLineJoin = StrokeJoin.Round
-                    ) {
-                        moveTo(10f, 8.5f)
-                        lineTo(14f, 8.5f)
-                    }
+
                     // Executive Shoulders / Torso Contour
                     path(
                         stroke = SolidColor(Color.Black),
