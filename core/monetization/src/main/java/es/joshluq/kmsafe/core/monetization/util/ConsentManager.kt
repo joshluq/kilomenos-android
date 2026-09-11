@@ -85,6 +85,9 @@ class ConsentManager @Inject constructor(
         activity: Activity,
         onConsentGathered: (Boolean) -> Unit
     ) {
+        if (!::consentInformation.isInitialized) {
+            consentInformation = getConsentInformation(activity)
+        }
         UserMessagingPlatform.showPrivacyOptionsForm(activity) { formError ->
             if (formError != null) {
                 logger.e("ConsentManager", "Privacy options form error: ${formError.message}")

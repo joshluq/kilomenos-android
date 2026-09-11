@@ -11,12 +11,13 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
 import androidx.navigation3.runtime.NavEntry
 import androidx.navigation3.ui.NavDisplay
 import es.joshluq.kmsafe.core.navigation.Destination
+import es.joshluq.kmsafe.core.navigation.DestinationListSaver
 import es.joshluq.kmsafe.core.navigation.LocalNavigationResultStore
 import es.joshluq.kmsafe.core.navigation.NavigationResultStore
 import es.joshluq.kmsafe.feature.auth.launch.LaunchRoute
@@ -49,7 +50,9 @@ fun AppNavigation(
     onShowPrivacyOptions: () -> Unit = {}
 ) {
     val viewModelStoreOwner = LocalViewModelStoreOwner.current
-    val backStack = remember { mutableStateListOf<Destination>(initialDestination) }
+    val backStack = rememberSaveable(saver = DestinationListSaver) {
+        mutableStateListOf<Destination>(initialDestination)
+    }
 
     val onNavigate: (Destination) -> Unit = { dest ->
         backStack.add(dest)

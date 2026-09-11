@@ -77,7 +77,7 @@ class MainActivity : ComponentActivity() {
                     resultStore = resultStore,
                     onLaunchBilling = { billingManager.launchBillingFlow(this) },
                     onShowPrivacyOptions = {
-                        consentManager.gatherConsent(this) { canRequestAds ->
+                        consentManager.showPrivacyOptionsForm(this) { canRequestAds ->
                             if (canRequestAds) {
                                 consentManager.initializeAds(this)
                             }

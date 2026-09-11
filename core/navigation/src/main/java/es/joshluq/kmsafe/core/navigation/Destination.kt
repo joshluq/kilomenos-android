@@ -1,6 +1,10 @@
 package es.joshluq.kmsafe.core.navigation
 
+import androidx.compose.runtime.saveable.Saver
+import androidx.compose.runtime.snapshots.SnapshotStateList
+import androidx.compose.runtime.toMutableStateList
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
 
 /**
  * Deep link configuration constants.
@@ -155,3 +159,20 @@ sealed interface Destination {
     @Serializable
     data class StationDetail(val stationId: String) : Destination
 }
+
+private val navJson = Json {
+    ignoreUnknownKeys = true
+    encodeDefaults = true
+}
+
+/**
+ * Compose [Saver] for persisting a [SnapshotStateList] of [Destination] across configuration changes and process recreation.
+ */
+val DestinationListSaver: Saver<SnapshotStateList<Destination>, ArrayList<String>> = Saver(
+    save = { stateList ->
+        ArrayList(stateList.map { navJson.encodeToString(Destination.serializer(), it) })
+    },
+    restore = { savedList ->
+        savedList.map { navJson.decodeFromString(Destination.serializer(), it) }.toMutableStateList()
+    }
+)

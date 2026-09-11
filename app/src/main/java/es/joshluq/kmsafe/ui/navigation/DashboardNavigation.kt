@@ -8,11 +8,12 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.navigation3.runtime.NavEntry
 import androidx.navigation3.ui.NavDisplay
 import es.joshluq.kmsafe.core.navigation.Destination
+import es.joshluq.kmsafe.core.navigation.DestinationListSaver
 import es.joshluq.kmsafe.feature.dashboard.DashboardTab
 import es.joshluq.kmsafe.feature.expenses.ExpensesRoute
 import es.joshluq.kmsafe.feature.history.HistoryRoute
@@ -48,7 +49,9 @@ fun DashboardNavigation(
         }
     }
 
-    val backStack = remember { mutableStateListOf<Destination>(destinationForTab(selectedTab)) }
+    val backStack = rememberSaveable(saver = DestinationListSaver) {
+        mutableStateListOf<Destination>(destinationForTab(selectedTab))
+    }
 
     LaunchedEffect(selectedTab) {
         val targetDestination = destinationForTab(selectedTab)
