@@ -347,7 +347,12 @@ private fun SoftwareCreditsDialog(onDismiss: () -> Unit) {
         ) {
             Column(modifier = Modifier.fillMaxSize()) {
                 CanvasKitTopBar(
-                    title = { Text(stringResource(R.string.preferences_oss_licenses_label)) },
+                    title = {
+                        Text(
+                            text = stringResource(R.string.preferences_oss_licenses_label),
+                            color = CanvasKitTheme.colors.textPrimary
+                        )
+                    },
                     navigationIcon = {
                         IconButton(onClick = onDismiss) {
                             Icon(
@@ -363,7 +368,10 @@ private fun SoftwareCreditsDialog(onDismiss: () -> Unit) {
                     modifier = Modifier
                         .fillMaxSize()
                         .verticalScroll(rememberScrollState())
-                        .padding(horizontal = CanvasKitTheme.spacing.screenHorizontal, vertical = CanvasKitTheme.spacing.lg),
+                        .padding(
+                            horizontal = CanvasKitTheme.spacing.screenHorizontal,
+                            vertical = CanvasKitTheme.spacing.lg
+                        ),
                     verticalArrangement = Arrangement.spacedBy(CanvasKitTheme.spacing.md)
                 ) {
                     Text(
