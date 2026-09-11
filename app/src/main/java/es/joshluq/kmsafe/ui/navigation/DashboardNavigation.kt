@@ -50,7 +50,7 @@ fun DashboardNavigation(
     }
 
     val backStack = rememberSaveable(saver = DestinationListSaver) {
-        mutableStateListOf<Destination>(destinationForTab(selectedTab))
+        mutableStateListOf(destinationForTab(selectedTab))
     }
 
     LaunchedEffect(selectedTab) {

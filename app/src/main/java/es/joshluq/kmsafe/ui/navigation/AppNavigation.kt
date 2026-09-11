@@ -2,8 +2,6 @@ package es.joshluq.kmsafe.ui.navigation
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
@@ -51,7 +49,7 @@ fun AppNavigation(
 ) {
     val viewModelStoreOwner = LocalViewModelStoreOwner.current
     val backStack = rememberSaveable(saver = DestinationListSaver) {
-        mutableStateListOf<Destination>(initialDestination)
+        mutableStateListOf(initialDestination)
     }
 
     val onNavigate: (Destination) -> Unit = { dest ->
@@ -74,12 +72,16 @@ fun AppNavigation(
             onBack = onBack,
             modifier = Modifier.fillMaxSize(),
             transitionSpec = {
-                (slideInHorizontally(animationSpec = tween(300)) { it } + fadeIn(animationSpec = tween(200)))
-                    .togetherWith(slideOutHorizontally(animationSpec = tween(300)) { -it / 3 } + fadeOut(animationSpec = tween(200)))
+                (slideInHorizontally(animationSpec = tween(300)) { it })
+                    .togetherWith(slideOutHorizontally(animationSpec = tween(300)) { -it / 3 })
             },
             popTransitionSpec = {
-                (slideInHorizontally(animationSpec = tween(300)) { -it / 3 } + fadeIn(animationSpec = tween(200)))
-                    .togetherWith(slideOutHorizontally(animationSpec = tween(300)) { it } + fadeOut(animationSpec = tween(200)))
+                slideInHorizontally(initialOffsetX = { -it }) togetherWith
+                        slideOutHorizontally(targetOffsetX = { it })
+            },
+            predictivePopTransitionSpec = {
+                slideInHorizontally(initialOffsetX = { -it }) togetherWith
+                        slideOutHorizontally(targetOffsetX = { it })
             },
             entryProvider = { key ->
                 when (key) {

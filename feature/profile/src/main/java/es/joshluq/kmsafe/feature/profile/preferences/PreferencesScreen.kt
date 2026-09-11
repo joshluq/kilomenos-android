@@ -389,7 +389,7 @@ private fun SoftwareCreditsDialog(onDismiss: () -> Unit) {
 
                     libraries.forEach { (name, desc) ->
                         CanvasKitCard(modifier = Modifier.fillMaxWidth()) {
-                            Column(modifier = Modifier.padding(16.dp)) {
+                            Column {
                                 Text(
                                     text = name,
                                     style = CanvasKitTheme.typography.bodyLarge,
