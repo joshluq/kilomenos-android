@@ -100,7 +100,7 @@ class LocationTrackingService : Service() {
          * Called from feature modules when the user saves or discards a tracked trip,
          */
         fun cancelTripFinishedNotification(context: Context) {
-            val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            val notificationManager = context.getSystemService(NOTIFICATION_SERVICE) as NotificationManager
             notificationManager.cancel(NOTIFICATION_ID_TRIP_FINISHED)
         }
     }

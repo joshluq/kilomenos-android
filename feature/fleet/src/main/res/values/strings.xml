@@ -100,16 +100,31 @@
     <string name="setup_wizard_action_finish">Finalizar Configuración</string>
     <string name="setup_wizard_action_skip">Configurar más tarde</string>
 
-    <!-- Welcome Discovery -->
+    <!-- Welcome Discovery (3 Tactical Steps Guide) -->
     <string name="welcome_discovery_title">Bienvenido a KiloMenos</string>
-    <string name="welcome_discovery_slide1_title">Controla tu Balance</string>
-    <string name="welcome_discovery_slide1_desc">Calculamos la diferencia entre los km que deberías llevar según tu contrato y los que realmente has recorrido.</string>
-    <string name="welcome_discovery_slide2_title">Configura tu Contrato</string>
-    <string name="welcome_discovery_slide2_desc">Dinos cuánto dura tu renting y cuántos km tienes incluidos. Nosotros nos encargaremos del resto.</string>
-    <string name="welcome_discovery_slide3_title">Primer Registro</string>
-    <string name="welcome_discovery_slide3_desc">Solo necesitas registrar tu odómetro actual para empezar a ver tu ahorro en tiempo real.</string>
-    <string name="welcome_discovery_action_next">Siguiente</string>
-    <string name="welcome_discovery_action_start">Configurar mi vehículo</string>
+    <string name="welcome_discovery_slide1_step">PASO 1 DE 3</string>
+    <string name="welcome_discovery_slide1_title">1. Dinos lo que tienes contratado</string>
+    <string name="welcome_discovery_slide1_desc">Solo necesitas los kilómetros anuales y la duración de tu contrato. Nosotros calculamos tu presupuesto diario de referencia.</string>
+    <string name="welcome_discovery_slide1_badge_duration">48 meses</string>
+    <string name="welcome_discovery_slide1_badge_km">15.000 km / año</string>
+    <string name="welcome_discovery_slide1_badge_budget">Presupuesto: 41 km / día</string>
+
+    <string name="welcome_discovery_slide2_step">PASO 2 DE 3</string>
+    <string name="welcome_discovery_slide2_title">2. Registra tu odómetro en segundos</string>
+    <string name="welcome_discovery_slide2_desc">Apunta el kilometraje al finalizar un trayecto o al repostar. Cada apunte recalcula al instante tu saldo en tiempo real.</string>
+    <string name="welcome_discovery_slide2_odometer_label">Odómetro actual</string>
+    <string name="welcome_discovery_slide2_odometer_value">42.500 km</string>
+    <string name="welcome_discovery_slide2_action_record">+ Registrar apunte</string>
+
+    <string name="welcome_discovery_slide3_step">PASO 3 DE 3</string>
+    <string name="welcome_discovery_slide3_title">3. Controla tu semáforo de saldo</string>
+    <string name="welcome_discovery_slide3_desc">Comparamos tus km reales con los teóricos contratados. Si estás en verde, vas perfecto y blindas tu bolsillo ante penalizaciones.</string>
+    <string name="welcome_discovery_slide3_status_badge">ZONA VERDE</string>
+    <string name="welcome_discovery_slide3_balance_value">+ 350 km a tu favor</string>
+    <string name="welcome_discovery_slide3_penalty_value">0,00 € en riesgo</string>
+
+    <string name="welcome_discovery_action_next">Siguiente paso</string>
+    <string name="welcome_discovery_action_start">Configurar mi vehículo ahora</string>
     <string name="welcome_discovery_action_understood">Entendido</string>
-    <string name="welcome_discovery_action_skip">Omitir</string>
+    <string name="welcome_discovery_action_skip">Omitir guía</string>
 </resources>

@@ -100,16 +100,31 @@
     <string name="setup_wizard_action_finish">Finish Setup</string>
     <string name="setup_wizard_action_skip">Setup later</string>
 
-    <!-- Welcome Discovery -->
+    <!-- Welcome Discovery (3 Tactical Steps Guide) -->
     <string name="welcome_discovery_title">Welcome to KiloMenos</string>
-    <string name="welcome_discovery_slide1_title">Control your Balance</string>
-    <string name="welcome_discovery_slide1_desc">We calculate the difference between the km you should have according to your contract and those you have actually traveled.</string>
-    <string name="welcome_discovery_slide2_title">Configure your Contract</string>
-    <string name="welcome_discovery_slide2_desc">Tell us how long your renting lasts and how many km you have included. We take care of the rest.</string>
-    <string name="welcome_discovery_slide3_title">First Registration</string>
-    <string name="welcome_discovery_slide3_desc">You only need to register your current odometer to start seeing your savings in real time.</string>
-    <string name="welcome_discovery_action_next">Next</string>
-    <string name="welcome_discovery_action_start">Setup my vehicle</string>
+    <string name="welcome_discovery_slide1_step">STEP 1 OF 3</string>
+    <string name="welcome_discovery_slide1_title">1. Tell us your contract terms</string>
+    <string name="welcome_discovery_slide1_desc">You only need your included annual km and lease duration. We calculate your ideal daily base budget automatically.</string>
+    <string name="welcome_discovery_slide1_badge_duration">48 months</string>
+    <string name="welcome_discovery_slide1_badge_km">15,000 km / yr</string>
+    <string name="welcome_discovery_slide1_badge_budget">Budget: 41 km / day</string>
+
+    <string name="welcome_discovery_slide2_step">STEP 2 OF 3</string>
+    <string name="welcome_discovery_slide2_title">2. Log your odometer in seconds</string>
+    <string name="welcome_discovery_slide2_desc">Enter your current km after a trip or refueling. Each update instantly recalculates your live contract balance.</string>
+    <string name="welcome_discovery_slide2_odometer_label">Current Odometer</string>
+    <string name="welcome_discovery_slide2_odometer_value">42,500 km</string>
+    <string name="welcome_discovery_slide2_action_record">+ Log distance</string>
+
+    <string name="welcome_discovery_slide3_step">STEP 3 OF 3</string>
+    <string name="welcome_discovery_slide3_title">3. Monitor your balance gauge</string>
+    <string name="welcome_discovery_slide3_desc">We compare your actual mileage against your contract allowance. Stay in the green zone to avoid penalty surprises.</string>
+    <string name="welcome_discovery_slide3_status_badge">GREEN ZONE</string>
+    <string name="welcome_discovery_slide3_balance_value">+ 350 km surplus</string>
+    <string name="welcome_discovery_slide3_penalty_value">€0.00 penalty risk</string>
+
+    <string name="welcome_discovery_action_next">Next step</string>
+    <string name="welcome_discovery_action_start">Setup my vehicle now</string>
     <string name="welcome_discovery_action_understood">Understood</string>
-    <string name="welcome_discovery_action_skip">Skip</string>
+    <string name="welcome_discovery_action_skip">Skip guide</string>
 </resources>
