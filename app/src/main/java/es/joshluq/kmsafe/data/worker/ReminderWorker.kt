@@ -98,7 +98,8 @@ class ReminderWorker @AssistedInject constructor(
         )
 
         val notification = NotificationCompat.Builder(applicationContext, CHANNEL_ID)
-            .setSmallIcon(R.drawable.ic_launcher_foreground)
+            .setSmallIcon(es.joshluq.kmsafe.core.ui.R.drawable.ic_stat_kmsafe_brand)
+            .setColor(0xFF00B0F0.toInt())
             .setContentTitle(applicationContext.getString(R.string.reminder_notification_title))
             .setContentText(applicationContext.getString(R.string.reminder_notification_message))
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)

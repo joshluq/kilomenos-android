@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+
+    <!-- Intelligent 'K' Brand with Live Telemetry Pulse Waves -->
+    <path
+        android:pathData="M 6,5 L 6,19"
+        android:strokeColor="#FFFFFFFF"
+        android:strokeWidth="2.2"
+        android:strokeLineCap="round" />
+    <path
+        android:pathData="M 6,12 L 13.5,6"
+        android:strokeColor="#FFFFFFFF"
+        android:strokeWidth="2.2"
+        android:strokeLineCap="round" />
+    <path
+        android:pathData="M 6,12 L 13.5,18"
+        android:strokeColor="#FFFFFFFF"
+        android:strokeWidth="2.2"
+        android:strokeLineCap="round" />
+
+    <!-- Telemetry Pulse Arc 1 -->
+    <path
+        android:pathData="M 16.5,8.5 A 5,5 0 0 1 16.5,15.5"
+        android:strokeColor="#FFFFFFFF"
+        android:strokeWidth="1.8"
+        android:strokeLineCap="round" />
+
+    <!-- Telemetry Pulse Arc 2 -->
+    <path
+        android:pathData="M 19.5,6 A 8.5,8.5 0 0 1 19.5,18"
+        android:strokeColor="#FFFFFFFF"
+        android:strokeWidth="1.8"
+        android:strokeLineCap="round" />
+</vector>

@@ -6,14 +6,7 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.List
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.LocalGasStation
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Timeline
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -27,6 +20,8 @@ import es.joshluq.foundationkit.text.TextProvider
 import es.joshluq.foundationkit.text.asString
 import es.joshluq.kmsafe.core.ui.R as CoreR
 import es.joshluq.kmsafe.core.ui.components.AppExecutiveHudOverlay
+import es.joshluq.kmsafe.core.ui.components.CanvasKitIcon
+import es.joshluq.kmsafe.core.ui.icons.CanvasKitIcons
 import es.joshluq.kmsafe.core.ui.util.safeClick
 import es.joshluq.kmsafe.domain.model.AppOverlayState
 
@@ -39,6 +34,7 @@ fun DashboardRoute(
 ) {
     val viewModel: DashboardViewModel = hiltViewModel()
     val state = viewModel.state.collectAsStateWithLifecycle()
+
     DashboardScreen(
         state = state.value,
         onEvent = viewModel::sendEvent,
@@ -108,15 +104,21 @@ private fun DashboardNavigationBar(
         CanvasKitBottomBarItem(
             selected = selectedTab == DashboardTab.OVERVIEW,
             onClick = safeClick { onEvent(Event.OnTabSelected(DashboardTab.OVERVIEW)) },
-            icon = { tint -> Icon(Icons.Default.Home, contentDescription = home.asString(), tint = tint) },
+            icon = { tint ->
+                CanvasKitIcon(
+                    imageVector = CanvasKitIcons.Navigation.HorizonRunway,
+                    contentDescription = home.asString(),
+                    tint = tint
+                )
+            },
             label = { tint -> Text(home.asString(), color = tint, style = CanvasKitTheme.typography.labelSmall) }
         )
         CanvasKitBottomBarItem(
             selected = selectedTab == DashboardTab.HISTORY,
             onClick = safeClick { onEvent(Event.OnTabSelected(DashboardTab.HISTORY)) },
             icon = { tint ->
-                Icon(
-                    Icons.AutoMirrored.Filled.List,
+                CanvasKitIcon(
+                    imageVector = CanvasKitIcons.Navigation.AuditLog,
                     contentDescription = history.asString(),
                     tint = tint
                 )
@@ -129,8 +131,8 @@ private fun DashboardNavigationBar(
                 selected = selectedTab == DashboardTab.PROJECTION,
                 onClick = safeClick { onEvent(Event.OnTabSelected(DashboardTab.PROJECTION)) },
                 icon = { tint ->
-                    Icon(
-                        Icons.Default.Timeline,
+                    CanvasKitIcon(
+                        imageVector = CanvasKitIcons.Navigation.RiskSentinel,
                         contentDescription = projection.asString(),
                         tint = tint
                     )
@@ -148,8 +150,8 @@ private fun DashboardNavigationBar(
                 selected = selectedTab == DashboardTab.EXPENSES,
                 onClick = safeClick { onEvent(Event.OnTabSelected(DashboardTab.EXPENSES)) },
                 icon = { tint ->
-                    Icon(
-                        Icons.Default.LocalGasStation,
+                    CanvasKitIcon(
+                        imageVector = CanvasKitIcons.Navigation.BivalentPump,
                         contentDescription = expenses.asString(),
                         tint = tint
                     )
@@ -166,7 +168,13 @@ private fun DashboardNavigationBar(
         CanvasKitBottomBarItem(
             selected = selectedTab == DashboardTab.PROFILE,
             onClick = safeClick { onEvent(Event.OnTabSelected(DashboardTab.PROFILE)) },
-            icon = { tint -> Icon(Icons.Default.Person, contentDescription = profile.asString(), tint = tint) },
+            icon = { tint ->
+                CanvasKitIcon(
+                    imageVector = CanvasKitIcons.Navigation.SmartPilot,
+                    contentDescription = profile.asString(),
+                    tint = tint
+                )
+            },
             label = { tint -> Text(profile.asString(), color = tint, style = CanvasKitTheme.typography.labelSmall) },
         )
     }

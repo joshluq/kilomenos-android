@@ -72,7 +72,8 @@ class StationNotificationServiceImpl @Inject constructor(
         )
 
         val notification = NotificationCompat.Builder(context, channelId)
-            .setSmallIcon(R.drawable.ic_launcher_foreground)
+            .setSmallIcon(es.joshluq.kmsafe.core.ui.R.drawable.ic_stat_station_alert)
+            .setColor(0xFF00B0F0.toInt())
             .setContentTitle(context.getString(R.string.notification_station_proximity_title, station.name))
             .setContentText(context.getString(R.string.notification_station_proximity_desc))
             .setPriority(NotificationCompat.PRIORITY_HIGH)

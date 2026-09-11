@@ -261,7 +261,8 @@ class BluetoothConnectionReceiver : BroadcastReceiver() {
         )
 
         val notification = NotificationCompat.Builder(context, CHANNEL_CONNECTED_ID)
-            .setSmallIcon(android.R.drawable.stat_sys_data_bluetooth)
+            .setSmallIcon(R.drawable.ic_stat_tracking_live)
+            .setColor(0xFF00B0F0.toInt())
             .setContentTitle(context.getString(R.string.tracking_bluetooth_connected_title, vehicleName))
             .setContentText(context.getString(R.string.tracking_bluetooth_connected_desc))
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
@@ -306,7 +307,8 @@ class BluetoothConnectionReceiver : BroadcastReceiver() {
         )
 
         val notification = NotificationCompat.Builder(context, CHANNEL_SUGGESTION_ID)
-            .setSmallIcon(android.R.drawable.stat_sys_data_bluetooth)
+            .setSmallIcon(R.drawable.ic_stat_tracking_live)
+            .setColor(0xFF00B0F0.toInt())
             .setContentTitle(context.getString(R.string.tracking_bluetooth_suggestion_title))
             .setContentText(context.getString(R.string.tracking_bluetooth_suggestion_desc))
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
@@ -404,7 +406,8 @@ class BluetoothConnectionReceiver : BroadcastReceiver() {
         )
 
         val notification = NotificationCompat.Builder(context, CHANNEL_STATION_ARRIVAL_ID)
-            .setSmallIcon(android.R.drawable.ic_dialog_map)
+            .setSmallIcon(R.drawable.ic_stat_tracking_live)
+            .setColor(0xFF00B0F0.toInt())
             .setContentTitle(context.getString(R.string.tracking_station_arrival_title, stationName))
             .setContentText(context.getString(R.string.tracking_station_arrival_desc))
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)

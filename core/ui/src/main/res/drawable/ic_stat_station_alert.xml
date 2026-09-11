@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+
+    <!-- Smart Fuel/EV Service Station Alert Silhouette -->
+    <!-- Pump Outline -->
+    <path
+        android:pathData="M 4,20 L 4,6 C 4,4.9 4.9,4 6,4 L 13,4 C 14.1,4 15,4.9 15,6 L 15,20"
+        android:strokeColor="#FFFFFFFF"
+        android:strokeWidth="2"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+
+    <!-- Pump Base -->
+    <path
+        android:pathData="M 3,20 L 16,20"
+        android:strokeColor="#FFFFFFFF"
+        android:strokeWidth="2"
+        android:strokeLineCap="round" />
+
+    <!-- Station Screen / Gauge -->
+    <path
+        android:pathData="M 7,8 L 12,8"
+        android:strokeColor="#FFFFFFFF"
+        android:strokeWidth="2"
+        android:strokeLineCap="round" />
+
+    <!-- Hose & Nozzle -->
+    <path
+        android:pathData="M 15,8 L 17.5,8 C 18.9,8 20,9.1 20,10.5 L 20,16 L 18.5,14.5"
+        android:strokeColor="#FFFFFFFF"
+        android:strokeWidth="1.8"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+
+    <!-- Proximity Alert Beacon Dot -->
+    <path
+        android:pathData="M 9.5,14 A 1,1 0 1 1 9.5,14.01"
+        android:strokeColor="#FFFFFFFF"
+        android:strokeWidth="2"
+        android:strokeLineCap="round" />
+</vector>

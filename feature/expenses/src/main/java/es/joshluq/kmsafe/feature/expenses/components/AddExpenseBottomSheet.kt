@@ -58,6 +58,8 @@ import es.joshluq.canvaskit.components.chips.CanvasKitChip
 import es.joshluq.canvaskit.components.chips.CanvasKitChipVariant
 import es.joshluq.canvaskit.components.feedback.CanvasKitAlertVariant
 import es.joshluq.canvaskit.components.feedback.CanvasKitBanner
+import es.joshluq.kmsafe.core.ui.components.CanvasKitIcon
+import es.joshluq.kmsafe.core.ui.icons.CanvasKitIcons
 import es.joshluq.canvaskit.components.inputs.CanvasKitSwitch
 import es.joshluq.canvaskit.components.inputs.CanvasKitTextField
 import es.joshluq.canvaskit.foundations.theme.CanvasKitTheme
@@ -346,7 +348,24 @@ fun AddExpenseBottomSheet(
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         CanvasKitChip(
                             selected = selectedHybridCategory == EnergyCategory.COMBUSTION,
-                            label = { Text(stringResource(R.string.expenses_sheet_energy_combustion)) },
+                            label = {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                ) {
+                                    CanvasKitIcon(
+                                        imageVector = CanvasKitIcons.Energy.FuelDrop,
+                                        contentDescription = null,
+                                        size = 16.dp,
+                                        tint = if (selectedHybridCategory == EnergyCategory.COMBUSTION) {
+                                            CanvasKitTheme.colors.brandAccent
+                                        } else {
+                                            CanvasKitTheme.colors.textSecondary
+                                        }
+                                    )
+                                    Text(stringResource(R.string.expenses_sheet_energy_combustion))
+                                }
+                            },
                             onClick = safeClick { 
                                 selectedHybridCategory = EnergyCategory.COMBUSTION
                                 unitPriceText = lastGasolinePrice?.let { String.format(Locale.getDefault(), "%.3f", it) } ?: ""
@@ -355,7 +374,24 @@ fun AddExpenseBottomSheet(
                         )
                         CanvasKitChip(
                             selected = selectedHybridCategory == EnergyCategory.ELECTRIC,
-                            label = { Text(stringResource(R.string.expenses_sheet_energy_electric)) },
+                            label = {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                ) {
+                                    CanvasKitIcon(
+                                        imageVector = CanvasKitIcons.Energy.ElectricBolt,
+                                        contentDescription = null,
+                                        size = 16.dp,
+                                        tint = if (selectedHybridCategory == EnergyCategory.ELECTRIC) {
+                                            CanvasKitTheme.colors.brandAccent
+                                        } else {
+                                            CanvasKitTheme.colors.textSecondary
+                                        }
+                                    )
+                                    Text(stringResource(R.string.expenses_sheet_energy_electric))
+                                }
+                            },
                             onClick = safeClick { 
                                 selectedHybridCategory = EnergyCategory.ELECTRIC 
                                 unitPriceText = lastElectricPrice?.let { String.format(Locale.getDefault(), "%.3f", it) } ?: ""
