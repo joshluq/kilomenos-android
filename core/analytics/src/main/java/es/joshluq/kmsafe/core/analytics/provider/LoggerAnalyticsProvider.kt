@@ -1,4 +1,4 @@
-package es.joshluq.kmsafe.infrastructure.analytics
+package es.joshluq.kmsafe.core.analytics.provider
 
 import es.joshluq.analyticskit.data.provider.AnalyticsProvider
 import es.joshluq.analyticskit.domain.model.AnalyticsEvent

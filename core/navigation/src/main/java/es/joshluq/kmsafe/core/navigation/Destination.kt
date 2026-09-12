@@ -60,9 +60,10 @@ sealed interface Destination {
 
     /**
      * Premium Paywall destination.
+     * @param source The attribution source triggering the paywall (e.g., "projection_risk_sentinel", "general").
      */
     @Serializable
-    object PremiumPaywall : Destination
+    data class PremiumPaywall(val source: String = "general") : Destination
 
     /**
      * Welcome Discovery destination.

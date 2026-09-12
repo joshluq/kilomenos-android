@@ -5,8 +5,8 @@ import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
-import es.joshluq.analyticskit.domain.model.AnalyticsEvent
-import es.joshluq.analyticskit.sdk.AnalyticskitManager
+import es.joshluq.kmsafe.core.analytics.AnalyticsTracker
+import es.joshluq.kmsafe.core.analytics.model.KmsafeAnalyticsEvent
 import es.joshluq.foundationkit.log.LoggerKit
 import es.joshluq.foundationkit.text.TextProvider
 import es.joshluq.foundationkit.viewmodel.ScreenViewModel
@@ -35,7 +35,7 @@ class EditContractViewModel @AssistedInject constructor(
     private val uploadVehicleImageUseCase: UploadVehicleImageUseCase,
     private val checkFeatureAccessUseCase: CheckFeatureAccessUseCase,
     private val getImageBytesUseCase: GetImageBytesUseCase,
-    private val analytics: AnalyticskitManager,
+    private val analytics: AnalyticsTracker,
     private val logger: LoggerKit
 ) : ScreenViewModel<State, Event, Effect>() {
 
@@ -226,7 +226,7 @@ class EditContractViewModel @AssistedInject constructor(
                 .onEach { output ->
                     when (output) {
                         is UpdateContractUseCase.Output.Success -> {
-                            analytics.track(AnalyticsEvent.Custom("vehicle_updated", mapOf("id" to vehicleId)))
+                            analytics.track(KmsafeAnalyticsEvent.Fleet.VehicleUpdated(vehicleId))
                             launchEffect(Effect.NavigateBack)
                         }
                         is UpdateContractUseCase.Output.Failure -> {

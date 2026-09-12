@@ -32,7 +32,7 @@ fun DashboardNavigation(
     onNavigateToStations: () -> Unit,
     onNavigateToStationDetail: (String) -> Unit,
     onNavigateToLogin: () -> Unit,
-    onNavigateToPremiumPaywall: () -> Unit,
+    onNavigateToPremiumPaywall: (String) -> Unit = {},
     onNavigateToPermissions: () -> Unit,
     onNavigateToAssistedPermissions: () -> Unit,
     onNavigateToWelcomeDiscovery: (Boolean) -> Unit,
@@ -83,7 +83,7 @@ fun DashboardNavigation(
                         onNavigateToProjection = { onSelectTab(DashboardTab.PROJECTION) },
                         onNavigateToPermissions = onNavigateToPermissions,
                         onNavigateToAssistedPermissions = onNavigateToAssistedPermissions,
-                        onNavigateToPremiumPaywall = onNavigateToPremiumPaywall,
+                        onNavigateToPremiumPaywall = { onNavigateToPremiumPaywall("overview") },
                         onNavigateToPreferences = onNavigateToPreferences,
                         onNavigateToWelcomeDiscovery = { onNavigateToWelcomeDiscovery(false) },
                         onNavigateToVehicleDetail = onNavigateToVehicleDetail
@@ -96,13 +96,13 @@ fun DashboardNavigation(
                 }
                 Destination.ProjectionAnalysis -> NavEntry(key) {
                     ProjectionAnalysisRoute(
-                        onNavigateToUpgrade = onNavigateToPremiumPaywall,
+                        onNavigateToUpgrade = { source -> onNavigateToPremiumPaywall(source) },
                         onNavigateToEditContract = onNavigateToEditContract
                     )
                 }
                 is Destination.Expenses -> NavEntry(key) {
                     ExpensesRoute(
-                        onNavigateToUpgrade = onNavigateToPremiumPaywall,
+                        onNavigateToUpgrade = { onNavigateToPremiumPaywall("expenses") },
                         onNavigateToStations = onNavigateToStations,
                         onNavigateToStationDetail = onNavigateToStationDetail
                     )
@@ -112,7 +112,7 @@ fun DashboardNavigation(
                         onNavigateToVehicles = onNavigateToVehicles,
                         onNavigateToPreferences = onNavigateToPreferences,
                         onNavigateToLogin = onNavigateToLogin,
-                        onNavigateToPremiumPaywall = onNavigateToPremiumPaywall,
+                        onNavigateToPremiumPaywall = { onNavigateToPremiumPaywall("profile") },
                         onNavigateToWelcomeDiscovery = { onNavigateToWelcomeDiscovery(true) }
                     )
                 }

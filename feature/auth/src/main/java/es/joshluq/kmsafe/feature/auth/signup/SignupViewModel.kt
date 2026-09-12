@@ -2,8 +2,8 @@ package es.joshluq.kmsafe.feature.auth.signup
 
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import es.joshluq.analyticskit.domain.model.AnalyticsEvent
-import es.joshluq.analyticskit.sdk.AnalyticskitManager
+import es.joshluq.kmsafe.core.analytics.AnalyticsTracker
+import es.joshluq.kmsafe.core.analytics.model.KmsafeAnalyticsEvent
 import es.joshluq.foundationkit.log.LoggerKit
 import es.joshluq.foundationkit.text.TextProvider
 import es.joshluq.foundationkit.viewmodel.ScreenViewModel
@@ -33,14 +33,14 @@ class SignupViewModel @Inject constructor(
     private val getEntitlementsUseCase: GetEntitlementsUseCase,
     private val syncContractsUseCase: SyncContractsUseCase,
     private val authConfig: AuthConfig,
-    private val analytics: AnalyticskitManager,
+    private val analytics: AnalyticsTracker,
     private val logger: LoggerKit
 ) : ScreenViewModel<State, Event, Effect>() {
 
     private var shouldClearDataOnSuccess = false
 
     init {
-        analytics.track(AnalyticsEvent.FunnelStep("signup", "started"))
+        analytics.track(KmsafeAnalyticsEvent.Auth.SignUpStarted())
         updateState { 
             copy(
                 termsUrl = authConfig.getTermsUrl(),
@@ -120,7 +120,7 @@ class SignupViewModel @Inject constructor(
                         performSignup()
                     }
                     EvaluateIdentityConflictUseCase.Output.ShowWarning -> {
-                        analytics.track(AnalyticsEvent.Custom("user_conflict_alert_shown"))
+                        analytics.track(KmsafeAnalyticsEvent.Auth.UserConflictAlertShown)
                         updateState { copy(showUserConflictWarning = true, isLoading = false) }
                     }
                 }
@@ -143,10 +143,11 @@ class SignupViewModel @Inject constructor(
             when (output) {
                 SignUpUseCase.Output.Progress -> updateState { copy(isLoading = true) }
                 is SignUpUseCase.Output.Failure -> {
+                    analytics.track(KmsafeAnalyticsEvent.Auth.SignUpFailed(output.error.toString()))
                     updateState { copy(isLoading = false, error = output.error.toText()) }
                 }
                 is SignUpUseCase.Output.Success -> {
-                    analytics.track(AnalyticsEvent.FunnelStep("signup", "completed"))
+                    analytics.track(KmsafeAnalyticsEvent.Auth.SignUpCompleted())
                     saveEmailPreference(output.user.email)
 
                     if (shouldClearDataOnSuccess) {

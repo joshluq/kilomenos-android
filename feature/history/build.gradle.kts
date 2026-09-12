@@ -19,7 +19,7 @@ dependencies {
 
     implementation(deps.canvaskit)
     implementation(deps.foundationkit)
-    implementation(deps.analyticskit)
+    implementation(project(":core:analytics"))
     implementation(deps.javax.inject)
     implementation(deps.play.services.maps)
     implementation(deps.maps.compose)

@@ -17,6 +17,7 @@ dependencies {
     implementation(project(":core:domain"))
     implementation(project(":core:ui"))
     implementation(project(":core:monetization"))
+    implementation(project(":core:analytics"))
 
     implementation(deps.canvaskit)
     implementation(deps.foundationkit)

@@ -86,6 +86,8 @@ class StationManagementViewModelTest {
         unmockkAll()
     }
 
+    private val analyticsTracker = es.joshluq.kmsafe.core.analytics.fake.FakeAnalyticsTracker()
+
     private fun createViewModel(): StationManagementViewModel {
         return StationManagementViewModel(
             getAllServiceStationsUseCase = getAllServiceStationsUseCase,
@@ -94,6 +96,7 @@ class StationManagementViewModelTest {
             setFavoriteStationUseCase = setFavoriteStationUseCase,
             checkFeatureAccessUseCase = checkFeatureAccessUseCase,
             syncStationsUseCase = syncStationsUseCase,
+            analyticsTracker = analyticsTracker,
             logger = logger
         )
     }

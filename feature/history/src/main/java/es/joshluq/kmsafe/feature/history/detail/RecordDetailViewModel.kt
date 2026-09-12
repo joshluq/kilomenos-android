@@ -5,8 +5,8 @@ import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
-import es.joshluq.analyticskit.domain.model.AnalyticsEvent
-import es.joshluq.analyticskit.sdk.AnalyticskitManager
+import es.joshluq.kmsafe.core.analytics.AnalyticsTracker
+import es.joshluq.kmsafe.core.analytics.model.KmsafeAnalyticsEvent
 import es.joshluq.foundationkit.log.LoggerKit
 import es.joshluq.foundationkit.text.TextProvider
 import es.joshluq.foundationkit.viewmodel.ScreenViewModel
@@ -29,7 +29,7 @@ class RecordDetailViewModel @AssistedInject constructor(
     private val updateOdometerRecordUseCase: UpdateOdometerRecordUseCase,
     private val checkFeatureAccessUseCase: CheckFeatureAccessUseCase,
     private val getRouteUseCase: GetRouteUseCase,
-    private val analytics: AnalyticskitManager,
+    private val analytics: AnalyticsTracker,
     private val logger: LoggerKit
 ) : ScreenViewModel<RecordDetailState, RecordDetailEvent, RecordDetailEffect>() {
 
@@ -72,7 +72,7 @@ class RecordDetailViewModel @AssistedInject constructor(
             RecordDetailEvent.OnUpdateRecordClicked -> handleUpdateRecord()
             RecordDetailEvent.OnPremiumUpgradeClicked -> {
                 analytics.track(
-                    AnalyticsEvent.Custom("premium_upgrade_clicked", mapOf("source" to "record_detail_route_map"))
+                    KmsafeAnalyticsEvent.Monetization.UpgradeClicked(source = "record_detail_route_map")
                 )
                 launchEffect(RecordDetailEffect.NavigateToPremiumPaywall)
             }
@@ -115,13 +115,13 @@ class RecordDetailViewModel @AssistedInject constructor(
                                 loadRoute(output.record.id)
                             } else {
                                 analytics.track(
-                                    AnalyticsEvent.Custom("route_teaser_viewed", mapOf("record_id" to output.record.id))
+                                    KmsafeAnalyticsEvent.History.RouteTeaserViewed(output.record.id)
                                 )
                                 logger.d("RecordDetailViewModel", "Free user viewing record with route. Teaser shown.")
                             }
                         } else {
                             analytics.track(
-                                AnalyticsEvent.Custom("record_no_route_viewed", mapOf("record_id" to output.record.id))
+                                KmsafeAnalyticsEvent.Custom("record_no_route_viewed", mapOf("record_id" to output.record.id))
                             )
                             logger.d("RecordDetailViewModel", "Record has no route data.")
                         }
@@ -149,12 +149,9 @@ class RecordDetailViewModel @AssistedInject constructor(
                     GetRouteUseCase.Output.Progress -> updateState { copy(isRouteLoading = true) }
                     is GetRouteUseCase.Output.Success -> {
                         analytics.track(
-                            AnalyticsEvent.Custom(
-                                "route_map_viewed",
-                                mapOf(
-                                    "record_id" to id,
-                                    "points" to output.route.pointCount
-                                )
+                            KmsafeAnalyticsEvent.History.RouteMapViewed(
+                                recordId = id,
+                                points = output.route.pointCount
                             )
                         )
                         updateState {
@@ -193,7 +190,7 @@ class RecordDetailViewModel @AssistedInject constructor(
                     is UpdateOdometerRecordUseCase.Output.Progress -> updateState { copy(isEditing = true) }
                     is UpdateOdometerRecordUseCase.Output.Success -> {
                         if (fuelAmount != null) {
-                            analytics.track(AnalyticsEvent.Custom("fuel_entry_added", mapOf("amount" to fuelAmount)))
+                            analytics.track(KmsafeAnalyticsEvent.History.FuelEntryAdded(fuelAmount))
                         }
                         updateState { copy(isEditing = false, showEditDialog = false) }
                         loadRecord() // Refresh local data
@@ -221,6 +218,7 @@ class RecordDetailViewModel @AssistedInject constructor(
                     when (output) {
                         is DeleteOdometerRecordUseCase.Output.Progress -> updateState { copy(isDeleting = true) }
                         is DeleteOdometerRecordUseCase.Output.Success -> {
+                            analytics.track(KmsafeAnalyticsEvent.History.RecordDeleted(record.id))
                             launchEffect(RecordDetailEffect.NavigateBack)
                         }
                         is DeleteOdometerRecordUseCase.Output.Failure -> {

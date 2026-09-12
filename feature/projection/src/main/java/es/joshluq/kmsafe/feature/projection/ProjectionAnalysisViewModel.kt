@@ -2,8 +2,8 @@ package es.joshluq.kmsafe.feature.projection
 
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import es.joshluq.analyticskit.domain.model.AnalyticsEvent
-import es.joshluq.analyticskit.sdk.AnalyticskitManager
+import es.joshluq.kmsafe.core.analytics.AnalyticsTracker
+import es.joshluq.kmsafe.core.analytics.model.KmsafeAnalyticsEvent
 import es.joshluq.foundationkit.log.LoggerKit
 import es.joshluq.foundationkit.viewmodel.ScreenViewModel
 import es.joshluq.kmsafe.domain.model.Feature
@@ -26,7 +26,7 @@ class ProjectionAnalysisViewModel @Inject constructor(
     private val getRentingContractUseCase: GetRentingContractUseCase,
     private val checkFeatureAccessUseCase: CheckFeatureAccessUseCase,
     private val simulateContractProjectionUseCase: SimulateContractProjectionUseCase,
-    private val analytics: AnalyticskitManager,
+    private val analytics: AnalyticsTracker,
     private val logger: LoggerKit
 ) : ScreenViewModel<State, Event, Effect>() {
 
@@ -58,28 +58,24 @@ class ProjectionAnalysisViewModel @Inject constructor(
                 val vehicleId = state.value.activeVehicleId ?: currentContract?.id
                 if (!vehicleId.isNullOrEmpty()) {
                     analytics.track(
-                        AnalyticsEvent.Custom(
-                            name = "projection_configure_contract_clicked",
-                            properties = mapOf(
-                                "vehicle_id" to vehicleId,
-                                "source" to "projection_analysis",
-                                "simulated_penalty" to state.value.estimatedPenalty.toString()
-                            )
+                        KmsafeAnalyticsEvent.Projection.ConfigureContractClicked(
+                            vehicleId = vehicleId,
+                            source = "projection_analysis"
                         )
                     )
                     launchEffect(Effect.NavigateToEditContract(vehicleId))
                 }
             }
             Event.OnUpgradeToPremiumClicked -> {
-                analytics.track(AnalyticsEvent.Custom("projection_upgrade_clicked"))
-                launchEffect(Effect.NavigateToPremiumPaywall)
+                analytics.track(KmsafeAnalyticsEvent.Monetization.UpgradeClicked(source = "projection_risk_sentinel"))
+                launchEffect(Effect.NavigateToPremiumPaywall(source = "projection_risk_sentinel"))
             }
             Event.OnDismissError -> updateState { copy(error = null) }
         }
     }
 
     private fun observeData() {
-        analytics.track(AnalyticsEvent.Custom("projection_viewed"))
+        analytics.track(KmsafeAnalyticsEvent.Projection.ProjectionViewed)
         combine(
             getTripProjectionUseCase(GetTripProjectionUseCase.Input),
             getOverviewDataUseCase(GetOverviewDataUseCase.Input),
@@ -174,8 +170,8 @@ class ProjectionAnalysisViewModel @Inject constructor(
     private fun handleAddPresetTrip(title: String, distanceKms: Int) {
         // Enforce Freemium rule: Free users can only have 1 active planned trip
         if (!state.value.isPremium && state.value.plannedTrips.isNotEmpty()) {
-            analytics.track(AnalyticsEvent.Custom("projection_multi_trip_blocked_free"))
-            launchEffect(Effect.NavigateToPremiumPaywall)
+            analytics.track(KmsafeAnalyticsEvent.Projection.MultiTripBlockedFree)
+            launchEffect(Effect.NavigateToPremiumPaywall(source = "projection_multi_trip"))
             return
         }
 
@@ -268,15 +264,10 @@ class ProjectionAnalysisViewModel @Inject constructor(
                 }
 
                 analytics.track(
-                    AnalyticsEvent.Custom(
-                        name = "projection_financial_impact_viewed",
-                        properties = mapOf(
-                            "is_over_limit" to sim.isOverLimit.toString(),
-                            "is_using_default_price" to sim.isUsingDefaultPrice.toString(),
-                            "is_using_default_margin" to sim.isUsingDefaultCourtesyMargin.toString(),
-                            "estimated_penalty" to sim.estimatedPenalty.toString(),
-                            "billable_excess_kms" to sim.billableExcessKms.toString()
-                        )
+                    KmsafeAnalyticsEvent.Projection.FinancialImpactViewed(
+                        isOverLimit = sim.isOverLimit,
+                        estimatedPenalty = sim.estimatedPenalty,
+                        billableExcessKms = sim.billableExcessKms
                     )
                 )
             }

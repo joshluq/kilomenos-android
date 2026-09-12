@@ -1,6 +1,6 @@
 package es.joshluq.kmsafe.feature.profile.preferences
 
-import es.joshluq.analyticskit.sdk.AnalyticskitManager
+import es.joshluq.kmsafe.core.analytics.fake.FakeAnalyticsTracker
 import es.joshluq.foundationkit.log.LoggerKit
 import es.joshluq.kmsafe.core.monetization.util.ConsentManager
 import es.joshluq.kmsafe.domain.model.Entitlements
@@ -49,7 +49,7 @@ class PreferencesViewModelTest {
     private val startAutoTrackingUseCase: StartAutoTrackingUseCase = mockk()
     private val stopAutoTrackingUseCase: StopAutoTrackingUseCase = mockk()
     private val consentManager: ConsentManager = mockk()
-    private val analytics: AnalyticskitManager = mockk(relaxed = true)
+    private val analytics = FakeAnalyticsTracker()
     private val logger: LoggerKit = mockk(relaxed = true)
 
     private val initialPreferences = UserPreferences(

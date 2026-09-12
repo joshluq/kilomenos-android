@@ -71,7 +71,7 @@ sealed interface Event : UiEvent {
 }
 
 sealed interface Effect : UiEffect {
-    data object NavigateToPremiumPaywall : Effect
+    data class NavigateToPremiumPaywall(val source: String = "projection_risk_sentinel") : Effect
     data class NavigateToEditContract(val vehicleId: String) : Effect
     data class ShowToast(val message: TextProvider) : Effect
 }

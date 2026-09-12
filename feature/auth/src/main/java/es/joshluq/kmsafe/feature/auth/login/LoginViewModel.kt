@@ -3,8 +3,8 @@ package es.joshluq.kmsafe.feature.auth.login
 import android.content.Context
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import es.joshluq.analyticskit.domain.model.AnalyticsEvent
-import es.joshluq.analyticskit.sdk.AnalyticskitManager
+import es.joshluq.kmsafe.core.analytics.AnalyticsTracker
+import es.joshluq.kmsafe.core.analytics.model.KmsafeAnalyticsEvent
 import es.joshluq.foundationkit.log.LoggerKit
 import es.joshluq.foundationkit.text.TextProvider
 import es.joshluq.foundationkit.viewmodel.ScreenViewModel
@@ -49,7 +49,7 @@ class LoginViewModel @Inject constructor(
     private val fingerprintProvider: FingerprintProvider,
     private val socialAuthService: SocialAuthService,
     private val authConfig: AuthConfig,
-    private val analytics: AnalyticskitManager,
+    private val analytics: AnalyticsTracker,
     private val logger: LoggerKit
 ) : ScreenViewModel<State, Event, Effect>() {
 
@@ -57,7 +57,7 @@ class LoginViewModel @Inject constructor(
     private var pendingUser: User? = null
 
     init {
-        analytics.track(AnalyticsEvent.Custom("login_started"))
+        analytics.track(KmsafeAnalyticsEvent.Auth.LoginStarted())
         loadPreferences()
         updateState { 
             copy(
@@ -143,7 +143,7 @@ class LoginViewModel @Inject constructor(
                         performLogin()
                     }
                     EvaluateIdentityConflictUseCase.Output.ShowWarning -> {
-                        analytics.track(AnalyticsEvent.Custom("user_conflict_alert_shown"))
+                        analytics.track(KmsafeAnalyticsEvent.Auth.UserConflictAlertShown)
                         updateState { copy(showUserConflictWarning = true, isLoading = false) }
                     }
                 }
@@ -151,7 +151,7 @@ class LoginViewModel @Inject constructor(
     }
 
     private fun handleGoogleSignInClicked() {
-        analytics.track(AnalyticsEvent.Custom("login_google_started"))
+        analytics.track(KmsafeAnalyticsEvent.Auth.LoginStarted(method = "google"))
         launchEffect(Effect.TriggerGoogleSignIn)
     }
 
@@ -184,11 +184,12 @@ class LoginViewModel @Inject constructor(
             when (output) {
                 SignInUseCase.Output.Progress -> updateState { copy(isLoading = true) }
                 is SignInUseCase.Output.Failure -> {
-                    analytics.track(AnalyticsEvent.Custom("login_failure", mapOf("error" to output.error.toString())))
+                    analytics.track(KmsafeAnalyticsEvent.Auth.LoginFailed(output.error.toString(), method = "credentials"))
                     updateState { copy(isLoading = false, error = output.error.toText()) }
                 }
 
                 is SignInUseCase.Output.Success -> {
+                    analytics.track(KmsafeAnalyticsEvent.Auth.LoginCompleted(method = "credentials"))
                     handleAuthSuccess(output.user)
                 }
             }
@@ -201,11 +202,12 @@ class LoginViewModel @Inject constructor(
                 SignInWithGoogleUseCase.Output.Progress -> updateState { copy(isLoading = true) }
                 is SignInWithGoogleUseCase.Output.Failure -> {
                     analytics.track(
-                        AnalyticsEvent.Custom("login_google_failure", mapOf("error" to output.error.toString()))
+                        KmsafeAnalyticsEvent.Auth.LoginFailed(output.error.toString(), method = "google")
                     )
                     updateState { copy(isLoading = false, error = output.error.toText()) }
                 }
                 is SignInWithGoogleUseCase.Output.Success -> {
+                    analytics.track(KmsafeAnalyticsEvent.Auth.LoginCompleted(method = "google"))
                     evaluateIdentityConflictUseCase(EvaluateIdentityConflictUseCase.Input(output.user.email))
                         .onEach { conflictOutput ->
                             when (conflictOutput) {
@@ -219,7 +221,7 @@ class LoginViewModel @Inject constructor(
                                     handleAuthSuccess(output.user)
                                 }
                                 EvaluateIdentityConflictUseCase.Output.ShowWarning -> {
-                                    analytics.track(AnalyticsEvent.Custom("user_conflict_alert_shown"))
+                                    analytics.track(KmsafeAnalyticsEvent.Auth.UserConflictAlertShown)
                                     pendingUser = output.user
                                     updateState { copy(showUserConflictWarning = true, isLoading = false) }
                                 }

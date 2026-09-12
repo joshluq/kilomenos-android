@@ -12,6 +12,7 @@ import es.joshluq.kmsafe.domain.usecase.ObserveFleetSwitchingUseCase
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import es.joshluq.kmsafe.core.analytics.AnalyticsTracker
 import javax.inject.Inject
 
 /**
@@ -23,6 +24,7 @@ class DashboardViewModel @Inject constructor(
     private val getCurrentUserUseCase: GetCurrentUserUseCase,
     private val observeFleetSwitchingUseCase: ObserveFleetSwitchingUseCase,
     private val observeAppOverlayUseCase: ObserveAppOverlayUseCase,
+    private val analytics: AnalyticsTracker,
     private val logger: LoggerKit
 ) : ScreenViewModel<State, Event, Effect>() {
 
@@ -138,6 +140,7 @@ class DashboardViewModel @Inject constructor(
             return
         }
         if (state.value.selectedTab != tab) {
+            analytics.trackScreen("dashboard_${tab.name.lowercase()}", "DashboardScreen")
             updateState { copy(selectedTab = tab) }
             logger.d("DashboardViewModel", "Navigating to tab $tab")
             launchEffect(Effect.NavigateToTab(tab))

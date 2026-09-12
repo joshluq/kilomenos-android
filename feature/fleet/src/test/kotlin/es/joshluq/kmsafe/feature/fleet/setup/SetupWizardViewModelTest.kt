@@ -1,6 +1,6 @@
 package es.joshluq.kmsafe.feature.fleet.setup
 
-import es.joshluq.analyticskit.sdk.AnalyticskitManager
+import es.joshluq.kmsafe.core.analytics.fake.FakeAnalyticsTracker
 import es.joshluq.foundationkit.log.LoggerKit
 import es.joshluq.kmsafe.domain.model.Entitlements
 import es.joshluq.kmsafe.domain.model.SubscriptionLevel
@@ -49,7 +49,7 @@ class SetupWizardViewModelTest {
     private val getAllContractsUseCase: GetAllContractsUseCase = mockk()
     private val uploadVehicleImageUseCase: UploadVehicleImageUseCase = mockk()
     private val getImageBytesUseCase: GetImageBytesUseCase = mockk()
-    private val analytics: AnalyticskitManager = mockk(relaxed = true)
+    private val analytics = FakeAnalyticsTracker()
     private val logger: LoggerKit = mockk(relaxed = true)
 
     @Before

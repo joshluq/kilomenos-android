@@ -17,11 +17,11 @@ configure<LibraryExtension> {
 
 dependencies {
     implementation(project(":core:domain"))
+    implementation(project(":core:analytics"))
 
     implementation(deps.foundationkit)
     implementation(deps.encryptionkit)
     implementation(deps.authkit)
-    implementation(deps.analyticskit)
     implementation(deps.javax.inject)
     implementation(libs.kotlinx.serialization.json)
 

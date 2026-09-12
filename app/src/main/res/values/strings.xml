@@ -126,8 +126,8 @@
     <!-- Reminders -->
     <string name="reminder_channel_name">Recordatorios de actividad</string>
     <string name="reminder_channel_description">Notificaciones para recordarte actualizar tu kilometraje.</string>
-    <string name="reminder_notification_title">¿Cómo va ese odómetro? 🚗</string>
-    <string name="reminder_notification_message">No has actualizado tus kilómetros en unos días. ¡Regístralos ahora para mantener tu balance al día!</string>
+    <string name="reminder_notification_title">Mantén tu Zona Verde al día 🚗</string>
+    <string name="reminder_notification_message">¿Has conducido este fin de semana? Actualiza tu odómetro en 5 segundos y evita sorpresas de kilometraje.</string>
 
     <!-- Station Proximity Notifications -->
     <string name="notification_channel_stations_name">Ahorro en Estaciones</string>

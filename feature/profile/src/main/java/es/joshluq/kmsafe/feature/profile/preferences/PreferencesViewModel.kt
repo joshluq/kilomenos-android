@@ -2,8 +2,8 @@ package es.joshluq.kmsafe.feature.profile.preferences
 
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import es.joshluq.analyticskit.domain.model.AnalyticsEvent
-import es.joshluq.analyticskit.sdk.AnalyticskitManager
+import es.joshluq.kmsafe.core.analytics.AnalyticsTracker
+import es.joshluq.kmsafe.core.analytics.model.KmsafeAnalyticsEvent
 import es.joshluq.foundationkit.log.LoggerKit
 import es.joshluq.foundationkit.viewmodel.ScreenViewModel
 import es.joshluq.kmsafe.core.monetization.util.ConsentManager
@@ -30,7 +30,7 @@ class PreferencesViewModel @Inject constructor(
     private val startAutoTrackingUseCase: StartAutoTrackingUseCase,
     private val stopAutoTrackingUseCase: StopAutoTrackingUseCase,
     private val consentManager: ConsentManager,
-    private val analytics: AnalyticskitManager,
+    private val analytics: AnalyticsTracker,
     private val logger: LoggerKit
 ) : ScreenViewModel<State, Event, Effect>() {
 
@@ -46,28 +46,28 @@ class PreferencesViewModel @Inject constructor(
         logger.d("PreferencesViewModel", "Event received: $event")
         when (event) {
             is Event.OnRememberEmailToggled -> {
-                analytics.track(AnalyticsEvent.Custom("remember_email_toggled", mapOf("enabled" to event.enabled)))
+                analytics.track(KmsafeAnalyticsEvent.Profile.PreferenceToggled("remember_email", event.enabled))
                 handleRememberEmailToggled(event.enabled)
             }
             is Event.OnProjectionBannerToggled -> {
-                analytics.track(AnalyticsEvent.Custom("projection_banner_toggled", mapOf("enabled" to event.enabled)))
+                analytics.track(KmsafeAnalyticsEvent.Profile.PreferenceToggled("projection_banner", event.enabled))
                 handleProjectionBannerToggled(event.enabled)
             }
             is Event.OnAutoTrackingToggled -> {
                 logger.i("PreferencesViewModel", "Auto-tracking toggle requested: ${event.enabled}")
-                analytics.track(AnalyticsEvent.Custom("autotracking_toggled_intent", mapOf("enabled" to event.enabled)))
+                analytics.track(KmsafeAnalyticsEvent.Profile.PreferenceToggled("autotracking", event.enabled))
                 handleAutoTrackingToggled(event.enabled)
             }
             is Event.OnPermissionsResult -> handlePermissionsResult(event.granted)
             Event.OnManagePrivacyClicked -> {
-                analytics.track(AnalyticsEvent.Custom("manage_privacy_clicked"))
+                analytics.track(KmsafeAnalyticsEvent.Profile.ManagePrivacyClicked)
                 launchEffect(Effect.ShowPrivacyOptions)
             }
             Event.OnBackClicked -> launchEffect(Effect.NavigateBack)
             Event.OnDismissError -> updateState { copy(error = null) }
             Event.OnStartTrialClicked -> handleStartTrial()
             Event.OnDismissTrialOffer -> {
-                analytics.track(AnalyticsEvent.Custom("premium_trial_offer_dismissed"))
+                analytics.track(KmsafeAnalyticsEvent.Monetization.TrialOfferDismissed)
                 updateState { copy(showTrialOffer = false) }
             }
         }
@@ -164,7 +164,7 @@ class PreferencesViewModel @Inject constructor(
     }
 
     private fun handleStartTrial() {
-        analytics.track(AnalyticsEvent.Custom("premium_trial_started"))
+        analytics.track(KmsafeAnalyticsEvent.Monetization.TrialStarted("preferences"))
         updateState { copy(showTrialOffer = false, isLoading = true) }
         val fingerprint = fingerprintProvider.getFingerprint()
         startTrialUseCase(StartTrialUseCase.Input(fingerprint))

@@ -1,4 +1,4 @@
-package es.joshluq.kmsafe.infrastructure.analytics
+package es.joshluq.kmsafe.core.analytics.provider
 
 import android.annotation.SuppressLint
 import android.content.Context

@@ -27,8 +27,8 @@ import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority.PRIORITY_HIGH_ACCURACY
 import dagger.hilt.android.AndroidEntryPoint
-import es.joshluq.analyticskit.domain.model.AnalyticsEvent
-import es.joshluq.analyticskit.sdk.AnalyticskitManager
+import es.joshluq.kmsafe.core.analytics.AnalyticsTracker
+import es.joshluq.kmsafe.core.analytics.model.KmsafeAnalyticsEvent
 import es.joshluq.foundationkit.log.LoggerKit
 import es.joshluq.kmsafe.domain.model.Feature
 import es.joshluq.kmsafe.domain.repository.TrackingRepository
@@ -71,7 +71,7 @@ class LocationTrackingService : Service() {
     lateinit var logger: LoggerKit
 
     @Inject
-    lateinit var analytics: AnalyticskitManager
+    lateinit var analytics: AnalyticsTracker
 
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private var distanceJob: kotlinx.coroutines.Job? = null
@@ -278,7 +278,7 @@ class LocationTrackingService : Service() {
             val permission = android.Manifest.permission.BLUETOOTH_CONNECT
             if (ActivityCompat.checkSelfPermission(context, permission) != PackageManager.PERMISSION_GRANTED) {
                 logger.w("LocationService", "Bluetooth validation skipped: BLUETOOTH_CONNECT permission missing.")
-                analytics.track(AnalyticsEvent.Custom("tracking_bt_validation_skipped_no_permission"))
+                analytics.track(KmsafeAnalyticsEvent.Tracking.BtValidationSkippedNoPermission)
                 return true // Fallback: prioritize tracking over validation
             }
         }
@@ -400,7 +400,7 @@ class LocationTrackingService : Service() {
 
             if (isMock) {
                 logger.w("LocationService", "Fake location detected. Ignoring update.")
-                analytics.track(AnalyticsEvent.Custom("security_gps_spoofing_detected"))
+                analytics.track(KmsafeAnalyticsEvent.Tracking.GpsSpoofingDetected)
                 return
             }
 

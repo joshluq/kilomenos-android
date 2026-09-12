@@ -41,6 +41,7 @@ class ProfileViewModelTest {
     private val getEntitlementsUseCase: GetEntitlementsUseCase = mockk()
     private val setAppOverlayUseCase: SetAppOverlayUseCase = mockk(relaxed = true)
     private val profileConfig: ProfileConfig = mockk()
+    private val analytics = es.joshluq.kmsafe.core.analytics.fake.FakeAnalyticsTracker()
     private val logger: LoggerKit = mockk(relaxed = true)
 
     private val sampleUser = User(
@@ -82,6 +83,7 @@ class ProfileViewModelTest {
             getEntitlementsUseCase = getEntitlementsUseCase,
             setAppOverlayUseCase = setAppOverlayUseCase,
             profileConfig = profileConfig,
+            analytics = analytics,
             logger = logger
         )
     }

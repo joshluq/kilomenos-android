@@ -19,6 +19,8 @@ import es.joshluq.kmsafe.feature.expenses.R
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 
+import es.joshluq.kmsafe.core.analytics.AnalyticsTracker
+
 /**
  * ViewModel for viewing service station statistics and history.
  */
@@ -30,6 +32,7 @@ class StationDetailViewModel @AssistedInject constructor(
     private val setFavoriteStationUseCase: SetFavoriteStationUseCase,
     private val checkFeatureAccessUseCase: CheckFeatureAccessUseCase,
     private val syncStationsUseCase: SyncStationsUseCase,
+    private val analyticsTracker: AnalyticsTracker,
     private val logger: LoggerKit
 ) : ScreenViewModel<StationDetailState, StationDetailEvent, StationDetailEffect>() {
 
@@ -40,6 +43,7 @@ class StationDetailViewModel @AssistedInject constructor(
 
     init {
         updateState { copy(stationId = stationId) }
+        analyticsTracker.trackScreen("station_detail")
         checkSubscription()
         loadData()
     }

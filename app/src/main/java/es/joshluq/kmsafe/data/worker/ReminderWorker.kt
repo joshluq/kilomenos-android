@@ -15,9 +15,12 @@ import dagger.assisted.AssistedInject
 import es.joshluq.foundationkit.log.LoggerKit
 import es.joshluq.kmsafe.MainActivity
 import es.joshluq.kmsafe.R
-import es.joshluq.kmsafe.domain.repository.HistoryRepository
-import es.joshluq.kmsafe.domain.repository.RentingRepository
-import kotlinx.coroutines.flow.first
+import es.joshluq.kmsafe.core.analytics.AnalyticsTracker
+import es.joshluq.kmsafe.core.analytics.model.KmsafeAnalyticsEvent
+import es.joshluq.kmsafe.domain.usecase.GetAllContractsUseCase
+import es.joshluq.kmsafe.domain.usecase.GetHistoryUseCase
+import kotlinx.coroutines.flow.filterIsInstance
+import kotlinx.coroutines.flow.firstOrNull
 import java.util.concurrent.TimeUnit
 
 /**
@@ -27,8 +30,9 @@ import java.util.concurrent.TimeUnit
 class ReminderWorker @AssistedInject constructor(
     @Assisted context: Context,
     @Assisted workerParams: WorkerParameters,
-    private val rentingRepository: RentingRepository,
-    private val historyRepository: HistoryRepository,
+    private val getAllContractsUseCase: GetAllContractsUseCase,
+    private val getHistoryUseCase: GetHistoryUseCase,
+    private val analytics: AnalyticsTracker,
     private val logger: LoggerKit
 ) : CoroutineWorker(context, workerParams) {
 
@@ -42,22 +46,34 @@ class ReminderWorker @AssistedInject constructor(
         logger.d("ReminderWorker", "Starting inactivity check...")
 
         return try {
-            val contract = rentingRepository.getContract().first()
-            if (contract == null) {
+            val contractsOutput = getAllContractsUseCase(GetAllContractsUseCase.Input)
+                .filterIsInstance<GetAllContractsUseCase.Output.Success>()
+                .firstOrNull()
+
+            val activeContract = contractsOutput?.contracts?.firstOrNull()
+            if (activeContract == null) {
                 logger.d("ReminderWorker", "No contract found. Skipping.")
                 return Result.success()
             }
 
-            val history = historyRepository.getHistory(contract.id).first()
-            val lastRecord = history.firstOrNull()
+            val historyOutput = getHistoryUseCase(GetHistoryUseCase.Input(forceRefresh = false))
+                .filterIsInstance<GetHistoryUseCase.Output.Success>()
+                .firstOrNull()
 
-            val lastTimestamp = lastRecord?.timestamp ?: contract.startDate
+            val lastRecord = historyOutput?.allRecords?.firstOrNull()?.record
+            val lastTimestamp = lastRecord?.timestamp ?: activeContract.startDate
             val currentTime = System.currentTimeMillis()
             val diffMillis = currentTime - lastTimestamp
             val diffDays = TimeUnit.MILLISECONDS.toDays(diffMillis)
 
             if (diffDays >= INACTIVITY_THRESHOLD_DAYS) {
                 logger.i("ReminderWorker", "User inactive for $diffDays days. Sending notification.")
+                analytics.track(
+                    KmsafeAnalyticsEvent.Custom(
+                        name = "reminder_notification_sent",
+                        properties = mapOf("inactivity_days" to diffDays)
+                    )
+                )
                 sendNotification()
             } else {
                 logger.d("ReminderWorker", "User active. Days since last update: $diffDays")

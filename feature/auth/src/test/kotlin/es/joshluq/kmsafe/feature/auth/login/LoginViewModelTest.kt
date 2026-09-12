@@ -1,6 +1,6 @@
 package es.joshluq.kmsafe.feature.auth.login
 
-import es.joshluq.analyticskit.sdk.AnalyticskitManager
+import es.joshluq.kmsafe.core.analytics.fake.FakeAnalyticsTracker
 import es.joshluq.foundationkit.log.LoggerKit
 import es.joshluq.kmsafe.domain.model.Entitlements
 import es.joshluq.kmsafe.domain.model.KmError
@@ -58,7 +58,7 @@ class LoginViewModelTest {
     private val fingerprintProvider: FingerprintProvider = mockk()
     private val socialAuthService: SocialAuthService = mockk()
     private val authConfig: AuthConfig = mockk()
-    private val analytics: AnalyticskitManager = mockk(relaxed = true)
+    private val analytics = FakeAnalyticsTracker()
     private val logger: LoggerKit = mockk(relaxed = true)
 
     @Before

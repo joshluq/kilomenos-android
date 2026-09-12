@@ -1,7 +1,7 @@
 package es.joshluq.kmsafe.feature.premium.paywall
 
-import es.joshluq.analyticskit.domain.model.AnalyticsEvent
-import es.joshluq.analyticskit.sdk.AnalyticskitManager
+import es.joshluq.kmsafe.core.analytics.fake.FakeAnalyticsTracker
+import es.joshluq.kmsafe.core.analytics.model.KmsafeAnalyticsEvent
 import es.joshluq.foundationkit.log.LoggerKit
 import es.joshluq.kmsafe.domain.model.SubscriptionLevel
 import es.joshluq.kmsafe.domain.model.User
@@ -39,7 +39,7 @@ class PremiumPaywallViewModelTest {
     private val updateSubscriptionUseCase: UpdateSubscriptionUseCase = mockk()
     private val migrateLocalDataUseCase: MigrateLocalDataToRemoteUseCase = mockk()
     private val syncContractsUseCase: SyncContractsUseCase = mockk()
-    private val analytics: AnalyticskitManager = mockk(relaxed = true)
+    private val analytics = FakeAnalyticsTracker()
     private val logger: LoggerKit = mockk(relaxed = true)
 
     private val purchaseSuccessFlow = MutableSharedFlow<String>()
@@ -88,6 +88,20 @@ class PremiumPaywallViewModelTest {
     }
 
     @Test
+    fun `on initialize with source updates state and tracks paywall viewed with source`() = runTest(testDispatcher) {
+        val viewModel = createViewModel()
+        testScheduler.advanceUntilIdle()
+
+        viewModel.sendEvent(Event.OnInitialize("projection_risk_sentinel"))
+        testScheduler.advanceUntilIdle()
+
+        assertEquals("projection_risk_sentinel", viewModel.state.value.source)
+        val viewedEvent = analytics.trackedEvents.filterIsInstance<KmsafeAnalyticsEvent.Monetization.PaywallViewed>().firstOrNull()
+        assertTrue(viewedEvent != null)
+        assertEquals("projection_risk_sentinel", viewedEvent?.source)
+    }
+
+    @Test
     fun `on plan selected updates state and tracks analytics`() = runTest(testDispatcher) {
         val viewModel = createViewModel()
         testScheduler.advanceUntilIdle()
@@ -96,7 +110,7 @@ class PremiumPaywallViewModelTest {
         testScheduler.advanceUntilIdle()
 
         assertEquals(PremiumBillingPlan.MONTHLY, viewModel.state.value.selectedPlan)
-        verify { analytics.track(AnalyticsEvent.Custom("premium_plan_selected", mapOf("plan" to "MONTHLY"))) }
+        assertTrue(analytics.trackedEvents.any { it is KmsafeAnalyticsEvent.Monetization.PlanSelected && it.plan == "MONTHLY" })
     }
 
     @Test
@@ -113,14 +127,7 @@ class PremiumPaywallViewModelTest {
         testScheduler.advanceUntilIdle()
 
         assertEquals(listOf(Effect.LaunchBillingFlow), effects)
-        verify {
-            analytics.track(
-                AnalyticsEvent.Custom(
-                    "premium_upgrade_clicked",
-                    mapOf("selected_plan" to "ANNUAL")
-                )
-            )
-        }
+        assertTrue(analytics.trackedEvents.any { it is KmsafeAnalyticsEvent.Monetization.UpgradeClicked && it.selectedPlan == "ANNUAL" })
     }
 
     @Test

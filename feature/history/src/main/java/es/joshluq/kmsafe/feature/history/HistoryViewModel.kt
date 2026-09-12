@@ -16,6 +16,8 @@ import es.joshluq.kmsafe.domain.usecase.GetHistoryUseCase
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
+import es.joshluq.kmsafe.core.analytics.AnalyticsTracker
+import es.joshluq.kmsafe.core.analytics.model.KmsafeAnalyticsEvent
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -28,6 +30,7 @@ class HistoryViewModel @Inject constructor(
     private val deleteOdometerRecordUseCase: DeleteOdometerRecordUseCase,
     private val checkFeatureAccessUseCase: CheckFeatureAccessUseCase,
     private val monetizationConfig: MonetizationConfig,
+    private val analytics: AnalyticsTracker,
     private val dispatchers: DispatcherProvider,
     private val logger: LoggerKit
 ) : ScreenViewModel<HistoryState, HistoryEvent, HistoryEffect>() {
@@ -54,10 +57,14 @@ class HistoryViewModel @Inject constructor(
             HistoryEvent.OnRefresh -> loadHistory(forceRefresh = true)
             HistoryEvent.OnDismissError -> updateState { copy(error = null) }
             is HistoryEvent.OnSearchQueryChanged -> {
+                if (event.query.isNotBlank()) {
+                    analytics.track(KmsafeAnalyticsEvent.History.SearchPerformed(event.query.length))
+                }
                 updateState { copy(searchQuery = event.query) }
                 applyFilters()
             }
             is HistoryEvent.OnGroupingModeChanged -> {
+                analytics.track(KmsafeAnalyticsEvent.History.GroupingModeChanged(event.mode.name))
                 updateState { copy(groupingMode = event.mode) }
                 applyFilters()
             }
@@ -91,6 +98,12 @@ class HistoryViewModel @Inject constructor(
                     }
 
                     is GetHistoryUseCase.Output.Success -> {
+                        analytics.track(
+                            KmsafeAnalyticsEvent.History.HistoryViewed(
+                                totalRecords = output.totalRecordsCount,
+                                totalKms = output.totalKms
+                            )
+                        )
                         updateState {
                             copy(
                                 isLoading = false,
@@ -174,7 +187,9 @@ class HistoryViewModel @Inject constructor(
                 .onEach { output ->
                     when (output) {
                         is DeleteOdometerRecordUseCase.Output.Progress -> Unit
-                        is DeleteOdometerRecordUseCase.Output.Success -> Unit
+                        is DeleteOdometerRecordUseCase.Output.Success -> {
+                            analytics.track(KmsafeAnalyticsEvent.History.RecordDeleted(record.id))
+                        }
                         is DeleteOdometerRecordUseCase.Output.Failure -> {
                             updateState {
                                 copy(

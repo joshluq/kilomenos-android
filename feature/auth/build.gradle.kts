@@ -19,7 +19,7 @@ dependencies {
 
     implementation(deps.canvaskit)
     implementation(deps.foundationkit)
-    implementation(deps.analyticskit)
+    implementation(project(":core:analytics"))
     implementation(deps.javax.inject)
     implementation(deps.googleid)
     implementation(libs.kotlinx.serialization.json)

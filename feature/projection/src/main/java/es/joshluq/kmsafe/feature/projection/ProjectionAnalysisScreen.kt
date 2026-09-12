@@ -39,7 +39,7 @@ import es.joshluq.kmsafe.core.ui.R as CoreR
 
 @Composable
 fun ProjectionAnalysisRoute(
-    onNavigateToUpgrade: () -> Unit = {},
+    onNavigateToUpgrade: (String) -> Unit = {},
     onNavigateToEditContract: (String) -> Unit = {}
 ) {
     val viewModel: ProjectionAnalysisViewModel = hiltViewModel()
@@ -48,7 +48,7 @@ fun ProjectionAnalysisRoute(
     LaunchedEffect(viewModel.effects) {
         viewModel.effects.collect { effect ->
             when (effect) {
-                Effect.NavigateToPremiumPaywall -> onNavigateToUpgrade()
+                is Effect.NavigateToPremiumPaywall -> onNavigateToUpgrade(effect.source)
                 is Effect.NavigateToEditContract -> onNavigateToEditContract(effect.vehicleId)
                 is Effect.ShowToast -> {
                     // Handled via state.error or feedback

@@ -39,6 +39,7 @@ class DashboardViewModelTest {
     private val getCurrentUserUseCase: GetCurrentUserUseCase = mockk(relaxed = true)
     private val observeFleetSwitchingUseCase: ObserveFleetSwitchingUseCase = mockk(relaxed = true)
     private val observeAppOverlayUseCase: ObserveAppOverlayUseCase = mockk(relaxed = true)
+    private val analytics = es.joshluq.kmsafe.core.analytics.fake.FakeAnalyticsTracker()
     private val logger: LoggerKit = mockk(relaxed = true)
 
     @Before
@@ -66,6 +67,7 @@ class DashboardViewModelTest {
             getCurrentUserUseCase = getCurrentUserUseCase,
             observeFleetSwitchingUseCase = observeFleetSwitchingUseCase,
             observeAppOverlayUseCase = observeAppOverlayUseCase,
+            analytics = analytics,
             logger = logger
         )
     }

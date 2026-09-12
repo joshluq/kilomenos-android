@@ -47,4 +47,6 @@
     <string name="premium_upgrade_cancel">Ahora no</string>
     <string name="premium_upgrade_confirm">Subir a Premium</string>
     <string name="premium_upgrade_error">Ha ocurrido un error al procesar tu suscripción. Por favor, inténtalo de nuevo.</string>
+    <string name="premium_loss_aversion_banner_title">Riesgo de Penalización Detectado</string>
+    <string name="premium_loss_aversion_banner_message">Tu ritmo de kilometraje actual indica riesgo de sobrecostes por exceso de km al vencimiento. Activa KiloMenos Premium para planificar rutas predictivas y evitar penalizaciones de cientos de euros.</string>
 </resources>

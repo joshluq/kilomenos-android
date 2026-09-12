@@ -1,6 +1,6 @@
 package es.joshluq.kmsafe.feature.fleet.detail
 
-import es.joshluq.analyticskit.sdk.AnalyticskitManager
+import es.joshluq.kmsafe.core.analytics.fake.FakeAnalyticsTracker
 import es.joshluq.foundationkit.log.LoggerKit
 import es.joshluq.kmsafe.domain.model.Feature
 import es.joshluq.kmsafe.domain.model.RentingContract
@@ -38,7 +38,7 @@ class VehicleDetailViewModelTest {
     private val getVehicleByIdUseCase: GetVehicleByIdUseCase = mockk()
     private val deleteContractUseCase: DeleteContractUseCase = mockk()
     private val checkFeatureAccessUseCase: CheckFeatureAccessUseCase = mockk()
-    private val analytics: AnalyticskitManager = mockk(relaxed = true)
+    private val analytics = FakeAnalyticsTracker()
     private val logger: LoggerKit = mockk(relaxed = true)
 
     private val sampleVehicle = RentingContract(

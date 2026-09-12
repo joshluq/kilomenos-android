@@ -13,6 +13,6 @@ dependencies {
     implementation(project(":core:domain"))
 
     implementation(deps.foundationkit)
-    implementation(deps.analyticskit)
+    implementation(project(":core:analytics"))
     implementation(deps.play.services.location)
 }

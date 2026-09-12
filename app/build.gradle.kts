@@ -126,12 +126,12 @@ dependencies {
     implementation(project(":core:navigation"))
     implementation(project(":core:monetization"))
     implementation(project(":core:tracking"))
+    implementation(project(":core:analytics"))
 
     implementation(deps.foundationkit)
     implementation(deps.canvaskit)
     implementation(deps.encryptionkit)
     implementation(deps.authkit)
-    implementation(deps.analyticskit)
 
     implementation(deps.androidx.splashscreen)
     implementation(deps.androidx.datastore.preferences)

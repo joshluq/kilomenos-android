@@ -37,6 +37,7 @@ import es.joshluq.kmsafe.feature.history.detail.RecordDetailRoute
 import es.joshluq.kmsafe.feature.premium.paywall.PremiumPaywallRoute
 import es.joshluq.kmsafe.feature.profile.preferences.PreferencesRoute
 import es.joshluq.kmsafe.ui.common.cropper.CropImageScreen
+import es.joshluq.kmsafe.core.analytics.AnalyticsTracker
 import es.joshluq.kmsafe.ui.common.permissions.AssistedTrackingPermissionsScreen
 import es.joshluq.kmsafe.ui.common.permissions.AutoTrackingPermissionsScreen
 
@@ -47,12 +48,21 @@ import es.joshluq.kmsafe.ui.common.permissions.AutoTrackingPermissionsScreen
 fun AppNavigation(
     initialDestination: Destination = Destination.Launch,
     resultStore: NavigationResultStore,
+    analyticsTracker: AnalyticsTracker? = null,
     onLaunchBilling: () -> Unit = {},
     onShowPrivacyOptions: () -> Unit = {}
 ) {
     val viewModelStoreOwner = LocalViewModelStoreOwner.current
     val backStack = rememberSaveable(saver = DestinationListSaver) {
         mutableStateListOf(initialDestination)
+    }
+
+    val currentDestination = backStack.lastOrNull()
+    LaunchedEffect(currentDestination) {
+        currentDestination?.let { dest ->
+            val screenName = dest::class.simpleName ?: "Unknown"
+            analyticsTracker?.trackScreen(screenName, screenName)
+        }
     }
 
     val onNavigate: (Destination) -> Unit = { dest ->
@@ -136,7 +146,7 @@ fun AppNavigation(
                             onNavigateToPremiumPaywall = {
                                 backStack.clear()
                                 backStack.add(Destination.Dashboard)
-                                backStack.add(Destination.PremiumPaywall)
+                                backStack.add(Destination.PremiumPaywall("login"))
                             },
                             onNavigateToSignup = {
                                 onNavigate(Destination.Signup)
@@ -159,7 +169,7 @@ fun AppNavigation(
                             onNavigateToPremiumPaywall = {
                                 backStack.clear()
                                 backStack.add(Destination.Dashboard)
-                                backStack.add(Destination.PremiumPaywall)
+                                backStack.add(Destination.PremiumPaywall("signup"))
                             }
                         )
                     }
@@ -193,8 +203,9 @@ fun AppNavigation(
                         )
                     }
 
-                    Destination.PremiumPaywall -> NavEntry(key) {
+                    is Destination.PremiumPaywall -> NavEntry(key) {
                         PremiumPaywallRoute(
+                            source = key.source,
                             onNavigateToDashboard = {
                                 backStack.clear()
                                 backStack.add(Destination.Dashboard)
@@ -225,8 +236,8 @@ fun AppNavigation(
                                         backStack.clear()
                                         backStack.add(Destination.Login)
                                     },
-                                    onNavigateToPremiumPaywall = {
-                                        onNavigate(Destination.PremiumPaywall)
+                                    onNavigateToPremiumPaywall = { source ->
+                                        onNavigate(Destination.PremiumPaywall(source))
                                     },
                                     onNavigateToPreferences = {
                                         onNavigate(Destination.Preferences)
@@ -270,7 +281,7 @@ fun AppNavigation(
                                 onNavigate(Destination.SetupWizard)
                             },
                             onNavigateToPremiumPaywall = {
-                                onNavigate(Destination.PremiumPaywall)
+                                onNavigate(Destination.PremiumPaywall("vehicle_list"))
                             }
                         )
                     }
@@ -339,7 +350,7 @@ fun AppNavigation(
                                 onNavigate(Destination.ImageCropper(uri))
                             },
                             onNavigateToPremiumPaywall = {
-                                onNavigate(Destination.PremiumPaywall)
+                                onNavigate(Destination.PremiumPaywall("setup_wizard"))
                             }
                         )
                     }
@@ -359,7 +370,7 @@ fun AppNavigation(
                             recordId = key.recordId,
                             onNavigateBack = onBack,
                             onNavigateToPremiumPaywall = {
-                                onNavigate(Destination.PremiumPaywall)
+                                onNavigate(Destination.PremiumPaywall("record_detail"))
                             }
                         )
                     }
@@ -381,7 +392,7 @@ fun AppNavigation(
                             autoOpenAdd = key.autoOpenAdd,
                             priceReportMode = key.priceReportMode,
                             onNavigateToUpgrade = {
-                                onNavigate(Destination.PremiumPaywall)
+                                onNavigate(Destination.PremiumPaywall("expenses"))
                             },
                             onNavigateToStations = {
                                 onNavigate(Destination.StationManagement)

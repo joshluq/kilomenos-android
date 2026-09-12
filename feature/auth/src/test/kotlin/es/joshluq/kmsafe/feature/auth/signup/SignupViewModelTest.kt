@@ -1,6 +1,6 @@
 package es.joshluq.kmsafe.feature.auth.signup
 
-import es.joshluq.analyticskit.sdk.AnalyticskitManager
+import es.joshluq.kmsafe.core.analytics.fake.FakeAnalyticsTracker
 import es.joshluq.foundationkit.log.LoggerKit
 import es.joshluq.kmsafe.domain.model.Entitlements
 import es.joshluq.kmsafe.domain.model.KmError
@@ -49,7 +49,7 @@ class SignupViewModelTest {
     private val getEntitlementsUseCase: GetEntitlementsUseCase = mockk()
     private val syncContractsUseCase: SyncContractsUseCase = mockk()
     private val authConfig: AuthConfig = mockk()
-    private val analytics: AnalyticskitManager = mockk(relaxed = true)
+    private val analytics = FakeAnalyticsTracker()
     private val logger: LoggerKit = mockk(relaxed = true)
 
     @Before

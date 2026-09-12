@@ -1,6 +1,6 @@
 package es.joshluq.kmsafe.feature.projection
 
-import es.joshluq.analyticskit.sdk.AnalyticskitManager
+import es.joshluq.kmsafe.core.analytics.fake.FakeAnalyticsTracker
 import es.joshluq.foundationkit.log.LoggerKit
 import es.joshluq.kmsafe.domain.model.Feature
 import es.joshluq.kmsafe.domain.model.RentingContract
@@ -46,7 +46,7 @@ class ProjectionAnalysisViewModelTest {
     private val getRentingContractUseCase: GetRentingContractUseCase = mockk()
     private val checkFeatureAccessUseCase: CheckFeatureAccessUseCase = mockk()
     private val simulateContractProjectionUseCase: SimulateContractProjectionUseCase = SimulateContractProjectionUseCaseImpl()
-    private val analytics: AnalyticskitManager = mockk(relaxed = true)
+    private val analytics = FakeAnalyticsTracker()
     private val logger: LoggerKit = mockk(relaxed = true)
 
     private val sampleContract = RentingContract(
@@ -203,7 +203,8 @@ class ProjectionAnalysisViewModelTest {
         advanceUntilIdle()
 
         assertEquals(1, effects.size)
-        assertTrue(effects.first() is Effect.NavigateToPremiumPaywall)
+        val effect = effects.first() as Effect.NavigateToPremiumPaywall
+        assertEquals("projection_risk_sentinel", effect.source)
 
         job.cancel()
     }

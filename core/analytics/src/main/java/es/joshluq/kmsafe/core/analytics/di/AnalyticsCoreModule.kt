@@ -1,20 +1,29 @@
-package es.joshluq.kmsafe.infrastructure.di
+package es.joshluq.kmsafe.core.analytics.di
 
+import dagger.Binds
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import es.joshluq.analyticskit.sdk.AnalyticskitManager
-import es.joshluq.kmsafe.infrastructure.analytics.FirebaseAnalyticsProvider
-import es.joshluq.kmsafe.infrastructure.analytics.LoggerAnalyticsProvider
+import es.joshluq.kmsafe.core.analytics.AnalyticsTracker
+import es.joshluq.kmsafe.core.analytics.impl.AnalyticsTrackerImpl
+import es.joshluq.kmsafe.core.analytics.provider.FirebaseAnalyticsProvider
+import es.joshluq.kmsafe.core.analytics.provider.LoggerAnalyticsProvider
 import javax.inject.Singleton
 
-/**
- * Hilt module for providing Analytics dependencies.
- */
 @Module
 @InstallIn(SingletonComponent::class)
-object AnalyticsModule {
+abstract class AnalyticsBindingModule {
+
+    @Binds
+    @Singleton
+    abstract fun bindAnalyticsTracker(impl: AnalyticsTrackerImpl): AnalyticsTracker
+}
+
+@Module
+@InstallIn(SingletonComponent::class)
+object AnalyticsCoreModule {
 
     @Provides
     @Singleton
@@ -27,7 +36,6 @@ object AnalyticsModule {
             .addProvider(firebaseProvider)
             .build()
 
-        // Configure Global Properties for all events
         manager.apply {
             addGlobalProperty("device_model", android.os.Build.MODEL)
             addGlobalProperty("device_brand", android.os.Build.MANUFACTURER)

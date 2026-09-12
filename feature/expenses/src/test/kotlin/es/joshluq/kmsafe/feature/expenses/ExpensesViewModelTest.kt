@@ -65,6 +65,7 @@ class ExpensesViewModelTest {
     private val processFuelReceiptUseCase: ProcessFuelReceiptUseCase = mockk()
     private val discardReceiptScanUseCase: DiscardReceiptScanUseCase = mockk()
     private val monetizationConfig: MonetizationConfig = mockk()
+    private val analyticsTracker = es.joshluq.kmsafe.core.analytics.fake.FakeAnalyticsTracker()
     private val logger: LoggerKit = mockk(relaxed = true)
 
     private val sampleExpense = FuelExpense(
@@ -180,6 +181,7 @@ class ExpensesViewModelTest {
             processFuelReceiptUseCase = processFuelReceiptUseCase,
             discardReceiptScanUseCase = discardReceiptScanUseCase,
             monetizationConfig = monetizationConfig,
+            analyticsTracker = analyticsTracker,
             logger = logger
         )
     }

@@ -43,6 +43,9 @@ class MainActivity : ComponentActivity() {
     lateinit var resultStore: NavigationResultStore
 
     @Inject
+    lateinit var analyticsTracker: es.joshluq.kmsafe.core.analytics.AnalyticsTracker
+
+    @Inject
     lateinit var logger: LoggerKit
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -80,6 +83,7 @@ class MainActivity : ComponentActivity() {
                 AppNavigation(
                     initialDestination = initialDestination,
                     resultStore = resultStore,
+                    analyticsTracker = analyticsTracker,
                     onLaunchBilling = { billingManager.launchBillingFlow(this) },
                     onShowPrivacyOptions = {
                         consentManager.showPrivacyOptionsForm(this) { canRequestAds ->

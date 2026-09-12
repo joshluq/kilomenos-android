@@ -20,6 +20,7 @@ dependencies {
 
     implementation(deps.canvaskit)
     implementation(deps.foundationkit)
+    implementation(project(":core:analytics"))
     implementation(deps.javax.inject)
     implementation(libs.kotlinx.serialization.json)
 }

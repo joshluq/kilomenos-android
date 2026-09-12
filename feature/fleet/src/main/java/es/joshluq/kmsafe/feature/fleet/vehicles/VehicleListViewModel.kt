@@ -2,8 +2,8 @@ package es.joshluq.kmsafe.feature.fleet.vehicles
 
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import es.joshluq.analyticskit.domain.model.AnalyticsEvent
-import es.joshluq.analyticskit.sdk.AnalyticskitManager
+import es.joshluq.kmsafe.core.analytics.AnalyticsTracker
+import es.joshluq.kmsafe.core.analytics.model.KmsafeAnalyticsEvent
 import es.joshluq.foundationkit.log.LoggerKit
 import es.joshluq.foundationkit.text.TextProvider
 import es.joshluq.foundationkit.viewmodel.ScreenViewModel
@@ -24,7 +24,7 @@ class VehicleListViewModel @Inject constructor(
     private val deleteContractUseCase: DeleteContractUseCase,
     private val selectContractUseCase: SelectContractUseCase,
     private val checkFeatureAccessUseCase: CheckFeatureAccessUseCase,
-    private val analytics: AnalyticskitManager,
+    private val analytics: AnalyticsTracker,
     private val logger: LoggerKit
 ) : ScreenViewModel<State, Event, Effect>() {
 
@@ -93,7 +93,7 @@ class VehicleListViewModel @Inject constructor(
         selectContractUseCase(SelectContractUseCase.Input(vehicleId))
             .onEach { output ->
                 if (output is SelectContractUseCase.Output.Success) {
-                    analytics.track(AnalyticsEvent.Custom("vehicle_switched"))
+                    analytics.track(KmsafeAnalyticsEvent.Fleet.VehicleSwitched)
                     loadVehicles()
                 }
             }.launchIn(viewModelScope)
@@ -101,7 +101,7 @@ class VehicleListViewModel @Inject constructor(
 
     private fun handleAddVehicle() {
         if (!state.value.isPremium && state.value.vehicles.isNotEmpty()) {
-            analytics.track(AnalyticsEvent.Custom("multi_vehicle_limit_reached"))
+            analytics.track(KmsafeAnalyticsEvent.Onboarding.MultiVehicleLimitReached)
             updateState { copy(showPremiumLimit = true) }
         } else {
             launchEffect(Effect.NavigateToAddVehicle)
@@ -116,7 +116,7 @@ class VehicleListViewModel @Inject constructor(
                 when (output) {
                     is DeleteContractUseCase.Output.Progress -> updateState { copy(isLoading = true) }
                     is DeleteContractUseCase.Output.Success -> {
-                        analytics.track(AnalyticsEvent.Custom("vehicle_deleted"))
+                        analytics.track(KmsafeAnalyticsEvent.Fleet.VehicleDeleted(vehicle.id))
                         updateState { copy(isLoading = false, vehicleToDelete = null) }
                         loadVehicles()
                     }

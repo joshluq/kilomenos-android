@@ -5,8 +5,8 @@ import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
-import es.joshluq.analyticskit.domain.model.AnalyticsEvent
-import es.joshluq.analyticskit.sdk.AnalyticskitManager
+import es.joshluq.kmsafe.core.analytics.AnalyticsTracker
+import es.joshluq.kmsafe.core.analytics.model.KmsafeAnalyticsEvent
 import es.joshluq.foundationkit.log.LoggerKit
 import es.joshluq.foundationkit.text.TextProvider
 import es.joshluq.foundationkit.viewmodel.ScreenViewModel
@@ -25,7 +25,7 @@ class VehicleDetailViewModel @AssistedInject constructor(
     private val getVehicleByIdUseCase: GetVehicleByIdUseCase,
     private val deleteContractUseCase: DeleteContractUseCase,
     private val checkFeatureAccessUseCase: CheckFeatureAccessUseCase,
-    private val analytics: AnalyticskitManager,
+    private val analytics: AnalyticsTracker,
     private val logger: LoggerKit
 ) : ScreenViewModel<State, Event, Effect>() {
 
@@ -94,7 +94,8 @@ class VehicleDetailViewModel @AssistedInject constructor(
                 when (output) {
                     is DeleteContractUseCase.Output.Progress -> updateState { copy(isLoading = true) }
                     is DeleteContractUseCase.Output.Success -> {
-                        analytics.track(AnalyticsEvent.Custom("vehicle_deleted", mapOf("id" to vehicleId)))
+                        analytics.track(KmsafeAnalyticsEvent.Fleet.VehicleDeleted(vehicleId))
+                        updateState { copy(isLoading = false) }
                         launchEffect(Effect.NavigateBack)
                     }
                     is DeleteContractUseCase.Output.Failure -> {

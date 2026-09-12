@@ -73,6 +73,7 @@ import es.joshluq.kmsafe.core.ui.R as CoreR
  */
 @Composable
 fun PremiumPaywallRoute(
+    source: String = "general",
     onNavigateToDashboard: () -> Unit,
     onNavigateBack: () -> Unit,
     onLaunchBilling: () -> Unit,
@@ -80,6 +81,10 @@ fun PremiumPaywallRoute(
     viewModel: PremiumPaywallViewModel = hiltViewModel(key = sessionId)
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+
+    LaunchedEffect(source) {
+        viewModel.sendEvent(Event.OnInitialize(source))
+    }
 
     LaunchedEffect(viewModel.effects) {
         viewModel.effects.collect { effect ->
@@ -160,6 +165,18 @@ fun PremiumPaywallScreen(
                             modifier = Modifier.size(24.dp)
                         )
                     }
+                }
+
+                // Loss Aversion Contextual Banner (Dynamic trigger from Projection Risk Sentinel)
+                if (state.source == "projection_risk_sentinel") {
+                    CanvasKitBanner(
+                        title = { Text(stringResource(R.string.premium_loss_aversion_banner_title)) },
+                        message = { Text(stringResource(R.string.premium_loss_aversion_banner_message)) },
+                        variant = CanvasKitAlertVariant.Warning,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = CanvasKitTheme.spacing.sm)
+                    )
                 }
 
                 // Layer 1: Hero Section with Protection Badge

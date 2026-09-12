@@ -2,8 +2,8 @@ package es.joshluq.kmsafe.feature.premium.paywall
 
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import es.joshluq.analyticskit.domain.model.AnalyticsEvent
-import es.joshluq.analyticskit.sdk.AnalyticskitManager
+import es.joshluq.kmsafe.core.analytics.AnalyticsTracker
+import es.joshluq.kmsafe.core.analytics.model.KmsafeAnalyticsEvent
 import es.joshluq.foundationkit.log.LoggerKit
 import es.joshluq.foundationkit.text.TextProvider
 import es.joshluq.foundationkit.viewmodel.ScreenViewModel
@@ -23,12 +23,11 @@ class PremiumPaywallViewModel @Inject constructor(
     private val updateSubscriptionUseCase: UpdateSubscriptionUseCase,
     private val migrateLocalDataUseCase: MigrateLocalDataToRemoteUseCase,
     private val syncContractsUseCase: SyncContractsUseCase,
-    private val analytics: AnalyticskitManager,
+    private val analytics: AnalyticsTracker,
     private val logger: LoggerKit
 ) : ScreenViewModel<State, Event, Effect>() {
 
     init {
-        analytics.track(AnalyticsEvent.ScreenView("premium_paywall"))
         observeBilling()
     }
 
@@ -37,27 +36,26 @@ class PremiumPaywallViewModel @Inject constructor(
     override fun handleEvent(event: Event) {
         logger.d("PremiumPaywallViewModel", "Event received: $event")
         when (event) {
+            is Event.OnInitialize -> {
+                updateState { copy(source = event.source) }
+                analytics.track(KmsafeAnalyticsEvent.Monetization.PaywallViewed(source = event.source))
+            }
             is Event.OnPlanSelected -> {
-                analytics.track(
-                    AnalyticsEvent.Custom(
-                        "premium_plan_selected",
-                        mapOf("plan" to event.plan.name)
-                    )
-                )
+                analytics.track(KmsafeAnalyticsEvent.Monetization.PlanSelected(event.plan.name))
                 updateState { copy(selectedPlan = event.plan) }
             }
             Event.OnUpgradeClicked -> {
                 analytics.track(
-                    AnalyticsEvent.Custom(
-                        "premium_upgrade_clicked",
-                        mapOf("selected_plan" to state.value.selectedPlan.name)
+                    KmsafeAnalyticsEvent.Monetization.UpgradeClicked(
+                        source = state.value.source,
+                        selectedPlan = state.value.selectedPlan.name
                     )
                 )
                 launchEffect(Effect.LaunchBillingFlow)
             }
             Event.OnDismissClicked -> {
                 logger.d("PremiumPaywallViewModel", "Dismiss clicked")
-                analytics.track(AnalyticsEvent.Custom("premium_paywall_dismissed"))
+                analytics.track(KmsafeAnalyticsEvent.Monetization.PaywallDismissed)
                 launchEffect(Effect.NavigateBack)
             }
             Event.OnDismissError -> updateState { copy(error = null) }
@@ -74,6 +72,13 @@ class PremiumPaywallViewModel @Inject constructor(
 
         billingService.errorFlow
             .onEach { error ->
+                analytics.track(
+                    KmsafeAnalyticsEvent.Monetization.PurchaseResult(
+                        result = if (error.contains("canceled", ignoreCase = true)) "USER_CANCELED" else "ERROR",
+                        errorCode = error,
+                        plan = state.value.selectedPlan.name
+                    )
+                )
                 updateState { copy(error = TextProvider.Dynamic(error), isLoading = false) }
             }
             .launchIn(viewModelScope)
@@ -93,7 +98,7 @@ class PremiumPaywallViewModel @Inject constructor(
                         }
                     }
                     is UpdateSubscriptionUseCase.Output.Success -> {
-                        analytics.track(AnalyticsEvent.Custom("premium_upgrade_success"))
+                        analytics.track(KmsafeAnalyticsEvent.Monetization.UpgradeSuccess(plan = state.value.selectedPlan.name))
                         startDataMigration()
                     }
                 }

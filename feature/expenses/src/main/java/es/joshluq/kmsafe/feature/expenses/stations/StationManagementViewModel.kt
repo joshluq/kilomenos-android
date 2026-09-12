@@ -18,6 +18,8 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import javax.inject.Inject
 
+import es.joshluq.kmsafe.core.analytics.AnalyticsTracker
+
 /**
  * ViewModel for managing the user's service stations.
  */
@@ -29,10 +31,12 @@ class StationManagementViewModel @Inject constructor(
     private val setFavoriteStationUseCase: SetFavoriteStationUseCase,
     private val checkFeatureAccessUseCase: CheckFeatureAccessUseCase,
     private val syncStationsUseCase: SyncStationsUseCase,
+    private val analyticsTracker: AnalyticsTracker,
     private val logger: LoggerKit
 ) : ScreenViewModel<StationManagementState, StationManagementEvent, StationManagementEffect>() {
 
     init {
+        analyticsTracker.trackScreen("station_management")
         checkSubscription()
         loadStations()
     }

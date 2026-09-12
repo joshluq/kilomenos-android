@@ -2,8 +2,8 @@ package es.joshluq.kmsafe.feature.overview
 
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import es.joshluq.analyticskit.domain.model.AnalyticsEvent
-import es.joshluq.analyticskit.sdk.AnalyticskitManager
+import es.joshluq.kmsafe.core.analytics.AnalyticsTracker
+import es.joshluq.kmsafe.core.analytics.model.KmsafeAnalyticsEvent
 import es.joshluq.foundationkit.log.LoggerKit
 import es.joshluq.foundationkit.text.TextProvider
 import es.joshluq.foundationkit.viewmodel.ScreenViewModel
@@ -68,7 +68,7 @@ class OverviewViewModel @Inject constructor(
     private val stopTripTrackingUseCase: StopTripTrackingUseCase,
     private val syncStationGeofencesUseCase: SyncStationGeofencesUseCase,
     private val monetizationConfig: MonetizationConfig,
-    private val analytics: AnalyticskitManager,
+    private val analytics: AnalyticsTracker,
     private val logger: LoggerKit
 ) : ScreenViewModel<State, Event, Effect>() {
 
@@ -302,22 +302,22 @@ class OverviewViewModel @Inject constructor(
                 updateState { copy(showProjectionBanner = false, statusCapsule = capsule) }
             }
             Event.OnProjectionBannerClicked -> {
-                analytics.track(AnalyticsEvent.Custom("projection_banner_clicked"))
+                analytics.track(KmsafeAnalyticsEvent.Overview.ProjectionBannerClicked)
                 launchEffect(Effect.NavigateToProjection)
             }
             is Event.OnStatusCapsuleClicked -> {
                 when (event.item) {
                     is StatusCapsuleUiModel.CriticalRisk -> {
-                        analytics.track(AnalyticsEvent.Custom("status_capsule_clicked", mapOf("type" to "critical_risk")))
+                        analytics.track(KmsafeAnalyticsEvent.Overview.StatusCapsuleClicked("critical_risk"))
                         launchEffect(Effect.NavigateToProjection)
                     }
                     is StatusCapsuleUiModel.BluetoothMissing -> {
-                        analytics.track(AnalyticsEvent.Custom("status_capsule_clicked", mapOf("type" to "bluetooth_missing")))
+                        analytics.track(KmsafeAnalyticsEvent.Overview.StatusCapsuleClicked("bluetooth_missing"))
                         state.value.renting?.let { launchEffect(Effect.NavigateToOnboarding(it.id, isEdit = true)) }
                     }
                     is StatusCapsuleUiModel.FleetNotice,
                     is StatusCapsuleUiModel.DrivingInsight -> {
-                        analytics.track(AnalyticsEvent.Custom("status_capsule_clicked", mapOf("type" to "insight")))
+                        analytics.track(KmsafeAnalyticsEvent.Overview.StatusCapsuleClicked("insight"))
                     }
                 }
             }
@@ -339,15 +339,15 @@ class OverviewViewModel @Inject constructor(
             Event.OnNavigateToPreferences -> launchEffect(Effect.NavigateToPreferences)
             is Event.OnPermissionsResult -> handlePermissionsResult(event.granted)
             Event.OnPremiumUpgradeClicked -> {
-                analytics.track(AnalyticsEvent.Custom("premium_upgrade_clicked", mapOf("source" to "top_bar")))
+                analytics.track(KmsafeAnalyticsEvent.Monetization.UpgradeClicked(source = "top_bar"))
                 launchEffect(Effect.NavigateToPremiumPaywall)
             }
             Event.OnDismissAutoTrackingPromotion -> {
-                analytics.track(AnalyticsEvent.Custom("autotracking_promotion_dismissed"))
+                analytics.track(KmsafeAnalyticsEvent.Overview.AutoTrackingPromotionDismissed)
                 handleDismissPromotion()
             }
             Event.OnAutoTrackingPromotionAccepted -> {
-                analytics.track(AnalyticsEvent.Custom("autotracking_promotion_accepted"))
+                analytics.track(KmsafeAnalyticsEvent.Overview.AutoTrackingPromotionAccepted)
                 handleDismissPromotion()
                 launchEffect(Effect.NavigateToPreferences)
             }
@@ -472,9 +472,9 @@ class OverviewViewModel @Inject constructor(
                     is AddOdometerRecordUseCase.Output.Progress -> updateState { copy(isSaving = true) }
                     is AddOdometerRecordUseCase.Output.Success -> {
                         logger.i("OverviewViewModel", "Odometer record saved successfully")
-                        analytics.track(AnalyticsEvent.Custom("odometer_updated", mapOf("value" to odometerValue)))
+                        analytics.track(KmsafeAnalyticsEvent.Overview.OdometerUpdated(odometerValue))
                         if (fuelAmount != null) {
-                            analytics.track(AnalyticsEvent.Custom("fuel_entry_added", mapOf("amount" to fuelAmount)))
+                            analytics.track(KmsafeAnalyticsEvent.Overview.FuelEntryAdded(fuelAmount))
                         }
                         updateState { copy(isSaving = false, showBottomSheet = false, isLoading = false) }
                         clearTrackingUseCase(ClearTrackingUseCase.Input).launchIn(viewModelScope)
@@ -541,7 +541,7 @@ class OverviewViewModel @Inject constructor(
     }
 
     private fun handleStartTracking() {
-        analytics.track(AnalyticsEvent.Custom("tracking_started"))
+        analytics.track(KmsafeAnalyticsEvent.Tracking.TrackingStarted)
         viewModelScope.launch {
             startTripTrackingUseCase(StartTripTrackingUseCase.Input)
         }
@@ -549,7 +549,7 @@ class OverviewViewModel @Inject constructor(
 
     private fun handleStopTracking() {
         logger.d("OverviewViewModel", "handleStopTracking called")
-        analytics.track(AnalyticsEvent.Custom("tracking_stopped", mapOf("distance" to state.value.trackedDistance)))
+        analytics.track(KmsafeAnalyticsEvent.Tracking.TrackingStopped(state.value.trackedDistance))
         viewModelScope.launch {
             stopTripTrackingUseCase(StopTripTrackingUseCase.Input)
         }
@@ -567,7 +567,7 @@ class OverviewViewModel @Inject constructor(
     }
 
     private fun handleCancelTrackedTrip() {
-        analytics.track(AnalyticsEvent.Custom("tracking_cancelled"))
+        analytics.track(KmsafeAnalyticsEvent.Tracking.TrackingCancelled)
         clearTrackingUseCase(ClearTrackingUseCase.Input).launchIn(viewModelScope)
         launchEffect(Effect.DismissTrackingNotifications)
     }

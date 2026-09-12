@@ -1,6 +1,6 @@
 package es.joshluq.kmsafe.feature.overview
 
-import es.joshluq.analyticskit.sdk.AnalyticskitManager
+import es.joshluq.kmsafe.core.analytics.fake.FakeAnalyticsTracker
 import es.joshluq.foundationkit.log.LoggerKit
 import es.joshluq.kmsafe.core.domain.usecase.SyncStationGeofencesUseCase
 import es.joshluq.kmsafe.core.monetization.domain.MonetizationConfig
@@ -76,7 +76,7 @@ class OverviewViewModelTest {
     private val stopTripTrackingUseCase: StopTripTrackingUseCase = mockk(relaxed = true)
     private val syncStationGeofencesUseCase: SyncStationGeofencesUseCase = mockk(relaxed = true)
     private val monetizationConfig: MonetizationConfig = mockk(relaxed = true)
-    private val analytics: AnalyticskitManager = mockk(relaxed = true)
+    private val analytics = FakeAnalyticsTracker()
     private val logger: LoggerKit = mockk(relaxed = true)
 
     private val sampleContract = RentingContract(

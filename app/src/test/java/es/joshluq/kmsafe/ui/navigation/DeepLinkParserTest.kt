@@ -113,7 +113,7 @@ class DeepLinkParserTest {
         val intent: Intent = mockk { every { data } returns uri }
 
         val dest = DeepLinkParser.parse(intent)
-        assertEquals(Destination.PremiumPaywall, dest)
+        assertEquals(Destination.PremiumPaywall(source = "deeplink"), dest)
     }
 
     @Test

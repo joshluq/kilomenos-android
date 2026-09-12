@@ -22,6 +22,7 @@ data class State(
     val isLoading: Boolean = false,
     val isMigrating: Boolean = false,
     val selectedPlan: PremiumBillingPlan = PremiumBillingPlan.ANNUAL,
+    val source: String = "general",
     val error: TextProvider? = null
 ) : UiState {
     companion object {
@@ -33,6 +34,7 @@ data class State(
  * Represents the UI events for the Premium Paywall screen.
  */
 sealed interface Event : UiEvent {
+    data class OnInitialize(val source: String) : Event
     data class OnPlanSelected(val plan: PremiumBillingPlan) : Event
     object OnUpgradeClicked : Event
     object OnDismissClicked : Event

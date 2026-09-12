@@ -17,6 +17,8 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.launchIn
+import es.joshluq.kmsafe.core.analytics.AnalyticsTracker
+import es.joshluq.kmsafe.core.analytics.model.KmsafeAnalyticsEvent
 import kotlinx.coroutines.flow.onEach
 import javax.inject.Inject
 import kotlin.time.Duration.Companion.milliseconds
@@ -29,6 +31,7 @@ class ProfileViewModel @Inject constructor(
     private val getEntitlementsUseCase: GetEntitlementsUseCase,
     private val setAppOverlayUseCase: SetAppOverlayUseCase,
     private val profileConfig: ProfileConfig,
+    private val analytics: AnalyticsTracker,
     private val logger: LoggerKit
 ) : ScreenViewModel<State, Event, Effect>() {
 
@@ -65,16 +68,19 @@ class ProfileViewModel @Inject constructor(
             }
             Event.OnLogoutClicked -> updateState { copy(showLogoutConfirmation = true) }
             Event.OnLogoutConfirmed -> {
+                analytics.track(KmsafeAnalyticsEvent.Profile.LogoutConfirmed)
                 updateState { copy(showLogoutConfirmation = false) }
                 handleLogout()
             }
             Event.OnLogoutCancelled -> updateState { copy(showLogoutConfirmation = false) }
             Event.OnUpgradeClicked -> {
+                analytics.track(KmsafeAnalyticsEvent.Monetization.UpgradeClicked(source = "profile"))
                 logger.d("ProfileViewModel", "Effect launched: NavigateToPremiumPaywall")
                 launchEffect(Effect.NavigateToPremiumPaywall)
             }
             Event.OnDeleteAccountClicked -> updateState { copy(showDeleteConfirmation = true) }
             Event.OnDeleteAccountConfirmed -> {
+                analytics.track(KmsafeAnalyticsEvent.Profile.AccountDeletionConfirmed)
                 updateState { copy(showDeleteConfirmation = false) }
                 handleDeleteAccount()
             }

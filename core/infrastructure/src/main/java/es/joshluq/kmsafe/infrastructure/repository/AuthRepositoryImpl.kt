@@ -1,7 +1,5 @@
 package es.joshluq.kmsafe.infrastructure.repository
 
-import es.joshluq.analyticskit.domain.model.AnalyticsEvent
-import es.joshluq.analyticskit.sdk.AnalyticskitManager
 import es.joshluq.authkit.session.model.Token
 import es.joshluq.authkit.session.model.TokenHolder
 import es.joshluq.foundationkit.coroutines.DispatcherProvider
@@ -29,6 +27,7 @@ import es.joshluq.kmsafe.domain.repository.AuthRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
+import es.joshluq.kmsafe.core.analytics.AnalyticsTracker
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
@@ -45,7 +44,7 @@ class AuthRepositoryImpl @Inject constructor(
     private val errorMapper: ErrorMapper,
     private val logger: LoggerKit,
     private val dispatchers: DispatcherProvider,
-    private val analytics: AnalyticskitManager
+    private val analyticsTracker: AnalyticsTracker
 ) : AuthRepository {
 
     override fun signIn(email: String, password: String): Flow<User> = flow {
@@ -83,11 +82,6 @@ class AuthRepositoryImpl @Inject constructor(
                 // Double check session persistence immediately
                 val verifiedSession = sessionDataSource.getCurrentUserSession()
                 logger.d("AuthRepository", "Verified session data immediately: $verifiedSession")
-                
-                analytics.track(
-                    AnalyticsEvent.Custom("login_success", mapOf("user_id" to user.id, "method" to "credentials"))
-                )
-
                 emit(user)
             } else {
                 val errorMsg = body?.error ?: "Authentication failed"
@@ -135,11 +129,6 @@ class AuthRepositoryImpl @Inject constructor(
                 // Double check
                 val verifiedSession = sessionDataSource.getCurrentUserSession()
                 logger.d("AuthRepository", "Verified Google session: $verifiedSession")
-
-                analytics.track(
-                    AnalyticsEvent.Custom("login_success", mapOf("user_id" to user.id, "method" to "google"))
-                )
-
                 emit(user)
             } else {
                 val errorMsg = body?.error ?: "OAuth authentication failed"
@@ -179,8 +168,6 @@ class AuthRepositoryImpl @Inject constructor(
 
                     sessionDataSource.startSession(tokens)
                     sessionDataSource.saveSessionData(user.toSessionModel(initialEntitlements.toModel()))
-
-                    analytics.track(AnalyticsEvent.Custom("signup_success", mapOf("user_id" to user.id)))
 
                     emit(user)
                 } else {
@@ -264,14 +251,13 @@ class AuthRepositoryImpl @Inject constructor(
             sessionDataSource.saveSessionData(updatedSession)
 
             // Sync analytics
-            analytics.addGlobalProperty("subscription_level", entitlements.subscriptionLevel.name)
+            analyticsTracker.setUserProperty("subscription_level", entitlements.subscriptionLevel.name)
         }
     }
 
     override fun signOut(clearLocalData: Boolean): Flow<Unit> = flow {
         logger.i("AuthRepository", "Ending session. clearLocalData: $clearLocalData")
-        analytics.track(AnalyticsEvent.Custom("logout"))
-        analytics.removeGlobalProperty("subscription_level")
+        analyticsTracker.setUserProperty("subscription_level", null)
         sessionDataSource.endSession()
         if (clearLocalData) {
             appDatabase.clearAllTables()
@@ -288,7 +274,7 @@ class AuthRepositoryImpl @Inject constructor(
             sessionDataSource.endSession()
             appDatabase.clearAllTables()
             preferencesDataSource.clearAllPreferences()
-            analytics.track(AnalyticsEvent.Custom("account_deleted"))
+            analyticsTracker.setUserProperty("subscription_level", null)
             emit(Unit)
         } else {
             logger.e("AuthRepository", "Failed to delete account. Code: ${response.code()}")
