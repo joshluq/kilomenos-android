@@ -80,18 +80,6 @@
                 android:value="androidx.startup"
                 tools:node="remove" />
         </provider>
-        <!-- KmSafe Home Screen Widget Receiver -->
-        <receiver
-            android:name="es.joshluq.kmsafe.feature.widget.receiver.KmSafeWidgetReceiver"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
-                <action android:name="es.joshluq.kmsafe.ACTION_UPDATE_WIDGET" />
-            </intent-filter>
-            <meta-data
-                android:name="android.appwidget.provider"
-                android:resource="@xml/kmsafe_widget_info" />
-        </receiver>
     </application>
 
 </manifest>

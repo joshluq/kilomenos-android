@@ -24,7 +24,7 @@ dependencies {
     implementation(deps.analyticskit)
     implementation(deps.javax.inject)
 
-    implementation(deps.androidx.glance.appwidget)
+    api(deps.androidx.glance.appwidget)
     implementation(deps.androidx.glance.material3)
 
     implementation(libs.kotlinx.serialization.json)
