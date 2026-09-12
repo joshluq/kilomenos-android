@@ -41,6 +41,14 @@
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data android:scheme="https" android:host="kmsafe.app" />
             </intent-filter>
+
+            <!-- Custom Scheme Deep Links: kmsafe://app/... -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="kmsafe" android:host="app" />
+            </intent-filter>
         </activity>
 
         <provider
@@ -72,6 +80,18 @@
                 android:value="androidx.startup"
                 tools:node="remove" />
         </provider>
+        <!-- KmSafe Home Screen Widget Receiver -->
+        <receiver
+            android:name="es.joshluq.kmsafe.feature.widget.receiver.KmSafeWidgetReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <action android:name="es.joshluq.kmsafe.ACTION_UPDATE_WIDGET" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/kmsafe_widget_info" />
+        </receiver>
     </application>
 
 </manifest>

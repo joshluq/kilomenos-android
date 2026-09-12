@@ -80,6 +80,8 @@ import es.joshluq.kmsafe.domain.usecase.SimulateContractProjectionUseCase
 import es.joshluq.kmsafe.domain.usecase.SimulateContractProjectionUseCaseImpl
 import es.joshluq.kmsafe.domain.usecase.GetVehicleByIdUseCase
 import es.joshluq.kmsafe.domain.usecase.GetVehicleByIdUseCaseImpl
+import es.joshluq.kmsafe.domain.usecase.GetWidgetSummaryUseCase
+import es.joshluq.kmsafe.domain.usecase.GetWidgetSummaryUseCaseImpl
 import es.joshluq.kmsafe.domain.usecase.MigrateLocalDataToRemoteUseCase
 import es.joshluq.kmsafe.domain.usecase.MigrateLocalDataToRemoteUseCaseImpl
 import es.joshluq.kmsafe.domain.usecase.ObserveAppOverlayUseCase
@@ -194,6 +196,9 @@ abstract class UseCaseModule {
 
     @Binds
     abstract fun bindGetOverviewDataUseCase(impl: GetOverviewDataUseCaseImpl): GetOverviewDataUseCase
+
+    @Binds
+    abstract fun bindGetWidgetSummaryUseCase(impl: GetWidgetSummaryUseCaseImpl): GetWidgetSummaryUseCase
 
     @Binds
     abstract fun bindGetPreferencesUseCase(impl: GetPreferencesUseCaseImpl): GetPreferencesUseCase

@@ -1,0 +1,11 @@
+<resources>
+    <string name="widget_name">KiloMenos</string>
+    <string name="widget_description">Consulta tu balance de renting en tiempo real y registra odómetro en 1 toque.</string>
+    <string name="widget_empty_title">Sin vehículo activo</string>
+    <string name="widget_empty_desc">Configura tu contrato en KiloMenos para ver tu balance en tiempo real.</string>
+    <string name="widget_empty_action">Configurar</string>
+    <string name="widget_today_quota">Hoy: %1$s km</string>
+    <string name="widget_current_odometer">%1$s km totales</string>
+    <string name="widget_quick_add">Registrar odómetro</string>
+    <string name="widget_sync_pending">Sincronización pendiente</string>
+</resources>

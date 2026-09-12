@@ -1,5 +1,6 @@
 package es.joshluq.kmsafe
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -69,6 +70,10 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
 
         val initialDestination = DeepLinkParser.parse(intent) ?: Destination.Launch
+        val isQuickAdd = intent?.data?.getQueryParameter("action") == "quick_add"
+        if (isQuickAdd) {
+            resultStore.setResult("quick_add_odometer", true)
+        }
 
         setContent {
             CanvasKitTheme {
@@ -85,6 +90,19 @@ class MainActivity : ComponentActivity() {
                     }
                 )
             }
+        }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        val destination = DeepLinkParser.parse(intent)
+        if (destination != null) {
+            resultStore.setResult("deep_link_destination", destination)
+        }
+        val isQuickAdd = intent.data?.getQueryParameter("action") == "quick_add"
+        if (isQuickAdd) {
+            resultStore.setResult("quick_add_odometer", true)
         }
     }
 }

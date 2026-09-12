@@ -19,14 +19,16 @@ object DeepLinkParser {
     fun parse(intent: Intent?): Destination? {
         val data: Uri = intent?.data ?: return null
 
-        if (data.scheme != DeepLinkConfig.SCHEME || data.host != DeepLinkConfig.HOST) {
+        val isHttps = data.scheme == DeepLinkConfig.SCHEME && data.host == DeepLinkConfig.HOST
+        val isCustomScheme = data.scheme == "kmsafe" && data.host == "app"
+        if (!isHttps && !isCustomScheme) {
             return null
         }
 
         val pathSegments = data.pathSegments ?: return null
 
         return when {
-            pathSegments.isEmpty() -> Destination.Dashboard
+            pathSegments.isEmpty() || pathSegments[0] == "dashboard" || pathSegments[0] == "overview" -> Destination.Dashboard
             pathSegments[0] == "expenses" -> {
                 val stationId = data.getQueryParameter("stationId")
                 val autoOpen = data.getBooleanQueryParameter("autoOpen", false)

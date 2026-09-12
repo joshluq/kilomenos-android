@@ -8,9 +8,12 @@ import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
 import androidx.navigation3.runtime.NavEntry
 import androidx.navigation3.ui.NavDisplay
@@ -54,6 +57,31 @@ fun AppNavigation(
 
     val onNavigate: (Destination) -> Unit = { dest ->
         backStack.add(dest)
+    }
+
+    val deepLinkDestination by resultStore
+        .getResult<Destination>("deep_link_destination")
+        .collectAsStateWithLifecycle()
+
+    LaunchedEffect(deepLinkDestination) {
+        deepLinkDestination?.let { target ->
+            when (target) {
+                is Destination.Dashboard -> {
+                    if (backStack.contains(Destination.Dashboard)) {
+                        while (backStack.size > 1 && backStack.last() != Destination.Dashboard) {
+                            backStack.removeAt(backStack.lastIndex)
+                        }
+                    } else {
+                        backStack.clear()
+                        backStack.add(Destination.Dashboard)
+                    }
+                }
+                else -> {
+                    backStack.add(target)
+                }
+            }
+            resultStore.clearResult("deep_link_destination")
+        }
     }
 
     val onBack: () -> Unit = {

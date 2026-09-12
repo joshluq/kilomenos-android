@@ -136,6 +136,17 @@ fun OverviewRoute(
         .getResult<Boolean>("permissions_granted")
         .collectAsStateWithLifecycle()
 
+    val quickAddResult by resultStore
+        .getResult<Boolean>("quick_add_odometer")
+        .collectAsStateWithLifecycle()
+
+    LaunchedEffect(quickAddResult) {
+        if (quickAddResult == true) {
+            viewModel.sendEvent(Event.OnUpdateOdometerClicked)
+            resultStore.clearResult("quick_add_odometer")
+        }
+    }
+
     LaunchedEffect(permissionResult) {
         permissionResult?.let { granted ->
             if (granted) {

@@ -119,6 +119,7 @@ dependencies {
     implementation(project(":feature:overview"))
     implementation(project(":feature:projection"))
     implementation(project(":feature:premium"))
+    implementation(project(":feature:widget"))
     implementation(project(":core:ui"))
     implementation(project(":core:infrastructure"))
     implementation(project(":core:domain"))
