@@ -25,7 +25,6 @@ import es.joshluq.kmsafe.feature.auth.launch.LaunchRoute
 import es.joshluq.kmsafe.feature.auth.login.LoginRoute
 import es.joshluq.kmsafe.feature.auth.signup.SignupRoute
 import es.joshluq.kmsafe.feature.dashboard.DashboardRoute
-import es.joshluq.kmsafe.feature.expenses.ExpensesRoute
 import es.joshluq.kmsafe.feature.expenses.stations.StationManagementRoute
 import es.joshluq.kmsafe.feature.expenses.stations.detail.StationDetailRoute
 import es.joshluq.kmsafe.feature.fleet.detail.VehicleDetailRoute
@@ -76,7 +75,7 @@ fun AppNavigation(
     LaunchedEffect(deepLinkDestination) {
         deepLinkDestination?.let { target ->
             when (target) {
-                is Destination.Dashboard -> {
+                is Destination.Dashboard, is Destination.Expenses -> {
                     if (backStack.contains(Destination.Dashboard)) {
                         while (backStack.size > 1 && backStack.last() != Destination.Dashboard) {
                             backStack.removeAt(backStack.lastIndex)
@@ -85,12 +84,15 @@ fun AppNavigation(
                         backStack.clear()
                         backStack.add(Destination.Dashboard)
                     }
+                    if (target is Destination.Dashboard) {
+                        resultStore.clearResult("deep_link_destination")
+                    }
                 }
                 else -> {
                     backStack.add(target)
+                    resultStore.clearResult("deep_link_destination")
                 }
             }
-            resultStore.clearResult("deep_link_destination")
         }
     }
 
@@ -386,23 +388,6 @@ fun AppNavigation(
                         )
                     }
 
-                    is Destination.Expenses -> NavEntry(key) {
-                        ExpensesRoute(
-                            stationId = key.stationId,
-                            autoOpenAdd = key.autoOpenAdd,
-                            priceReportMode = key.priceReportMode,
-                            onNavigateToUpgrade = {
-                                onNavigate(Destination.PremiumPaywall("expenses"))
-                            },
-                            onNavigateToStations = {
-                                onNavigate(Destination.StationManagement)
-                            },
-                            onNavigateToStationDetail = { stationId ->
-                                onNavigate(Destination.StationDetail(stationId))
-                            }
-                        )
-                    }
-
                     Destination.StationManagement -> NavEntry(key) {
                         StationManagementRoute(
                             onNavigateBack = onBack,
@@ -422,7 +407,8 @@ fun AppNavigation(
                     Destination.Overview,
                     Destination.History,
                     Destination.Profile,
-                    Destination.ProjectionAnalysis -> NavEntry(key) {
+                    Destination.ProjectionAnalysis,
+                    is Destination.Expenses -> NavEntry(key) {
                         // Handled internally by DashboardNavigation
                     }
                 }

@@ -72,7 +72,10 @@ class MainActivity : ComponentActivity() {
 
         enableEdgeToEdge()
 
-        val initialDestination = DeepLinkParser.parse(intent) ?: Destination.Launch
+        val destination = DeepLinkParser.parse(intent)
+        if (destination != null) {
+            resultStore.setResult("deep_link_destination", destination)
+        }
         val isQuickAdd = intent?.data?.getQueryParameter("action") == "quick_add"
         if (isQuickAdd) {
             resultStore.setResult("quick_add_odometer", true)
@@ -81,7 +84,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             CanvasKitTheme {
                 AppNavigation(
-                    initialDestination = initialDestination,
+                    initialDestination = Destination.Launch,
                     resultStore = resultStore,
                     analyticsTracker = analyticsTracker,
                     onLaunchBilling = { billingManager.launchBillingFlow(this) },

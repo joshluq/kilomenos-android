@@ -21,6 +21,10 @@ import es.joshluq.kmsafe.feature.overview.OverviewRoute
 import es.joshluq.kmsafe.feature.profile.ProfileRoute
 import es.joshluq.kmsafe.feature.projection.ProjectionAnalysisRoute
 
+import androidx.compose.runtime.getValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import es.joshluq.kmsafe.core.navigation.LocalNavigationResultStore
+
 @Composable
 fun DashboardNavigation(
     selectedTab: DashboardTab,
@@ -39,6 +43,11 @@ fun DashboardNavigation(
     onNavigateToVehicleDetail: (String) -> Unit,
     onNavigateToEditContract: (String) -> Unit = {}
 ) {
+    val resultStore = LocalNavigationResultStore.current
+    val deepLinkDestination by resultStore
+        .getResult<Destination>("deep_link_destination")
+        .collectAsStateWithLifecycle()
+
     val destinationForTab: (DashboardTab) -> Destination = { tab ->
         when (tab) {
             DashboardTab.OVERVIEW -> Destination.Overview
@@ -50,11 +59,24 @@ fun DashboardNavigation(
     }
 
     val backStack = rememberSaveable(saver = DestinationListSaver) {
-        mutableStateListOf(destinationForTab(selectedTab))
+        val initial = if (selectedTab == DashboardTab.EXPENSES && deepLinkDestination is Destination.Expenses) {
+            val dest = deepLinkDestination as Destination.Expenses
+            resultStore.clearResult("deep_link_destination")
+            dest
+        } else {
+            destinationForTab(selectedTab)
+        }
+        mutableStateListOf(initial)
     }
 
-    LaunchedEffect(selectedTab) {
-        val targetDestination = destinationForTab(selectedTab)
+    LaunchedEffect(selectedTab, deepLinkDestination) {
+        val targetDestination = if (selectedTab == DashboardTab.EXPENSES && deepLinkDestination is Destination.Expenses) {
+            val dest = deepLinkDestination as Destination.Expenses
+            resultStore.clearResult("deep_link_destination")
+            dest
+        } else {
+            destinationForTab(selectedTab)
+        }
         if (backStack.lastOrNull() != targetDestination) {
             backStack.clear()
             backStack.add(targetDestination)
@@ -102,6 +124,9 @@ fun DashboardNavigation(
                 }
                 is Destination.Expenses -> NavEntry(key) {
                     ExpensesRoute(
+                        stationId = key.stationId,
+                        autoOpenAdd = key.autoOpenAdd,
+                        priceReportMode = key.priceReportMode,
                         onNavigateToUpgrade = { onNavigateToPremiumPaywall("expenses") },
                         onNavigateToStations = onNavigateToStations,
                         onNavigateToStationDetail = onNavigateToStationDetail

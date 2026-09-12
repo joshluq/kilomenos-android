@@ -53,6 +53,7 @@ class DeepLinkParserTest {
             every { pathSegments } returns listOf("expenses")
             every { getQueryParameter("stationId") } returns "st-1"
             every { getBooleanQueryParameter("autoOpen", false) } returns true
+            every { getBooleanQueryParameter("autoOpenAdd", false) } returns false
             every { getBooleanQueryParameter("priceReportMode", false) } returns false
         }
         val intent: Intent = mockk { every { data } returns uri }
@@ -60,6 +61,26 @@ class DeepLinkParserTest {
         val dest = DeepLinkParser.parse(intent)
         assertEquals(
             Destination.Expenses(stationId = "st-1", autoOpenAdd = true, priceReportMode = false),
+            dest
+        )
+    }
+
+    @Test
+    fun `given expenses uri with autoOpenAdd then resolves to Destination Expenses with autoOpenAdd true`() {
+        val uri: Uri = mockk {
+            every { scheme } returns "https"
+            every { host } returns "kmsafe.app"
+            every { pathSegments } returns listOf("expenses")
+            every { getQueryParameter("stationId") } returns "st-99"
+            every { getBooleanQueryParameter("autoOpen", false) } returns false
+            every { getBooleanQueryParameter("autoOpenAdd", false) } returns true
+            every { getBooleanQueryParameter("priceReportMode", false) } returns false
+        }
+        val intent: Intent = mockk { every { data } returns uri }
+
+        val dest = DeepLinkParser.parse(intent)
+        assertEquals(
+            Destination.Expenses(stationId = "st-99", autoOpenAdd = true, priceReportMode = false),
             dest
         )
     }

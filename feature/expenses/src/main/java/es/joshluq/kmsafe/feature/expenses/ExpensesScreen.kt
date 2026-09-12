@@ -421,15 +421,6 @@ private fun BoxScope.BannerSections(
             .align(Alignment.BottomCenter),
         verticalArrangement = Arrangement.spacedBy(CanvasKitTheme.spacing.xs)
     ) {
-        // Scanning progress banner overlay
-        if (state.isScanningReceipt) {
-            CanvasKitBanner(
-                title = { Text(stringResource(R.string.expenses_scanning_banner_title)) },
-                message = { Text(stringResource(R.string.expenses_scanning_banner_desc)) },
-                variant = CanvasKitAlertVariant.Info,
-                modifier = Modifier.fillMaxWidth()
-            )
-        }
 
         // Toast-style Banner (Error & Success)
         CanvasKitBanner(

@@ -30,6 +30,11 @@ import es.joshluq.kmsafe.core.ui.icons.CanvasKitIcons
 import es.joshluq.kmsafe.core.ui.util.safeClick
 import es.joshluq.kmsafe.domain.model.AppOverlayState
 
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import es.joshluq.kmsafe.core.navigation.Destination
+import es.joshluq.kmsafe.core.navigation.LocalNavigationResultStore
+
 /**
  * Route Composable connecting the ViewModel to the DashboardScreen.
  */
@@ -39,6 +44,20 @@ fun DashboardRoute(
 ) {
     val viewModel: DashboardViewModel = hiltViewModel()
     val state = viewModel.state.collectAsStateWithLifecycle()
+
+    val resultStore = LocalNavigationResultStore.current
+    val deepLinkDestination by resultStore
+        .getResult<Destination>("deep_link_destination")
+        .collectAsStateWithLifecycle()
+
+    LaunchedEffect(deepLinkDestination) {
+        when (deepLinkDestination) {
+            is Destination.Expenses -> {
+                viewModel.sendEvent(Event.OnTabSelected(DashboardTab.EXPENSES))
+            }
+            else -> Unit
+        }
+    }
 
     DashboardScreen(
         state = state.value,

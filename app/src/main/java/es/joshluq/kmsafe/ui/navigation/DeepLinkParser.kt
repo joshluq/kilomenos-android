@@ -31,7 +31,8 @@ object DeepLinkParser {
             pathSegments.isEmpty() || pathSegments[0] == "dashboard" || pathSegments[0] == "overview" -> Destination.Dashboard
             pathSegments[0] == "expenses" -> {
                 val stationId = data.getQueryParameter("stationId")
-                val autoOpen = data.getBooleanQueryParameter("autoOpen", false)
+                val autoOpen = data.getBooleanQueryParameter("autoOpen", false) ||
+                        data.getBooleanQueryParameter("autoOpenAdd", false)
                 val priceReportMode = data.getBooleanQueryParameter("priceReportMode", false)
                 Destination.Expenses(
                     stationId = stationId,
