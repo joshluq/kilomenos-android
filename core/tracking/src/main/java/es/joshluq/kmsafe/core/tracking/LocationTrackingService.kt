@@ -99,14 +99,6 @@ class LocationTrackingService : Service() {
         private const val MIN_SPEED_THRESHOLD_MPS = 1.5 // ~5.4 km/h
         private const val MAX_HORIZONTAL_ACCURACY_METERS = 30.0
 
-        /**
-         * Cancels the "Trip Finished" notification programmatically.
-         * Called from feature modules when the user saves or discards a tracked trip,
-         */
-        fun cancelTripFinishedNotification(context: Context) {
-            val notificationManager = context.getSystemService(NOTIFICATION_SERVICE) as NotificationManager
-            notificationManager.cancel(NOTIFICATION_ID_TRIP_FINISHED)
-        }
     }
 
     override fun onCreate() {
