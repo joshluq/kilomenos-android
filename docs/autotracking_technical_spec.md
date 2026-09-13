@@ -61,20 +61,19 @@ sequenceDiagram
 
     alt Primary Flow: Bluetooth Fast-Path (Vehicle Ignition)
         Car->>BCR: ACTION_ACL_CONNECTED (MAC)
-        BCR->>DB: Check Active Contract & Premium Entitlements
-        alt MAC matches Active Vehicle
-            BCR-->>UI: Live Connection Pill Active ("Vinculado")
-            BCR->>BCR: Show Local Feedback Notification ("Connected to vehicle")
-            Note over BCR: ANDROID 14 EXEMPTION WINDOW
+        BCR->>BCR: TrackingDeviceCache.getLinkedMac() [<0.1ms sync check]
+        alt MAC matches Active Vehicle Cache
+            Note over BCR: SYNCHRONOUS IN onReceive() [AGENTS.md Rule 16.1]
             BCR->>LTS: context.startForegroundService(ACTION_START_BT_AUTO)
             activate LTS
             Note over LTS: MAIN THREAD (Synchronous)
             LTS->>LTS: showValidationNotification() -> startForeground()
-            Note over LTS: IO THREAD (Async Validation)
-            LTS->>DB: Triple Check (Premium + Active Contract + MAC pre-verified)
+            Note over LTS: IO THREAD (Async Triple Check in Foreground)
+            LTS->>DB: Triple Check (Premium + autoTrackingEnabled + Active Contract + Preverified MAC)
             LTS->>GPS: Request Location Updates (High Accuracy)
             LTS-->>UI: Trip in Progress (Pill active with live distance)
         end
+        BCR->>DB: Async: Update UI Connection Pill & Keep Cache Fresh
     end
 
     alt Vehicle Disconnection (Trip Finalization)
@@ -135,18 +134,19 @@ graph TD
     StateNoPerms -->|Tap Card| NavAutoPerms[Navigate to AutoTrackingPermissionsScreen]
 
     AllPermsCheck -->|Yes| BtCheck{Active Vehicle Bluetooth Connected?}
-    BtCheck -->|Yes| StateConnected[State 3: 'Coche Enlazado'<br/>Subtitle: 'Listo para grabar' (Green)]
-    BtCheck -->|No| StateStandby[State 4: 'En Espera'<br/>Subtitle: 'Listo para grabar' (Blue)]
+    BtCheck -->|Yes| StateConnected[State 3: 'Coche Enlazado'<br/>Subtitle: 'Listo para grabar' Green]
+    BtCheck -->|No| StateStandby[State 4: 'En Espera'<br/>Subtitle: 'Listo para grabar' Blue]
 ```
 
 ---
 
-## 5. Validation Logic (The "Triple Check")
+## 5. Validation Logic (The "Triple Check" + Preferences Guard)
 
-Before recording GPS points, `LocationTrackingService` performs three validations:
+Before recording GPS points, `LocationTrackingService` executes comprehensive domain validations in foreground:
 1. **Premium Access**: Verifies via `CheckFeatureAccessUseCase` that the user has the `AUTO_TRACKING` entitlement.
-2. **Contract SSOT**: Verifies the presence of an active `RentingContract` in the local Room database.
-3. **Bluetooth Hardware Fast-Path**: If started via `ACTION_START_BT_AUTO` with matching pre-verified MAC, validation succeeds immediately. If started via Activity Recognition fallback, the service queries connected `A2DP` and `HEADSET` profile proxies with asynchronous completion protection.
+2. **Preferences Guard**: Verifies via `GetPreferencesUseCase` that `preferences.autoTrackingEnabled` is `true`. If disabled, stops gracefully immediately.
+3. **Contract SSOT**: Verifies the presence of an active `RentingContract` in the local Room database and updates `TrackingDeviceCache`.
+4. **Bluetooth Hardware Fast-Path**: If started via `ACTION_START_BT_AUTO` with matching pre-verified MAC, validation succeeds immediately. If started via Activity Recognition fallback, the service queries connected `A2DP` and `HEADSET` profile proxies with thread-safe `AtomicBoolean` flags and cancellation cleanup.
 
 ---
 

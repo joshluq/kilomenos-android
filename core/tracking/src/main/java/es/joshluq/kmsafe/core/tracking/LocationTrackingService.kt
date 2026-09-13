@@ -33,6 +33,7 @@ import es.joshluq.foundationkit.log.LoggerKit
 import es.joshluq.kmsafe.domain.model.Feature
 import es.joshluq.kmsafe.domain.repository.TrackingRepository
 import es.joshluq.kmsafe.domain.usecase.CheckFeatureAccessUseCase
+import es.joshluq.kmsafe.domain.usecase.GetPreferencesUseCase
 import es.joshluq.kmsafe.domain.usecase.GetRentingContractUseCase
 import es.joshluq.kmsafe.core.tracking.diagnostic.TrackingDiagnostics
 import kotlinx.coroutines.CoroutineScope
@@ -46,6 +47,7 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.coroutines.suspendCancellableCoroutine
+import java.util.concurrent.atomic.AtomicBoolean
 import javax.inject.Inject
 import kotlin.coroutines.resume
 import kotlin.time.Duration.Companion.milliseconds
@@ -67,6 +69,9 @@ class LocationTrackingService : Service() {
 
     @Inject
     lateinit var getRentingContractUseCase: GetRentingContractUseCase
+
+    @Inject
+    lateinit var getPreferencesUseCase: GetPreferencesUseCase
 
     @Inject
     lateinit var logger: LoggerKit
@@ -215,7 +220,24 @@ class LocationTrackingService : Service() {
                     return@launch
                 }
 
-                // 2. Check if already tracking
+                // 2. RC-2 FIX: Check Preferences (Auto-Tracking Toggle)
+                val prefsOutput = withTimeoutOrNull(3000L.milliseconds) {
+                    getPreferencesUseCase(GetPreferencesUseCase.Input).first()
+                }
+                val isAutoTrackingEnabled = (prefsOutput is GetPreferencesUseCase.Output.Success) &&
+                    prefsOutput.preferences.autoTrackingEnabled
+                if (!isAutoTrackingEnabled) {
+                    logger.i("LocationService", "Validation failed: Auto-tracking is disabled in user preferences.")
+                    TrackingDiagnostics.recordError(
+                        this@LocationTrackingService,
+                        "LocationService",
+                        "Auto-tracking is disabled in user preferences."
+                    )
+                    stopTrackingGracefully()
+                    return@launch
+                }
+
+                // 3. Check if already tracking
                 if (trackingRepository.isTracking.first()) {
                     logger.d("LocationService", "Already tracking. Validation aborted.")
                     TrackingDiagnostics.updateStatus(
@@ -226,14 +248,16 @@ class LocationTrackingService : Service() {
                     return@launch
                 }
 
-                // 3. Check Bluetooth if linked
+                // 4. Check Bluetooth if linked
                 val contractOutput = withTimeoutOrNull(5000L.milliseconds) {
                     getRentingContractUseCase(GetRentingContractUseCase.Input).first {
                         it !is GetRentingContractUseCase.Output.Progress
                     }
                 }
                 if (contractOutput is GetRentingContractUseCase.Output.Success) {
-                    val mac = contractOutput.contract.bluetoothDeviceAddress
+                    val contract = contractOutput.contract
+                    TrackingDeviceCache.updateCache(this@LocationTrackingService, contract.bluetoothDeviceAddress, contract.vehicleName)
+                    val mac = contract.bluetoothDeviceAddress
                     if (mac != null) {
                         val isConnected = if (isBluetoothFastPath && preverifiedMac != null && normalizeAddress(mac) == normalizeAddress(preverifiedMac)) {
                             logger.i("LocationService", "Fast-Path active: Bluetooth $mac pre-verified by hardware broadcast.")
@@ -348,14 +372,14 @@ class LocationTrackingService : Service() {
             suspendCancellableCoroutine { continuation ->
                 var a2dpProxy: BluetoothProfile? = null
                 var headsetProxy: BluetoothProfile? = null
-                var a2dpProcessed = false
-                var headsetProcessed = false
-                var found = false
+                val a2dpProcessed = AtomicBoolean(false)
+                val headsetProcessed = AtomicBoolean(false)
+                val found = AtomicBoolean(false)
 
                 fun checkCompletion() {
-                    if (found && !continuation.isCompleted) {
+                    if (found.get() && !continuation.isCompleted) {
                         continuation.resume(true)
-                    } else if (a2dpProcessed && headsetProcessed && !continuation.isCompleted) {
+                    } else if (a2dpProcessed.get() && headsetProcessed.get() && !continuation.isCompleted) {
                         continuation.resume(false)
                     }
                 }
@@ -368,19 +392,19 @@ class LocationTrackingService : Service() {
                                 val isTargetConnected = proxy.connectedDevices.any {
                                     normalizeAddress(it.address) == normalizedTarget
                                 }
-                                if (isTargetConnected) found = true
-                                a2dpProcessed = true
+                                if (isTargetConnected) found.set(true)
+                                a2dpProcessed.set(true)
                             } else if (profile == BluetoothProfile.HEADSET) {
                                 headsetProxy = proxy
                                 val isTargetConnected = proxy.connectedDevices.any {
                                     normalizeAddress(it.address) == normalizedTarget
                                 }
-                                if (isTargetConnected) found = true
-                                headsetProcessed = true
+                                if (isTargetConnected) found.set(true)
+                                headsetProcessed.set(true)
                             }
                         } catch (e: SecurityException) {
                             logger.e("LocationService", "SecurityException during Bluetooth check", e)
-                            found = true // Fallback: don't fail due to security exception
+                            found.set(true) // Fallback: don't fail due to security exception
                         } catch (e: Exception) {
                             logger.e("LocationService", "Error checking Bluetooth profile devices", e)
                         } finally {
@@ -389,21 +413,22 @@ class LocationTrackingService : Service() {
                     }
 
                     override fun onServiceDisconnected(profile: Int) {
-                        if (profile == BluetoothProfile.A2DP) a2dpProcessed = true
-                        if (profile == BluetoothProfile.HEADSET) headsetProcessed = true
+                        if (profile == BluetoothProfile.A2DP) a2dpProcessed.set(true)
+                        if (profile == BluetoothProfile.HEADSET) headsetProcessed.set(true)
                         checkCompletion()
                     }
                 }
 
                 try {
                     val a2dpStarted = adapter.getProfileProxy(context, profileListener, BluetoothProfile.A2DP)
-                    if (!a2dpStarted) a2dpProcessed = true
+                    if (!a2dpStarted) a2dpProcessed.set(true)
 
                     val headsetStarted = adapter.getProfileProxy(context, profileListener, BluetoothProfile.HEADSET)
-                    if (!headsetStarted) headsetProcessed = true
+                    if (!headsetStarted) headsetProcessed.set(true)
 
                     checkCompletion()
                 } catch (e: Exception) {
+                    logger.e("LocationService", "Error adapter.getProfileProxy Bluetooth profile listeners", e)
                     if (!continuation.isCompleted) continuation.resume(true) // Fallback on proxy error
                 }
 

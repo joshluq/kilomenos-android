@@ -93,12 +93,36 @@ class BluetoothConnectionReceiver : BroadcastReceiver() {
         val deviceAddr = try { device.address } catch (_: SecurityException) { "unknown" }
         logger.i("BluetoothReceiver", "Bluetooth event: $action, device=$deviceName ($deviceAddr)")
 
+        val normalizedDeviceMac = normalizeAddress(deviceAddr)
+        val linkedMac = TrackingDeviceCache.getLinkedMac(context)?.let { normalizeAddress(it) }
+
+        var serviceStartedSync = false
+
+        if (action == BluetoothDevice.ACTION_ACL_CONNECTED && linkedMac != null && normalizedDeviceMac == linkedMac) {
+            // RULE 16.1: START SERVICE SYNCHRONOUSLY UNDER HARDWARE BROADCAST EXEMPTION WINDOW
+            val vehicleName = TrackingDeviceCache.getVehicleName(context) ?: deviceName
+            logger.i("BluetoothReceiver", "FAST-PATH: Synchronous ACL match for linked vehicle ($linkedMac). Starting service immediately.")
+            TrackingDiagnostics.updateStatus(
+                context,
+                stage = "BT_FAST_PATH_SYNC_START",
+                details = "Starting LocationTrackingService synchronously in onReceive()"
+            )
+
+            val serviceIntent = Intent(context, LocationTrackingService::class.java).apply {
+                this.action = LocationTrackingService.ACTION_START_BT_AUTO
+                putExtra(LocationTrackingService.EXTRA_DEVICE_MAC, linkedMac)
+                putExtra(LocationTrackingService.EXTRA_VEHICLE_NAME, vehicleName)
+            }
+            startTrackingService(context, serviceIntent)
+            serviceStartedSync = true
+        }
+
         val pendingResult = goAsync()
 
         scope.launch {
             try {
                 when (action) {
-                    BluetoothDevice.ACTION_ACL_CONNECTED -> handleBluetoothConnected(context, device)
+                    BluetoothDevice.ACTION_ACL_CONNECTED -> handleBluetoothConnected(context, device, normalizedDeviceMac, serviceStartedSync)
                     BluetoothDevice.ACTION_ACL_DISCONNECTED -> handleBluetoothDisconnected(context, device)
                 }
             } catch (e: Exception) {
@@ -109,14 +133,12 @@ class BluetoothConnectionReceiver : BroadcastReceiver() {
         }
     }
 
-    private suspend fun handleBluetoothConnected(context: Context, device: BluetoothDevice) {
-        val deviceAddress = try {
-            device.address
-        } catch (_: SecurityException) {
-            null
-        } ?: return
-        val normalizedDeviceMac = normalizeAddress(deviceAddress)
-
+    private suspend fun handleBluetoothConnected(
+        context: Context,
+        device: BluetoothDevice,
+        normalizedDeviceMac: String,
+        serviceStartedSync: Boolean
+    ) {
         // 1. Fetch active contract
         val contractOutput = withTimeoutOrNull(5000L.milliseconds) {
             getRentingContractUseCase(GetRentingContractUseCase.Input).first {
@@ -131,6 +153,9 @@ class BluetoothConnectionReceiver : BroadcastReceiver() {
         val contract = contractOutput.contract
         val contractBluetoothMac = contract.bluetoothDeviceAddress
 
+        // Keep synchronous cache updated for next connection
+        TrackingDeviceCache.updateCache(context, contractBluetoothMac, contract.vehicleName)
+
         if (contractBluetoothMac == null) {
             // Case A: No bluetooth linked to this contract yet -> suggest linking if premium
             val accessOutput = checkFeatureAccessUseCase(
@@ -138,7 +163,7 @@ class BluetoothConnectionReceiver : BroadcastReceiver() {
             ).first()
             val isPremium = (accessOutput is CheckFeatureAccessUseCase.Output.Success) && accessOutput.isGranted
             if (isPremium) {
-                logger.i("BluetoothReceiver", "New device connected: $deviceAddress. Suggesting vehicle link.")
+                logger.i("BluetoothReceiver", "New device connected: ${device.address}. Suggesting vehicle link.")
                 showSuggestionNotification(context)
             }
         } else {
@@ -162,34 +187,34 @@ class BluetoothConnectionReceiver : BroadcastReceiver() {
                     details = "MAC: $contractBluetoothMac | Vehicle: ${contract.vehicleName}"
                 )
 
-                val accessOutput = checkFeatureAccessUseCase(
-                    CheckFeatureAccessUseCase.Input(Feature.AUTO_TRACKING)
-                ).first()
-                val isPremium = (accessOutput is CheckFeatureAccessUseCase.Output.Success) && accessOutput.isGranted
+                showConnectedNotification(context, contract.vehicleName)
 
-                if (isPremium) {
-                    val prefsOutput = getPreferencesUseCase(GetPreferencesUseCase.Input).first()
-                    val isAutoTrackingEnabled = (prefsOutput is GetPreferencesUseCase.Output.Success) &&
-                        prefsOutput.preferences.autoTrackingEnabled
+                // Fallback: If synchronous start was skipped (e.g. cold cache on first install), start here
+                if (!serviceStartedSync) {
+                    val accessOutput = checkFeatureAccessUseCase(
+                        CheckFeatureAccessUseCase.Input(Feature.AUTO_TRACKING)
+                    ).first()
+                    val isPremium = (accessOutput is CheckFeatureAccessUseCase.Output.Success) && accessOutput.isGranted
 
-                    if (isAutoTrackingEnabled) {
-                        logger.i("BluetoothReceiver", "Showing vehicle connected notification for '${contract.vehicleName}'")
-                        showConnectedNotification(context, contract.vehicleName)
+                    if (isPremium) {
+                        val prefsOutput = getPreferencesUseCase(GetPreferencesUseCase.Input).first()
+                        val isAutoTrackingEnabled = (prefsOutput is GetPreferencesUseCase.Output.Success) &&
+                            prefsOutput.preferences.autoTrackingEnabled
 
-                        // BLUETOOTH FAST-PATH FIRST:
-                        // Start LocationTrackingService directly under Bluetooth hardware broadcast exemption
-                        logger.i("BluetoothReceiver", "Starting LocationTrackingService via Bluetooth Fast-Path for vehicle: ${contract.vehicleName}")
-                        TrackingDiagnostics.updateStatus(
-                            context,
-                            stage = "BT_FAST_PATH_START",
-                            details = "Starting LocationTrackingService for ${contract.vehicleName}"
-                        )
-                        val serviceIntent = Intent(context, LocationTrackingService::class.java).apply {
-                            action = LocationTrackingService.ACTION_START_BT_AUTO
-                            putExtra("EXTRA_DEVICE_MAC", contractBluetoothMac)
-                            putExtra("EXTRA_VEHICLE_NAME", contract.vehicleName)
+                        if (isAutoTrackingEnabled) {
+                            logger.i("BluetoothReceiver", "Starting LocationTrackingService via fallback for vehicle: ${contract.vehicleName}")
+                            TrackingDiagnostics.updateStatus(
+                                context,
+                                stage = "BT_FAST_PATH_FALLBACK_START",
+                                details = "Starting LocationTrackingService via async fallback"
+                            )
+                            val serviceIntent = Intent(context, LocationTrackingService::class.java).apply {
+                                action = LocationTrackingService.ACTION_START_BT_AUTO
+                                putExtra(LocationTrackingService.EXTRA_DEVICE_MAC, contractBluetoothMac)
+                                putExtra(LocationTrackingService.EXTRA_VEHICLE_NAME, contract.vehicleName)
+                            }
+                            startTrackingService(context, serviceIntent)
                         }
-                        startTrackingService(context, serviceIntent)
                     }
                 }
             } else {
@@ -214,6 +239,7 @@ class BluetoothConnectionReceiver : BroadcastReceiver() {
         if (contractOutput !is GetRentingContractUseCase.Output.Success) return
 
         val contract = contractOutput.contract
+        TrackingDeviceCache.updateCache(context, contract.bluetoothDeviceAddress, contract.vehicleName)
         val contractMac = contract.bluetoothDeviceAddress?.let { normalizeAddress(it) } ?: return
 
         if (normalizedDeviceMac == contractMac) {
