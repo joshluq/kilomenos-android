@@ -25,6 +25,7 @@ import es.joshluq.kmsafe.domain.usecase.DetectNearestStationUseCase
 import es.joshluq.kmsafe.domain.usecase.GetPreferencesUseCase
 import es.joshluq.kmsafe.domain.usecase.GetRentingContractUseCase
 import es.joshluq.kmsafe.domain.usecase.UpdateBluetoothConnectionStateUseCase
+import es.joshluq.kmsafe.core.tracking.diagnostic.TrackingDiagnostics
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -155,6 +156,12 @@ class BluetoothConnectionReceiver : BroadcastReceiver() {
                     )
                 )
 
+                TrackingDiagnostics.updateStatus(
+                    context,
+                    stage = "BT_CONNECTED",
+                    details = "MAC: $contractBluetoothMac | Vehicle: ${contract.vehicleName}"
+                )
+
                 val accessOutput = checkFeatureAccessUseCase(
                     CheckFeatureAccessUseCase.Input(Feature.AUTO_TRACKING)
                 ).first()
@@ -168,6 +175,21 @@ class BluetoothConnectionReceiver : BroadcastReceiver() {
                     if (isAutoTrackingEnabled) {
                         logger.i("BluetoothReceiver", "Showing vehicle connected notification for '${contract.vehicleName}'")
                         showConnectedNotification(context, contract.vehicleName)
+
+                        // BLUETOOTH FAST-PATH FIRST:
+                        // Start LocationTrackingService directly under Bluetooth hardware broadcast exemption
+                        logger.i("BluetoothReceiver", "Starting LocationTrackingService via Bluetooth Fast-Path for vehicle: ${contract.vehicleName}")
+                        TrackingDiagnostics.updateStatus(
+                            context,
+                            stage = "BT_FAST_PATH_START",
+                            details = "Starting LocationTrackingService for ${contract.vehicleName}"
+                        )
+                        val serviceIntent = Intent(context, LocationTrackingService::class.java).apply {
+                            action = LocationTrackingService.ACTION_START_BT_AUTO
+                            putExtra("EXTRA_DEVICE_MAC", contractBluetoothMac)
+                            putExtra("EXTRA_VEHICLE_NAME", contract.vehicleName)
+                        }
+                        startTrackingService(context, serviceIntent)
                     }
                 }
             } else {
@@ -196,6 +218,11 @@ class BluetoothConnectionReceiver : BroadcastReceiver() {
 
         if (normalizedDeviceMac == contractMac) {
             logger.i("BluetoothReceiver", "Vehicle Bluetooth disconnected: ${contract.vehicleName}. Updating connection state.")
+            TrackingDiagnostics.updateStatus(
+                context,
+                stage = "BT_DISCONNECTED",
+                details = "MAC: $contractMac | Vehicle: ${contract.vehicleName}"
+            )
 
             // Rule 16.2: Deactivate live connection pill immediately in OverviewScreen
             updateBluetoothConnectionStateUseCase(
@@ -219,6 +246,24 @@ class BluetoothConnectionReceiver : BroadcastReceiver() {
 
             // Smart Arrival: Detect if vehicle stopped at a service station
             checkStationArrival(context)
+        }
+    }
+
+    private fun startTrackingService(context: Context, intent: Intent) {
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                context.startForegroundService(intent)
+            } else {
+                context.startService(intent)
+            }
+        } catch (e: Exception) {
+            logger.e("BluetoothReceiver", "FAILED TO START SERVICE ON BT CONNECT: ${e.message}", e)
+            TrackingDiagnostics.recordError(
+                context,
+                "BluetoothReceiver",
+                "ForegroundService start failed on BT connect: ${e.message}",
+                e
+            )
         }
     }
 

@@ -1,18 +1,49 @@
 # Auto-Tracking Technical Specification 🚗
 
-This document describes the architecture, data flow, Bluetooth feedback mechanisms, and troubleshooting details for the automatic trip tracking feature in KiloMenos.
+This document describes the architecture, data flow, Bluetooth feedback mechanisms, real-time field diagnostics, and troubleshooting details for the automatic trip tracking feature in KiloMenos.
+
+---
 
 ## 1. Architecture Overview
 
-The auto-tracking system combines **Google Play Services Activity Recognition API** and **Bluetooth ACL Hardware Events** to detect when a user enters or exits a vehicle and provide immediate user feedback. It is designed to be resilient on Android 14+ by adhering to the "Foreground Service First" pattern.
+The auto-tracking system is built on the **Bluetooth Fast-Path First** paradigm with **Google Play Services Activity Recognition** as a secondary fallback. It is designed to be 100% resilient on Android 14+ by adhering to the "Foreground Service First" pattern under hardware broadcast exemptions.
+
+```
++─────────────────────────────────────────────────────────────────────────────+
+|                         HARDWARE / TELEMETRY TRIGGERS                       |
+|                                                                             |
+|  [Primary: Fast-Path]                     [Secondary Fallback]             |
+|  Bluetooth ACL Broadcast                  Google Play Services              |
+|  (ACTION_ACL_CONNECTED)                   (IN_VEHICLE ENTER)                |
++───────────────────────┬─────────────────────────────────────┬───────────────+
+                        │                                     │
+                        ▼                                     ▼
+      [BluetoothConnectionReceiver]              [ActivityTransitionReceiver]
+      • Validates MAC with active vehicle        • Forwards transition event
+      • Starts service under HW exemption        • Fallback if no BT linked
+                        │                                     │
+                        └──────────────────┬──────────────────┘
+                                           │
+                                           ▼
+                            [LocationTrackingService]
+                            • Immediate Main-Thread startForeground()
+                            • Validates License & Active Contract
+                            • Starts FusedLocationProviderClient updates
+                            • Filters stationary drift (< 1.5 m/s)
+                                           │
+                                           ▼
+                                 [TrackingRepository]
+                                 • Reactive distance accumulation
+                                 • Persisted in TrackingDataSource
+```
 
 ### Components:
-- **`AutoTrackingManager`**: Registers and unregisters for Google Play Activity Recognition transitions (`IN_VEHICLE`).
-- **`ActivityTransitionReceiver`**: Synchronous `BroadcastReceiver` that wakes up the app upon activity detection (`ENTER` invokes `context.startForegroundService()`, while `EXIT` dispatches `ACTION_STOP` via standard `context.startService()`).
-- **`BluetoothConnectionReceiver`**: Synchronous `BroadcastReceiver` listening to `BluetoothDevice.ACTION_ACL_CONNECTED` and `ACTION_ACL_DISCONNECTED` to manage immediate feedback and fast-path auto-tracking.
-- **`LocationTrackingService`**: `Foreground Service` (type `location`) that promotes itself immediately to foreground on the Main Thread to satisfy OS timing constraints, then asynchronously validates contract entitlements and records GPS points.
-- **`TrackingRepository`**: Manages the persistent state of the active trip and distance accumulation.
-- **UI Indicators**: Live connection badges in `OverviewScreen` (vehicle header) and `BluetoothDevicePicker` (paired devices list).
+- **`BluetoothConnectionReceiver`** *(Primary Fast-Path)*: Synchronous `BroadcastReceiver` listening to `BluetoothDevice.ACTION_ACL_CONNECTED` and `ACTION_ACL_DISCONNECTED`. Leverages Android's hardware broadcast exemption to immediately initiate `LocationTrackingService` (`ACTION_START_BT_AUTO`) when the linked vehicle connects, bypassing Android 14 background restrictions.
+- **`ActivityTransitionReceiver`** *(Secondary Fallback)*: Synchronous `BroadcastReceiver` that handles Google Play Activity Recognition transitions (`IN_VEHICLE ENTER / EXIT`) as a fallback when no vehicle Bluetooth MAC is registered.
+- **`LocationTrackingService`**: `Foreground Service` (type `location`). Synchronously promotes itself to foreground on the Main Thread (`showValidationNotification()`) within seconds to satisfy OS watchdog timing, validates contract and entitlement invariants, and streams GPS updates.
+- **`TrackingRepository`**: Manages the persistent state of the active trip, point counts, and distance accumulation (`TrackingDataSource`).
+- **`TrackingDiagnostics`** *(Temporary Field-Testing Suite)*: Real-time status bar diagnostic notification engine providing immediate visual telemetry for road testers.
+- **`LoggerKit` (`FoundationKit`)**: Centralized logging pipeline routing error logs and non-fatal exceptions to **Firebase Crashlytics** via `CrashlyticsLogProvider` without coupling `:core:tracking` to external SDKs.
 
 ---
 
@@ -23,83 +54,66 @@ sequenceDiagram
     autonumber
     participant Car as Car Bluetooth
     participant BCR as BluetoothConnectionReceiver
-    participant GPS as Google Play Services
-    participant ATR as ActivityTransitionReceiver
+    participant GPS as FusedLocationProvider
     participant LTS as LocationTrackingService
     participant UI as OverviewScreen / UI
-    participant DB as Database (Room)
+    participant DB as Room / DataSource
 
-    alt Fast-Path / Feedback: Bluetooth Connects First
-        Car->>BCR: ACL_CONNECTED (MAC)
-        BCR->>DB: Check Active Contract & Premium
+    alt Primary Flow: Bluetooth Fast-Path (Vehicle Ignition)
+        Car->>BCR: ACTION_ACL_CONNECTED (MAC)
+        BCR->>DB: Check Active Contract & Premium Entitlements
         alt MAC matches Active Vehicle
-            BCR-->>UI: Live Connection Pill Active (Overview)
-            BCR->>BCR: Show Silent Local Notification ("Connected to $vehicle")
+            BCR-->>UI: Live Connection Pill Active ("Vinculado")
+            BCR->>BCR: Show Local Feedback Notification ("Connected to vehicle")
+            Note over BCR: ANDROID 14 EXEMPTION WINDOW
+            BCR->>LTS: context.startForegroundService(ACTION_START_BT_AUTO)
+            activate LTS
+            Note over LTS: MAIN THREAD (Synchronous)
+            LTS->>LTS: showValidationNotification() -> startForeground()
+            Note over LTS: IO THREAD (Async Validation)
+            LTS->>DB: Triple Check (Premium + Active Contract + MAC pre-verified)
+            LTS->>GPS: Request Location Updates (High Accuracy)
+            LTS-->>UI: Trip in Progress (Pill active with live distance)
         end
     end
 
-    alt Activity Recognition Transition: Vehicle ENTER
-        GPS->>ATR: Transition Event (IN_VEHICLE ENTER)
-        Note over ATR: Synchronous wake-up in onReceive
-        ATR->>LTS: context.startForegroundService(ACTION_START)
-        activate LTS
-        Note over LTS: MAIN THREAD (Synchronous)
-        LTS->>LTS: showValidationNotification() -> startForeground()
-        Note right of LTS: "Validating trip conditions..." (Satisfies 5s watchdog)
-        
-        Note over LTS: IO THREAD (Async Coroutine)
-        LTS->>DB: Check Premium Access (Triple Check 1)
-        LTS->>DB: Check Active Contract (Triple Check 2)
-        
-        alt Has Linked Bluetooth (Triple Check 3)
-            LTS->>Car: isBluetoothDeviceConnected(MAC)
-            Car-->>LTS: Connection Status
-        end
-
-        alt Validations Passed
-            LTS->>LTS: startTracking() -> promote to Trip in Progress
-            Note right of LTS: "Trip in progress..."
-            LTS->>GPS: Request Location Updates
-        else Validations Failed
-            LTS->>LTS: stopTrackingGracefully()
-            Note right of LTS: stopForeground(STOP_FOREGROUND_REMOVE) & stopSelf()
-            deactivate LTS
-        end
-    end
-
-    alt Activity Recognition Transition: Vehicle EXIT
-        GPS->>ATR: Transition Event (IN_VEHICLE EXIT)
-        ATR->>LTS: context.startService(ACTION_STOP)
-        Note over ATR: NEVER use startForegroundService for EXIT
-        LTS->>LTS: stopTrackingGracefully()
+    alt Vehicle Disconnection (Trip Finalization)
+        Car->>BCR: ACTION_ACL_DISCONNECTED (MAC)
+        BCR-->>UI: Connection Pill Inactive
+        BCR->>LTS: context.startService(ACTION_STOP)
+        LTS->>DB: Finalize Trip & Persist Accumulated Distance
+        LTS->>LTS: showTripFinishedNotification() & stopSelf()
         deactivate LTS
+        BCR->>BCR: checkStationArrival() -> Show refueling prompt if at station
     end
 ```
 
 ---
 
-## 3. Feedback Loop & UI/UX Strategy
+## 3. Real-Time Field Observability (`TrackingDiagnostics`)
 
-### 3.1 Why Bluetooth Feedback Matters
-Google Play Services Activity Recognition can take 1 to 3 minutes of continuous driving to detect `IN_VEHICLE ENTER`. Without feedback, users experience uncertainty ("Is KiloMenos tracking this trip?"). Bluetooth connects in 2–5 seconds upon ignition, providing the ideal event to establish user confidence.
+> [!IMPORTANT]
+> **Temporary Diagnostic Component**: `TrackingDiagnostics` is an instrumentation helper designed exclusively for field testing on road conditions. It provides live visual telemetry in the device's status bar so testers can verify state transitions without needing ADB or Logcat cables. **Once field test stability is fully validated across all target devices, `TrackingDiagnostics` can be safely removed.**
 
-### 3.2 Notification Strategy (Local vs. Remote)
-- **Zero Network Dependency**: Feedback on Bluetooth connection uses local Android notifications (`NotificationManager`), never remote FCM pushes.
-- **No Flicker**: The system avoids intermediate "Connecting..." notifications because Bluetooth ACL negotiation takes under 1 second. It notifies directly upon confirmed connection.
-- **Alert Fatigue Prevention**: Notifications use `NotificationManager.IMPORTANCE_LOW` (silent, persistent in status bar, non-intrusive heads-up).
+### Diagnostic Capabilities:
+1. **Live Sticky Status Bar Notification**:
+   - Displays real-time state: `[HH:mm:ss] State: BT_CONNECTED -> VALIDATIONS_PASSED -> GPS_RECORDING (Speed: 52 km/h | Acc: 7m | +120m)`.
+   - Low-priority channel (`tracking_diagnostic_channel`) with zero sound or vibration disturbance.
+2. **Immediate Red Alert Heads-Up on Error**:
+   - If an exception occurs (e.g. `ForegroundServiceStartNotAllowedException`, missing permissions, or validation timeout), an alert notification is displayed immediately.
+3. **Decoupled Crashlytics Telemetry via `LoggerKit`**:
+   - `:core:tracking` does **not** depend on Firebase SDK directly.
+   - All errors are logged via `logger.e("LocationService", message, throwable)`.
+   - `CrashlyticsLogProvider` in `:core:infrastructure` intercepts `LogLevel.ERROR` and records non-fatal exceptions to the Firebase Console automatically.
 
-### 3.3 Visual Telemetry in UI (Phase 1)
-1. **`OverviewScreen` (MainBalanceCard)**:
-   - Displays a live status badge next to the vehicle name: `[ 󰂯 Conectado ]` in `CanvasKitTheme.colors.brandAccent`.
-   - Listens to Bluetooth ACL connection broadcasts while in the foreground with zero background battery draw.
-2. **`BluetoothDevicePicker` (Fleet Setup / Edit)**:
-   - Queries `BluetoothProfile.A2DP` and `BluetoothProfile.HEADSET` to identify actively connected devices among paired devices.
-   - Highlights the connected device with a distinct `"Conectado ahora"` badge.
-   - Automatically sorts connected devices to the top of the list to eliminate configuration errors.
+---
 
-### 3.4 SMART Copilot & Assisted Copilot UI State Machine (`CopilotRadarSection`)
+## 4. Feedback Loop & UI/UX Strategy
 
-The Cockpit Radar card on `OverviewScreen` dynamically adapts depending on the user's subscription level, preferences, and hardware telemetry:
+### 4.1 Why Bluetooth Fast-Path Matters
+Google Play Services Activity Recognition requires 1 to 3 minutes of continuous driving movement before emitting `IN_VEHICLE ENTER`, and on Android 14 it cannot start a foreground service from background without an exemption. Car Bluetooth connects in **2–5 seconds** upon ignition, delivering the hardware interrupt `ACTION_ACL_CONNECTED` which Android explicitly exempts for starting foreground services.
+
+### 4.2 SMART Copilot UI State Machine (`CopilotRadarSection`)
 
 ```mermaid
 graph TD
@@ -125,67 +139,35 @@ graph TD
     BtCheck -->|No| StateStandby[State 4: 'En Espera'<br/>Subtitle: 'Listo para grabar' (Blue)]
 ```
 
-#### Detailed State Specifications:
-
-| Tier | State | Badge / Status | Subtitle | Icon & Color | Interaction / Destination |
-| :--- | :--- | :--- | :--- | :--- | :--- |
-| **Free** | **Copilot Asistido** | *Dynamic* | *Contextual* | `Navigation` / Accent | Tapping "Iniciar Viaje": If permissions are granted, starts recording. Otherwise, routes to `AssistedTrackingPermissionsScreen` (step-by-step: Location -> Notifications). Upon completion, returns and immediately triggers trip recording. |
-| **Premium** | **1. Desactivado** | `Desactivado` | `Activar en Ajustes` | `Settings` / Amber | Tapping card opens `PreferencesScreen` directly to enable auto-tracking. Eliminates intrusive modal dialogs. |
-| **Premium** | **2. Sin permiso** | `Sin permiso` | `Toca para activar` | `Warning` / Amber | Evaluates full auto-tracking permission set (Fine Location, Background Location, Notifications, Activity Recognition, and Bluetooth Connect if vehicle has MAC linked). Tapping card opens `AutoTrackingPermissionsScreen` (guided step-by-step onboarding). |
-| **Premium** | **3. Coche Enlazado** | `Coche Enlazado` | `Listo para grabar` | `BluetoothConnected` / Emerald | Passive telemetry confirmation. Phone is actively connected to the vehicle's paired hands-free or audio system. |
-| **Premium** | **4. En Espera** | `En Espera` | `Listo para grabar` | `Bluetooth` / Blue | Passive standby state. System is ready to trigger as soon as vehicle Bluetooth connects or Activity Recognition detects `IN_VEHICLE`. |
-
 ---
 
-## 4. Validation Logic (The "Triple Check")
+## 5. Validation Logic (The "Triple Check")
 
-Before recording any GPS point, `LocationTrackingService` performs three validations:
+Before recording GPS points, `LocationTrackingService` performs three validations:
 1. **Premium Access**: Verifies via `CheckFeatureAccessUseCase` that the user has the `AUTO_TRACKING` entitlement.
-2. **Contract SSOT**: Verifies there is an active `RentingContract` in the local database.
-3. **Bluetooth Tethering & Resilient Polling (Optional but Recommended)**: If the active contract has a `bluetoothDeviceAddress`, the service executes a resilient retry polling window (up to 15-20s, querying every 1.5s-2.0s) while keeping the foreground validation notification visible. This prevents premature service teardown while car infotainment systems finish booting and negotiating A2DP/HEADSET profiles.
+2. **Contract SSOT**: Verifies the presence of an active `RentingContract` in the local Room database.
+3. **Bluetooth Hardware Fast-Path**: If started via `ACTION_START_BT_AUTO` with matching pre-verified MAC, validation succeeds immediately. If started via Activity Recognition fallback, the service queries connected `A2DP` and `HEADSET` profile proxies with asynchronous completion protection.
 
 ---
 
-## 5. Implementation Phases & Session Continuity
+## 6. Implementation Phases
 
 | Phase | Scope | Status |
 | :--- | :--- | :--- |
 | **Phase 1** | **UI Indicators & Setup Optimization**: Live Bluetooth connection badge in `OverviewScreen`; "Connected now" badge and auto-sorting in `BluetoothDevicePicker`. | ✅ Implemented |
 | **Phase 2** | **Background Fast-Path & Notifications**: Silent local notification upon car Bluetooth connection; pre-activating location validation before Activity Recognition fires; instant trip stop on vehicle disconnect. | ✅ Implemented |
-| **Phase 3** | **Production Resiliency & Trip Continuity**: `BluetoothConnectionReceiver` exported in AndroidManifest; upgraded channel `location_tracking_channel_v2` to `IMPORTANCE_DEFAULT`; 15s Bluetooth polling window; continuous cumulative tracking across stops (`TrackingDataSource`). | ✅ Implemented |
+| **Phase 3** | **Production Resiliency & Trip Continuity**: `BluetoothConnectionReceiver` exported in AndroidManifest; upgraded channel `location_tracking_channel_v3`; continuous cumulative tracking across stops (`TrackingDataSource`). | ✅ Implemented |
+| **Phase 4** | **Bluetooth Fast-Path First & Real-Time Observability**: Synchronous service initiation under Bluetooth hardware broadcast exemption; robust A2DP/HEADSET proxy resolution; sticky diagnostic monitor (`TrackingDiagnostics`); decoupled logging via `LoggerKit` & Crashlytics. | ✅ Implemented |
 
 ---
 
-## 6. Troubleshooting & Known Errors
-
-### Auto-Tracking doesn't start
-- **Power Optimization**: If the user has "Battery Optimization" enabled for KiloMenos, Android may kill the process before the validations finish. 
-  - *Solution*: Suggest the user to set battery to "Unrestricted".
-- **Google Play Services Delay**: Activity Recognition can take 1-3 minutes of continuous driving to trigger an `ENTER` event.
-- **Bluetooth MAC Drift**: Some cars rotate their MAC address for security. 
-  - *Check*: Verify the linked MAC in the "Edit Vehicle" screen.
-
-### False Positives (Tracking starts while walking/cycling)
-- **Speed Filter**: `LocationTrackingService` ignores updates if speed is below `1.5 m/s` (~5.4 km/h).
-- **Accuracy Filter**: GPS points with accuracy > `30m` are discarded to prevent "jumpy" routes in urban canyons.
-
-### Error: `ForegroundServiceDidNotStartInTimeException`
-- **Context**: Thrown by the Android OS (`android.app.RemoteServiceException`) when `Context.startForegroundService()` is called, but the service fails to call `Service.startForeground()` within the mandatory 5-second window.
-- **Root Causes**:
-  1. **Calling `startForegroundService` on Vehicle EXIT**: When `ActivityTransitionReceiver` received an `EXIT` event, calling `startForegroundService()` followed by an immediate `stopTracking()` -> `stopSelf()` without `startForeground()` triggered a fatal exception on Android 8.0+.
-  2. **Background / Deferred Coroutine Latency**: Initiating `startForeground()` from inside an asynchronous coroutine (`serviceScope.launch(Dispatchers.IO)`) was susceptible to thread pool exhaustion and file lock contention during app startup (e.g. Firebase, Room, DataStore), delaying the foreground promotion past 5 seconds.
-- **Architectural Fix**:
-  1. **Synchronous Main-Thread Promotion**: In `LocationTrackingService.onStartCommand()`, `showValidationNotification()` is called immediately on the Main Thread outside any coroutine, immediately satisfying the Android watchdog.
-  2. **Asymmetric Lifecycle Contract**: Only `IN_VEHICLE ENTER` transitions invoke `context.startForegroundService()`. The `EXIT` transition strictly uses `context.startService(ACTION_STOP)` since stopping does not require elevated foreground priority.
-  3. **Graceful Teardown (`stopTrackingGracefully`)**: If validations fail or when an active trip stops, the service explicitly removes foreground status (`stopForeground(STOP_FOREGROUND_REMOVE)`), dismisses notifications, and then calls `stopSelf()`.
+## 7. Troubleshooting & Known Errors
 
 ### Error: `ForegroundServiceStartNotAllowedException`
-- **Context**: This happens if the `Receiver` takes too long to start the service or if it's started from an asynchronous block (coroutine) outside the allowed foreground service start window.
-- **Fix**: Broadcast receivers (`ActivityTransitionReceiver`, `BluetoothConnectionReceiver`) invoke `context.startForegroundService()` synchronously and directly inside `onReceive()`.
+- **Root Cause**: Attempting to start `LocationTrackingService` from background when Google Play Activity Recognition fired `IN_VEHICLE ENTER` minutes after the app was backgrounded. Android 14 blocks background service starts without explicit exemptions.
+- **Architectural Solution**: **Bluetooth Fast-Path First**. `BluetoothConnectionReceiver` starts the service synchronously when `ACTION_ACL_CONNECTED` is received, which is an explicit Android exemption for starting foreground services.
 
----
-
-## 7. Security & Privacy
-- **Mock Locations**: The service checks for `location.isFromMockProvider` to prevent mileage fraud.
-- **Background Location**: Requires "Allow all the time" permission. The app provides a dedicated `AutoTrackingPermissionsScreen` to guide the user.
-- **Bluetooth Permissions**: Android 12+ (API 31+) strictly requires `BLUETOOTH_CONNECT` to query device names and connection states.
+### False Positives & Stationary Drift
+- **Speed Filter**: Coordinates with speed below `1.5 m/s` (~5.4 km/h) are ignored for distance accumulation.
+- **Accuracy Filter**: Points with accuracy error exceeding `30 meters` are discarded.
+- **Anti-Spoofing**: Locations marked with `location.isMock` (or `isFromMockProvider`) are rejected.

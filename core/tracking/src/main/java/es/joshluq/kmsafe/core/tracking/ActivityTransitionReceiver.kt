@@ -9,6 +9,7 @@ import com.google.android.gms.location.ActivityTransitionResult
 import com.google.android.gms.location.DetectedActivity
 import dagger.hilt.android.AndroidEntryPoint
 import es.joshluq.foundationkit.log.LoggerKit
+import es.joshluq.kmsafe.core.tracking.diagnostic.TrackingDiagnostics
 import javax.inject.Inject
 
 /**
@@ -45,6 +46,11 @@ class ActivityTransitionReceiver : BroadcastReceiver() {
                     when (lastInVehicleEvent.transitionType) {
                         ActivityTransition.ACTIVITY_TRANSITION_ENTER -> {
                             logger.i("ActivityReceiver", "Latest IN_VEHICLE transition is ENTER. Starting tracking service...")
+                            TrackingDiagnostics.updateStatus(
+                                context,
+                                stage = "AR_IN_VEHICLE_ENTER",
+                                details = "Activity Recognition detected vehicle entry"
+                            )
                             val serviceIntent = Intent(context, LocationTrackingService::class.java).apply {
                                 putExtra("EXTRA_TRANSITION_RESULT", result)
                             }
@@ -52,6 +58,11 @@ class ActivityTransitionReceiver : BroadcastReceiver() {
                         }
                         ActivityTransition.ACTIVITY_TRANSITION_EXIT -> {
                             logger.i("ActivityReceiver", "Latest IN_VEHICLE transition is EXIT. Stopping service via startService...")
+                            TrackingDiagnostics.updateStatus(
+                                context,
+                                stage = "AR_IN_VEHICLE_EXIT",
+                                details = "Activity Recognition detected vehicle exit"
+                            )
                             val stopIntent = Intent(context, LocationTrackingService::class.java).apply {
                                 this.action = LocationTrackingService.ACTION_STOP
                             }
@@ -59,7 +70,8 @@ class ActivityTransitionReceiver : BroadcastReceiver() {
                             try {
                                 context.startService(stopIntent)
                             } catch (e: Exception) {
-                                logger.e("ActivityReceiver", "Failed to send stop command to service: ${e.message}")
+                                logger.e("ActivityReceiver", "Failed to send stop command to service: ${e.message}", e)
+                                TrackingDiagnostics.recordError(context, "ActivityReceiver", "Failed to send stop command: ${e.message}", e)
                             }
                         }
                     }
@@ -80,7 +92,14 @@ class ActivityTransitionReceiver : BroadcastReceiver() {
                 context.startService(intent)
             }
         } catch (e: Exception) {
-            logger.e("ActivityReceiver", "FAILED TO START SERVICE: ${e.message}")
+            logger.e("ActivityReceiver", "FAILED TO START SERVICE: ${e.message}", e)
+            TrackingDiagnostics.recordError(
+                context,
+                "ActivityReceiver",
+                "ForegroundService start failed from background: ${e.message}",
+                e
+            )
         }
     }
 }
+

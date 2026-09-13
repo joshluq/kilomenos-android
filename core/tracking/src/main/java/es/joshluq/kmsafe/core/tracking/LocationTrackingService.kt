@@ -34,6 +34,7 @@ import es.joshluq.kmsafe.domain.model.Feature
 import es.joshluq.kmsafe.domain.repository.TrackingRepository
 import es.joshluq.kmsafe.domain.usecase.CheckFeatureAccessUseCase
 import es.joshluq.kmsafe.domain.usecase.GetRentingContractUseCase
+import es.joshluq.kmsafe.core.tracking.diagnostic.TrackingDiagnostics
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -89,7 +90,10 @@ class LocationTrackingService : Service() {
         private const val NOTIFICATION_ID_BT_CONNECTED = 2003
 
         const val ACTION_START = "ACTION_START"
+        const val ACTION_START_BT_AUTO = "ACTION_START_BT_AUTO"
         const val ACTION_STOP = "ACTION_STOP"
+        const val EXTRA_DEVICE_MAC = "EXTRA_DEVICE_MAC"
+        const val EXTRA_VEHICLE_NAME = "EXTRA_VEHICLE_NAME"
 
         // BUSINESS RULE: To avoid false positives (e.g. drift when stationary)
         private const val MIN_SPEED_THRESHOLD_MPS = 1.5 // ~5.4 km/h
@@ -141,13 +145,22 @@ class LocationTrackingService : Service() {
         // synchronously on the main thread within seconds. Never defer behind coroutines or I/O.
         showValidationNotification()
 
-        // 3. Handle explicit UI manual start
+        // 3. Handle Bluetooth Fast-Path Auto Start
+        if (action == ACTION_START_BT_AUTO) {
+            val mac = intent.getStringExtra(EXTRA_DEVICE_MAC)
+            val vehicleName = intent.getStringExtra(EXTRA_VEHICLE_NAME)
+            logger.i("LocationService", "ACTION_START_BT_AUTO received for $vehicleName ($mac)")
+            startAutoValidationAndTracking(isBluetoothFastPath = true, preverifiedMac = mac)
+            return START_STICKY
+        }
+
+        // 4. Handle explicit UI manual start
         if (action == ACTION_START) {
             startTracking()
             return START_STICKY
         }
 
-        // 4. Handle Intelligent Transitions from ActivityTransitionReceiver
+        // 5. Handle Intelligent Transitions from ActivityTransitionReceiver
         val transitionResult = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             intent?.getParcelableExtra("EXTRA_TRANSITION_RESULT", ActivityTransitionResult::class.java)
         } else {
@@ -174,18 +187,26 @@ class LocationTrackingService : Service() {
 
     private fun processTransition(type: Int) {
         if (type == ActivityTransition.ACTIVITY_TRANSITION_ENTER) {
-            startAutoValidationAndTracking()
+            startAutoValidationAndTracking(isBluetoothFastPath = false)
         } else if (type == ActivityTransition.ACTIVITY_TRANSITION_EXIT) {
             logger.i("LocationService", "IN_VEHICLE EXIT detected. Stopping service.")
             stopTracking()
         }
     }
 
-    private fun startAutoValidationAndTracking() {
+    private fun startAutoValidationAndTracking(
+        isBluetoothFastPath: Boolean = false,
+        preverifiedMac: String? = null
+    ) {
         serviceScope.launch {
             try {
                 // Run business validations
-                logger.d("LocationService", "Starting autostart validation flow...")
+                logger.d("LocationService", "Starting autostart validation flow (fastPath=$isBluetoothFastPath)...")
+                TrackingDiagnostics.updateStatus(
+                    this@LocationTrackingService,
+                    stage = "VALIDATING_CONDITIONS",
+                    details = "FastPath: $isBluetoothFastPath | Preverified: $preverifiedMac"
+                )
 
                 // 1. Check Access
                 val access = withTimeoutOrNull(5000L.milliseconds) {
@@ -193,6 +214,11 @@ class LocationTrackingService : Service() {
                 }
                 if (access !is CheckFeatureAccessUseCase.Output.Success || !access.isGranted) {
                     logger.w("LocationService", "Validation failed: User has no Premium access (access=$access).")
+                    TrackingDiagnostics.recordError(
+                        this@LocationTrackingService,
+                        "LocationService",
+                        "AutoTracking access not granted: $access"
+                    )
                     stopTrackingGracefully()
                     return@launch
                 }
@@ -200,6 +226,11 @@ class LocationTrackingService : Service() {
                 // 2. Check if already tracking
                 if (trackingRepository.isTracking.first()) {
                     logger.d("LocationService", "Already tracking. Validation aborted.")
+                    TrackingDiagnostics.updateStatus(
+                        this@LocationTrackingService,
+                        stage = "ALREADY_TRACKING",
+                        details = "Service already recording GPS"
+                    )
                     return@launch
                 }
 
@@ -212,24 +243,51 @@ class LocationTrackingService : Service() {
                 if (contractOutput is GetRentingContractUseCase.Output.Success) {
                     val mac = contractOutput.contract.bluetoothDeviceAddress
                     if (mac != null) {
-                        val isConnected = waitForBluetoothConnection(mac)
+                        val isConnected = if (isBluetoothFastPath && preverifiedMac != null && normalizeAddress(mac) == normalizeAddress(preverifiedMac)) {
+                            logger.i("LocationService", "Fast-Path active: Bluetooth $mac pre-verified by hardware broadcast.")
+                            true
+                        } else {
+                            waitForBluetoothConnection(mac)
+                        }
+
                         if (!isConnected) {
                             logger.i("LocationService", "Validation failed: Vehicle Bluetooth ($mac) not found after retry window.")
+                            TrackingDiagnostics.recordError(
+                                this@LocationTrackingService,
+                                "LocationService",
+                                "Vehicle Bluetooth ($mac) not connected after retry window."
+                            )
                             stopTrackingGracefully()
                             return@launch
                         }
                     }
                 } else {
                     logger.w("LocationService", "Validation failed: No active vehicle selected.")
+                    TrackingDiagnostics.recordError(
+                        this@LocationTrackingService,
+                        "LocationService",
+                        "No active vehicle contract found in local database."
+                    )
                     stopTrackingGracefully()
                     return@launch
                 }
 
                 // Validations passed! Start GPS capture
                 logger.i("LocationService", "VALIDATIONS PASSED. Switching to active tracking.")
+                TrackingDiagnostics.updateStatus(
+                    this@LocationTrackingService,
+                    stage = "VALIDATIONS_PASSED",
+                    details = "Starting active GPS tracking"
+                )
                 startTracking()
             } catch (e: Exception) {
                 logger.e("LocationService", "Error during autostart validation", e)
+                TrackingDiagnostics.recordError(
+                    this@LocationTrackingService,
+                    "LocationService",
+                    "Exception during autostart validation: ${e.message}",
+                    e
+                )
                 stopTrackingGracefully()
             }
         }
@@ -256,6 +314,12 @@ class LocationTrackingService : Service() {
             }
         } catch (e: Exception) {
             logger.e("LocationService", "Error calling startForeground: ${e.message}", e)
+            TrackingDiagnostics.recordError(
+                this,
+                "LocationService",
+                "Error calling startForeground: ${e.message}",
+                e
+            )
         }
     }
 
@@ -272,7 +336,7 @@ class LocationTrackingService : Service() {
     }
 
     @SuppressLint("MissingPermission")
-    private suspend fun isBluetoothDeviceConnected(context: Context, macAddress: String, timeoutMillis: Long = 2500L): Boolean {
+    private suspend fun isBluetoothDeviceConnected(context: Context, macAddress: String, timeoutMillis: Long = 2000L): Boolean {
         // 1. Permission Guard for Android 12+ (API 31)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             val permission = android.Manifest.permission.BLUETOOTH_CONNECT
@@ -283,41 +347,87 @@ class LocationTrackingService : Service() {
             }
         }
 
-        val normalizedTarget = macAddress.replace(":", "").uppercase().trim()
+        val normalizedTarget = normalizeAddress(macAddress)
         val bluetoothManager = context.getSystemService(BLUETOOTH_SERVICE) as? BluetoothManager
         val adapter = bluetoothManager?.adapter ?: return false
         if (!adapter.isEnabled) return false
 
-        return suspendCancellableCoroutine { continuation ->
-            val profileListener = object : BluetoothProfile.ServiceListener {
-                override fun onServiceConnected(profile: Int, proxy: BluetoothProfile) {
-                    try {
-                        val connectedDevices = proxy.connectedDevices
-                        val isTargetConnected = connectedDevices.any {
-                            it.address.replace(":", "").uppercase().trim() == normalizedTarget
-                        }
-                        if (isTargetConnected && !continuation.isCompleted) continuation.resume(true)
-                    } catch (e: SecurityException) {
-                        // Double-safety: Handle unexpected late permission revocation or system inconsistencies
-                        logger.e("LocationService", "SecurityException during Bluetooth check fallback applied", e)
-                        if (!continuation.isCompleted) continuation.resume(true)
-                    } catch (e: Exception) {
-                        logger.e("LocationService", "Unexpected error during Bluetooth check", e)
-                        if (!continuation.isCompleted) continuation.resume(true)
-                    } finally {
-                        adapter.closeProfileProxy(profile, proxy)
+        return withTimeoutOrNull(timeoutMillis.milliseconds) {
+            suspendCancellableCoroutine { continuation ->
+                var a2dpProxy: BluetoothProfile? = null
+                var headsetProxy: BluetoothProfile? = null
+                var a2dpProcessed = false
+                var headsetProcessed = false
+                var found = false
+
+                fun checkCompletion() {
+                    if (found && !continuation.isCompleted) {
+                        continuation.resume(true)
+                    } else if (a2dpProcessed && headsetProcessed && !continuation.isCompleted) {
+                        continuation.resume(false)
                     }
                 }
-                override fun onServiceDisconnected(profile: Int) {}
-            }
-            adapter.getProfileProxy(context, profileListener, BluetoothProfile.HEADSET)
-            adapter.getProfileProxy(context, profileListener, BluetoothProfile.A2DP)
 
-            serviceScope.launch {
-                delay(timeoutMillis.milliseconds)
-                if (!continuation.isCompleted) continuation.resume(false)
+                val profileListener = object : BluetoothProfile.ServiceListener {
+                    override fun onServiceConnected(profile: Int, proxy: BluetoothProfile) {
+                        try {
+                            if (profile == BluetoothProfile.A2DP) {
+                                a2dpProxy = proxy
+                                val isTargetConnected = proxy.connectedDevices.any {
+                                    normalizeAddress(it.address) == normalizedTarget
+                                }
+                                if (isTargetConnected) found = true
+                                a2dpProcessed = true
+                            } else if (profile == BluetoothProfile.HEADSET) {
+                                headsetProxy = proxy
+                                val isTargetConnected = proxy.connectedDevices.any {
+                                    normalizeAddress(it.address) == normalizedTarget
+                                }
+                                if (isTargetConnected) found = true
+                                headsetProcessed = true
+                            }
+                        } catch (e: SecurityException) {
+                            logger.e("LocationService", "SecurityException during Bluetooth check", e)
+                            found = true // Fallback: don't fail due to security exception
+                        } catch (e: Exception) {
+                            logger.e("LocationService", "Error checking Bluetooth profile devices", e)
+                        } finally {
+                            checkCompletion()
+                        }
+                    }
+
+                    override fun onServiceDisconnected(profile: Int) {
+                        if (profile == BluetoothProfile.A2DP) a2dpProcessed = true
+                        if (profile == BluetoothProfile.HEADSET) headsetProcessed = true
+                        checkCompletion()
+                    }
+                }
+
+                try {
+                    val a2dpStarted = adapter.getProfileProxy(context, profileListener, BluetoothProfile.A2DP)
+                    if (!a2dpStarted) a2dpProcessed = true
+
+                    val headsetStarted = adapter.getProfileProxy(context, profileListener, BluetoothProfile.HEADSET)
+                    if (!headsetStarted) headsetProcessed = true
+
+                    checkCompletion()
+                } catch (e: Exception) {
+                    if (!continuation.isCompleted) continuation.resume(true) // Fallback on proxy error
+                }
+
+                continuation.invokeOnCancellation {
+                    try {
+                        a2dpProxy?.let { adapter.closeProfileProxy(BluetoothProfile.A2DP, it) }
+                        headsetProxy?.let { adapter.closeProfileProxy(BluetoothProfile.HEADSET, it) }
+                    } catch (_: Exception) {
+                    }
+                }
             }
-        }
+        } ?: false
+    }
+
+    private fun normalizeAddress(address: String): String {
+        return address.replace(":", "").replace("-", "").uppercase().trim()
     }
 
     private suspend fun waitForBluetoothConnection(macAddress: String): Boolean {
@@ -339,6 +449,11 @@ class LocationTrackingService : Service() {
 
     private fun startTracking() {
         logger.i("LocationService", "startTracking initiated")
+        TrackingDiagnostics.updateStatus(
+            this,
+            stage = "START_TRACKING",
+            details = "Initializing FusedLocationProviderClient updates"
+        )
 
         // Clean up residual notifications from previous trip cycle
         val notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
@@ -421,6 +536,11 @@ class LocationTrackingService : Service() {
                             longitude = location.longitude
                         )
                     }
+                    TrackingDiagnostics.updateStatus(
+                        this@LocationTrackingService,
+                        stage = "GPS_RECORDING",
+                        details = "Speed: ${"%.1f".format(location.speed * 3.6)} km/h | Acc: ${"%.0f".format(location.accuracy)}m (+${"%.0f".format(distance)}m)"
+                    )
                     lastLocation = location
                 } else if (distance > 1.0) {
                     serviceScope.launch {
@@ -428,6 +548,11 @@ class LocationTrackingService : Service() {
                             distanceMeters = distance.toDouble()
                         )
                     }
+                    TrackingDiagnostics.updateStatus(
+                        this@LocationTrackingService,
+                        stage = "GPS_RECORDING",
+                        details = "Speed: ${"%.1f".format(location.speed * 3.6)} km/h | Acc: ${"%.0f".format(location.accuracy)}m"
+                    )
                     lastLocation = location
                 }
             }
@@ -447,12 +572,23 @@ class LocationTrackingService : Service() {
         serviceScope.launch {
             try {
                 val distance = trackingRepository.currentDistanceMeters.first()
+                TrackingDiagnostics.updateStatus(
+                    this@LocationTrackingService,
+                    stage = "TRIP_STOPPED",
+                    details = "Total Distance: ${"%.2f".format(distance / 1000.0)} km"
+                )
                 trackingRepository.stopTracking()
                 if (distance >= 300.0) {
                     showTripFinishedNotification(distance)
                 }
             } catch (e: Exception) {
                 logger.e("LocationService", "Error stopping tracking repository", e)
+                TrackingDiagnostics.recordError(
+                    this@LocationTrackingService,
+                    "LocationService",
+                    "Error stopping tracking: ${e.message}",
+                    e
+                )
             } finally {
                 stopTrackingGracefully()
             }

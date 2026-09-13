@@ -111,12 +111,12 @@
     <string name="expenses_kpi_real_cost_title">Real cost per 100 km</string>
     <string name="expenses_hero_cost_per_hundred_km">Real cost per 100 km</string>
     <string name="expenses_hero_cost_per_hundred_km_value">%.2f €/100 km</string>
-    <string name="expenses_hero_delta_better">🟢 %.1f%% more efficient vs. average</string>
-    <string name="expenses_hero_delta_worse">🔴 +%.1f%% vs. average</string>
+    <string name="expenses_hero_delta_better">🟢 %.2f%% more efficient vs. average</string>
+    <string name="expenses_hero_delta_worse">🔴 +%.2f%% vs. average</string>
     <string name="expenses_kpi_cost_format">%1$s / 100 km</string>
     <string name="expenses_kpi_last_cycle_label">Last cycle: %1$.1f %2$s/100km</string>
-    <string name="expenses_kpi_delta_better">🟢 -%1$.1f %2$s vs. average</string>
-    <string name="expenses_kpi_delta_worse">🔴 +%1$.1f %2$s vs. average</string>
+    <string name="expenses_kpi_delta_better">🟢 -%1$.2f %2$s vs. average</string>
+    <string name="expenses_kpi_delta_worse">🔴 +%1$.2f %2$s vs. average</string>
     <string name="expenses_kpi_hero_empty_hint">Log full tank refuels to calculate your real cost per 100 km</string>
 
     <string name="expenses_radar_title">Price Radar</string>

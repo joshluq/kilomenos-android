@@ -26,6 +26,10 @@ class CrashlyticsLogProvider(
             crashlytics.setCustomKey("log_tag", tag)
             crashlytics.setCustomKey("log_priority", priority.name)
             crashlytics.recordException(throwable)
+        } else if (priority == LogLevel.ERROR) {
+            crashlytics.setCustomKey("log_tag", tag)
+            crashlytics.setCustomKey("log_priority", priority.name)
+            crashlytics.recordException(Exception("[$tag] $message"))
         }
     }
 }

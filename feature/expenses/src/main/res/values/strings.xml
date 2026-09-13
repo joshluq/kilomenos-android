@@ -111,12 +111,12 @@
     <string name="expenses_kpi_real_cost_title">Coste real por 100 km</string>
     <string name="expenses_hero_cost_per_hundred_km">Coste real por 100 km</string>
     <string name="expenses_hero_cost_per_hundred_km_value">%.2f €/100 km</string>
-    <string name="expenses_hero_delta_better">🟢 %.1f%% más eficiente vs media</string>
-    <string name="expenses_hero_delta_worse">🔴 +%.1f%% vs media</string>
+    <string name="expenses_hero_delta_better">🟢 %.2f%% más eficiente vs media</string>
+    <string name="expenses_hero_delta_worse">🔴 +%.2f%% vs media</string>
     <string name="expenses_kpi_cost_format">%1$s / 100 km</string>
     <string name="expenses_kpi_last_cycle_label">Último ciclo: %1$.1f %2$s/100km</string>
-    <string name="expenses_kpi_delta_better">🟢 -%1$.1f %2$s vs media</string>
-    <string name="expenses_kpi_delta_worse">🔴 +%1$.1f %2$s vs media</string>
+    <string name="expenses_kpi_delta_better">🟢 -%1$.2f %2$s vs media</string>
+    <string name="expenses_kpi_delta_worse">🔴 +%1$.2f %2$s vs media</string>
     <string name="expenses_kpi_hero_empty_hint">Registra repostajes a depósito lleno para calcular tu coste real por 100 km</string>
 
     <string name="expenses_radar_title">Radar de Precios</string>
