@@ -1,6 +1,12 @@
 package es.joshluq.kmsafe.feature.overview.components
 
 import android.content.res.Configuration
+import androidx.compose.animation.animateColor
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -24,6 +30,7 @@ import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -53,6 +60,7 @@ fun CopilotRadarSection(
     dailyQuotaKm: Double,
     isPremium: Boolean,
     isBluetoothConnected: Boolean,
+    isTracking: Boolean = false,
     hasPermissions: Boolean = true,
     autoTrackingEnabled: Boolean = true,
     onStartTripClick: () -> Unit,
@@ -60,6 +68,17 @@ fun CopilotRadarSection(
     onRequestPermissions: () -> Unit = {},
     onNavigateToPreferences: () -> Unit = {}
 ) {
+    val infiniteTransition = rememberInfiniteTransition(label = "RadarRecPulseTransition")
+    val dotColor by infiniteTransition.animateColor(
+        initialValue = CanvasKitTheme.colors.error,
+        targetValue = CanvasKitTheme.colors.error.copy(alpha = 0.2f),
+        animationSpec = infiniteRepeatable(
+            animation = tween(800, easing = LinearEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "RadarRecDotColor"
+    )
+
     Row(
         modifier = modifier
             .fillMaxWidth()
@@ -103,7 +122,12 @@ fun CopilotRadarSection(
         }
 
         // Card 2: Copilot Trip Control (Free vs Premium)
-        val cardModifier = if (isPremium) {
+        val cardModifier = if (isTracking) {
+            Modifier
+                .weight(1f)
+                .defaultMinSize(minHeight = 130.dp)
+                .testTag("copilot_radar_tracking")
+        } else if (isPremium) {
             when {
                 !autoTrackingEnabled -> Modifier
                     .weight(1f)
@@ -141,7 +165,52 @@ fun CopilotRadarSection(
                 )
             }
         ) {
-            if (isPremium) {
+            if (isTracking) {
+                // Tracking Active (Unified for SmartCopilot and Assisted Copilot)
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(24.dp)
+                                .clip(CircleShape)
+                                .background(CanvasKitTheme.colors.error.copy(alpha = 0.12f)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(10.dp)
+                                    .clip(CircleShape)
+                                    .background(dotColor)
+                            )
+                        }
+
+                        Text(
+                            text = stringResource(R.string.overview_radar_tracking_active),
+                            style = CanvasKitTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = CanvasKitTheme.colors.error,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Text(
+                        text = stringResource(R.string.overview_radar_tracking_desc),
+                        style = CanvasKitTheme.typography.labelSmall,
+                        color = CanvasKitTheme.colors.textSecondary,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+            } else if (isPremium) {
                 if (!autoTrackingEnabled) {
                     // State 1: Auto-Tracking Disabled in Preferences
                     Column(
@@ -414,6 +483,36 @@ fun PreviewCopilotRadarDisabled() {
             onStartTripClick = {},
             onUpgradeClick = {},
             onNavigateToPreferences = {}
+        )
+    }
+}
+
+@Preview(name = "CopilotRadar - Premium Tracking")
+@Composable
+fun PreviewCopilotRadarPremiumTracking() {
+    CanvasKitTheme {
+        CopilotRadarSection(
+            dailyQuotaKm = 82.0,
+            isPremium = true,
+            isBluetoothConnected = true,
+            isTracking = true,
+            onStartTripClick = {},
+            onUpgradeClick = {}
+        )
+    }
+}
+
+@Preview(name = "CopilotRadar - Free Tracking")
+@Composable
+fun PreviewCopilotRadarFreeTracking() {
+    CanvasKitTheme {
+        CopilotRadarSection(
+            dailyQuotaKm = 68.0,
+            isPremium = false,
+            isBluetoothConnected = false,
+            isTracking = true,
+            onStartTripClick = {},
+            onUpgradeClick = {}
         )
     }
 }

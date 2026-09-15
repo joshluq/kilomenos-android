@@ -92,6 +92,9 @@
     <string name="overview_radar_grant_permissions_desc">Toca para activar</string>
     <string name="overview_radar_autotracking_disabled">Desactivado</string>
     <string name="overview_radar_enable_in_settings">Activar en Ajustes</string>
+    <string name="overview_radar_tracking_active">Grabando viaje</string>
+    <string name="overview_radar_tracking_desc">Telemetría en tiempo real</string>
+    <string name="overview_radar_stop_trip_button">Finalizar</string>
 
     <!-- Floating Telemetry Pill -->
     <string name="overview_pill_recording_trip">Grabando</string>

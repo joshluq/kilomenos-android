@@ -436,6 +436,7 @@ private fun RentingState(
             dailyQuotaKm = state.dailyLimit,
             isPremium = state.isPremium ?: false,
             isBluetoothConnected = state.isVehicleBluetoothConnected,
+            isTracking = state.isTracking,
             hasPermissions = hasAutoTrackingPermissions,
             autoTrackingEnabled = state.autoTrackingEnabled,
             onStartTripClick = onStartTracking,

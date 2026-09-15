@@ -501,7 +501,7 @@ private fun KpiHeaderSection(
                 }
             }
 
-            if (state.consumptionDeltaVsAverage != null) {
+            if (state.consumptionDeltaVsAverage != null && state.consumptionDeltaVsAverage != 0.0) {
                 Spacer(modifier = Modifier.height(CanvasKitTheme.spacing.xs))
                 val isBetter = state.consumptionDeltaVsAverage < 0.0
                 val deltaText = if (isBetter) {

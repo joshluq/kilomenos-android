@@ -8,6 +8,8 @@ import es.joshluq.kmsafe.domain.repository.FuelExpenseRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
+import java.math.MathContext
+import java.math.RoundingMode
 import javax.inject.Inject
 
 /**
@@ -68,7 +70,7 @@ class CalculateCostPerHundredKmUseCaseImpl @Inject constructor(
             val averageConsumption = if (consumptions.isNotEmpty()) consumptions.average() else null
 
             val delta = if (lastCycleConsumption != null && averageConsumption != null) {
-                lastCycleConsumption - averageConsumption
+                (lastCycleConsumption - averageConsumption).toBigDecimal(MathContext(2, RoundingMode.HALF_UP))
             } else {
                 null
             }
@@ -82,7 +84,7 @@ class CalculateCostPerHundredKmUseCaseImpl @Inject constructor(
                 costPer100km = costPer100km,
                 lastCycleConsumption = lastCycleConsumption,
                 averageConsumption = averageConsumption,
-                consumptionDeltaVsAverage = delta,
+                consumptionDeltaVsAverage = delta?.toDouble(),
                 totalFullTankKms = totalFullTankKms,
                 totalFullTankCost = totalFullTankCost
             )

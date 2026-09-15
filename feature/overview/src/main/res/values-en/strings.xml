@@ -92,6 +92,9 @@
     <string name="overview_radar_grant_permissions_desc">Tap to enable</string>
     <string name="overview_radar_autotracking_disabled">Disabled</string>
     <string name="overview_radar_enable_in_settings">Enable in Settings</string>
+    <string name="overview_radar_tracking_active">Recording trip</string>
+    <string name="overview_radar_tracking_desc">Real-time telemetry</string>
+    <string name="overview_radar_stop_trip_button">Finish</string>
 
     <!-- Floating Telemetry Pill -->
     <string name="overview_pill_recording_trip">Recording</string>
