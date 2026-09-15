@@ -43,6 +43,11 @@ class TrackingRepositoryImpl @Inject constructor(
     override val isTracking: Flow<Boolean> = dataSource.isTracking()
 
     /**
+     * Flow emitting the timestamp of when the last tracking session was stopped or cleared.
+     */
+    override val lastTripEndTime: Flow<Long?> = dataSource.getLastTripEndTime()
+
+    /**
      * Flow emitting the encoded Google Polyline string representing the path traversed so far.
      */
     override val currentRoutePolyline: Flow<String?> = dataSource.getRoutePolyline()

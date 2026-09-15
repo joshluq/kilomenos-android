@@ -22,6 +22,11 @@ interface TrackingRepository {
     val isTracking: Flow<Boolean>
 
     /**
+     * The timestamp of when the last tracking session finished or was cancelled.
+     */
+    val lastTripEndTime: Flow<Long?>
+
+    /**
      * The current route encoded as a polyline string.
      */
     val currentRoutePolyline: Flow<String?>

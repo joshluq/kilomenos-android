@@ -104,6 +104,8 @@ class LocationTrackingService : Service() {
         private const val MIN_SPEED_THRESHOLD_MPS = 1.5 // ~5.4 km/h
         private const val MAX_HORIZONTAL_ACCURACY_METERS = 30.0
 
+        // Anti-Flap Cooldown Window: Prevents re-arming immediately after a trip is stopped/cancelled
+        private const val AUTO_TRACKING_COOLDOWN_MS = 60_000L // 60 seconds
     }
 
     override fun onCreate() {
@@ -237,7 +239,22 @@ class LocationTrackingService : Service() {
                     return@launch
                 }
 
-                // 3. Check if already tracking
+                // 3. Anti-Flap Cooldown Check: Prevent immediate re-arm if a trip was recently finished or cancelled
+                val lastTripEnd = trackingRepository.lastTripEndTime.first()
+                val now = System.currentTimeMillis()
+                if (lastTripEnd != null && (now - lastTripEnd) < AUTO_TRACKING_COOLDOWN_MS) {
+                    val remainingSeconds = (AUTO_TRACKING_COOLDOWN_MS - (now - lastTripEnd)) / 1000
+                    logger.i("LocationService", "Validation aborted: Auto-tracking cooldown active (${remainingSeconds}s remaining).")
+                    TrackingDiagnostics.updateStatus(
+                        this@LocationTrackingService,
+                        stage = "COOLDOWN_ACTIVE",
+                        details = "Cooldown active: ${remainingSeconds}s remaining"
+                    )
+                    stopTrackingGracefully()
+                    return@launch
+                }
+
+                // 4. Check if already tracking
                 if (trackingRepository.isTracking.first()) {
                     logger.d("LocationService", "Already tracking. Validation aborted.")
                     TrackingDiagnostics.updateStatus(

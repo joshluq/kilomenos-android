@@ -37,6 +37,7 @@ import es.joshluq.kmsafe.feature.overview.model.StatusCapsuleUiModel
 import es.joshluq.kmsafe.feature.overview.model.toUiModel
 import kotlin.math.absoluteValue
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.launchIn
@@ -563,12 +564,18 @@ class OverviewViewModel @Inject constructor(
                 newOdometerValue = String.format(java.util.Locale.getDefault(), "%.2f", tripKms)
             )
         }
-        stopTrackingUseCase(StopTrackingUseCase.Input).launchIn(viewModelScope)
+        viewModelScope.launch {
+            stopTripTrackingUseCase(StopTripTrackingUseCase.Input)
+            stopTrackingUseCase(StopTrackingUseCase.Input).collect()
+        }
     }
 
     private fun handleCancelTrackedTrip() {
         analytics.track(KmsafeAnalyticsEvent.Tracking.TrackingCancelled)
-        clearTrackingUseCase(ClearTrackingUseCase.Input).launchIn(viewModelScope)
+        viewModelScope.launch {
+            stopTripTrackingUseCase(StopTripTrackingUseCase.Input)
+            clearTrackingUseCase(ClearTrackingUseCase.Input).collect()
+        }
         launchEffect(Effect.DismissTrackingNotifications)
     }
 

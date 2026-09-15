@@ -56,7 +56,15 @@ class TrackingDataSourceTest {
     }
 
     @Test
-    fun `clear deletes all tracking keys from storage`() = runTest {
+    fun `stopTracking updates isTracking to false and saves last trip end time`() = runTest {
+        dataSource.stopTracking()
+
+        coVerify { storage.save("tracking_active", false) }
+        coVerify { storage.save(eq("tracking_last_trip_end_timestamp"), any<Long>()) }
+    }
+
+    @Test
+    fun `clear deletes active tracking keys and saves last trip end time`() = runTest {
         dataSource.clear()
 
         coVerify { storage.delete("tracking_active") }
@@ -64,5 +72,6 @@ class TrackingDataSourceTest {
         coVerify { storage.delete("tracking_distance_meters") }
         coVerify { storage.delete("tracking_route_polyline") }
         coVerify { storage.delete("tracking_point_count") }
+        coVerify { storage.save(eq("tracking_last_trip_end_timestamp"), any<Long>()) }
     }
 }

@@ -32,6 +32,7 @@ class TrackingDataSource @Inject constructor(
         private const val KEY_DISTANCE = "tracking_distance_meters"
         private const val KEY_ROUTE_POLYLINE = "tracking_route_polyline"
         private const val KEY_POINT_COUNT = "tracking_point_count"
+        private const val KEY_LAST_TRIP_END_TIME = "tracking_last_trip_end_timestamp"
     }
 
     fun isTracking(): Flow<Boolean> = _updates.flatMapLatest {
@@ -52,6 +53,10 @@ class TrackingDataSource @Inject constructor(
 
     fun getPointCount(): Flow<Int> = _updates.flatMapLatest {
         flow { emit(storage.read<Int>(KEY_POINT_COUNT) ?: 0) }
+    }
+
+    fun getLastTripEndTime(): Flow<Long?> = _updates.flatMapLatest {
+        flow { emit(storage.read<Long>(KEY_LAST_TRIP_END_TIME)) }
     }
 
     suspend fun startTracking(timestamp: Long) {
@@ -80,18 +85,20 @@ class TrackingDataSource @Inject constructor(
     }
 
     suspend fun stopTracking() {
-        logger.d("TrackingDataSource", "stopTracking: setting IS_TRACKING to false")
+        logger.d("TrackingDataSource", "stopTracking: setting IS_TRACKING to false and recording lastTripEndTime")
         storage.save(KEY_IS_TRACKING, false)
+        storage.save(KEY_LAST_TRIP_END_TIME, System.currentTimeMillis())
         _updates.emit(Unit)
     }
 
     suspend fun clear() {
-        logger.d("TrackingDataSource", "clear: deleting all tracking keys")
+        logger.d("TrackingDataSource", "clear: deleting all tracking keys and recording lastTripEndTime")
         storage.delete(KEY_IS_TRACKING)
         storage.delete(KEY_START_TIME)
         storage.delete(KEY_DISTANCE)
         storage.delete(KEY_ROUTE_POLYLINE)
         storage.delete(KEY_POINT_COUNT)
+        storage.save(KEY_LAST_TRIP_END_TIME, System.currentTimeMillis())
         _updates.emit(Unit)
     }
 }

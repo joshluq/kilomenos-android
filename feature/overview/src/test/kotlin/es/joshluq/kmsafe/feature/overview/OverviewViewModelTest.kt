@@ -349,6 +349,34 @@ class OverviewViewModelTest {
     }
 
     @Test
+    fun `given cancel tracked trip clicked then stops service and clears tracking data`() = runTest(testDispatcher) {
+        val effects = mutableListOf<Effect>()
+        val viewModel = createViewModel()
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
+            viewModel.effects.collect { effects.add(it) }
+        }
+
+        viewModel.sendEvent(Event.OnCancelTrackedTripClicked)
+        advanceUntilIdle()
+
+        coVerify(exactly = 1) { stopTripTrackingUseCase(StopTripTrackingUseCase.Input) }
+        coVerify(exactly = 1) { clearTrackingUseCase(ClearTrackingUseCase.Input) }
+        assertTrue(effects.contains(Effect.DismissTrackingNotifications))
+    }
+
+    @Test
+    fun `given confirm tracked trip clicked then stops service, prepares bottom sheet and stops tracking`() = runTest(testDispatcher) {
+        val viewModel = createViewModel()
+
+        viewModel.sendEvent(Event.OnConfirmTrackedTripClicked)
+        advanceUntilIdle()
+
+        coVerify(exactly = 1) { stopTripTrackingUseCase(StopTripTrackingUseCase.Input) }
+        coVerify(exactly = 1) { stopTrackingUseCase(StopTrackingUseCase.Input) }
+        assertTrue(viewModel.state.value.showBottomSheet)
+    }
+
+    @Test
     fun `given premium upgrade clicked then emits NavigateToPremiumPaywall effect`() = runTest(testDispatcher) {
         val effects = mutableListOf<Effect>()
         val viewModel = createViewModel()
