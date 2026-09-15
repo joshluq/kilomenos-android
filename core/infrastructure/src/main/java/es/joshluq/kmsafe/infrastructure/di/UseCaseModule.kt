@@ -132,6 +132,8 @@ import es.joshluq.kmsafe.domain.usecase.StopTripTrackingUseCase
 import es.joshluq.kmsafe.domain.usecase.StopTripTrackingUseCaseImpl
 import es.joshluq.kmsafe.domain.usecase.SyncContractsUseCase
 import es.joshluq.kmsafe.domain.usecase.SyncContractsUseCaseImpl
+import es.joshluq.kmsafe.domain.usecase.SyncFuelExpensesUseCase
+import es.joshluq.kmsafe.domain.usecase.SyncFuelExpensesUseCaseImpl
 import es.joshluq.kmsafe.domain.usecase.SyncStationsUseCase
 import es.joshluq.kmsafe.domain.usecase.SyncStationsUseCaseImpl
 import es.joshluq.kmsafe.domain.usecase.UpdateContractUseCase
@@ -328,6 +330,9 @@ abstract class UseCaseModule {
 
     @Binds
     abstract fun bindSyncStationsUseCase(impl: SyncStationsUseCaseImpl): SyncStationsUseCase
+
+    @Binds
+    abstract fun bindSyncFuelExpensesUseCase(impl: SyncFuelExpensesUseCaseImpl): SyncFuelExpensesUseCase
 
     @Binds
     abstract fun bindObserveVehicleBluetoothConnectionUseCase(impl: ObserveVehicleBluetoothConnectionUseCaseImpl): ObserveVehicleBluetoothConnectionUseCase

@@ -30,6 +30,8 @@ import es.joshluq.kmsafe.domain.usecase.ObserveStationRadarUseCase
 import es.joshluq.kmsafe.domain.usecase.ProcessFuelReceiptUseCase
 import es.joshluq.kmsafe.domain.usecase.SaveFuelExpenseUseCase
 import es.joshluq.kmsafe.domain.usecase.SaveServiceStationUseCase
+import es.joshluq.kmsafe.domain.usecase.SyncFuelExpensesUseCase
+import es.joshluq.kmsafe.domain.usecase.SyncStationsUseCase
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flatMapLatest
@@ -57,6 +59,8 @@ class ExpensesViewModel @AssistedInject constructor(
     private val observeStationRadarUseCase: ObserveStationRadarUseCase,
     private val processFuelReceiptUseCase: ProcessFuelReceiptUseCase,
     private val discardReceiptScanUseCase: DiscardReceiptScanUseCase,
+    private val syncFuelExpensesUseCase: SyncFuelExpensesUseCase,
+    private val syncStationsUseCase: SyncStationsUseCase,
     private val monetizationConfig: MonetizationConfig,
     private val analyticsTracker: AnalyticsTracker,
     private val logger: LoggerKit
@@ -94,7 +98,7 @@ class ExpensesViewModel @AssistedInject constructor(
     override fun handleEvent(event: ExpensesEvent) {
         logger.d("ExpensesViewModel", "Handling event: $event")
         when (event) {
-            ExpensesEvent.OnRefresh -> loadExpenses()
+            ExpensesEvent.OnRefresh -> handleRefresh()
             is ExpensesEvent.OnFilterChanged -> handleFilterChanged(event.mode)
             ExpensesEvent.OnOpenAddExpense -> updateState { copy(isAddExpenseSheetOpen = true) }
             ExpensesEvent.OnDismissAddExpense -> {
@@ -160,7 +164,9 @@ class ExpensesViewModel @AssistedInject constructor(
             .onEach { output ->
                 when (output) {
                     GetExpensesByVehicleUseCase.Output.Progress -> {
-                        updateState { copy(isLoading = true) }
+                        if (state.value.expenses.isEmpty()) {
+                            updateState { copy(isLoading = true) }
+                        }
                     }
                     is GetExpensesByVehicleUseCase.Output.Empty -> {
                         updateState {
@@ -237,6 +243,45 @@ class ExpensesViewModel @AssistedInject constructor(
                 }
             }
             .launchIn(viewModelScope)
+    }
+
+    private fun handleRefresh() {
+        logger.d("ExpensesViewModel", "Triggering pull to refresh")
+        updateState { copy(isRefreshing = true) }
+
+        if (state.value.isPremium == true) {
+            val currentVehicleId = state.value.vehicleId
+            logger.i("ExpensesViewModel", "User is Premium, initiating remote sync for vehicle: $currentVehicleId")
+
+            syncStationsUseCase(SyncStationsUseCase.Input).launchIn(viewModelScope)
+
+            syncFuelExpensesUseCase(SyncFuelExpensesUseCase.Input(currentVehicleId))
+                .onEach { output ->
+                    when (output) {
+                        SyncFuelExpensesUseCase.Output.Progress -> {
+                            updateState { copy(isRefreshing = true) }
+                        }
+                        is SyncFuelExpensesUseCase.Output.Success -> {
+                            logger.i("ExpensesViewModel", "Remote fuel expenses sync succeeded: ${output.expensesCount} expenses synced")
+                            updateState { copy(isRefreshing = false) }
+                            loadStations()
+                            loadExpenses()
+                        }
+                        is SyncFuelExpensesUseCase.Output.Failure -> {
+                            logger.w("ExpensesViewModel", "Remote fuel expenses sync failed: ${output.error}")
+                            updateState { copy(isRefreshing = false) }
+                            loadStations()
+                            loadExpenses()
+                        }
+                    }
+                }
+                .launchIn(viewModelScope)
+        } else {
+            logger.d("ExpensesViewModel", "User is not Premium, refreshing local data only")
+            loadStations()
+            loadExpenses()
+            updateState { copy(isRefreshing = false) }
+        }
     }
 
     private fun loadStations() {

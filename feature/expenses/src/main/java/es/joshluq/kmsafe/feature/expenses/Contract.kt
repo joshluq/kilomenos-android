@@ -53,6 +53,7 @@ data class ExpensesState(
     val isPremium: Boolean? = null,
     val adUnitId: String? = null,
     val isLoading: Boolean = false,
+    val isRefreshing: Boolean = false,
     val isSaving: Boolean = false,
     val initialStationId: String? = null,
     val priceReportMode: Boolean = false,

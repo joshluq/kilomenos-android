@@ -91,7 +91,7 @@ class LocationTrackingService : Service() {
         private const val NOTIFICATION_ID_TRIP_FINISHED = 1002
         /**
          * Bluetooth connected notification ID from [BluetoothConnectionReceiver].
-         * Cancelled here to avoid duplicate ongoing notifications.
+         * Canceled here to avoid duplicate ongoing notifications.
          */
         private const val NOTIFICATION_ID_BT_CONNECTED = 2003
 
@@ -105,7 +105,7 @@ class LocationTrackingService : Service() {
         private const val MIN_SPEED_THRESHOLD_MPS = 1.5 // ~5.4 km/h
         private const val MAX_HORIZONTAL_ACCURACY_METERS = 30.0
 
-        // Anti-Flap Cooldown Window: Prevents re-arming immediately after a trip is stopped/cancelled
+        // Anti-Flap Cooldown Window: Prevents re-arming immediately after a trip is stopped/canceled
         private const val AUTO_TRACKING_COOLDOWN_MS = 60_000L // 60 seconds
     }
 
@@ -240,7 +240,7 @@ class LocationTrackingService : Service() {
                     return@launch
                 }
 
-                // 3. Anti-Flap Cooldown Check: Prevent immediate re-arm if a trip was recently cancelled
+                // 3. Anti-Flap Cooldown Check: Prevent immediate re-arm if a trip was recently canceled
                 val lastTripEnd = trackingRepository.lastTripEndTime.first()
                 val now = System.currentTimeMillis()
                 val elapsed = if (lastTripEnd != null) now - lastTripEnd else Long.MAX_VALUE
@@ -748,9 +748,9 @@ class LocationTrackingService : Service() {
     /**
      * Detects if an exception is a coroutine cancellation wrapped by EncryptionKit's StorageProvider.
      *
-     * When [serviceScope] is cancelled during [onDestroy], pending [StorageProvider] read operations
+     * When [serviceScope] is canceled during [onDestroy], pending StorageProvider read operations
      * throw an internal exception (R8-obfuscated as `encryptionkit.internal.di3`) with the message
-     * "Job was cancelled". These are normal lifecycle events, not actionable errors, and should be
+     * "Job was canceled". These are normal lifecycle events, not actionable errors, and should be
      * logged at DEBUG level instead of ERROR to prevent Crashlytics noise.
      */
     private fun isServiceLifecycleCancellation(e: Exception): Boolean {

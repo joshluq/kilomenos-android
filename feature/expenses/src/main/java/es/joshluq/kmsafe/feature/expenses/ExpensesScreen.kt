@@ -333,7 +333,7 @@ fun ExpensesScreen(
             ) {
                 if (state.isPremium == true) {
                     PullToRefreshBox(
-                        isRefreshing = state.isLoading,
+                        isRefreshing = state.isRefreshing,
                         onRefresh = { onEvent(ExpensesEvent.OnRefresh) },
                         modifier = Modifier.fillMaxSize(),
                         content = { content() }

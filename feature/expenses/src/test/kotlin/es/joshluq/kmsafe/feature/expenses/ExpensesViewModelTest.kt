@@ -23,6 +23,8 @@ import es.joshluq.kmsafe.domain.usecase.ObserveStationRadarUseCase
 import es.joshluq.kmsafe.domain.usecase.ProcessFuelReceiptUseCase
 import es.joshluq.kmsafe.domain.usecase.SaveFuelExpenseUseCase
 import es.joshluq.kmsafe.domain.usecase.SaveServiceStationUseCase
+import es.joshluq.kmsafe.domain.usecase.SyncFuelExpensesUseCase
+import es.joshluq.kmsafe.domain.usecase.SyncStationsUseCase
 import io.mockk.clearAllMocks
 import io.mockk.coVerify
 import io.mockk.every
@@ -64,6 +66,8 @@ class ExpensesViewModelTest {
     private val observeStationRadarUseCase: ObserveStationRadarUseCase = mockk()
     private val processFuelReceiptUseCase: ProcessFuelReceiptUseCase = mockk()
     private val discardReceiptScanUseCase: DiscardReceiptScanUseCase = mockk()
+    private val syncFuelExpensesUseCase: SyncFuelExpensesUseCase = mockk()
+    private val syncStationsUseCase: SyncStationsUseCase = mockk()
     private val monetizationConfig: MonetizationConfig = mockk()
     private val analyticsTracker = es.joshluq.kmsafe.core.analytics.fake.FakeAnalyticsTracker()
     private val logger: LoggerKit = mockk(relaxed = true)
@@ -150,6 +154,8 @@ class ExpensesViewModelTest {
             )
         )
         every { discardReceiptScanUseCase(any()) } returns flowOf(DiscardReceiptScanUseCase.Output.Success)
+        every { syncStationsUseCase(any()) } returns flowOf(SyncStationsUseCase.Output.Success)
+        every { syncFuelExpensesUseCase(any()) } returns flowOf(SyncFuelExpensesUseCase.Output.Success(1))
     }
 
     @After
@@ -180,6 +186,8 @@ class ExpensesViewModelTest {
             observeStationRadarUseCase = observeStationRadarUseCase,
             processFuelReceiptUseCase = processFuelReceiptUseCase,
             discardReceiptScanUseCase = discardReceiptScanUseCase,
+            syncFuelExpensesUseCase = syncFuelExpensesUseCase,
+            syncStationsUseCase = syncStationsUseCase,
             monetizationConfig = monetizationConfig,
             analyticsTracker = analyticsTracker,
             logger = logger
@@ -604,5 +612,58 @@ class ExpensesViewModelTest {
                 }
             )
         }
+    }
+
+    @Test
+    fun `given premium user when OnRefresh then syncs remote fuel expenses and stations`() = runTest(testDispatcher) {
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        every { syncStationsUseCase(any()) } returns flowOf(SyncStationsUseCase.Output.Success)
+        every { syncFuelExpensesUseCase(any()) } returns flowOf(
+            SyncFuelExpensesUseCase.Output.Progress,
+            SyncFuelExpensesUseCase.Output.Success(3)
+        )
+
+        viewModel.sendEvent(ExpensesEvent.OnRefresh)
+        advanceUntilIdle()
+
+        coVerify(atLeast = 1) { syncStationsUseCase(SyncStationsUseCase.Input) }
+        coVerify(atLeast = 1) { syncFuelExpensesUseCase(SyncFuelExpensesUseCase.Input("v1")) }
+        assertFalse(viewModel.state.value.isRefreshing)
+    }
+
+    @Test
+    fun `given non-premium user when OnRefresh then does not trigger remote sync but refreshes local data`() = runTest(testDispatcher) {
+        every { checkFeatureAccessUseCase(CheckFeatureAccessUseCase.Input(Feature.ADVANCED_PROJECTIONS)) } returns flowOf(
+            CheckFeatureAccessUseCase.Output.Success(isGranted = false)
+        )
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        viewModel.sendEvent(ExpensesEvent.OnRefresh)
+        advanceUntilIdle()
+
+        coVerify(exactly = 0) { syncFuelExpensesUseCase(any()) }
+        assertFalse(viewModel.state.value.isRefreshing)
+    }
+
+    @Test
+    fun `given remote sync failure when OnRefresh then handles error gracefully and turns off isRefreshing`() = runTest(testDispatcher) {
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        every { syncFuelExpensesUseCase(any()) } returns flowOf(
+            SyncFuelExpensesUseCase.Output.Progress,
+            SyncFuelExpensesUseCase.Output.Failure(KmError.NetworkError)
+        )
+
+        viewModel.sendEvent(ExpensesEvent.OnRefresh)
+        advanceUntilIdle()
+
+        coVerify(atLeast = 1) { syncFuelExpensesUseCase(any()) }
+        assertFalse(viewModel.state.value.isRefreshing)
+        // Verify local expenses are not wiped
+        assertTrue(viewModel.state.value.expenses.isNotEmpty())
     }
 }
