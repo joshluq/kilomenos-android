@@ -56,11 +56,11 @@ class TrackingDataSourceTest {
     }
 
     @Test
-    fun `stopTracking updates isTracking to false and saves last trip end time`() = runTest {
+    fun `stopTracking updates isTracking to false without arming cooldown`() = runTest {
         dataSource.stopTracking()
 
         coVerify { storage.save("tracking_active", false) }
-        coVerify { storage.save(eq("tracking_last_trip_end_timestamp"), any<Long>()) }
+        coVerify(exactly = 0) { storage.save(eq("tracking_last_trip_end_timestamp"), any<Long>()) }
     }
 
     @Test

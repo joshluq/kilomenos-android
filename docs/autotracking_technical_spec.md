@@ -114,9 +114,14 @@ Google Play Services Activity Recognition requires 1 to 3 minutes of continuous 
 
 ### 4.2 SMART Copilot UI State Machine (`CopilotRadarSection`)
 
+Card 2 in `CopilotRadarSection` dynamically reflects telemetry status across Free and Premium tiers. When an active recording session is running (`isTracking == true`), both tiers transition into a unified high-visibility active tracking state:
+
 ```mermaid
 graph TD
-    UserCheck{Is User Premium?}
+    TrackingCheck{isTracking == true?}
+    TrackingCheck -->|Yes: Unified Active State| StateRecording[State: 'Grabando viaje'<br/>Subtitle: 'Telemetría en tiempo real'<br/>Indicator: Pulsing Red Beacon]
+    
+    TrackingCheck -->|No: Idle / Standby| UserCheck{Is User Premium?}
     
     UserCheck -->|Free Tier: Copilot Asistido| FreeState[Manual Trip Control Card]
     FreeState --> FreeClick[User taps 'Iniciar Viaje']
@@ -138,15 +143,24 @@ graph TD
     BtCheck -->|No| StateStandby[State 4: 'En Espera'<br/>Subtitle: 'Listo para grabar' Blue]
 ```
 
+#### Active Tracking Design Guidelines:
+- **Pulsing Beacon Indicator**: Features an animated pulsing red dot (`CanvasKitTheme.colors.red`) with infinite transition breathing effect (alpha `1.0f` to `0.3f`).
+- **Telemetry Separation of Concerns**: `CopilotRadarSection` deliberately **omits** live kilometer numbers during tracking (which prevents high-frequency UI recomposition on every GPS fix) and **omits** a duplicate Stop button (delegated exclusively to the floating `FloatingTelemetryPill`).
+
 ---
 
-## 5. Validation Logic (The "Triple Check" + Preferences Guard)
+## 5. Validation Logic (The "Triple Check" + Preferences Guard + Anti-Flap Cooldown)
 
 Before recording GPS points, `LocationTrackingService` executes comprehensive domain validations in foreground:
 1. **Premium Access**: Verifies via `CheckFeatureAccessUseCase` that the user has the `AUTO_TRACKING` entitlement.
 2. **Preferences Guard**: Verifies via `GetPreferencesUseCase` that `preferences.autoTrackingEnabled` is `true`. If disabled, stops gracefully immediately.
-3. **Contract SSOT**: Verifies the presence of an active `RentingContract` in the local Room database and updates `TrackingDeviceCache`.
-4. **Bluetooth Hardware Fast-Path**: If started via `ACTION_START_BT_AUTO` with matching pre-verified MAC, validation succeeds immediately. If started via Activity Recognition fallback, the service queries connected `A2DP` and `HEADSET` profile proxies with thread-safe `AtomicBoolean` flags and cancellation cleanup.
+3. **Anti-Flap Cooldown Window (`AUTO_TRACKING_COOLDOWN_MS = 60_000L`)**:
+   - Verifies that at least 60 seconds have elapsed since the **cancellation** of the last trip (`trackingRepository.lastTripEndTime`).
+   - **Cancellation-Only Arming**: The cooldown timestamp is written exclusively by `TrackingDataSource.clear()` (trip cancellation). `TrackingDataSource.stopTracking()` (trip confirmation/save, natural BT disconnect, AR EXIT) does **not** arm the cooldown, allowing legitimate consecutive trips to auto-start immediately.
+   - **Clock Monotonicity Guard**: Uses `elapsed in 0 until COOLDOWN_MS` to prevent permanent lockout from negative clock deltas caused by NTP correction or manual time adjustment.
+   - *Note: Manual user-initiated trips (`ACTION_START`) deliberately bypass this cooldown entirely.*
+4. **Contract SSOT**: Verifies the presence of an active `RentingContract` in the local Room database and updates `TrackingDeviceCache`.
+5. **Bluetooth Hardware Fast-Path**: If started via `ACTION_START_BT_AUTO` with matching pre-verified MAC, validation succeeds immediately. If started via Activity Recognition fallback, the service queries connected `A2DP` and `HEADSET` profile proxies with thread-safe `AtomicBoolean` flags and cancellation cleanup.
 
 ---
 
@@ -158,6 +172,7 @@ Before recording GPS points, `LocationTrackingService` executes comprehensive do
 | **Phase 2** | **Background Fast-Path & Notifications**: Silent local notification upon car Bluetooth connection; pre-activating location validation before Activity Recognition fires; instant trip stop on vehicle disconnect. | ✅ Implemented |
 | **Phase 3** | **Production Resiliency & Trip Continuity**: `BluetoothConnectionReceiver` exported in AndroidManifest; upgraded channel `location_tracking_channel_v3`; continuous cumulative tracking across stops (`TrackingDataSource`). | ✅ Implemented |
 | **Phase 4** | **Bluetooth Fast-Path First & Real-Time Observability**: Synchronous service initiation under Bluetooth hardware broadcast exemption; robust A2DP/HEADSET proxy resolution; sticky diagnostic monitor (`TrackingDiagnostics`); decoupled logging via `LoggerKit` & Crashlytics. | ✅ Implemented |
+| **Phase 5** | **Active Telemetry State & Lifecycle Resiliency**: Active recording state in `CopilotRadarSection` with animated pulsing beacon; explicit foreground service teardown on trip cancellation/confirmation (`OverviewViewModel`); 60s anti-flap cooldown window preventing ghost re-tracking outside vehicle. | ✅ Implemented |
 
 ---
 
@@ -167,7 +182,15 @@ Before recording GPS points, `LocationTrackingService` executes comprehensive do
 - **Root Cause**: Attempting to start `LocationTrackingService` from background when Google Play Activity Recognition fired `IN_VEHICLE ENTER` minutes after the app was backgrounded. Android 14 blocks background service starts without explicit exemptions.
 - **Architectural Solution**: **Bluetooth Fast-Path First**. `BluetoothConnectionReceiver` starts the service synchronously when `ACTION_ACL_CONNECTED` is received, which is an explicit Android exemption for starting foreground services.
 
+### Ghost Tracking Re-Trigger After Trip Cancellation
+- **Root Cause**: Cancelling or completing a trip in `TripCompletedCard` previously only cleared local Room data via `ClearTrackingUseCase` without signaling `LocationTrackingService`. The foreground service remained alive in background, and the subsequent GPS update restarted distance accumulation from 0 m outside the vehicle. Furthermore, residual Bluetooth connectivity or Activity Recognition re-triggered auto-validation.
+- **Architectural Solution**: 
+  1. `OverviewViewModel` explicitly stops `LocationTrackingService` (`StopTripTrackingUseCase`) on both trip cancellation and confirmation.
+  2. `TrackingDataSource` persists a timestamp (`lastTripEndTime`).
+  3. `LocationTrackingService` enforces a 60-second anti-flap cooldown window for automated triggers.
+
 ### False Positives & Stationary Drift
 - **Speed Filter**: Coordinates with speed below `1.5 m/s` (~5.4 km/h) are ignored for distance accumulation.
 - **Accuracy Filter**: Points with accuracy error exceeding `30 meters` are discarded.
 - **Anti-Spoofing**: Locations marked with `location.isMock` (or `isFromMockProvider`) are rejected.
+

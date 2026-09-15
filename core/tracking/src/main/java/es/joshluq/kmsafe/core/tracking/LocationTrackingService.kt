@@ -42,6 +42,7 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
+import java.util.concurrent.CancellationException
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
@@ -239,11 +240,12 @@ class LocationTrackingService : Service() {
                     return@launch
                 }
 
-                // 3. Anti-Flap Cooldown Check: Prevent immediate re-arm if a trip was recently finished or cancelled
+                // 3. Anti-Flap Cooldown Check: Prevent immediate re-arm if a trip was recently cancelled
                 val lastTripEnd = trackingRepository.lastTripEndTime.first()
                 val now = System.currentTimeMillis()
-                if (lastTripEnd != null && (now - lastTripEnd) < AUTO_TRACKING_COOLDOWN_MS) {
-                    val remainingSeconds = (AUTO_TRACKING_COOLDOWN_MS - (now - lastTripEnd)) / 1000
+                val elapsed = if (lastTripEnd != null) now - lastTripEnd else Long.MAX_VALUE
+                if (elapsed in 0 until AUTO_TRACKING_COOLDOWN_MS) {
+                    val remainingSeconds = (AUTO_TRACKING_COOLDOWN_MS - elapsed) / 1000
                     logger.i("LocationService", "Validation aborted: Auto-tracking cooldown active (${remainingSeconds}s remaining).")
                     TrackingDiagnostics.updateStatus(
                         this@LocationTrackingService,
@@ -313,14 +315,20 @@ class LocationTrackingService : Service() {
                     details = "Starting active GPS tracking"
                 )
                 startTracking()
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
-                logger.e("LocationService", "Error during autostart validation", e)
-                TrackingDiagnostics.recordError(
-                    this@LocationTrackingService,
-                    "LocationService",
-                    "Exception during autostart validation: ${e.message}",
-                    e
-                )
+                if (isServiceLifecycleCancellation(e)) {
+                    logger.d("LocationService", "Validation cancelled due to service lifecycle: ${e.message}")
+                } else {
+                    logger.e("LocationService", "Error during autostart validation", e)
+                    TrackingDiagnostics.recordError(
+                        this@LocationTrackingService,
+                        "LocationService",
+                        "Exception during autostart validation: ${e.message}",
+                        e
+                    )
+                }
                 stopTrackingGracefully()
             }
         }
@@ -615,14 +623,20 @@ class LocationTrackingService : Service() {
                 if (distance >= 300.0) {
                     showTripFinishedNotification(distance)
                 }
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
-                logger.e("LocationService", "Error stopping tracking repository", e)
-                TrackingDiagnostics.recordError(
-                    this@LocationTrackingService,
-                    "LocationService",
-                    "Error stopping tracking: ${e.message}",
-                    e
-                )
+                if (isServiceLifecycleCancellation(e)) {
+                    logger.d("LocationService", "Stop tracking cancelled due to service lifecycle: ${e.message}")
+                } else {
+                    logger.e("LocationService", "Error stopping tracking repository", e)
+                    TrackingDiagnostics.recordError(
+                        this@LocationTrackingService,
+                        "LocationService",
+                        "Error stopping tracking: ${e.message}",
+                        e
+                    )
+                }
             } finally {
                 stopTrackingGracefully()
             }
@@ -729,6 +743,20 @@ class LocationTrackingService : Service() {
             val manager = getSystemService(NotificationManager::class.java)
             manager.createNotificationChannel(channel)
         }
+    }
+
+    /**
+     * Detects if an exception is a coroutine cancellation wrapped by EncryptionKit's StorageProvider.
+     *
+     * When [serviceScope] is cancelled during [onDestroy], pending [StorageProvider] read operations
+     * throw an internal exception (R8-obfuscated as `encryptionkit.internal.di3`) with the message
+     * "Job was cancelled". These are normal lifecycle events, not actionable errors, and should be
+     * logged at DEBUG level instead of ERROR to prevent Crashlytics noise.
+     */
+    private fun isServiceLifecycleCancellation(e: Exception): Boolean {
+        val message = e.message ?: return false
+        return message.contains("cancelled", ignoreCase = true) ||
+            message.contains("canceled", ignoreCase = true)
     }
 
     override fun onBind(intent: Intent?): IBinder? = null
