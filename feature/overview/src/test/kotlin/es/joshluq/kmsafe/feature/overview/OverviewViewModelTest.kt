@@ -555,4 +555,33 @@ class OverviewViewModelTest {
         assertEquals(null, viewModel.state.value.switchingVehicleName)
         coVerify(exactly = 1) { selectContractUseCase(SelectContractUseCase.Input(id = "contract-2", targetVehicleName = "Peugeot 3008")) }
     }
+
+    @Test
+    fun `given tracking update when bottom sheet is open then suppresses isTracking in state`() = runTest(testDispatcher) {
+        val trackingFlow = MutableSharedFlow<ObserveTrackingStateUseCase.Output>()
+        every { observeTrackingStateUseCase(any()) } returns trackingFlow
+
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        // Open bottom sheet
+        viewModel.sendEvent(Event.OnUpdateOdometerClicked)
+        advanceUntilIdle()
+        assertTrue(viewModel.state.value.showBottomSheet)
+
+        // Emit active tracking from background
+        trackingFlow.emit(
+            ObserveTrackingStateUseCase.Output.Success(
+                isTracking = true,
+                trackedDistance = 100.0,
+                startTime = 1000L,
+                encodedPolyline = null,
+                pointCount = 1
+            )
+        )
+        advanceUntilIdle()
+
+        // Verify isTracking remains false in UI state because bottom sheet is open
+        assertFalse(viewModel.state.value.isTracking)
+    }
 }

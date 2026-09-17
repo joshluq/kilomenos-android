@@ -348,7 +348,7 @@ fun OverviewScreen(
 
             // Floating Telemetry Pill (Dynamic Island pattern during active recording)
             FloatingTelemetryPill(
-                isVisible = state.isTracking,
+                isVisible = state.isTracking && !state.showBottomSheet && !state.isSaving,
                 distanceMeters = state.trackedDistance,
                 onStopClick = { onEvent(Event.OnStopTrackingClicked) },
                 modifier = Modifier

@@ -85,8 +85,9 @@ class TrackingDataSource @Inject constructor(
     }
 
     suspend fun stopTracking() {
-        logger.d("TrackingDataSource", "stopTracking: setting IS_TRACKING to false")
+        logger.d("TrackingDataSource", "stopTracking: setting IS_TRACKING to false and arming cooldown")
         storage.save(KEY_IS_TRACKING, false)
+        storage.save(KEY_LAST_TRIP_END_TIME, System.currentTimeMillis())
         _updates.emit(Unit)
     }
 

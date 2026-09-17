@@ -99,6 +99,7 @@ class BluetoothConnectionReceiver : BroadcastReceiver() {
         var serviceStartedSync = false
 
         if (action == BluetoothDevice.ACTION_ACL_CONNECTED && linkedMac != null && normalizedDeviceMac == linkedMac) {
+            TrackingDeviceCache.setBluetoothConnected(true)
             // RULE 16.1: START SERVICE SYNCHRONOUSLY UNDER HARDWARE BROADCAST EXEMPTION WINDOW
             val vehicleName = TrackingDeviceCache.getVehicleName(context) ?: deviceName
             logger.i("BluetoothReceiver", "FAST-PATH: Synchronous ACL match for linked vehicle ($linkedMac). Starting service immediately.")
@@ -115,6 +116,8 @@ class BluetoothConnectionReceiver : BroadcastReceiver() {
             }
             startTrackingService(context, serviceIntent)
             serviceStartedSync = true
+        } else if (action == BluetoothDevice.ACTION_ACL_DISCONNECTED && linkedMac != null && normalizedDeviceMac == linkedMac) {
+            TrackingDeviceCache.setBluetoothConnected(false)
         }
 
         val pendingResult = goAsync()
@@ -172,6 +175,7 @@ class BluetoothConnectionReceiver : BroadcastReceiver() {
             val macMatch = normalizedDeviceMac == normalizedContractMac
 
             if (macMatch) {
+                TrackingDeviceCache.setBluetoothConnected(true)
                 // Rule 16.2: Activate live connection pill immediately in OverviewScreen
                 logger.i("BluetoothReceiver", "Vehicle Bluetooth connected: ${contract.vehicleName}. Updating connection state.")
                 updateBluetoothConnectionStateUseCase(
@@ -243,6 +247,7 @@ class BluetoothConnectionReceiver : BroadcastReceiver() {
         val contractMac = contract.bluetoothDeviceAddress?.let { normalizeAddress(it) } ?: return
 
         if (normalizedDeviceMac == contractMac) {
+            TrackingDeviceCache.setBluetoothConnected(false)
             logger.i("BluetoothReceiver", "Vehicle Bluetooth disconnected: ${contract.vehicleName}. Updating connection state.")
             TrackingDiagnostics.updateStatus(
                 context,

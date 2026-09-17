@@ -23,6 +23,23 @@ object TrackingDeviceCache {
     @Volatile
     private var isInitialized: Boolean = false
 
+    @Volatile
+    private var isBluetoothConnected: Boolean = false
+
+    /**
+     * Updates the fast-path connection status of the linked vehicle Bluetooth device.
+     */
+    fun setBluetoothConnected(connected: Boolean) {
+        isBluetoothConnected = connected
+    }
+
+    /**
+     * Checks whether the linked vehicle Bluetooth device is currently connected.
+     */
+    fun isBluetoothConnected(): Boolean {
+        return isBluetoothConnected
+    }
+
     /**
      * Retrieves the linked vehicle Bluetooth MAC address synchronously.
      * Checks in-memory cache first, falls back to SharedPreferences.

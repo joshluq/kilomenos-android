@@ -41,6 +41,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.flow.first
 import java.util.concurrent.CancellationException
 import kotlinx.coroutines.flow.launchIn
@@ -82,6 +83,7 @@ class LocationTrackingService : Service() {
 
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private var distanceJob: kotlinx.coroutines.Job? = null
+    private var bluetoothHeartbeatJob: kotlinx.coroutines.Job? = null
     private lateinit var fusedLocationClient: FusedLocationProviderClient
     private var lastLocation: Location? = null
 
@@ -105,8 +107,8 @@ class LocationTrackingService : Service() {
         private const val MIN_SPEED_THRESHOLD_MPS = 1.5 // ~5.4 km/h
         private const val MAX_HORIZONTAL_ACCURACY_METERS = 30.0
 
-        // Anti-Flap Cooldown Window: Prevents re-arming immediately after a trip is stopped/canceled
-        private const val AUTO_TRACKING_COOLDOWN_MS = 60_000L // 60 seconds
+        // Anti-Flap Cooldown Window: Prevents re-arming immediately after a trip is stopped/canceled (15s dynamic cooldown)
+        private const val AUTO_TRACKING_COOLDOWN_MS = 15_000L // 15 seconds
     }
 
     override fun onCreate() {
@@ -127,6 +129,7 @@ class LocationTrackingService : Service() {
 
     override fun onDestroy() {
         super.onDestroy()
+        bluetoothHeartbeatJob?.cancel()
         serviceScope.cancel()
     }
 
@@ -240,20 +243,26 @@ class LocationTrackingService : Service() {
                     return@launch
                 }
 
-                // 3. Anti-Flap Cooldown Check: Prevent immediate re-arm if a trip was recently canceled
-                val lastTripEnd = trackingRepository.lastTripEndTime.first()
-                val now = System.currentTimeMillis()
-                val elapsed = if (lastTripEnd != null) now - lastTripEnd else Long.MAX_VALUE
-                if (elapsed in 0 until AUTO_TRACKING_COOLDOWN_MS) {
-                    val remainingSeconds = (AUTO_TRACKING_COOLDOWN_MS - elapsed) / 1000
-                    logger.i("LocationService", "Validation aborted: Auto-tracking cooldown active (${remainingSeconds}s remaining).")
-                    TrackingDiagnostics.updateStatus(
-                        this@LocationTrackingService,
-                        stage = "COOLDOWN_ACTIVE",
-                        details = "Cooldown active: ${remainingSeconds}s remaining"
-                    )
-                    stopTrackingGracefully()
-                    return@launch
+                // 3. Anti-Flap Cooldown Check: Prevent immediate re-arm if a trip was recently canceled/saved.
+                // Ignition bypass: Hardware Bluetooth connection events (fast-path) represent an intentional ignition cycle,
+                // bypassing cooldown so that restarting the car immediately starts a new trip.
+                if (!isBluetoothFastPath) {
+                    val lastTripEnd = trackingRepository.lastTripEndTime.first()
+                    val now = System.currentTimeMillis()
+                    val elapsed = if (lastTripEnd != null) now - lastTripEnd else Long.MAX_VALUE
+                    if (elapsed in 0 until AUTO_TRACKING_COOLDOWN_MS) {
+                        val remainingSeconds = (AUTO_TRACKING_COOLDOWN_MS - elapsed) / 1000
+                        logger.i("LocationService", "Validation aborted: Auto-tracking cooldown active (${remainingSeconds}s remaining).")
+                        TrackingDiagnostics.updateStatus(
+                            this@LocationTrackingService,
+                            stage = "COOLDOWN_ACTIVE",
+                            details = "Cooldown active: ${remainingSeconds}s remaining"
+                        )
+                        stopTrackingGracefully()
+                        return@launch
+                    }
+                } else {
+                    logger.i("LocationService", "Bluetooth Fast-Path active: Bypassing cooldown check for hardware ignition event.")
                 }
 
                 // 4. Check if already tracking
@@ -489,6 +498,33 @@ class LocationTrackingService : Service() {
         return false
     }
 
+    private fun startBluetoothHeartbeat() {
+        bluetoothHeartbeatJob?.cancel()
+        val contractMac = TrackingDeviceCache.getLinkedMac(this) ?: return
+        bluetoothHeartbeatJob = serviceScope.launch {
+            logger.d("LocationService", "Starting Bluetooth heartbeat for linked vehicle: $contractMac")
+            while (isActive) {
+                delay(15_000L.milliseconds)
+                val isConnected = isBluetoothDeviceConnected(this@LocationTrackingService, contractMac, timeoutMillis = 2000L)
+                if (!isConnected) {
+                    val currentSpeedKmh = (lastLocation?.speed ?: 0f) * 3.6f
+                    if (lastLocation == null || currentSpeedKmh < 10.0f) {
+                        logger.i("LocationService", "Heartbeat: Bluetooth lost and speed is low (${currentSpeedKmh} km/h). Stopping tracking.")
+                        TrackingDiagnostics.updateStatus(
+                            this@LocationTrackingService,
+                            stage = "BT_HEARTBEAT_STOP",
+                            details = "Bluetooth disconnected and speed < 10 km/h ($currentSpeedKmh km/h)"
+                        )
+                        stopTracking()
+                        break
+                    } else {
+                        logger.d("LocationService", "Heartbeat: Bluetooth lost but vehicle moving at $currentSpeedKmh km/h >= 10 km/h. Continuing tracking.")
+                    }
+                }
+            }
+        }
+    }
+
     private fun startTracking() {
         logger.i("LocationService", "startTracking initiated")
         TrackingDiagnostics.updateStatus(
@@ -523,6 +559,7 @@ class LocationTrackingService : Service() {
             if (!isAlreadyTracking) {
                 trackingRepository.startTracking()
             }
+            startBluetoothHeartbeat()
 
             val locationRequest = LocationRequest.Builder(
                 PRIORITY_HIGH_ACCURACY,
@@ -604,6 +641,7 @@ class LocationTrackingService : Service() {
 
     private fun stopTracking() {
         logger.i("LocationService", "Stopping tracking process...")
+        bluetoothHeartbeatJob?.cancel()
         try {
             fusedLocationClient.removeLocationUpdates(locationCallback)
         } catch (e: Exception) {

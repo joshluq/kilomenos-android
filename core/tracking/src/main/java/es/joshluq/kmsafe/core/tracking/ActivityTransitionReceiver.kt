@@ -38,45 +38,79 @@ class ActivityTransitionReceiver : BroadcastReceiver() {
             if (result != null) {
                 logger.i("ActivityReceiver", "Transition result received. Analyzing events...")
 
-                val lastInVehicleEvent = result.transitionEvents
-                    .filter { it.activityType == DetectedActivity.IN_VEHICLE }
+                val lastRelevantEvent = result.transitionEvents
+                    .filter {
+                        it.activityType == DetectedActivity.IN_VEHICLE ||
+                        it.activityType == DetectedActivity.WALKING ||
+                        it.activityType == DetectedActivity.ON_FOOT
+                    }
                     .maxByOrNull { it.elapsedRealTimeNanos }
 
-                if (lastInVehicleEvent != null) {
-                    when (lastInVehicleEvent.transitionType) {
-                        ActivityTransition.ACTIVITY_TRANSITION_ENTER -> {
-                            logger.i("ActivityReceiver", "Latest IN_VEHICLE transition is ENTER. Starting tracking service...")
-                            TrackingDiagnostics.updateStatus(
-                                context,
-                                stage = "AR_IN_VEHICLE_ENTER",
-                                details = "Activity Recognition detected vehicle entry"
-                            )
-                            val serviceIntent = Intent(context, LocationTrackingService::class.java).apply {
-                                putExtra("EXTRA_TRANSITION_RESULT", result)
+                if (lastRelevantEvent != null) {
+                    when (lastRelevantEvent.activityType) {
+                        DetectedActivity.IN_VEHICLE -> {
+                            when (lastRelevantEvent.transitionType) {
+                                ActivityTransition.ACTIVITY_TRANSITION_ENTER -> {
+                                    logger.i("ActivityReceiver", "Latest IN_VEHICLE transition is ENTER. Starting tracking service...")
+                                    TrackingDiagnostics.updateStatus(
+                                        context,
+                                        stage = "AR_IN_VEHICLE_ENTER",
+                                        details = "Activity Recognition detected vehicle entry"
+                                    )
+                                    val serviceIntent = Intent(context, LocationTrackingService::class.java).apply {
+                                        putExtra("EXTRA_TRANSITION_RESULT", result)
+                                    }
+                                    startTrackingService(context, serviceIntent)
+                                }
+                                ActivityTransition.ACTIVITY_TRANSITION_EXIT -> {
+                                    logger.i("ActivityReceiver", "Latest IN_VEHICLE transition is EXIT. Stopping service via startService...")
+                                    TrackingDiagnostics.updateStatus(
+                                        context,
+                                        stage = "AR_IN_VEHICLE_EXIT",
+                                        details = "Activity Recognition detected vehicle exit"
+                                    )
+                                    val stopIntent = Intent(context, LocationTrackingService::class.java).apply {
+                                        this.action = LocationTrackingService.ACTION_STOP
+                                    }
+                                    try {
+                                        context.startService(stopIntent)
+                                    } catch (e: Exception) {
+                                        logger.e("ActivityReceiver", "Failed to send stop command to service: ${e.message}", e)
+                                        TrackingDiagnostics.recordError(context, "ActivityReceiver", "Failed to send stop command: ${e.message}", e)
+                                    }
+                                }
                             }
-                            startTrackingService(context, serviceIntent)
                         }
-                        ActivityTransition.ACTIVITY_TRANSITION_EXIT -> {
-                            logger.i("ActivityReceiver", "Latest IN_VEHICLE transition is EXIT. Stopping service via startService...")
-                            TrackingDiagnostics.updateStatus(
-                                context,
-                                stage = "AR_IN_VEHICLE_EXIT",
-                                details = "Activity Recognition detected vehicle exit"
-                            )
-                            val stopIntent = Intent(context, LocationTrackingService::class.java).apply {
-                                this.action = LocationTrackingService.ACTION_STOP
-                            }
-                            // Crucial: Use standard startService for stopping, NEVER startForegroundService
-                            try {
-                                context.startService(stopIntent)
-                            } catch (e: Exception) {
-                                logger.e("ActivityReceiver", "Failed to send stop command to service: ${e.message}", e)
-                                TrackingDiagnostics.recordError(context, "ActivityReceiver", "Failed to send stop command: ${e.message}", e)
+                        DetectedActivity.WALKING, DetectedActivity.ON_FOOT -> {
+                            if (lastRelevantEvent.transitionType == ActivityTransition.ACTIVITY_TRANSITION_ENTER) {
+                                val linkedMac = TrackingDeviceCache.getLinkedMac(context)
+                                val isBtConnected = TrackingDeviceCache.isBluetoothConnected()
+                                val activityName = if (lastRelevantEvent.activityType == DetectedActivity.WALKING) "WALKING" else "ON_FOOT"
+
+                                if (linkedMac == null || !isBtConnected) {
+                                    logger.i("ActivityReceiver", "Pedestrian transition detected ($activityName ENTER) without active vehicle Bluetooth. Stopping service...")
+                                    TrackingDiagnostics.updateStatus(
+                                        context,
+                                        stage = "AR_PEDESTRIAN_STOP",
+                                        details = "Activity Recognition detected $activityName while vehicle Bluetooth disconnected"
+                                    )
+                                    val stopIntent = Intent(context, LocationTrackingService::class.java).apply {
+                                        this.action = LocationTrackingService.ACTION_STOP
+                                    }
+                                    try {
+                                        context.startService(stopIntent)
+                                    } catch (e: Exception) {
+                                        logger.e("ActivityReceiver", "Failed to send stop command for pedestrian transition: ${e.message}", e)
+                                        TrackingDiagnostics.recordError(context, "ActivityReceiver", "Failed to send pedestrian stop command: ${e.message}", e)
+                                    }
+                                } else {
+                                    logger.d("ActivityReceiver", "Pedestrian transition ($activityName ENTER) ignored because vehicle Bluetooth is actively connected.")
+                                }
                             }
                         }
                     }
                 } else {
-                    logger.d("ActivityReceiver", "No IN_VEHICLE transition in result. Ignoring.")
+                    logger.d("ActivityReceiver", "No relevant transition in result. Ignoring.")
                 }
             }
         }

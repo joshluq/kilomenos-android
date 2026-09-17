@@ -60,6 +60,14 @@ class AutoTrackingManager @Inject constructor(
             ActivityTransition.Builder()
                 .setActivityType(DetectedActivity.IN_VEHICLE)
                 .setActivityTransition(ActivityTransition.ACTIVITY_TRANSITION_EXIT)
+                .build(),
+            ActivityTransition.Builder()
+                .setActivityType(DetectedActivity.WALKING)
+                .setActivityTransition(ActivityTransition.ACTIVITY_TRANSITION_ENTER)
+                .build(),
+            ActivityTransition.Builder()
+                .setActivityType(DetectedActivity.ON_FOOT)
+                .setActivityTransition(ActivityTransition.ACTIVITY_TRANSITION_ENTER)
                 .build()
         )
 

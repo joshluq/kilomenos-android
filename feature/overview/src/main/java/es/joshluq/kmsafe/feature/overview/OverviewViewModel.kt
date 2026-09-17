@@ -527,10 +527,11 @@ class OverviewViewModel @Inject constructor(
         observeTrackingStateUseCase(ObserveTrackingStateUseCase.Input)
             .onEach { output ->
                 if (output is ObserveTrackingStateUseCase.Output.Success) {
+                    val shouldSuppressTrackingUi = state.value.showBottomSheet || state.value.isSaving
                     updateState {
                         copy(
-                            isTracking = output.isTracking,
-                            trackedDistance = output.trackedDistance,
+                            isTracking = if (shouldSuppressTrackingUi) false else output.isTracking,
+                            trackedDistance = if (shouldSuppressTrackingUi && isTracking) trackedDistance else output.trackedDistance,
                             tripStartTime = output.startTime,
                             currentRoutePolyline = output.encodedPolyline,
                             currentPointCount = output.pointCount
