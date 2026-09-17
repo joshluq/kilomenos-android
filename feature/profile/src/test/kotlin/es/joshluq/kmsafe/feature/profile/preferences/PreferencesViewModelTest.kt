@@ -201,7 +201,31 @@ class PreferencesViewModelTest {
         testScheduler.advanceUntilIdle()
 
         assertEquals(listOf(Effect.NavigateToPermissions), effects)
-        assertTrue(viewModel.state.value.autoTrackingEnabled)
+        assertFalse(viewModel.state.value.autoTrackingEnabled)
+    }
+
+    @Test
+    fun `auto-tracking toggle followed by cancelled permissions keeps auto-tracking disabled`() = runTest(testDispatcher) {
+        val viewModel = createViewModel()
+        testScheduler.advanceUntilIdle()
+
+        val effects = mutableListOf<Effect>()
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
+            viewModel.effects.collect { effects.add(it) }
+        }
+
+        viewModel.sendEvent(Event.OnAutoTrackingToggled(true))
+        testScheduler.advanceUntilIdle()
+
+        assertEquals(listOf(Effect.NavigateToPermissions), effects)
+        assertFalse(viewModel.state.value.autoTrackingEnabled)
+
+        viewModel.sendEvent(Event.OnPermissionsResult(false))
+        testScheduler.advanceUntilIdle()
+
+        assertFalse(viewModel.state.value.autoTrackingEnabled)
+        verify(exactly = 0) { updatePreferencesUseCase(UpdatePreferencesUseCase.Input(autoTrackingEnabled = true)) }
+        verify(exactly = 0) { startAutoTrackingUseCase(any()) }
     }
 
     @Test

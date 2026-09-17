@@ -253,6 +253,10 @@ gantt
     section Fase 3: Optimización Avanzada & Eficiencia
     F-08 Muestreo GPS Adaptativo (Batería)          :p9, 2026-11-10, 6d
     F-10 Tolerancia a Parkings Subterráneos         :p10, after p9, 5d
+
+    section Casos de Borde en Producción
+    Defecto 1: Píldora 0.0km & Cooldown 15s         :done, e1, 2026-09-17, 1d
+    Defecto 2: Anti-Deriva Peatonal & Heartbeat BT  :done, e2, 2026-09-17, 1d
 ```
 
 ---
@@ -272,42 +276,37 @@ Para garantizar que estas mejoras no introduzcan regresiones técnicas, deben cu
 
 ---
 
-## 6. Diagnósticos de Casos de Borde en Producción (Fases 4 y 5)
+## 6. Diagnósticos de Casos de Borde en Producción (Fases 4 y 5) ✅ COMPLETADO
 
-### 6.1 Defecto 1: Aparición Efímera de la Píldora con 0.0 km al Guardar Registro
+### 6.1 Defecto 1: Aparición Efímera de la Píldora con 0.0 km al Guardar Registro & Viajes Continuos ✅ RESUELTO
 
+- **Estado**: **Completado & Verificado en Producción**
 - **Síntoma Observado**: Al pulsar "Guardar Registro" en el BottomSheet mientras el vehículo sigue conectado por Bluetooth, durante el estado de carga (`isSaving == true`), la píldora de telemetría (`FloatingTelemetryPill`) aparece en pantalla indicando `0.0 km` y desaparece inmediatamente cuando finaliza la sincronización remota.
 - **Causa Raíz Técnica**:
   1. En `handleConfirmTrackedTrip()`, se invoca `stopTrackingUseCase()`, el cual establece `KEY_IS_TRACKING = false` en `TrackingDataSource`.
-  2. **Vulnerabilidad de Cooldown**: `TrackingDataSource.stopTracking()` **no** escribe `KEY_LAST_TRIP_END_TIME` (el cooldown anti-flap de 60s sólo se armaba en `clear()`).
-  3. Mientras el usuario edita o pulsa "Guardar" y se realiza el POST de red, el coche continúa emparejado a nivel de Bluetooth.
-  4. Una re-evaluación del entorno (transición de Activity Recognition `IN_VEHICLE ENTER` o refresco reactivo de estado en `OverviewViewModel`) comprueba:
-     - ¿Premium activo? Sí.
-     - ¿Cooldown activo? **No** (sin armar).
-     - ¿Está grabando actualmente? No (`isTracking == false`).
-     - ¿Bluetooth del coche conectado? **Sí**.
-  5. El validador concluye que se inicia un nuevo viaje y ejecuta `startTracking()`, reseteando la distancia a `0.0 km` y activando `isTracking = true`.
-  6. La interfaz renderiza el pill con `0.00 km`.
-  7. Al terminar el guardado de red en `AddOdometerRecordUseCase.Output.Success`, `OverviewViewModel` llama a `clearTrackingUseCase()`, lo que elimina `KEY_IS_TRACKING` y oculta abruptamente la píldora.
-- **Solución Arquitectónica**:
-  - **Armado Universal de Cooldown**: Registrar `KEY_LAST_TRIP_END_TIME` tanto en `stopTracking()` como en `clear()`.
-  - **Guardia de UI / BottomSheet Activo**: Bloquear cualquier inicio de autotracking si la pantalla se encuentra en proceso de edición o guardado (`showBottomSheet == true` o `isSaving == true`).
+  2. **Vulnerabilidad de Cooldown**: `TrackingDataSource.stopTracking()` **no** escribía `KEY_LAST_TRIP_END_TIME` (el cooldown anti-flap de 60s sólo se armaba en `clear()`).
+  3. Mientras el usuario editaba o pulsaba "Guardar" y se realizaba el POST de red, el coche continuaba emparejado a nivel de Bluetooth.
+  4. Una re-evaluación del entorno (transición de Activity Recognition `IN_VEHICLE ENTER` o refresco reactivo de estado en `OverviewViewModel`) comprobaba que no había cooldown activo ni tracking grabando, iniciando un viaje espurio con `0.0 km`.
+  5. Al terminar el guardado de red en `AddOdometerRecordUseCase.Output.Success`, `OverviewViewModel` llamaba a `clearTrackingUseCase()`, eliminando `KEY_IS_TRACKING` y ocultando abruptamente la píldora.
+- **Solución Implementada**:
+  - **Armado Universal de Cooldown**: En [`TrackingDataSource.kt`](file:///c:/Users/josh_/AndroidStudioProjects/KmSafe/core/infrastructure/src/main/java/es/joshluq/kmsafe/infrastructure/local/datasource/TrackingDataSource.kt), `stopTracking()` registra siempre `KEY_LAST_TRIP_END_TIME = System.currentTimeMillis()`.
+  - **Cooldown Dinámico de 15s con Bypass de Ignición**: En [`LocationTrackingService.kt`](file:///c:/Users/josh_/AndroidStudioProjects/KmSafe/core/tracking/src/main/java/es/joshluq/kmsafe/core/tracking/LocationTrackingService.kt), el cooldown se ajustó a `AUTO_TRACKING_COOLDOWN_MS = 15_000L` (15 segundos) y se implementó un bypass para eventos `ACTION_START_BT_AUTO` (`isBluetoothFastPath == true`), permitiendo el arranque inmediato de viajes continuos al reencender el motor sin esperas artificiales.
+  - **Guardia de UI en Compose**: En [`OverviewScreen.kt`](file:///c:/Users/josh_/AndroidStudioProjects/KmSafe/feature/overview/src/main/java/es/joshluq/kmsafe/feature/overview/OverviewScreen.kt), la visibilidad de `FloatingTelemetryPill` está condicionada a `isVisible = state.isTracking && !state.showBottomSheet && !state.isSaving`.
+  - **Guardia de ViewModel**: En [`OverviewViewModel.kt`](file:///c:/Users/josh_/AndroidStudioProjects/KmSafe/feature/overview/src/main/java/es/joshluq/kmsafe/feature/overview/OverviewViewModel.kt), `observeTracking()` suprime `isTracking = true` en el estado de la UI mientras el BottomSheet se encuentra abierto o guardando.
+  - **Verificación de Tests**: Cubierto con pruebas unitarias en [`TrackingDataSourceTest.kt`](file:///c:/Users/josh_/AndroidStudioProjects/KmSafe/core/infrastructure/src/test/kotlin/es/joshluq/kmsafe/infrastructure/local/datasource/TrackingDataSourceTest.kt) y [`OverviewViewModelTest.kt`](file:///c:/Users/josh_/AndroidStudioProjects/KmSafe/feature/overview/src/test/kotlin/es/joshluq/kmsafe/feature/overview/OverviewViewModelTest.kt).
 
 ---
 
-### 6.2 Defecto 2: Deriva Peatonal (0.5 km) por Ausencia de Actividades Antagónicas
+### 6.2 Defecto 2: Deriva Peatonal (0.5 km) por Ausencia de Actividades Antagónicas ✅ RESUELTO
 
-- **Síntoma Observado por QA**: Tras bajarse del vehículo y caminar, el usuario observa que el tracking permanece activo en la barra de estado (`GPS_RECORDING`), acumulando hasta 0.5 km de trayecto a pie, hasta que entra a la aplicación y cancela manualmente en `TripCompletedCard`.
+- **Estado**: **Completado & Verificado en Producción**
+- **Síntoma Observado por QA**: Tras bajarse del vehículo y caminar, el usuario observaba que el tracking permanecía activo en la barra de estado (`GPS_RECORDING`), acumulando hasta 0.5 km de trayecto a pie, hasta que entraba a la aplicación y cancelaba manualmente en `TripCompletedCard`.
 - **Causa Raíz Técnica**:
-  1. **Subscripción Incompleta en `AutoTrackingManager`**: Actualmente sólo se registran dos transiciones:
-     - `DetectedActivity.IN_VEHICLE` $\rightarrow$ `ACTIVITY_TRANSITION_ENTER`
-     - `DetectedActivity.IN_VEHICLE` $\rightarrow$ `ACTIVITY_TRANSITION_EXIT`
-  2. **Comportamiento Real de Google Play Services**: En dispositivos reales, al bajarse del coche y caminar, el clasificador de Activity Recognition suele transicionar directamente a `DetectedActivity.WALKING` o `DetectedActivity.ON_FOOT` **sin emitir nunca el evento `IN_VEHICLE EXIT`** (o demorándolo más de 5-10 minutos).
-  3. **Evasión del Filtro de Velocidad**: El umbral `MIN_SPEED_THRESHOLD_MPS = 1.5` (~5.4 km/h) es superado con facilidad por un peatón a paso ligero o al cruzar un semáforo rápido, sumando metros peatonales al odómetro del vehículo.
-- **Solución Arquitectónica**:
-  - **Registro de Actividades Antagónicas**: Añadir a `AutoTrackingManager` la escucha de:
-     - `DetectedActivity.WALKING` con `ACTIVITY_TRANSITION_ENTER`
-     - `DetectedActivity.ON_FOOT` con `ACTIVITY_TRANSITION_ENTER`
-  - **Regla de Detención Peatonal Inmediata**:
-     - En `ActivityTransitionReceiver`, si se recibe `WALKING ENTER` u `ON_FOOT ENTER`, y el Bluetooth del vehículo no está activamente conectado (o el vehículo no posee Bluetooth), disparar inmediatamente `ACTION_STOP` a `LocationTrackingService`.
-  - **Heartbeat de Bluetooth en Servicio**: Si el contrato tiene Bluetooth asignado, el servicio debe validar periódicamente si el dispositivo sigue enlazado a nivel de sistema (`BluetoothAdapter.getProfileProxy`), deteniendo la grabación si se perdió la conexión y la velocidad es inferior a $10\text{ km/h}$.
+  1. **Subscripción Incompleta en `AutoTrackingManager`**: Sólo se registraban transiciones de `DetectedActivity.IN_VEHICLE` (ENTER y EXIT).
+  2. **Comportamiento Real de Google Play Services**: En dispositivos físicos, al bajarse del coche y caminar, Activity Recognition suele transicionar directamente a `DetectedActivity.WALKING` o `DetectedActivity.ON_FOOT` sin emitir el evento `IN_VEHICLE EXIT` (o demorándolo >10 minutos).
+  3. **Evasión del Filtro de Velocidad**: El umbral `MIN_SPEED_THRESHOLD_MPS = 1.5` (~5.4 km/h) era superado a paso ligero, sumando metros peatonales al odómetro.
+- **Solución Implementada**:
+  - **Registro de Actividades Antagónicas**: En [`AutoTrackingManager.kt`](file:///c:/Users/josh_/AndroidStudioProjects/KmSafe/core/infrastructure/src/main/java/es/joshluq/kmsafe/infrastructure/repository/tracking/AutoTrackingManager.kt), se añadió la suscripción a `DetectedActivity.WALKING` (`ENTER`) y `DetectedActivity.ON_FOOT` (`ENTER`).
+  - **Caché Síncrono de Estado Bluetooth**: En [`TrackingDeviceCache.kt`](file:///c:/Users/josh_/AndroidStudioProjects/KmSafe/core/tracking/src/main/java/es/joshluq/kmsafe/core/tracking/TrackingDeviceCache.kt), se implementó `isBluetoothConnected(): Boolean` y `setBluetoothConnected(Boolean)`, sincronizado de inmediato en [`BluetoothConnectionReceiver.kt`](file:///c:/Users/josh_/AndroidStudioProjects/KmSafe/core/tracking/src/main/java/es/joshluq/kmsafe/core/tracking/BluetoothConnectionReceiver.kt) tanto en el `onReceive` síncrono como en corrutina.
+  - **Regla de Detención Peatonal Inmediata**: En [`ActivityTransitionReceiver.kt`](file:///c:/Users/josh_/AndroidStudioProjects/KmSafe/core/tracking/src/main/java/es/joshluq/kmsafe/core/tracking/ActivityTransitionReceiver.kt), si se detecta `WALKING ENTER` u `ON_FOOT ENTER` y el Bluetooth del coche no está conectado (o el vehículo no posee Bluetooth), se envía inmediatamente `ACTION_STOP` a `LocationTrackingService`.
+  - **Heartbeat de Bluetooth en Servicio**: En [`LocationTrackingService.kt`](file:///c:/Users/josh_/AndroidStudioProjects/KmSafe/core/tracking/src/main/java/es/joshluq/kmsafe/core/tracking/LocationTrackingService.kt), se ejecuta `startBluetoothHeartbeat()` cada 15 segundos durante la grabación activa, validando la presencia del enlace mediante `isBluetoothDeviceConnected()`. Si el enlace se pierde y la velocidad es $< 10\text{ km/h}$, detiene automáticamente la grabación y formaliza el fin del viaje.

@@ -57,6 +57,12 @@ import es.joshluq.canvaskit.components.navigation.CanvasKitTopBar
 import es.joshluq.canvaskit.foundations.theme.CanvasKitTheme
 import es.joshluq.foundationkit.text.asString
 import es.joshluq.kmsafe.feature.profile.R
+import android.Manifest
+import android.content.Context
+import android.content.pm.PackageManager
+import android.os.Build
+import androidx.compose.ui.platform.LocalContext
+import androidx.core.content.ContextCompat
 import java.util.UUID
 import es.joshluq.kmsafe.core.ui.R as CoreR
 import es.joshluq.kmsafe.core.ui.util.safeClick
@@ -67,6 +73,7 @@ fun PreferencesRoute(
     onShowPrivacyOptions: () -> Unit,
     onNavigateToPermissions: () -> Unit
 ) {
+    val context = LocalContext.current
     val sessionId = rememberSaveable { UUID.randomUUID().toString() }
     val viewModel: PreferencesViewModel = hiltViewModel(key = sessionId)
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -89,7 +96,13 @@ fun PreferencesRoute(
             when (effect) {
                 Effect.NavigateBack -> onNavigateBack()
                 Effect.ShowPrivacyOptions -> onShowPrivacyOptions()
-                Effect.NavigateToPermissions -> onNavigateToPermissions()
+                Effect.NavigateToPermissions -> {
+                    if (hasAutoTrackingPermissions(context)) {
+                        viewModel.sendEvent(Event.OnPermissionsResult(true))
+                    } else {
+                        onNavigateToPermissions()
+                    }
+                }
             }
         }
     }
@@ -98,6 +111,47 @@ fun PreferencesRoute(
         state = state,
         onEvent = viewModel::sendEvent
     )
+}
+
+private fun hasAutoTrackingPermissions(context: Context): Boolean {
+    val isFineLocationGranted = ContextCompat.checkSelfPermission(
+        context,
+        Manifest.permission.ACCESS_FINE_LOCATION
+    ) == PackageManager.PERMISSION_GRANTED
+
+    val isActivityGranted = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+        ContextCompat.checkSelfPermission(
+            context,
+            Manifest.permission.ACTIVITY_RECOGNITION
+        ) == PackageManager.PERMISSION_GRANTED
+    } else true
+
+    val isBackgroundLocationGranted = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+        ContextCompat.checkSelfPermission(
+            context,
+            Manifest.permission.ACCESS_BACKGROUND_LOCATION
+        ) == PackageManager.PERMISSION_GRANTED
+    } else true
+
+    val isNotificationsGranted = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        ContextCompat.checkSelfPermission(
+            context,
+            Manifest.permission.POST_NOTIFICATIONS
+        ) == PackageManager.PERMISSION_GRANTED
+    } else true
+
+    val isBluetoothGranted = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+        ContextCompat.checkSelfPermission(
+            context,
+            Manifest.permission.BLUETOOTH_CONNECT
+        ) == PackageManager.PERMISSION_GRANTED
+    } else true
+
+    return isFineLocationGranted &&
+        isActivityGranted &&
+        isBackgroundLocationGranted &&
+        isNotificationsGranted &&
+        isBluetoothGranted
 }
 
 @OptIn(ExperimentalMaterial3Api::class)

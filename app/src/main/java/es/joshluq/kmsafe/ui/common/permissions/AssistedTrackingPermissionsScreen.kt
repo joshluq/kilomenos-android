@@ -2,6 +2,7 @@ package es.joshluq.kmsafe.ui.common.permissions
 
 import android.Manifest
 import android.os.Build
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -51,6 +52,9 @@ fun AssistedTrackingPermissionsScreen(
     onAllPermissionsGranted: () -> Unit,
     onDismiss: () -> Unit
 ) {
+    BackHandler {
+        onDismiss()
+    }
     val fineLocationState = rememberPermissionState(Manifest.permission.ACCESS_FINE_LOCATION)
 
     val notificationsPermissionState = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {

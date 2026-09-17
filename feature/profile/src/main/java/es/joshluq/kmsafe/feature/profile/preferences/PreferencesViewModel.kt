@@ -154,8 +154,6 @@ class PreferencesViewModel @Inject constructor(
         // If enabling, navigate to permissions rationale screen
         if (enabled) {
             logger.i("PreferencesViewModel", "Navigating to permissions screen")
-            // Optimistic update so the switch stays ON while navigating
-            updateState { copy(autoTrackingEnabled = true) }
             launchEffect(Effect.NavigateToPermissions)
         } else {
             logger.i("PreferencesViewModel", "Disabling auto-tracking directly")

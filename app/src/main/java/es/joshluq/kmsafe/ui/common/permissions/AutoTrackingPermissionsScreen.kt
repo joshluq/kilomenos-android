@@ -2,6 +2,7 @@ package es.joshluq.kmsafe.ui.common.permissions
 
 import android.Manifest
 import android.os.Build
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -48,6 +49,9 @@ fun AutoTrackingPermissionsScreen(
     onAllPermissionsGranted: () -> Unit,
     onDismiss: () -> Unit
 ) {
+    BackHandler {
+        onDismiss()
+    }
     val activityRecognitionState = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
         rememberPermissionState(Manifest.permission.ACTIVITY_RECOGNITION)
     } else {
