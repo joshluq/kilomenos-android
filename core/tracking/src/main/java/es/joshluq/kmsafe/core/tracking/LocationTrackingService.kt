@@ -28,7 +28,7 @@ import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority.PRIORITY_HIGH_ACCURACY
 import dagger.hilt.android.AndroidEntryPoint
 import es.joshluq.kmsafe.core.analytics.AnalyticsTracker
-import es.joshluq.kmsafe.core.analytics.model.KmsafeAnalyticsEvent
+import es.joshluq.kmsafe.core.analytics.model.KmAnalyticsEvent
 import es.joshluq.foundationkit.log.LoggerKit
 import es.joshluq.kmsafe.domain.model.Feature
 import es.joshluq.kmsafe.domain.repository.TrackingRepository
@@ -339,7 +339,7 @@ class LocationTrackingService : Service() {
             val permission = android.Manifest.permission.BLUETOOTH_CONNECT
             if (ActivityCompat.checkSelfPermission(context, permission) != PackageManager.PERMISSION_GRANTED) {
                 logger.w("LocationService", "Bluetooth validation skipped: BLUETOOTH_CONNECT permission missing.")
-                analytics.track(KmsafeAnalyticsEvent.Tracking.BtValidationSkippedNoPermission)
+                analytics.track(KmAnalyticsEvent.Tracking.BtValidationSkippedNoPermission)
                 return true // Fallback: prioritize tracking over validation
             }
         }
@@ -531,7 +531,7 @@ class LocationTrackingService : Service() {
 
             if (isMock) {
                 logger.w("LocationService", "Fake location detected. Ignoring update.")
-                analytics.track(KmsafeAnalyticsEvent.Tracking.GpsSpoofingDetected)
+                analytics.track(KmAnalyticsEvent.Tracking.GpsSpoofingDetected)
                 return
             }
 

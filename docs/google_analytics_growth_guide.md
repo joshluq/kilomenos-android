@@ -2,7 +2,7 @@
 
 **Rol:** Product Owner Senior (Growth, Digital Experience & Fintech)  
 **Proyecto:** KiloMenos Android (KmSafe)  
-**Stack de Analítica:** `:core:analytics` (`AnalyticsTracker`, `KmsafeAnalyticsEvent`)  
+**Stack de Analítica:** `:core:analytics` (`AnalyticsTracker`, `KmAnalyticsEvent`)  
 **Fecha:** Septiembre 2026  
 
 ---

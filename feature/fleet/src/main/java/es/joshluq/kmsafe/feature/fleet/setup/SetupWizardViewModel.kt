@@ -3,7 +3,7 @@ package es.joshluq.kmsafe.feature.fleet.setup
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import es.joshluq.kmsafe.core.analytics.AnalyticsTracker
-import es.joshluq.kmsafe.core.analytics.model.KmsafeAnalyticsEvent
+import es.joshluq.kmsafe.core.analytics.model.KmAnalyticsEvent
 import es.joshluq.foundationkit.log.LoggerKit
 import es.joshluq.foundationkit.text.TextProvider
 import es.joshluq.foundationkit.viewmodel.ScreenViewModel
@@ -50,7 +50,7 @@ class SetupWizardViewModel @Inject constructor(
     init {
         loadEntitlements()
         checkMultiVehicleEligibility()
-        analytics.track(KmsafeAnalyticsEvent.Onboarding.WizardStarted(isFirstVehicle = true))
+        analytics.track(KmAnalyticsEvent.Onboarding.WizardStarted(isFirstVehicle = true))
     }
 
     override fun createInitialState(): State = State()
@@ -132,7 +132,7 @@ class SetupWizardViewModel @Inject constructor(
             SetupStep.VEHICLE_IDENTITY -> {
                 if (validateIdentity()) {
                     analytics.track(
-                        KmsafeAnalyticsEvent.Onboarding.StepCompleted(
+                        KmAnalyticsEvent.Onboarding.StepCompleted(
                             stepIndex = 1,
                             stepName = "VEHICLE_IDENTITY",
                             extra = mapOf("fuel_type" to state.value.fuelType.name)
@@ -144,7 +144,7 @@ class SetupWizardViewModel @Inject constructor(
             SetupStep.CONTRACT_TIMEFRAME -> {
                 if (validateTimeframe()) {
                     analytics.track(
-                        KmsafeAnalyticsEvent.Onboarding.StepCompleted(
+                        KmAnalyticsEvent.Onboarding.StepCompleted(
                             stepIndex = 2,
                             stepName = "CONTRACT_TIMEFRAME",
                             extra = mapOf("duration_months" to state.value.durationMonths)
@@ -156,7 +156,7 @@ class SetupWizardViewModel @Inject constructor(
             SetupStep.MILEAGE_BUDGET -> {
                 if (validateMileage()) {
                     analytics.track(
-                        KmsafeAnalyticsEvent.Onboarding.StepCompleted(
+                        KmAnalyticsEvent.Onboarding.StepCompleted(
                             stepIndex = 3,
                             stepName = "MILEAGE_BUDGET",
                             extra = mapOf("total_kms" to state.value.totalKms)
@@ -168,7 +168,7 @@ class SetupWizardViewModel @Inject constructor(
             SetupStep.SMART_ACTIVATION -> {
                 if (validateBluetooth()) {
                     analytics.track(
-                        KmsafeAnalyticsEvent.Onboarding.StepCompleted(
+                        KmAnalyticsEvent.Onboarding.StepCompleted(
                             stepIndex = 4,
                             stepName = "SMART_ACTIVATION",
                             extra = mapOf("has_bluetooth" to (state.value.bluetoothDeviceAddress != null))
@@ -180,7 +180,7 @@ class SetupWizardViewModel @Inject constructor(
             SetupStep.ADVANCED_PROTECTION -> {
                 if (validateAdvanced()) {
                     analytics.track(
-                        KmsafeAnalyticsEvent.Onboarding.StepCompleted(
+                        KmAnalyticsEvent.Onboarding.StepCompleted(
                             stepIndex = 5,
                             stepName = "ADVANCED_PROTECTION",
                             extra = mapOf("has_advanced" to state.value.excessDistancePrice.isNotBlank())
@@ -193,7 +193,7 @@ class SetupWizardViewModel @Inject constructor(
     }
 
     private fun handleBack() {
-        analytics.track(KmsafeAnalyticsEvent.Onboarding.StepAbandoned(state.value.currentStep.name))
+        analytics.track(KmAnalyticsEvent.Onboarding.StepAbandoned(state.value.currentStep.name))
         val prevStep = when (state.value.currentStep) {
             SetupStep.VEHICLE_IDENTITY -> null
             SetupStep.CONTRACT_TIMEFRAME -> SetupStep.VEHICLE_IDENTITY
@@ -354,7 +354,7 @@ class SetupWizardViewModel @Inject constructor(
             }
             if (shouldBlock) {
                 logger.w("SetupWizardViewModel", "Multi-vehicle limit reached for free user")
-                analytics.track(KmsafeAnalyticsEvent.Onboarding.MultiVehicleLimitReached)
+                analytics.track(KmAnalyticsEvent.Onboarding.MultiVehicleLimitReached)
             }
         }.launchIn(viewModelScope)
     }
@@ -439,7 +439,7 @@ class SetupWizardViewModel @Inject constructor(
                     when (output) {
                         is SaveInitialContractUseCase.Output.Success -> {
                             analytics.track(
-                                KmsafeAnalyticsEvent.Onboarding.RentingSetupCompleted(
+                                KmAnalyticsEvent.Onboarding.RentingSetupCompleted(
                                     hasBluetooth = (s.bluetoothDeviceAddress != null),
                                     hasAdvancedPricing = (s.excessDistancePrice.isNotBlank())
                                 )

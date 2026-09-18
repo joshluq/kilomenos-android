@@ -17,7 +17,7 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import es.joshluq.kmsafe.core.analytics.AnalyticsTracker
-import es.joshluq.kmsafe.core.analytics.model.KmsafeAnalyticsEvent
+import es.joshluq.kmsafe.core.analytics.model.KmAnalyticsEvent
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -58,13 +58,13 @@ class HistoryViewModel @Inject constructor(
             HistoryEvent.OnDismissError -> updateState { copy(error = null) }
             is HistoryEvent.OnSearchQueryChanged -> {
                 if (event.query.isNotBlank()) {
-                    analytics.track(KmsafeAnalyticsEvent.History.SearchPerformed(event.query.length))
+                    analytics.track(KmAnalyticsEvent.History.SearchPerformed(event.query.length))
                 }
                 updateState { copy(searchQuery = event.query) }
                 applyFilters()
             }
             is HistoryEvent.OnGroupingModeChanged -> {
-                analytics.track(KmsafeAnalyticsEvent.History.GroupingModeChanged(event.mode.name))
+                analytics.track(KmAnalyticsEvent.History.GroupingModeChanged(event.mode.name))
                 updateState { copy(groupingMode = event.mode) }
                 applyFilters()
             }
@@ -99,7 +99,7 @@ class HistoryViewModel @Inject constructor(
 
                     is GetHistoryUseCase.Output.Success -> {
                         analytics.track(
-                            KmsafeAnalyticsEvent.History.HistoryViewed(
+                            KmAnalyticsEvent.History.HistoryViewed(
                                 totalRecords = output.totalRecordsCount,
                                 totalKms = output.totalKms
                             )
@@ -188,7 +188,7 @@ class HistoryViewModel @Inject constructor(
                     when (output) {
                         is DeleteOdometerRecordUseCase.Output.Progress -> Unit
                         is DeleteOdometerRecordUseCase.Output.Success -> {
-                            analytics.track(KmsafeAnalyticsEvent.History.RecordDeleted(record.id))
+                            analytics.track(KmAnalyticsEvent.History.RecordDeleted(record.id))
                         }
                         is DeleteOdometerRecordUseCase.Output.Failure -> {
                             updateState {

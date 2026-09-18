@@ -19,7 +19,7 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 
 import es.joshluq.kmsafe.core.analytics.AnalyticsTracker
-import es.joshluq.kmsafe.core.analytics.model.KmsafeAnalyticsEvent
+import es.joshluq.kmsafe.core.analytics.model.KmAnalyticsEvent
 
 /**
  * ViewModel for viewing service station statistics and history.
@@ -102,7 +102,7 @@ class StationDetailViewModel @AssistedInject constructor(
                     is GetStationVolatilityUseCase.Output.Success -> {
                         logger.i("StationDetailViewModel", "Volatility calculated: ${output.volatility.priceTrend}")
                         analyticsTracker.track(
-                            KmsafeAnalyticsEvent.Expenses.StationVolatilityViewed(
+                            KmAnalyticsEvent.Expenses.StationVolatilityViewed(
                                 stationBrand = state.value.detail?.station?.brand ?: "",
                                 variancePct = output.volatility.currentPrice - output.volatility.historicalAveragePrice
                             )
@@ -130,7 +130,7 @@ class StationDetailViewModel @AssistedInject constructor(
                 if (output is SetFavoriteStationUseCase.Output.Success) {
                     logger.i("StationDetailViewModel", "Favorite state updated successfully")
                     analyticsTracker.track(
-                        KmsafeAnalyticsEvent.Expenses.StationFavoriteToggled(
+                        KmAnalyticsEvent.Expenses.StationFavoriteToggled(
                             stationId = stationId,
                             isFavorite = isFavorite
                         )

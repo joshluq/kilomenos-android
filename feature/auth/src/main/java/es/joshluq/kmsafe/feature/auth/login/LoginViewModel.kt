@@ -4,7 +4,7 @@ import android.content.Context
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import es.joshluq.kmsafe.core.analytics.AnalyticsTracker
-import es.joshluq.kmsafe.core.analytics.model.KmsafeAnalyticsEvent
+import es.joshluq.kmsafe.core.analytics.model.KmAnalyticsEvent
 import es.joshluq.foundationkit.log.LoggerKit
 import es.joshluq.foundationkit.text.TextProvider
 import es.joshluq.foundationkit.viewmodel.ScreenViewModel
@@ -57,7 +57,7 @@ class LoginViewModel @Inject constructor(
     private var pendingUser: User? = null
 
     init {
-        analytics.track(KmsafeAnalyticsEvent.Auth.LoginStarted())
+        analytics.track(KmAnalyticsEvent.Auth.LoginStarted())
         loadPreferences()
         updateState { 
             copy(
@@ -143,7 +143,7 @@ class LoginViewModel @Inject constructor(
                         performLogin()
                     }
                     EvaluateIdentityConflictUseCase.Output.ShowWarning -> {
-                        analytics.track(KmsafeAnalyticsEvent.Auth.UserConflictAlertShown)
+                        analytics.track(KmAnalyticsEvent.Auth.UserConflictAlertShown)
                         updateState { copy(showUserConflictWarning = true, isLoading = false) }
                     }
                 }
@@ -151,7 +151,7 @@ class LoginViewModel @Inject constructor(
     }
 
     private fun handleGoogleSignInClicked() {
-        analytics.track(KmsafeAnalyticsEvent.Auth.LoginStarted(method = "google"))
+        analytics.track(KmAnalyticsEvent.Auth.LoginStarted(method = "google"))
         launchEffect(Effect.TriggerGoogleSignIn)
     }
 
@@ -184,12 +184,12 @@ class LoginViewModel @Inject constructor(
             when (output) {
                 SignInUseCase.Output.Progress -> updateState { copy(isLoading = true) }
                 is SignInUseCase.Output.Failure -> {
-                    analytics.track(KmsafeAnalyticsEvent.Auth.LoginFailed(output.error.toString(), method = "credentials"))
+                    analytics.track(KmAnalyticsEvent.Auth.LoginFailed(output.error.toString(), method = "credentials"))
                     updateState { copy(isLoading = false, error = output.error.toText()) }
                 }
 
                 is SignInUseCase.Output.Success -> {
-                    analytics.track(KmsafeAnalyticsEvent.Auth.LoginCompleted(method = "credentials"))
+                    analytics.track(KmAnalyticsEvent.Auth.LoginCompleted(method = "credentials"))
                     handleAuthSuccess(output.user)
                 }
             }
@@ -202,12 +202,12 @@ class LoginViewModel @Inject constructor(
                 SignInWithGoogleUseCase.Output.Progress -> updateState { copy(isLoading = true) }
                 is SignInWithGoogleUseCase.Output.Failure -> {
                     analytics.track(
-                        KmsafeAnalyticsEvent.Auth.LoginFailed(output.error.toString(), method = "google")
+                        KmAnalyticsEvent.Auth.LoginFailed(output.error.toString(), method = "google")
                     )
                     updateState { copy(isLoading = false, error = output.error.toText()) }
                 }
                 is SignInWithGoogleUseCase.Output.Success -> {
-                    analytics.track(KmsafeAnalyticsEvent.Auth.LoginCompleted(method = "google"))
+                    analytics.track(KmAnalyticsEvent.Auth.LoginCompleted(method = "google"))
                     evaluateIdentityConflictUseCase(EvaluateIdentityConflictUseCase.Input(output.user.email))
                         .onEach { conflictOutput ->
                             when (conflictOutput) {
@@ -221,7 +221,7 @@ class LoginViewModel @Inject constructor(
                                     handleAuthSuccess(output.user)
                                 }
                                 EvaluateIdentityConflictUseCase.Output.ShowWarning -> {
-                                    analytics.track(KmsafeAnalyticsEvent.Auth.UserConflictAlertShown)
+                                    analytics.track(KmAnalyticsEvent.Auth.UserConflictAlertShown)
                                     pendingUser = output.user
                                     updateState { copy(showUserConflictWarning = true, isLoading = false) }
                                 }

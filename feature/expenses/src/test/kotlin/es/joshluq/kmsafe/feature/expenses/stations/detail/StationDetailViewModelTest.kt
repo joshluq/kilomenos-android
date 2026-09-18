@@ -1,7 +1,7 @@
 package es.joshluq.kmsafe.feature.expenses.stations.detail
 
 import es.joshluq.foundationkit.log.LoggerKit
-import es.joshluq.kmsafe.core.analytics.model.KmsafeAnalyticsEvent
+import es.joshluq.kmsafe.core.analytics.model.KmAnalyticsEvent
 import es.joshluq.kmsafe.domain.model.FuelExpense
 import es.joshluq.kmsafe.domain.model.FuelType
 import es.joshluq.kmsafe.domain.model.PriceTrend
@@ -134,7 +134,7 @@ class StationDetailViewModelTest {
 
         assertTrue(analyticsTracker.trackedScreens.contains("station_detail"))
         assertTrue(
-            analyticsTracker.trackedEvents.any { it is KmsafeAnalyticsEvent.Expenses.StationVolatilityViewed }
+            analyticsTracker.trackedEvents.any { it is KmAnalyticsEvent.Expenses.StationVolatilityViewed }
         )
     }
 
@@ -154,7 +154,7 @@ class StationDetailViewModelTest {
         assertEquals(true, viewModel.state.value.detail?.station?.isFavorite)
 
         val favoriteEvent = analyticsTracker.trackedEvents
-            .filterIsInstance<KmsafeAnalyticsEvent.Expenses.StationFavoriteToggled>()
+            .filterIsInstance<KmAnalyticsEvent.Expenses.StationFavoriteToggled>()
             .firstOrNull()
         assertTrue(favoriteEvent != null)
         assertEquals("st-1", favoriteEvent?.stationId)

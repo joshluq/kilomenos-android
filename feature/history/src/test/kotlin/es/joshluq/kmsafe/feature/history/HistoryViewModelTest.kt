@@ -4,7 +4,7 @@ import es.joshluq.foundationkit.coroutines.DispatcherProvider
 import es.joshluq.foundationkit.log.LoggerKit
 import es.joshluq.kmsafe.core.monetization.domain.MonetizationConfig
 import es.joshluq.kmsafe.core.analytics.fake.FakeAnalyticsTracker
-import es.joshluq.kmsafe.core.analytics.model.KmsafeAnalyticsEvent
+import es.joshluq.kmsafe.core.analytics.model.KmAnalyticsEvent
 import es.joshluq.kmsafe.domain.model.Feature
 import es.joshluq.kmsafe.domain.model.OdometerRecord
 import es.joshluq.kmsafe.domain.model.RecordWithIndicator
@@ -214,7 +214,7 @@ class HistoryViewModelTest {
         advanceUntilIdle()
 
         coVerify { deleteOdometerRecordUseCase(DeleteOdometerRecordUseCase.Input(sampleRecord1)) }
-        assertEquals(1, analyticsTracker.trackedEvents.filterIsInstance<KmsafeAnalyticsEvent.History.RecordDeleted>().size)
+        assertEquals(1, analyticsTracker.trackedEvents.filterIsInstance<KmAnalyticsEvent.History.RecordDeleted>().size)
     }
 
     @Test
@@ -222,7 +222,7 @@ class HistoryViewModelTest {
         createViewModel()
         advanceUntilIdle()
 
-        val viewedEvent = analyticsTracker.trackedEvents.filterIsInstance<KmsafeAnalyticsEvent.History.HistoryViewed>().firstOrNull()
+        val viewedEvent = analyticsTracker.trackedEvents.filterIsInstance<KmAnalyticsEvent.History.HistoryViewed>().firstOrNull()
         assertTrue(viewedEvent != null)
         assertEquals(2, viewedEvent?.totalRecords)
         assertEquals(250.0, viewedEvent?.totalKms ?: 0.0, 0.01)
@@ -236,7 +236,7 @@ class HistoryViewModelTest {
         viewModel.sendEvent(HistoryEvent.OnGroupingModeChanged(HistoryGroupingMode.YEAR))
         advanceUntilIdle()
 
-        val modeEvent = analyticsTracker.trackedEvents.filterIsInstance<KmsafeAnalyticsEvent.History.GroupingModeChanged>().firstOrNull()
+        val modeEvent = analyticsTracker.trackedEvents.filterIsInstance<KmAnalyticsEvent.History.GroupingModeChanged>().firstOrNull()
         assertTrue(modeEvent != null)
         assertEquals("YEAR", modeEvent?.mode)
     }
@@ -249,7 +249,7 @@ class HistoryViewModelTest {
         viewModel.sendEvent(HistoryEvent.OnSearchQueryChanged("commute"))
         advanceUntilIdle()
 
-        val searchEvent = analyticsTracker.trackedEvents.filterIsInstance<KmsafeAnalyticsEvent.History.SearchPerformed>().firstOrNull()
+        val searchEvent = analyticsTracker.trackedEvents.filterIsInstance<KmAnalyticsEvent.History.SearchPerformed>().firstOrNull()
         assertTrue(searchEvent != null)
         assertEquals("commute".length, searchEvent?.queryLength)
     }

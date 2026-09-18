@@ -3,7 +3,7 @@ package es.joshluq.kmsafe.feature.auth.signup
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import es.joshluq.kmsafe.core.analytics.AnalyticsTracker
-import es.joshluq.kmsafe.core.analytics.model.KmsafeAnalyticsEvent
+import es.joshluq.kmsafe.core.analytics.model.KmAnalyticsEvent
 import es.joshluq.foundationkit.log.LoggerKit
 import es.joshluq.foundationkit.text.TextProvider
 import es.joshluq.foundationkit.viewmodel.ScreenViewModel
@@ -40,7 +40,7 @@ class SignupViewModel @Inject constructor(
     private var shouldClearDataOnSuccess = false
 
     init {
-        analytics.track(KmsafeAnalyticsEvent.Auth.SignUpStarted())
+        analytics.track(KmAnalyticsEvent.Auth.SignUpStarted())
         updateState { 
             copy(
                 termsUrl = authConfig.getTermsUrl(),
@@ -120,7 +120,7 @@ class SignupViewModel @Inject constructor(
                         performSignup()
                     }
                     EvaluateIdentityConflictUseCase.Output.ShowWarning -> {
-                        analytics.track(KmsafeAnalyticsEvent.Auth.UserConflictAlertShown)
+                        analytics.track(KmAnalyticsEvent.Auth.UserConflictAlertShown)
                         updateState { copy(showUserConflictWarning = true, isLoading = false) }
                     }
                 }
@@ -143,11 +143,11 @@ class SignupViewModel @Inject constructor(
             when (output) {
                 SignUpUseCase.Output.Progress -> updateState { copy(isLoading = true) }
                 is SignUpUseCase.Output.Failure -> {
-                    analytics.track(KmsafeAnalyticsEvent.Auth.SignUpFailed(output.error.toString()))
+                    analytics.track(KmAnalyticsEvent.Auth.SignUpFailed(output.error.toString()))
                     updateState { copy(isLoading = false, error = output.error.toText()) }
                 }
                 is SignUpUseCase.Output.Success -> {
-                    analytics.track(KmsafeAnalyticsEvent.Auth.SignUpCompleted())
+                    analytics.track(KmAnalyticsEvent.Auth.SignUpCompleted())
                     saveEmailPreference(output.user.email)
 
                     if (shouldClearDataOnSuccess) {

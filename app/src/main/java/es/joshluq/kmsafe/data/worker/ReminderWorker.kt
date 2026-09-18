@@ -16,7 +16,7 @@ import es.joshluq.foundationkit.log.LoggerKit
 import es.joshluq.kmsafe.MainActivity
 import es.joshluq.kmsafe.R
 import es.joshluq.kmsafe.core.analytics.AnalyticsTracker
-import es.joshluq.kmsafe.core.analytics.model.KmsafeAnalyticsEvent
+import es.joshluq.kmsafe.core.analytics.model.KmAnalyticsEvent
 import es.joshluq.kmsafe.domain.usecase.GetAllContractsUseCase
 import es.joshluq.kmsafe.domain.usecase.GetHistoryUseCase
 import kotlinx.coroutines.flow.filterIsInstance
@@ -69,7 +69,7 @@ class ReminderWorker @AssistedInject constructor(
             if (diffDays >= INACTIVITY_THRESHOLD_DAYS) {
                 logger.i("ReminderWorker", "User inactive for $diffDays days. Sending notification.")
                 analytics.track(
-                    KmsafeAnalyticsEvent.Custom(
+                    KmAnalyticsEvent.Custom(
                         name = "reminder_notification_sent",
                         properties = mapOf("inactivity_days" to diffDays)
                     )

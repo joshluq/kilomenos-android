@@ -1,18 +1,18 @@
 package es.joshluq.kmsafe.core.analytics.fake
 
 import es.joshluq.kmsafe.core.analytics.AnalyticsTracker
-import es.joshluq.kmsafe.core.analytics.model.KmsafeAnalyticsEvent
+import es.joshluq.kmsafe.core.analytics.model.KmAnalyticsEvent
 
 /**
  * In-memory test fake for [AnalyticsTracker].
  * Used across unit tests without MockK boilerplate.
  */
 class FakeAnalyticsTracker : AnalyticsTracker {
-    val trackedEvents = mutableListOf<KmsafeAnalyticsEvent>()
+    val trackedEvents = mutableListOf<KmAnalyticsEvent>()
     val trackedScreens = mutableListOf<String>()
     val userProperties = mutableMapOf<String, String>()
 
-    override fun track(event: KmsafeAnalyticsEvent) {
+    override fun track(event: KmAnalyticsEvent) {
         trackedEvents.add(event)
     }
 

@@ -3,7 +3,7 @@ package es.joshluq.kmsafe.feature.fleet.vehicles
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import es.joshluq.kmsafe.core.analytics.AnalyticsTracker
-import es.joshluq.kmsafe.core.analytics.model.KmsafeAnalyticsEvent
+import es.joshluq.kmsafe.core.analytics.model.KmAnalyticsEvent
 import es.joshluq.foundationkit.log.LoggerKit
 import es.joshluq.foundationkit.text.TextProvider
 import es.joshluq.foundationkit.viewmodel.ScreenViewModel
@@ -93,7 +93,7 @@ class VehicleListViewModel @Inject constructor(
         selectContractUseCase(SelectContractUseCase.Input(vehicleId))
             .onEach { output ->
                 if (output is SelectContractUseCase.Output.Success) {
-                    analytics.track(KmsafeAnalyticsEvent.Fleet.VehicleSwitched)
+                    analytics.track(KmAnalyticsEvent.Fleet.VehicleSwitched)
                     loadVehicles()
                 }
             }.launchIn(viewModelScope)
@@ -101,7 +101,7 @@ class VehicleListViewModel @Inject constructor(
 
     private fun handleAddVehicle() {
         if (!state.value.isPremium && state.value.vehicles.isNotEmpty()) {
-            analytics.track(KmsafeAnalyticsEvent.Onboarding.MultiVehicleLimitReached)
+            analytics.track(KmAnalyticsEvent.Onboarding.MultiVehicleLimitReached)
             updateState { copy(showPremiumLimit = true) }
         } else {
             launchEffect(Effect.NavigateToAddVehicle)
@@ -116,7 +116,7 @@ class VehicleListViewModel @Inject constructor(
                 when (output) {
                     is DeleteContractUseCase.Output.Progress -> updateState { copy(isLoading = true) }
                     is DeleteContractUseCase.Output.Success -> {
-                        analytics.track(KmsafeAnalyticsEvent.Fleet.VehicleDeleted(vehicle.id))
+                        analytics.track(KmAnalyticsEvent.Fleet.VehicleDeleted(vehicle.id))
                         updateState { copy(isLoading = false, vehicleToDelete = null) }
                         loadVehicles()
                     }

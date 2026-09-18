@@ -3,7 +3,7 @@ package es.joshluq.kmsafe.feature.projection
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import es.joshluq.kmsafe.core.analytics.AnalyticsTracker
-import es.joshluq.kmsafe.core.analytics.model.KmsafeAnalyticsEvent
+import es.joshluq.kmsafe.core.analytics.model.KmAnalyticsEvent
 import es.joshluq.foundationkit.log.LoggerKit
 import es.joshluq.foundationkit.viewmodel.ScreenViewModel
 import es.joshluq.kmsafe.domain.model.Feature
@@ -58,7 +58,7 @@ class ProjectionAnalysisViewModel @Inject constructor(
                 val vehicleId = state.value.activeVehicleId ?: currentContract?.id
                 if (!vehicleId.isNullOrEmpty()) {
                     analytics.track(
-                        KmsafeAnalyticsEvent.Projection.ConfigureContractClicked(
+                        KmAnalyticsEvent.Projection.ConfigureContractClicked(
                             vehicleId = vehicleId,
                             source = "projection_analysis"
                         )
@@ -67,7 +67,7 @@ class ProjectionAnalysisViewModel @Inject constructor(
                 }
             }
             Event.OnUpgradeToPremiumClicked -> {
-                analytics.track(KmsafeAnalyticsEvent.Monetization.UpgradeClicked(source = "projection_risk_sentinel"))
+                analytics.track(KmAnalyticsEvent.Monetization.UpgradeClicked(source = "projection_risk_sentinel"))
                 launchEffect(Effect.NavigateToPremiumPaywall(source = "projection_risk_sentinel"))
             }
             Event.OnDismissError -> updateState { copy(error = null) }
@@ -75,7 +75,7 @@ class ProjectionAnalysisViewModel @Inject constructor(
     }
 
     private fun observeData() {
-        analytics.track(KmsafeAnalyticsEvent.Projection.ProjectionViewed)
+        analytics.track(KmAnalyticsEvent.Projection.ProjectionViewed)
         combine(
             getTripProjectionUseCase(GetTripProjectionUseCase.Input),
             getOverviewDataUseCase(GetOverviewDataUseCase.Input),
@@ -170,7 +170,7 @@ class ProjectionAnalysisViewModel @Inject constructor(
     private fun handleAddPresetTrip(title: String, distanceKms: Int) {
         // Enforce Freemium rule: Free users can only have 1 active planned trip
         if (!state.value.isPremium && state.value.plannedTrips.isNotEmpty()) {
-            analytics.track(KmsafeAnalyticsEvent.Projection.MultiTripBlockedFree)
+            analytics.track(KmAnalyticsEvent.Projection.MultiTripBlockedFree)
             launchEffect(Effect.NavigateToPremiumPaywall(source = "projection_multi_trip"))
             return
         }
@@ -264,7 +264,7 @@ class ProjectionAnalysisViewModel @Inject constructor(
                 }
 
                 analytics.track(
-                    KmsafeAnalyticsEvent.Projection.FinancialImpactViewed(
+                    KmAnalyticsEvent.Projection.FinancialImpactViewed(
                         isOverLimit = sim.isOverLimit,
                         estimatedPenalty = sim.estimatedPenalty,
                         billableExcessKms = sim.billableExcessKms

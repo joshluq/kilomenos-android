@@ -1,7 +1,7 @@
 package es.joshluq.kmsafe.feature.premium.paywall
 
 import es.joshluq.kmsafe.core.analytics.fake.FakeAnalyticsTracker
-import es.joshluq.kmsafe.core.analytics.model.KmsafeAnalyticsEvent
+import es.joshluq.kmsafe.core.analytics.model.KmAnalyticsEvent
 import es.joshluq.foundationkit.log.LoggerKit
 import es.joshluq.kmsafe.domain.model.SubscriptionLevel
 import es.joshluq.kmsafe.domain.model.User
@@ -96,7 +96,7 @@ class PremiumPaywallViewModelTest {
         testScheduler.advanceUntilIdle()
 
         assertEquals("projection_risk_sentinel", viewModel.state.value.source)
-        val viewedEvent = analytics.trackedEvents.filterIsInstance<KmsafeAnalyticsEvent.Monetization.PaywallViewed>().firstOrNull()
+        val viewedEvent = analytics.trackedEvents.filterIsInstance<KmAnalyticsEvent.Monetization.PaywallViewed>().firstOrNull()
         assertTrue(viewedEvent != null)
         assertEquals("projection_risk_sentinel", viewedEvent?.source)
     }
@@ -110,7 +110,7 @@ class PremiumPaywallViewModelTest {
         testScheduler.advanceUntilIdle()
 
         assertEquals(PremiumBillingPlan.MONTHLY, viewModel.state.value.selectedPlan)
-        assertTrue(analytics.trackedEvents.any { it is KmsafeAnalyticsEvent.Monetization.PlanSelected && it.plan == "MONTHLY" })
+        assertTrue(analytics.trackedEvents.any { it is KmAnalyticsEvent.Monetization.PlanSelected && it.plan == "MONTHLY" })
     }
 
     @Test
@@ -127,7 +127,7 @@ class PremiumPaywallViewModelTest {
         testScheduler.advanceUntilIdle()
 
         assertEquals(listOf(Effect.LaunchBillingFlow), effects)
-        assertTrue(analytics.trackedEvents.any { it is KmsafeAnalyticsEvent.Monetization.UpgradeClicked && it.selectedPlan == "ANNUAL" })
+        assertTrue(analytics.trackedEvents.any { it is KmAnalyticsEvent.Monetization.UpgradeClicked && it.selectedPlan == "ANNUAL" })
     }
 
     @Test

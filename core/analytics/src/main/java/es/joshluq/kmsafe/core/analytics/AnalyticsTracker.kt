@@ -1,6 +1,6 @@
 package es.joshluq.kmsafe.core.analytics
 
-import es.joshluq.kmsafe.core.analytics.model.KmsafeAnalyticsEvent
+import es.joshluq.kmsafe.core.analytics.model.KmAnalyticsEvent
 
 /**
  * High-level domain contract for tracking analytics and telemetry.
@@ -10,7 +10,7 @@ interface AnalyticsTracker {
     /**
      * Tracks a strongly-typed domain analytics event.
      */
-    fun track(event: KmsafeAnalyticsEvent)
+    fun track(event: KmAnalyticsEvent)
 
     /**
      * Tracks a screen view event.

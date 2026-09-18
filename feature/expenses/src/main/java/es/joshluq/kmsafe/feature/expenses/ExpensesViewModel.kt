@@ -11,7 +11,7 @@ import es.joshluq.foundationkit.log.LoggerKit
 import es.joshluq.foundationkit.text.TextProvider
 import es.joshluq.foundationkit.viewmodel.ScreenViewModel
 import es.joshluq.kmsafe.core.analytics.AnalyticsTracker
-import es.joshluq.kmsafe.core.analytics.model.KmsafeAnalyticsEvent
+import es.joshluq.kmsafe.core.analytics.model.KmAnalyticsEvent
 import es.joshluq.kmsafe.core.monetization.domain.MonetizationConfig
 import es.joshluq.kmsafe.domain.model.EnergyCategory
 import es.joshluq.kmsafe.domain.model.Feature
@@ -140,7 +140,7 @@ class ExpensesViewModel @AssistedInject constructor(
                 }
             }
             ExpensesEvent.OnUpgradeToUnlockRadarClicked -> {
-                analyticsTracker.track(KmsafeAnalyticsEvent.Monetization.UpgradeClicked(source = "expenses_radar"))
+                analyticsTracker.track(KmAnalyticsEvent.Monetization.UpgradeClicked(source = "expenses_radar"))
                 launchEffect(ExpensesEffect.NavigateToUpgrade)
             }
             is ExpensesEvent.OnReceiptUriSelected -> handleReceiptUriSelected(event.uri)
@@ -448,7 +448,7 @@ class ExpensesViewModel @AssistedInject constructor(
                 is SaveFuelExpenseUseCase.Output.Success -> {
                     logger.i("ExpensesViewModel", "Expense saved successfully: ${output.expenseId}")
                     analyticsTracker.track(
-                        KmsafeAnalyticsEvent.Expenses.ExpenseSaved(
+                        KmAnalyticsEvent.Expenses.ExpenseSaved(
                             energyType = event.fuelType.name,
                             amountEur = event.totalCost,
                             unitPrice = event.unitPrice
@@ -508,7 +508,7 @@ class ExpensesViewModel @AssistedInject constructor(
 
         if (state.value.isPremium != true) {
             logger.w("ExpensesViewModel", "Receipt scan blocked: user is not premium")
-            analyticsTracker.track(KmsafeAnalyticsEvent.Monetization.UpgradeClicked(source = "expenses_receipt_scan"))
+            analyticsTracker.track(KmAnalyticsEvent.Monetization.UpgradeClicked(source = "expenses_receipt_scan"))
             updateState { copy(error = KmError.FuelExpensesPremiumOnly.toText()) }
             launchEffect(ExpensesEffect.NavigateToUpgrade)
             return
@@ -587,7 +587,7 @@ class ExpensesViewModel @AssistedInject constructor(
             .onEach { output ->
                 if (output is GetStationVolatilityUseCase.Output.Success) {
                     analyticsTracker.track(
-                        KmsafeAnalyticsEvent.Expenses.StationVolatilityViewed(
+                        KmAnalyticsEvent.Expenses.StationVolatilityViewed(
                             stationBrand = output.volatility.stationId,
                             variancePct = output.volatility.currentPrice - output.volatility.historicalAveragePrice
                         )

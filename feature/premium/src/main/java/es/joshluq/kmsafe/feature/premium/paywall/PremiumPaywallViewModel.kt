@@ -3,7 +3,7 @@ package es.joshluq.kmsafe.feature.premium.paywall
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import es.joshluq.kmsafe.core.analytics.AnalyticsTracker
-import es.joshluq.kmsafe.core.analytics.model.KmsafeAnalyticsEvent
+import es.joshluq.kmsafe.core.analytics.model.KmAnalyticsEvent
 import es.joshluq.foundationkit.log.LoggerKit
 import es.joshluq.foundationkit.text.TextProvider
 import es.joshluq.foundationkit.viewmodel.ScreenViewModel
@@ -38,15 +38,15 @@ class PremiumPaywallViewModel @Inject constructor(
         when (event) {
             is Event.OnInitialize -> {
                 updateState { copy(source = event.source) }
-                analytics.track(KmsafeAnalyticsEvent.Monetization.PaywallViewed(source = event.source))
+                analytics.track(KmAnalyticsEvent.Monetization.PaywallViewed(source = event.source))
             }
             is Event.OnPlanSelected -> {
-                analytics.track(KmsafeAnalyticsEvent.Monetization.PlanSelected(event.plan.name))
+                analytics.track(KmAnalyticsEvent.Monetization.PlanSelected(event.plan.name))
                 updateState { copy(selectedPlan = event.plan) }
             }
             Event.OnUpgradeClicked -> {
                 analytics.track(
-                    KmsafeAnalyticsEvent.Monetization.UpgradeClicked(
+                    KmAnalyticsEvent.Monetization.UpgradeClicked(
                         source = state.value.source,
                         selectedPlan = state.value.selectedPlan.name
                     )
@@ -55,7 +55,7 @@ class PremiumPaywallViewModel @Inject constructor(
             }
             Event.OnDismissClicked -> {
                 logger.d("PremiumPaywallViewModel", "Dismiss clicked")
-                analytics.track(KmsafeAnalyticsEvent.Monetization.PaywallDismissed)
+                analytics.track(KmAnalyticsEvent.Monetization.PaywallDismissed)
                 launchEffect(Effect.NavigateBack)
             }
             Event.OnDismissError -> updateState { copy(error = null) }
@@ -73,7 +73,7 @@ class PremiumPaywallViewModel @Inject constructor(
         billingService.errorFlow
             .onEach { error ->
                 analytics.track(
-                    KmsafeAnalyticsEvent.Monetization.PurchaseResult(
+                    KmAnalyticsEvent.Monetization.PurchaseResult(
                         result = if (error.contains("canceled", ignoreCase = true)) "USER_CANCELED" else "ERROR",
                         errorCode = error,
                         plan = state.value.selectedPlan.name
@@ -98,7 +98,7 @@ class PremiumPaywallViewModel @Inject constructor(
                         }
                     }
                     is UpdateSubscriptionUseCase.Output.Success -> {
-                        analytics.track(KmsafeAnalyticsEvent.Monetization.UpgradeSuccess(plan = state.value.selectedPlan.name))
+                        analytics.track(KmAnalyticsEvent.Monetization.UpgradeSuccess(plan = state.value.selectedPlan.name))
                         startDataMigration()
                     }
                 }

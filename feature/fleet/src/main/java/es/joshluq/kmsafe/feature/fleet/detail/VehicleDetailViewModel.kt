@@ -6,7 +6,7 @@ import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import es.joshluq.kmsafe.core.analytics.AnalyticsTracker
-import es.joshluq.kmsafe.core.analytics.model.KmsafeAnalyticsEvent
+import es.joshluq.kmsafe.core.analytics.model.KmAnalyticsEvent
 import es.joshluq.foundationkit.log.LoggerKit
 import es.joshluq.foundationkit.text.TextProvider
 import es.joshluq.foundationkit.viewmodel.ScreenViewModel
@@ -94,7 +94,7 @@ class VehicleDetailViewModel @AssistedInject constructor(
                 when (output) {
                     is DeleteContractUseCase.Output.Progress -> updateState { copy(isLoading = true) }
                     is DeleteContractUseCase.Output.Success -> {
-                        analytics.track(KmsafeAnalyticsEvent.Fleet.VehicleDeleted(vehicleId))
+                        analytics.track(KmAnalyticsEvent.Fleet.VehicleDeleted(vehicleId))
                         updateState { copy(isLoading = false) }
                         launchEffect(Effect.NavigateBack)
                     }
