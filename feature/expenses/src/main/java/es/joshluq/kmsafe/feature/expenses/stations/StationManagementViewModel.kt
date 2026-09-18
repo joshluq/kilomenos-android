@@ -18,6 +18,7 @@ import kotlinx.coroutines.flow.onEach
 import javax.inject.Inject
 
 import es.joshluq.kmsafe.core.analytics.AnalyticsTracker
+import es.joshluq.kmsafe.core.analytics.model.KmAnalyticsEvent
 
 /**
  * ViewModel for managing the user's service stations.
@@ -131,6 +132,12 @@ class StationManagementViewModel @Inject constructor(
             .onEach { output ->
                 if (output is SetFavoriteStationUseCase.Output.Success) {
                     logger.i("StationManagementViewModel", "Favorite toggled successfully for $stationId")
+                    analyticsTracker.track(
+                        KmAnalyticsEvent.Expenses.StationFavoriteToggled(
+                            stationId = stationId,
+                            isFavorite = isFavorite
+                        )
+                    )
                     // Local state update for immediate feedback
                     updateState {
                         val updated = stations.map {
@@ -149,6 +156,9 @@ class StationManagementViewModel @Inject constructor(
             .onEach { output ->
                 if (output is DeleteServiceStationUseCase.Output.Success) {
                     logger.i("StationManagementViewModel", "Station $stationId deleted successfully")
+                    analyticsTracker.track(
+                        KmAnalyticsEvent.Expenses.StationDeleted(stationId = stationId)
+                    )
                     loadStations()
                 }
             }
@@ -177,6 +187,13 @@ class StationManagementViewModel @Inject constructor(
             when (output) {
                 is SaveServiceStationUseCase.Output.Success -> {
                     logger.i("StationManagementViewModel", "Station saved successfully: ${output.stationId}")
+                    analyticsTracker.track(
+                        KmAnalyticsEvent.Expenses.StationSaved(
+                            stationId = output.stationId,
+                            isNew = event.id == null,
+                            brand = event.brand
+                        )
+                    )
                     updateState {
                         copy(
                             isEditSheetOpen = false,

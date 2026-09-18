@@ -168,6 +168,14 @@ sealed interface KmAnalyticsEvent {
             override val name: String = "station_favorite_toggled"
             override val properties: Map<String, Any> = mapOf("station_id" to stationId, "is_favorite" to isFavorite)
         }
+        data class StationSaved(val stationId: String, val isNew: Boolean, val brand: String) : Expenses {
+            override val name: String = "station_saved"
+            override val properties: Map<String, Any> = mapOf("station_id" to stationId, "is_new" to isNew, "brand" to brand)
+        }
+        data class StationDeleted(val stationId: String) : Expenses {
+            override val name: String = "station_deleted"
+            override val properties: Map<String, Any> = mapOf("station_id" to stationId)
+        }
     }
 
     // 7. Projection & Risk Sentinel

@@ -1,6 +1,7 @@
 package es.joshluq.kmsafe.feature.expenses.stations
 
 import es.joshluq.foundationkit.log.LoggerKit
+import es.joshluq.kmsafe.core.analytics.model.KmAnalyticsEvent
 import es.joshluq.kmsafe.domain.model.Feature
 import es.joshluq.kmsafe.domain.model.FuelType
 import es.joshluq.kmsafe.domain.model.ServiceStation
@@ -99,7 +100,7 @@ class StationManagementViewModelTest {
     }
 
     @Test
-    fun `given stations loaded when initialized then state contains stations list`() = runTest(testDispatcher) {
+    fun `given stations loaded when initialized then state contains stations list and tracks screen`() = runTest(testDispatcher) {
         val viewModel = createViewModel()
         advanceUntilIdle()
 
@@ -107,6 +108,7 @@ class StationManagementViewModelTest {
         assertTrue(viewModel.state.value.isPremium)
         assertEquals(2, viewModel.state.value.stations.size)
         assertEquals(2, viewModel.state.value.filteredStations.size)
+        assertTrue(analyticsTracker.trackedScreens.contains("station_management"))
     }
 
     @Test
@@ -123,7 +125,7 @@ class StationManagementViewModelTest {
     }
 
     @Test
-    fun `given toggle favorite then updates favorite state and calls use case`() = runTest(testDispatcher) {
+    fun `given toggle favorite then updates favorite state and tracks analytics`() = runTest(testDispatcher) {
         every { setFavoriteStationUseCase(SetFavoriteStationUseCase.Input("st-1", true)) } returns flowOf(
             SetFavoriteStationUseCase.Output.Success
         )
@@ -135,10 +137,16 @@ class StationManagementViewModelTest {
         advanceUntilIdle()
 
         coVerify { setFavoriteStationUseCase(SetFavoriteStationUseCase.Input("st-1", true)) }
+        val favoriteEvent = analyticsTracker.trackedEvents
+            .filterIsInstance<KmAnalyticsEvent.Expenses.StationFavoriteToggled>()
+            .firstOrNull()
+        assertTrue(favoriteEvent != null)
+        assertEquals("st-1", favoriteEvent?.stationId)
+        assertEquals(true, favoriteEvent?.isFavorite)
     }
 
     @Test
-    fun `given delete confirmed when success then deletes station and reloads`() = runTest(testDispatcher) {
+    fun `given delete confirmed when success then deletes station and tracks analytics`() = runTest(testDispatcher) {
         every { deleteServiceStationUseCase(DeleteServiceStationUseCase.Input("st-1")) } returns flowOf(
             DeleteServiceStationUseCase.Output.Success
         )
@@ -158,6 +166,39 @@ class StationManagementViewModelTest {
         assertFalse(viewModel.state.value.showDeleteConfirmation)
         assertNull(viewModel.state.value.deleteTargetId)
         coVerify { deleteServiceStationUseCase(DeleteServiceStationUseCase.Input("st-1")) }
+
+        val deleteEvent = analyticsTracker.trackedEvents
+            .filterIsInstance<KmAnalyticsEvent.Expenses.StationDeleted>()
+            .firstOrNull()
+        assertTrue(deleteEvent != null)
+        assertEquals("st-1", deleteEvent?.stationId)
+    }
+
+    @Test
+    fun `given save station when success then updates state and tracks analytics`() = runTest(testDispatcher) {
+        every { saveServiceStationUseCase(any()) } returns flowOf(
+            SaveServiceStationUseCase.Output.Success("st-new")
+        )
+
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        viewModel.sendEvent(
+            StationManagementEvent.OnSaveStation(
+                id = null,
+                name = "Shell Central",
+                brand = "Shell"
+            )
+        )
+        advanceUntilIdle()
+
+        val saveEvent = analyticsTracker.trackedEvents
+            .filterIsInstance<KmAnalyticsEvent.Expenses.StationSaved>()
+            .firstOrNull()
+        assertTrue(saveEvent != null)
+        assertEquals("st-new", saveEvent?.stationId)
+        assertEquals(true, saveEvent?.isNew)
+        assertEquals("Shell", saveEvent?.brand)
     }
 
     @Test
