@@ -19,6 +19,7 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 
 import es.joshluq.kmsafe.core.analytics.AnalyticsTracker
+import es.joshluq.kmsafe.core.analytics.model.KmsafeAnalyticsEvent
 
 /**
  * ViewModel for viewing service station statistics and history.
@@ -100,6 +101,12 @@ class StationDetailViewModel @AssistedInject constructor(
                 when (output) {
                     is GetStationVolatilityUseCase.Output.Success -> {
                         logger.i("StationDetailViewModel", "Volatility calculated: ${output.volatility.priceTrend}")
+                        analyticsTracker.track(
+                            KmsafeAnalyticsEvent.Expenses.StationVolatilityViewed(
+                                stationBrand = state.value.detail?.station?.brand ?: "",
+                                variancePct = output.volatility.currentPrice - output.volatility.historicalAveragePrice
+                            )
+                        )
                         updateState { copy(volatility = output.volatility) }
                     }
                     GetStationVolatilityUseCase.Output.Empty -> {
@@ -116,14 +123,18 @@ class StationDetailViewModel @AssistedInject constructor(
             .launchIn(viewModelScope)
     }
 
-
-
     private fun handleToggleFavorite(isFavorite: Boolean) {
         logger.d("StationDetailViewModel", "Setting favorite for $stationId to $isFavorite")
         setFavoriteStationUseCase(SetFavoriteStationUseCase.Input(stationId, isFavorite))
             .onEach { output ->
                 if (output is SetFavoriteStationUseCase.Output.Success) {
                     logger.i("StationDetailViewModel", "Favorite state updated successfully")
+                    analyticsTracker.track(
+                        KmsafeAnalyticsEvent.Expenses.StationFavoriteToggled(
+                            stationId = stationId,
+                            isFavorite = isFavorite
+                        )
+                    )
                     updateState {
                         copy(detail = detail?.copy(station = detail.station.copy(isFavorite = isFavorite)))
                     }

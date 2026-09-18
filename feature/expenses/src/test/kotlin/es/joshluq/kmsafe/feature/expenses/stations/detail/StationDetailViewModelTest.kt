@@ -1,7 +1,7 @@
 package es.joshluq.kmsafe.feature.expenses.stations.detail
 
 import es.joshluq.foundationkit.log.LoggerKit
-import es.joshluq.kmsafe.domain.model.Feature
+import es.joshluq.kmsafe.core.analytics.model.KmsafeAnalyticsEvent
 import es.joshluq.kmsafe.domain.model.FuelExpense
 import es.joshluq.kmsafe.domain.model.FuelType
 import es.joshluq.kmsafe.domain.model.PriceTrend
@@ -122,7 +122,7 @@ class StationDetailViewModelTest {
     }
 
     @Test
-    fun `given station detail and volatility loaded when initialized then state is populated`() = runTest(testDispatcher) {
+    fun `given station detail and volatility loaded when initialized then state is populated and analytics tracked`() = runTest(testDispatcher) {
         val viewModel = createViewModel()
         advanceUntilIdle()
 
@@ -131,10 +131,15 @@ class StationDetailViewModelTest {
         assertEquals("st-1", viewModel.state.value.detail?.station?.id)
         assertEquals(sampleDetail, viewModel.state.value.detail)
         assertEquals(sampleVolatility, viewModel.state.value.volatility)
+
+        assertTrue(analyticsTracker.trackedScreens.contains("station_detail"))
+        assertTrue(
+            analyticsTracker.trackedEvents.any { it is KmsafeAnalyticsEvent.Expenses.StationVolatilityViewed }
+        )
     }
 
     @Test
-    fun `given toggle favorite event then updates favorite state and calls use case`() = runTest(testDispatcher) {
+    fun `given toggle favorite event then updates favorite state and tracks analytics`() = runTest(testDispatcher) {
         every { setFavoriteStationUseCase(SetFavoriteStationUseCase.Input("st-1", true)) } returns flowOf(
             SetFavoriteStationUseCase.Output.Success
         )
@@ -147,5 +152,12 @@ class StationDetailViewModelTest {
 
         coVerify { setFavoriteStationUseCase(SetFavoriteStationUseCase.Input("st-1", true)) }
         assertEquals(true, viewModel.state.value.detail?.station?.isFavorite)
+
+        val favoriteEvent = analyticsTracker.trackedEvents
+            .filterIsInstance<KmsafeAnalyticsEvent.Expenses.StationFavoriteToggled>()
+            .firstOrNull()
+        assertTrue(favoriteEvent != null)
+        assertEquals("st-1", favoriteEvent?.stationId)
+        assertEquals(true, favoriteEvent?.isFavorite)
     }
 }

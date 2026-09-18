@@ -178,6 +178,10 @@ sealed interface KmsafeAnalyticsEvent {
             override val name: String = "station_volatility_viewed"
             override val properties: Map<String, Any> = mapOf("brand" to stationBrand, "variance_pct" to variancePct)
         }
+        data class StationFavoriteToggled(val stationId: String, val isFavorite: Boolean) : Expenses {
+            override val name: String = "station_favorite_toggled"
+            override val properties: Map<String, Any> = mapOf("station_id" to stationId, "is_favorite" to isFavorite)
+        }
         data class ElectrificationKpiInspected(val savingsEur: Double, val kwhConsumed: Double) : Expenses {
             override val name: String = "electrification_kpi_inspected"
             override val properties: Map<String, Any> = mapOf("savings_eur" to savingsEur, "kwh" to kwhConsumed)

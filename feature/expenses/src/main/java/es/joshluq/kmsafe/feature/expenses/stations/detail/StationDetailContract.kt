@@ -37,6 +37,4 @@ sealed interface StationDetailEvent : UiEvent {
 /**
  * Side effects for Station Detail.
  */
-sealed interface StationDetailEffect : UiEffect {
-    data object NavigateBack : StationDetailEffect
-}
+sealed interface StationDetailEffect : UiEffect
