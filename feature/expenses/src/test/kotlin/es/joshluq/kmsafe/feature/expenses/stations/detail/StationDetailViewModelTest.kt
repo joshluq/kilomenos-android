@@ -12,7 +12,6 @@ import es.joshluq.kmsafe.domain.usecase.CheckFeatureAccessUseCase
 import es.joshluq.kmsafe.domain.usecase.GetServiceStationDetailUseCase
 import es.joshluq.kmsafe.domain.usecase.GetStationVolatilityUseCase
 import es.joshluq.kmsafe.domain.usecase.SetFavoriteStationUseCase
-import es.joshluq.kmsafe.domain.usecase.SyncStationsUseCase
 import io.mockk.clearAllMocks
 import io.mockk.coVerify
 import io.mockk.every
@@ -42,7 +41,6 @@ class StationDetailViewModelTest {
     private val getStationVolatilityUseCase: GetStationVolatilityUseCase = mockk()
     private val setFavoriteStationUseCase: SetFavoriteStationUseCase = mockk()
     private val checkFeatureAccessUseCase: CheckFeatureAccessUseCase = mockk()
-    private val syncStationsUseCase: SyncStationsUseCase = mockk()
     private val logger: LoggerKit = mockk(relaxed = true)
 
     private val sampleStation = ServiceStation(
@@ -118,7 +116,6 @@ class StationDetailViewModelTest {
             getStationVolatilityUseCase = getStationVolatilityUseCase,
             setFavoriteStationUseCase = setFavoriteStationUseCase,
             checkFeatureAccessUseCase = checkFeatureAccessUseCase,
-            syncStationsUseCase = syncStationsUseCase,
             analyticsTracker = analyticsTracker,
             logger = logger
         )

@@ -14,7 +14,6 @@ import es.joshluq.kmsafe.domain.usecase.CheckFeatureAccessUseCase
 import es.joshluq.kmsafe.domain.usecase.GetServiceStationDetailUseCase
 import es.joshluq.kmsafe.domain.usecase.GetStationVolatilityUseCase
 import es.joshluq.kmsafe.domain.usecase.SetFavoriteStationUseCase
-import es.joshluq.kmsafe.domain.usecase.SyncStationsUseCase
 import es.joshluq.kmsafe.feature.expenses.R
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
@@ -31,7 +30,6 @@ class StationDetailViewModel @AssistedInject constructor(
     private val getStationVolatilityUseCase: GetStationVolatilityUseCase,
     private val setFavoriteStationUseCase: SetFavoriteStationUseCase,
     private val checkFeatureAccessUseCase: CheckFeatureAccessUseCase,
-    private val syncStationsUseCase: SyncStationsUseCase,
     private val analyticsTracker: AnalyticsTracker,
     private val logger: LoggerKit
 ) : ScreenViewModel<StationDetailState, StationDetailEvent, StationDetailEffect>() {
@@ -53,7 +51,6 @@ class StationDetailViewModel @AssistedInject constructor(
     override fun handleEvent(event: StationDetailEvent) {
         logger.d("StationDetailViewModel", "Handling event: $event")
         when (event) {
-            StationDetailEvent.OnRefresh -> handleRefresh()
             is StationDetailEvent.OnToggleFavorite -> handleToggleFavorite(event.isFavorite)
             StationDetailEvent.OnDismissError -> updateState { copy(error = null) }
         }
@@ -119,21 +116,7 @@ class StationDetailViewModel @AssistedInject constructor(
             .launchIn(viewModelScope)
     }
 
-    private fun handleRefresh() {
-        if (state.value.isPremium) {
-            logger.i("StationDetailViewModel", "Premium user: Triggering remote sync on refresh")
-            syncStationsUseCase(SyncStationsUseCase.Input)
-                .onEach { output ->
-                    if (output is SyncStationsUseCase.Output.Success || output is SyncStationsUseCase.Output.Failure) {
-                        loadData()
-                    }
-                }
-                .launchIn(viewModelScope)
-        } else {
-            logger.d("StationDetailViewModel", "Free user: Local load on refresh")
-            loadData()
-        }
-    }
+
 
     private fun handleToggleFavorite(isFavorite: Boolean) {
         logger.d("StationDetailViewModel", "Setting favorite for $stationId to $isFavorite")

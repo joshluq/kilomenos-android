@@ -30,7 +30,6 @@ data class StationDetailState(
  * UI events for Station Detail.
  */
 sealed interface StationDetailEvent : UiEvent {
-    data object OnRefresh : StationDetailEvent
     data class OnToggleFavorite(val isFavorite: Boolean) : StationDetailEvent
     data object OnDismissError : StationDetailEvent
 }

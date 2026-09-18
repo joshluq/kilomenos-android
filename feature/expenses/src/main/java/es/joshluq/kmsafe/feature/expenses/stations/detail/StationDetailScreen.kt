@@ -28,7 +28,6 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
-import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -103,7 +102,11 @@ fun StationDetailScreen(
         },
         containerColor = CanvasKitTheme.colors.backgroundSecondary
     ) { paddingValues ->
-        val content = @Composable {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+        ) {
             if (detail != null && station != null) {
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
@@ -187,25 +190,6 @@ fun StationDetailScreen(
                         HistoryItemRow(expense)
                     }
                 }
-            }
-        }
-
-        if (state.isPremium) {
-            PullToRefreshBox(
-                isRefreshing = state.isLoading,
-                onRefresh = { onEvent(StationDetailEvent.OnRefresh) },
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues),
-                content = { content() }
-            )
-        } else {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues)
-            ) {
-                content()
             }
         }
     }
