@@ -35,7 +35,6 @@ data class StationManagementState(
  * UI events for Station Management.
  */
 sealed interface StationManagementEvent : UiEvent {
-    data object OnRefresh : StationManagementEvent
     data class OnSearchQueryChanged(val query: String) : StationManagementEvent
     data class OnToggleFavorite(val stationId: String, val isFavorite: Boolean) : StationManagementEvent
     data class OnDeleteStation(val stationId: String) : StationManagementEvent

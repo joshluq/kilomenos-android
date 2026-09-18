@@ -9,7 +9,6 @@ import es.joshluq.kmsafe.domain.usecase.DeleteServiceStationUseCase
 import es.joshluq.kmsafe.domain.usecase.GetAllServiceStationsUseCase
 import es.joshluq.kmsafe.domain.usecase.SaveServiceStationUseCase
 import es.joshluq.kmsafe.domain.usecase.SetFavoriteStationUseCase
-import es.joshluq.kmsafe.domain.usecase.SyncStationsUseCase
 import io.mockk.clearAllMocks
 import io.mockk.coVerify
 import io.mockk.every
@@ -43,7 +42,6 @@ class StationManagementViewModelTest {
     private val deleteServiceStationUseCase: DeleteServiceStationUseCase = mockk()
     private val setFavoriteStationUseCase: SetFavoriteStationUseCase = mockk()
     private val checkFeatureAccessUseCase: CheckFeatureAccessUseCase = mockk()
-    private val syncStationsUseCase: SyncStationsUseCase = mockk()
     private val logger: LoggerKit = mockk(relaxed = true)
 
     private val sampleStation1 = ServiceStation(
@@ -95,7 +93,6 @@ class StationManagementViewModelTest {
             deleteServiceStationUseCase = deleteServiceStationUseCase,
             setFavoriteStationUseCase = setFavoriteStationUseCase,
             checkFeatureAccessUseCase = checkFeatureAccessUseCase,
-            syncStationsUseCase = syncStationsUseCase,
             analyticsTracker = analyticsTracker,
             logger = logger
         )

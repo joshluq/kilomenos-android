@@ -12,7 +12,6 @@ import es.joshluq.kmsafe.domain.usecase.DeleteServiceStationUseCase
 import es.joshluq.kmsafe.domain.usecase.GetAllServiceStationsUseCase
 import es.joshluq.kmsafe.domain.usecase.SaveServiceStationUseCase
 import es.joshluq.kmsafe.domain.usecase.SetFavoriteStationUseCase
-import es.joshluq.kmsafe.domain.usecase.SyncStationsUseCase
 import es.joshluq.kmsafe.feature.expenses.R
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
@@ -30,7 +29,6 @@ class StationManagementViewModel @Inject constructor(
     private val deleteServiceStationUseCase: DeleteServiceStationUseCase,
     private val setFavoriteStationUseCase: SetFavoriteStationUseCase,
     private val checkFeatureAccessUseCase: CheckFeatureAccessUseCase,
-    private val syncStationsUseCase: SyncStationsUseCase,
     private val analyticsTracker: AnalyticsTracker,
     private val logger: LoggerKit
 ) : ScreenViewModel<StationManagementState, StationManagementEvent, StationManagementEffect>() {
@@ -46,7 +44,6 @@ class StationManagementViewModel @Inject constructor(
     override fun handleEvent(event: StationManagementEvent) {
         logger.d("StationManagementViewModel", "Handling event: $event")
         when (event) {
-            StationManagementEvent.OnRefresh -> handleRefresh()
             is StationManagementEvent.OnSearchQueryChanged -> handleSearch(event.query)
             is StationManagementEvent.OnToggleFavorite -> handleToggleFavorite(event.stationId, event.isFavorite)
             is StationManagementEvent.OnDeleteStation -> updateState { copy(showDeleteConfirmation = true, deleteTargetId = event.stationId) }
@@ -119,21 +116,7 @@ class StationManagementViewModel @Inject constructor(
         }
     }
 
-    private fun handleRefresh() {
-        if (state.value.isPremium) {
-            logger.i("StationManagementViewModel", "Premium user: Triggering remote sync on refresh")
-            syncStationsUseCase(SyncStationsUseCase.Input)
-                .onEach { output ->
-                    if (output is SyncStationsUseCase.Output.Success || output is SyncStationsUseCase.Output.Failure) {
-                        loadStations()
-                    }
-                }
-                .launchIn(viewModelScope)
-        } else {
-            logger.d("StationManagementViewModel", "Free user: Local load on refresh")
-            loadStations()
-        }
-    }
+
 
     private fun filterStations(stations: List<ServiceStation>, query: String): List<ServiceStation> {
         if (query.isBlank()) return stations

@@ -35,7 +35,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
-import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -194,16 +193,7 @@ fun StationManagementScreen(
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
-            if (state.isPremium) {
-                PullToRefreshBox(
-                    isRefreshing = state.isLoading,
-                    onRefresh = { onEvent(StationManagementEvent.OnRefresh) },
-                    modifier = Modifier.fillMaxSize(),
-                    content = { content() }
-                )
-            } else {
-                content()
-            }
+            content()
 
             // Edit/Add Bottom Sheet
             if (state.isEditSheetOpen) {
