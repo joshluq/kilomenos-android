@@ -35,7 +35,6 @@ import es.joshluq.kmsafe.domain.repository.TrackingRepository
 import es.joshluq.kmsafe.domain.usecase.CheckFeatureAccessUseCase
 import es.joshluq.kmsafe.domain.usecase.GetPreferencesUseCase
 import es.joshluq.kmsafe.domain.usecase.GetRentingContractUseCase
-import es.joshluq.kmsafe.core.tracking.diagnostic.TrackingDiagnostics
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -205,11 +204,6 @@ class LocationTrackingService : Service() {
             try {
                 // Run business validations
                 logger.d("LocationService", "Starting autostart validation flow (fastPath=$isBluetoothFastPath)...")
-                TrackingDiagnostics.updateStatus(
-                    this@LocationTrackingService,
-                    stage = "VALIDATING_CONDITIONS",
-                    details = "FastPath: $isBluetoothFastPath | Preverified: $preverifiedMac"
-                )
 
                 // 1. Check Access
                 val access = withTimeoutOrNull(5000L.milliseconds) {
@@ -217,11 +211,6 @@ class LocationTrackingService : Service() {
                 }
                 if (access !is CheckFeatureAccessUseCase.Output.Success || !access.isGranted) {
                     logger.w("LocationService", "Validation failed: User has no Premium access (access=$access).")
-                    TrackingDiagnostics.recordError(
-                        this@LocationTrackingService,
-                        "LocationService",
-                        "AutoTracking access not granted: $access"
-                    )
                     stopTrackingGracefully()
                     return@launch
                 }
@@ -234,11 +223,6 @@ class LocationTrackingService : Service() {
                     prefsOutput.preferences.autoTrackingEnabled
                 if (!isAutoTrackingEnabled) {
                     logger.i("LocationService", "Validation failed: Auto-tracking is disabled in user preferences.")
-                    TrackingDiagnostics.recordError(
-                        this@LocationTrackingService,
-                        "LocationService",
-                        "Auto-tracking is disabled in user preferences."
-                    )
                     stopTrackingGracefully()
                     return@launch
                 }
@@ -253,11 +237,6 @@ class LocationTrackingService : Service() {
                     if (elapsed in 0 until AUTO_TRACKING_COOLDOWN_MS) {
                         val remainingSeconds = (AUTO_TRACKING_COOLDOWN_MS - elapsed) / 1000
                         logger.i("LocationService", "Validation aborted: Auto-tracking cooldown active (${remainingSeconds}s remaining).")
-                        TrackingDiagnostics.updateStatus(
-                            this@LocationTrackingService,
-                            stage = "COOLDOWN_ACTIVE",
-                            details = "Cooldown active: ${remainingSeconds}s remaining"
-                        )
                         stopTrackingGracefully()
                         return@launch
                     }
@@ -268,11 +247,6 @@ class LocationTrackingService : Service() {
                 // 4. Check if already tracking
                 if (trackingRepository.isTracking.first()) {
                     logger.d("LocationService", "Already tracking. Validation aborted.")
-                    TrackingDiagnostics.updateStatus(
-                        this@LocationTrackingService,
-                        stage = "ALREADY_TRACKING",
-                        details = "Service already recording GPS"
-                    )
                     return@launch
                 }
 
@@ -296,33 +270,18 @@ class LocationTrackingService : Service() {
 
                         if (!isConnected) {
                             logger.i("LocationService", "Validation failed: Vehicle Bluetooth ($mac) not found after retry window.")
-                            TrackingDiagnostics.recordError(
-                                this@LocationTrackingService,
-                                "LocationService",
-                                "Vehicle Bluetooth ($mac) not connected after retry window."
-                            )
                             stopTrackingGracefully()
                             return@launch
                         }
                     }
                 } else {
                     logger.w("LocationService", "Validation failed: No active vehicle selected.")
-                    TrackingDiagnostics.recordError(
-                        this@LocationTrackingService,
-                        "LocationService",
-                        "No active vehicle contract found in local database."
-                    )
                     stopTrackingGracefully()
                     return@launch
                 }
 
                 // Validations passed! Start GPS capture
                 logger.i("LocationService", "VALIDATIONS PASSED. Switching to active tracking.")
-                TrackingDiagnostics.updateStatus(
-                    this@LocationTrackingService,
-                    stage = "VALIDATIONS_PASSED",
-                    details = "Starting active GPS tracking"
-                )
                 startTracking()
             } catch (e: CancellationException) {
                 throw e
@@ -331,12 +290,6 @@ class LocationTrackingService : Service() {
                     logger.d("LocationService", "Validation cancelled due to service lifecycle: ${e.message}")
                 } else {
                     logger.e("LocationService", "Error during autostart validation", e)
-                    TrackingDiagnostics.recordError(
-                        this@LocationTrackingService,
-                        "LocationService",
-                        "Exception during autostart validation: ${e.message}",
-                        e
-                    )
                 }
                 stopTrackingGracefully()
             }
@@ -364,12 +317,6 @@ class LocationTrackingService : Service() {
             }
         } catch (e: Exception) {
             logger.e("LocationService", "Error calling startForeground: ${e.message}", e)
-            TrackingDiagnostics.recordError(
-                this,
-                "LocationService",
-                "Error calling startForeground: ${e.message}",
-                e
-            )
         }
     }
 
@@ -510,11 +457,6 @@ class LocationTrackingService : Service() {
                     val currentSpeedKmh = (lastLocation?.speed ?: 0f) * 3.6f
                     if (lastLocation == null || currentSpeedKmh < 10.0f) {
                         logger.i("LocationService", "Heartbeat: Bluetooth lost and speed is low (${currentSpeedKmh} km/h). Stopping tracking.")
-                        TrackingDiagnostics.updateStatus(
-                            this@LocationTrackingService,
-                            stage = "BT_HEARTBEAT_STOP",
-                            details = "Bluetooth disconnected and speed < 10 km/h ($currentSpeedKmh km/h)"
-                        )
                         stopTracking()
                         break
                     } else {
@@ -527,11 +469,6 @@ class LocationTrackingService : Service() {
 
     private fun startTracking() {
         logger.i("LocationService", "startTracking initiated")
-        TrackingDiagnostics.updateStatus(
-            this,
-            stage = "START_TRACKING",
-            details = "Initializing FusedLocationProviderClient updates"
-        )
 
         // Clean up residual notifications from previous trip cycle
         val notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
@@ -615,11 +552,6 @@ class LocationTrackingService : Service() {
                             longitude = location.longitude
                         )
                     }
-                    TrackingDiagnostics.updateStatus(
-                        this@LocationTrackingService,
-                        stage = "GPS_RECORDING",
-                        details = "Speed: ${"%.1f".format(location.speed * 3.6)} km/h | Acc: ${"%.0f".format(location.accuracy)}m (+${"%.0f".format(distance)}m)"
-                    )
                     lastLocation = location
                 } else if (distance > 1.0) {
                     serviceScope.launch {
@@ -627,11 +559,6 @@ class LocationTrackingService : Service() {
                             distanceMeters = distance.toDouble()
                         )
                     }
-                    TrackingDiagnostics.updateStatus(
-                        this@LocationTrackingService,
-                        stage = "GPS_RECORDING",
-                        details = "Speed: ${"%.1f".format(location.speed * 3.6)} km/h | Acc: ${"%.0f".format(location.accuracy)}m"
-                    )
                     lastLocation = location
                 }
             }
@@ -652,11 +579,6 @@ class LocationTrackingService : Service() {
         serviceScope.launch {
             try {
                 val distance = trackingRepository.currentDistanceMeters.first()
-                TrackingDiagnostics.updateStatus(
-                    this@LocationTrackingService,
-                    stage = "TRIP_STOPPED",
-                    details = "Total Distance: ${"%.2f".format(distance / 1000.0)} km"
-                )
                 trackingRepository.stopTracking()
                 if (distance >= 300.0) {
                     showTripFinishedNotification(distance)
@@ -668,12 +590,6 @@ class LocationTrackingService : Service() {
                     logger.d("LocationService", "Stop tracking cancelled due to service lifecycle: ${e.message}")
                 } else {
                     logger.e("LocationService", "Error stopping tracking repository", e)
-                    TrackingDiagnostics.recordError(
-                        this@LocationTrackingService,
-                        "LocationService",
-                        "Error stopping tracking: ${e.message}",
-                        e
-                    )
                 }
             } finally {
                 stopTrackingGracefully()
