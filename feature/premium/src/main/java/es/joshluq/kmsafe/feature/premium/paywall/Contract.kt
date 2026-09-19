@@ -10,8 +10,8 @@ import es.joshluq.foundationkit.viewmodel.UiState
  * Available subscription billing plans on the paywall.
  */
 enum class PremiumBillingPlan {
-    ANNUAL,
-    MONTHLY
+    MONTHLY,
+    ANNUAL
 }
 
 /**
@@ -21,7 +21,7 @@ enum class PremiumBillingPlan {
 data class State(
     val isLoading: Boolean = false,
     val isMigrating: Boolean = false,
-    val selectedPlan: PremiumBillingPlan = PremiumBillingPlan.ANNUAL,
+    val selectedPlan: PremiumBillingPlan = PremiumBillingPlan.MONTHLY,
     val source: String = "general",
     val error: TextProvider? = null
 ) : UiState {

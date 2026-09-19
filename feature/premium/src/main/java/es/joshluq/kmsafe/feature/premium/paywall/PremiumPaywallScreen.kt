@@ -27,7 +27,6 @@ import androidx.compose.material.icons.filled.AutoMode
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.LocalGasStation
-import androidx.compose.material.icons.filled.RadioButtonUnchecked
 import androidx.compose.material.icons.filled.Savings
 import androidx.compose.material.icons.filled.Shield
 import androidx.compose.material.icons.filled.Speed
@@ -267,7 +266,6 @@ fun PremiumPaywallScreen(
 
                 // Layer 4: Interactive Plan Selector
                 PlanSelectorSection(
-                    selectedPlan = state.selectedPlan,
                     onPlanSelected = { onEvent(Event.OnPlanSelected(it)) }
                 )
 
@@ -315,8 +313,6 @@ fun PremiumPaywallScreen(
                     ) { contentColor ->
                         val ctaText = if (state.isLoading) {
                             stringResource(CoreR.string.common_processing)
-                        } else if (state.selectedPlan == PremiumBillingPlan.ANNUAL) {
-                            stringResource(R.string.premium_cta_start_trial)
                         } else {
                             stringResource(R.string.premium_cta_monthly)
                         }
@@ -470,38 +466,21 @@ private fun LossAversionRoiBox() {
 }
 
 /**
- * Interactive Plan Selector showing Annual (7-day free trial) and Monthly plans.
+ * Subscription plan display for the monthly plan.
  */
 @Composable
 private fun PlanSelectorSection(
-    selectedPlan: PremiumBillingPlan,
     onPlanSelected: (PremiumBillingPlan) -> Unit
 ) {
     Column(
         verticalArrangement = Arrangement.spacedBy(CanvasKitTheme.spacing.sm)
     ) {
-        // Option 1: Annual Plan (with 7-Day Free Trial)
-        PlanOptionCard(
-            title = stringResource(R.string.premium_plan_annual_title),
-            price = stringResource(R.string.premium_plan_annual_price),
-            period = stringResource(R.string.premium_plan_annual_period),
-            badge = stringResource(R.string.premium_plan_annual_badge),
-            isBadgeHighlighted = true,
-            isSelected = selectedPlan == PremiumBillingPlan.ANNUAL,
-            onClick = { onPlanSelected(PremiumBillingPlan.ANNUAL) },
-            testTag = "premium_plan_annual_card"
-        )
-
-        // Option 2: Monthly Plan
         PlanOptionCard(
             title = stringResource(R.string.premium_plan_monthly_title),
             price = stringResource(R.string.premium_plan_monthly_price),
             period = stringResource(R.string.premium_plan_monthly_period),
             badge = stringResource(R.string.premium_plan_monthly_badge),
-            isBadgeHighlighted = false,
-            isSelected = selectedPlan == PremiumBillingPlan.MONTHLY,
-            onClick = { onPlanSelected(PremiumBillingPlan.MONTHLY) },
-            testTag = "premium_plan_monthly_card"
+            onClick = { onPlanSelected(PremiumBillingPlan.MONTHLY) }
         )
     }
 }
@@ -515,24 +494,13 @@ private fun PlanOptionCard(
     price: String,
     period: String,
     badge: String,
-    isBadgeHighlighted: Boolean,
-    isSelected: Boolean,
-    onClick: () -> Unit,
-    testTag: String
+    onClick: () -> Unit
 ) {
-    val borderColor = if (isSelected) {
-        CanvasKitTheme.colors.brandAccent
-    } else {
-        CanvasKitTheme.colors.borderSubtle
-    }
+    val borderColor = CanvasKitTheme.colors.brandAccent
 
-    val borderWidth = if (isSelected) 2.dp else 1.dp
+    val borderWidth = 2.dp
 
-    val backgroundColor = if (isSelected) {
-        CanvasKitTheme.colors.brandAccent.copy(alpha = 0.05f)
-    } else {
-        CanvasKitTheme.colors.backgroundSecondary
-    }
+    val backgroundColor = CanvasKitTheme.colors.brandAccent.copy(alpha = 0.05f)
 
     Box(
         modifier = Modifier
@@ -542,7 +510,7 @@ private fun PlanOptionCard(
             .border(borderWidth, borderColor, RoundedCornerShape(16.dp))
             .clickable(role = Role.RadioButton, onClick = onClick)
             .padding(CanvasKitTheme.spacing.md)
-            .testTag(testTag)
+            .testTag("premium_plan_monthly_card")
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -555,9 +523,9 @@ private fun PlanOptionCard(
                 modifier = Modifier.weight(1f)
             ) {
                 Icon(
-                    imageVector = if (isSelected) Icons.Default.CheckCircle else Icons.Default.RadioButtonUnchecked,
+                    imageVector = Icons.Default.CheckCircle,
                     contentDescription = null,
-                    tint = if (isSelected) CanvasKitTheme.colors.brandAccent else CanvasKitTheme.colors.textSecondary,
+                    tint = CanvasKitTheme.colors.brandAccent,
                     modifier = Modifier.size(24.dp)
                 )
 
@@ -577,23 +545,13 @@ private fun PlanOptionCard(
                         Box(
                             modifier = Modifier
                                 .clip(CircleShape)
-                                .background(
-                                    if (isBadgeHighlighted) {
-                                        CanvasKitTheme.colors.brandAccent.copy(alpha = 0.15f)
-                                    } else {
-                                        CanvasKitTheme.colors.backgroundSecondary
-                                    }
-                                )
+                                .background(CanvasKitTheme.colors.brandAccent.copy(alpha = 0.15f))
                                 .padding(horizontal = 8.dp, vertical = 2.dp)
                         ) {
                             Text(
                                 text = badge,
                                 style = CanvasKitTheme.typography.labelSmall,
-                                color = if (isBadgeHighlighted) {
-                                    CanvasKitTheme.colors.brandAccent
-                                } else {
-                                    CanvasKitTheme.colors.textSecondary
-                                },
+                                color = CanvasKitTheme.colors.brandAccent,
                                 fontWeight = FontWeight.Bold
                             )
                         }
@@ -614,7 +572,7 @@ private fun PlanOptionCard(
                 text = price,
                 style = CanvasKitTheme.typography.headingMedium,
                 fontWeight = FontWeight.Black,
-                color = if (isSelected) CanvasKitTheme.colors.brandAccent else CanvasKitTheme.colors.textPrimary
+                color = CanvasKitTheme.colors.brandAccent
             )
         }
     }
@@ -626,7 +584,7 @@ private fun PlanOptionCard(
 fun PremiumPaywallScreenPreview() {
     CanvasKitTheme {
         PremiumPaywallScreen(
-            state = State(selectedPlan = PremiumBillingPlan.ANNUAL),
+            state = State(selectedPlan = PremiumBillingPlan.MONTHLY),
             onEvent = {}
         )
     }

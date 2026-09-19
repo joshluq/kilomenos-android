@@ -83,7 +83,7 @@ class PremiumPaywallViewModelTest {
         val state = viewModel.state.value
         assertFalse(state.isLoading)
         assertFalse(state.isMigrating)
-        assertEquals(PremiumBillingPlan.ANNUAL, state.selectedPlan)
+        assertEquals(PremiumBillingPlan.MONTHLY, state.selectedPlan)
         assertNull(state.error)
     }
 
@@ -106,11 +106,11 @@ class PremiumPaywallViewModelTest {
         val viewModel = createViewModel()
         testScheduler.advanceUntilIdle()
 
-        viewModel.sendEvent(Event.OnPlanSelected(PremiumBillingPlan.MONTHLY))
+        viewModel.sendEvent(Event.OnPlanSelected(PremiumBillingPlan.ANNUAL))
         testScheduler.advanceUntilIdle()
 
-        assertEquals(PremiumBillingPlan.MONTHLY, viewModel.state.value.selectedPlan)
-        assertTrue(analytics.trackedEvents.any { it is KmAnalyticsEvent.Monetization.PlanSelected && it.plan == "MONTHLY" })
+        assertEquals(PremiumBillingPlan.ANNUAL, viewModel.state.value.selectedPlan)
+        assertTrue(analytics.trackedEvents.any { it is KmAnalyticsEvent.Monetization.PlanSelected && it.plan == "ANNUAL" })
     }
 
     @Test
@@ -127,7 +127,7 @@ class PremiumPaywallViewModelTest {
         testScheduler.advanceUntilIdle()
 
         assertEquals(listOf(Effect.LaunchBillingFlow), effects)
-        assertTrue(analytics.trackedEvents.any { it is KmAnalyticsEvent.Monetization.UpgradeClicked && it.selectedPlan == "ANNUAL" })
+        assertTrue(analytics.trackedEvents.any { it is KmAnalyticsEvent.Monetization.UpgradeClicked && it.selectedPlan == "MONTHLY" })
     }
 
     @Test
