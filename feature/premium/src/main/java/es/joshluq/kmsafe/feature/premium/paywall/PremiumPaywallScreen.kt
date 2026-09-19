@@ -270,7 +270,7 @@ fun PremiumPaywallScreen(
                 )
 
                 // Large bottom spacer for sticky CTA
-                Spacer(modifier = Modifier.height(220.dp))
+                Spacer(modifier = Modifier.height(260.dp))
             }
 
             // Sticky Footer with CTA Buttons & Trust Guarantee
@@ -306,12 +306,12 @@ fun PremiumPaywallScreen(
                     // Main Primary CTA Button
                     CanvasKitButton(
                         onClick = safeClick { onEvent(Event.OnUpgradeClicked) },
-                        loading = state.isLoading,
+                        loading = state.isLoading && !state.isRestoring,
                         modifier = Modifier
                             .fillMaxWidth()
                             .testTag("premium_buy_now_button")
                     ) { contentColor ->
-                        val ctaText = if (state.isLoading) {
+                        val ctaText = if (state.isLoading && !state.isRestoring) {
                             stringResource(CoreR.string.common_processing)
                         } else {
                             stringResource(R.string.premium_cta_monthly)
@@ -333,6 +333,23 @@ fun PremiumPaywallScreen(
                         modifier = Modifier.padding(vertical = 2.dp)
                     )
 
+                    // Secondary Ghost Button (Restore Purchases)
+                    CanvasKitButton(
+                        variant = CanvasKitButtonVariant.Ghost,
+                        onClick = safeClick { onEvent(Event.OnRestorePurchasesClicked) },
+                        loading = state.isRestoring,
+                        enabled = !state.isLoading,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .testTag("premium_restore_purchases_button")
+                    ) {
+                        Text(
+                            text = stringResource(R.string.premium_restore_purchases),
+                            style = CanvasKitTheme.typography.labelLarge,
+                            color = CanvasKitTheme.colors.brandAccent
+                        )
+                    }
+
                     // Secondary Ghost Button (Continue Free)
                     CanvasKitButton(
                         variant = CanvasKitButtonVariant.Ghost,
@@ -348,6 +365,18 @@ fun PremiumPaywallScreen(
                     }
                 }
             }
+
+            // Information / Success Banner
+            CanvasKitBanner(
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .statusBarsPadding()
+                    .padding(CanvasKitTheme.spacing.sm),
+                variant = CanvasKitAlertVariant.Success,
+                message = { Text(state.message?.asString() ?: "") },
+                visible = state.message != null,
+                onDismiss = { onEvent(Event.OnDismissMessage) }
+            )
 
             // Error Banner
             CanvasKitBanner(

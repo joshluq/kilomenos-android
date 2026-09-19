@@ -49,4 +49,8 @@
     <string name="premium_upgrade_error">Ha ocurrido un error al procesar tu suscripción. Por favor, inténtalo de nuevo.</string>
     <string name="premium_loss_aversion_banner_title">Riesgo de Penalización Detectado</string>
     <string name="premium_loss_aversion_banner_message">Tu ritmo de kilometraje actual indica riesgo de sobrecostes por exceso de km al vencimiento. Activa KiloMenos Premium para planificar rutas predictivas y evitar penalizaciones de cientos de euros.</string>
+    <string name="premium_restore_purchases">Restaurar compras</string>
+    <string name="premium_restore_success">¡Suscripción restaurada y ventajas Premium activadas!</string>
+    <string name="premium_restore_empty">No se encontraron suscripciones activas en tu cuenta de Google Play.</string>
+    <string name="premium_restore_error">Ha ocurrido un error al restaurar las compras. Inténtalo más tarde.</string>
 </resources>

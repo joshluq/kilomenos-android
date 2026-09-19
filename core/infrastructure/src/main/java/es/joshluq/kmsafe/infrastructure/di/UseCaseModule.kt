@@ -18,6 +18,10 @@ import es.joshluq.kmsafe.domain.usecase.CheckFeatureAccessUseCase
 import es.joshluq.kmsafe.domain.usecase.CheckFeatureAccessUseCaseImpl
 import es.joshluq.kmsafe.domain.usecase.CheckSessionUseCase
 import es.joshluq.kmsafe.domain.usecase.CheckSessionUseCaseImpl
+import es.joshluq.kmsafe.domain.usecase.VerifyPurchaseUseCase
+import es.joshluq.kmsafe.domain.usecase.VerifyPurchaseUseCaseImpl
+import es.joshluq.kmsafe.domain.usecase.RestorePurchasesUseCase
+import es.joshluq.kmsafe.domain.usecase.RestorePurchasesUseCaseImpl
 import es.joshluq.kmsafe.domain.usecase.ClearLocalDataUseCase
 import es.joshluq.kmsafe.domain.usecase.ClearLocalDataUseCaseImpl
 import es.joshluq.kmsafe.domain.usecase.ClearTrackingUseCase
@@ -372,4 +376,10 @@ abstract class UseCaseModule {
 
     @Binds
     abstract fun bindSetAppOverlayUseCase(impl: SetAppOverlayUseCaseImpl): SetAppOverlayUseCase
+
+    @Binds
+    abstract fun bindVerifyPurchaseUseCase(impl: VerifyPurchaseUseCaseImpl): VerifyPurchaseUseCase
+
+    @Binds
+    abstract fun bindRestorePurchasesUseCase(impl: RestorePurchasesUseCaseImpl): RestorePurchasesUseCase
 }

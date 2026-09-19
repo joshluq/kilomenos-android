@@ -7,6 +7,7 @@ import es.joshluq.kmsafe.domain.model.SubscriptionLevel
 import es.joshluq.kmsafe.domain.model.User
 import es.joshluq.kmsafe.domain.service.BillingService
 import es.joshluq.kmsafe.domain.usecase.MigrateLocalDataToRemoteUseCase
+import es.joshluq.kmsafe.domain.usecase.RestorePurchasesUseCase
 import es.joshluq.kmsafe.domain.usecase.SyncContractsUseCase
 import es.joshluq.kmsafe.domain.usecase.UpdateSubscriptionUseCase
 import io.mockk.every
@@ -37,6 +38,7 @@ class PremiumPaywallViewModelTest {
 
     private val billingService: BillingService = mockk()
     private val updateSubscriptionUseCase: UpdateSubscriptionUseCase = mockk()
+    private val restorePurchasesUseCase: RestorePurchasesUseCase = mockk()
     private val migrateLocalDataUseCase: MigrateLocalDataToRemoteUseCase = mockk()
     private val syncContractsUseCase: SyncContractsUseCase = mockk()
     private val analytics = FakeAnalyticsTracker()
@@ -68,6 +70,7 @@ class PremiumPaywallViewModelTest {
         return PremiumPaywallViewModel(
             billingService = billingService,
             updateSubscriptionUseCase = updateSubscriptionUseCase,
+            restorePurchasesUseCase = restorePurchasesUseCase,
             migrateLocalDataUseCase = migrateLocalDataUseCase,
             syncContractsUseCase = syncContractsUseCase,
             analytics = analytics,
@@ -83,8 +86,10 @@ class PremiumPaywallViewModelTest {
         val state = viewModel.state.value
         assertFalse(state.isLoading)
         assertFalse(state.isMigrating)
+        assertFalse(state.isRestoring)
         assertEquals(PremiumBillingPlan.MONTHLY, state.selectedPlan)
         assertNull(state.error)
+        assertNull(state.message)
     }
 
     @Test
@@ -209,6 +214,78 @@ class PremiumPaywallViewModelTest {
         testScheduler.advanceUntilIdle()
 
         assertFalse(viewModel.state.value.isLoading)
+        assertTrue(viewModel.state.value.error != null)
+    }
+
+    @Test
+    fun `restore purchases success migrates data, syncs, sets message and navigates`() = runTest(testDispatcher) {
+        every { restorePurchasesUseCase(RestorePurchasesUseCase.Input) } returns flowOf(
+            RestorePurchasesUseCase.Output.Progress,
+            RestorePurchasesUseCase.Output.Success(restoredCount = 1)
+        )
+        every { migrateLocalDataUseCase(MigrateLocalDataToRemoteUseCase.Input) } returns flowOf(
+            MigrateLocalDataToRemoteUseCase.Output.Progress,
+            MigrateLocalDataToRemoteUseCase.Output.Success
+        )
+        every { syncContractsUseCase(SyncContractsUseCase.Input) } returns flowOf(
+            SyncContractsUseCase.Output.Progress,
+            SyncContractsUseCase.Output.Success
+        )
+
+        val viewModel = createViewModel()
+        testScheduler.advanceUntilIdle()
+
+        val effects = mutableListOf<Effect>()
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
+            viewModel.effects.collect { effects.add(it) }
+        }
+
+        viewModel.sendEvent(Event.OnRestorePurchasesClicked)
+        testScheduler.advanceUntilIdle()
+
+        assertFalse(viewModel.state.value.isLoading)
+        assertFalse(viewModel.state.value.isRestoring)
+        assertTrue(viewModel.state.value.message != null)
+        assertEquals(listOf(Effect.NavigateToDashboard), effects)
+        assertTrue(analytics.trackedEvents.any { it is KmAnalyticsEvent.Monetization.UpgradeSuccess })
+    }
+
+    @Test
+    fun `restore purchases with no active subscriptions shows empty message`() = runTest(testDispatcher) {
+        every { restorePurchasesUseCase(RestorePurchasesUseCase.Input) } returns flowOf(
+            RestorePurchasesUseCase.Output.Progress,
+            RestorePurchasesUseCase.Output.NoPurchasesFound
+        )
+
+        val viewModel = createViewModel()
+        testScheduler.advanceUntilIdle()
+
+        viewModel.sendEvent(Event.OnRestorePurchasesClicked)
+        testScheduler.advanceUntilIdle()
+
+        assertFalse(viewModel.state.value.isLoading)
+        assertFalse(viewModel.state.value.isRestoring)
+        assertTrue(viewModel.state.value.message != null)
+
+        viewModel.sendEvent(Event.OnDismissMessage)
+        assertNull(viewModel.state.value.message)
+    }
+
+    @Test
+    fun `restore purchases failure shows error`() = runTest(testDispatcher) {
+        every { restorePurchasesUseCase(RestorePurchasesUseCase.Input) } returns flowOf(
+            RestorePurchasesUseCase.Output.Progress,
+            RestorePurchasesUseCase.Output.Failure("Network error")
+        )
+
+        val viewModel = createViewModel()
+        testScheduler.advanceUntilIdle()
+
+        viewModel.sendEvent(Event.OnRestorePurchasesClicked)
+        testScheduler.advanceUntilIdle()
+
+        assertFalse(viewModel.state.value.isLoading)
+        assertFalse(viewModel.state.value.isRestoring)
         assertTrue(viewModel.state.value.error != null)
     }
 }

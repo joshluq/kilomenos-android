@@ -47,4 +47,10 @@
     <string name="premium_upgrade_cancel">Not now</string>
     <string name="premium_upgrade_confirm">Upgrade to Premium</string>
     <string name="premium_upgrade_error">An error occurred while processing your subscription. Please try again.</string>
+    <string name="premium_loss_aversion_banner_title">Penalty Risk Detected</string>
+    <string name="premium_loss_aversion_banner_message">Your current mileage pace indicates a risk of excess mileage fees at contract expiry. Activate KiloMenos Premium to plan predictive routes and avoid hundreds of euros in penalties.</string>
+    <string name="premium_restore_purchases">Restore purchases</string>
+    <string name="premium_restore_success">Subscription restored and Premium benefits activated!</string>
+    <string name="premium_restore_empty">No active subscriptions found in your Google Play account.</string>
+    <string name="premium_restore_error">An error occurred while restoring purchases. Please try again later.</string>
 </resources>

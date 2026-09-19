@@ -10,6 +10,7 @@ import es.joshluq.foundationkit.viewmodel.ScreenViewModel
 import es.joshluq.kmsafe.domain.model.SubscriptionLevel
 import es.joshluq.kmsafe.domain.service.BillingService
 import es.joshluq.kmsafe.domain.usecase.MigrateLocalDataToRemoteUseCase
+import es.joshluq.kmsafe.domain.usecase.RestorePurchasesUseCase
 import es.joshluq.kmsafe.domain.usecase.SyncContractsUseCase
 import es.joshluq.kmsafe.domain.usecase.UpdateSubscriptionUseCase
 import kotlinx.coroutines.flow.launchIn
@@ -21,6 +22,7 @@ import es.joshluq.kmsafe.feature.premium.R
 class PremiumPaywallViewModel @Inject constructor(
     private val billingService: BillingService,
     private val updateSubscriptionUseCase: UpdateSubscriptionUseCase,
+    private val restorePurchasesUseCase: RestorePurchasesUseCase,
     private val migrateLocalDataUseCase: MigrateLocalDataToRemoteUseCase,
     private val syncContractsUseCase: SyncContractsUseCase,
     private val analytics: AnalyticsTracker,
@@ -53,12 +55,17 @@ class PremiumPaywallViewModel @Inject constructor(
                 )
                 launchEffect(Effect.LaunchBillingFlow)
             }
+            Event.OnRestorePurchasesClicked -> {
+                logger.d("PremiumPaywallViewModel", "Restore purchases clicked")
+                handleRestorePurchases()
+            }
             Event.OnDismissClicked -> {
                 logger.d("PremiumPaywallViewModel", "Dismiss clicked")
                 analytics.track(KmAnalyticsEvent.Monetization.PaywallDismissed)
                 launchEffect(Effect.NavigateBack)
             }
             Event.OnDismissError -> updateState { copy(error = null) }
+            Event.OnDismissMessage -> updateState { copy(message = null) }
         }
     }
 
@@ -105,6 +112,48 @@ class PremiumPaywallViewModel @Inject constructor(
             }.launchIn(viewModelScope)
     }
 
+    private fun handleRestorePurchases() {
+        restorePurchasesUseCase(RestorePurchasesUseCase.Input)
+            .onEach { output ->
+                when (output) {
+                    RestorePurchasesUseCase.Output.Progress -> {
+                        updateState { copy(isLoading = true, isRestoring = true, error = null, message = null) }
+                    }
+                    is RestorePurchasesUseCase.Output.Success -> {
+                        logger.i("PremiumPaywallViewModel", "Purchases restored successfully: ${output.restoredCount}")
+                        analytics.track(KmAnalyticsEvent.Monetization.UpgradeSuccess(plan = state.value.selectedPlan.name))
+                        updateState {
+                            copy(
+                                message = TextProvider.Resource(R.string.premium_restore_success),
+                                isRestoring = false
+                            )
+                        }
+                        startDataMigration()
+                    }
+                    RestorePurchasesUseCase.Output.NoPurchasesFound -> {
+                        logger.i("PremiumPaywallViewModel", "No active purchases found to restore")
+                        updateState {
+                            copy(
+                                isLoading = false,
+                                isRestoring = false,
+                                message = TextProvider.Resource(R.string.premium_restore_empty)
+                            )
+                        }
+                    }
+                    is RestorePurchasesUseCase.Output.Failure -> {
+                        logger.e("PremiumPaywallViewModel", "Restore failed: ${output.message}")
+                        updateState {
+                            copy(
+                                isLoading = false,
+                                isRestoring = false,
+                                error = TextProvider.Resource(R.string.premium_restore_error)
+                            )
+                        }
+                    }
+                }
+            }.launchIn(viewModelScope)
+    }
+
     private fun startDataMigration() {
         migrateLocalDataUseCase(MigrateLocalDataToRemoteUseCase.Input)
             .onEach { output ->
@@ -135,7 +184,7 @@ class PremiumPaywallViewModel @Inject constructor(
                 when (output) {
                     SyncContractsUseCase.Output.Progress -> updateState { copy(isLoading = true, isMigrating = false) }
                     else -> {
-                        updateState { copy(isLoading = false) }
+                        updateState { copy(isLoading = false, isRestoring = false) }
                         launchEffect(Effect.NavigateToDashboard)
                     }
                 }

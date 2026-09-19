@@ -28,6 +28,8 @@ import es.joshluq.kmsafe.domain.repository.TrackingRepository
 import es.joshluq.kmsafe.infrastructure.repository.AppOverlayRepositoryImpl
 import es.joshluq.kmsafe.infrastructure.repository.BluetoothRepositoryImpl
 import es.joshluq.kmsafe.infrastructure.repository.ReceiptRepositoryImpl
+import es.joshluq.kmsafe.infrastructure.repository.BillingRepositoryImpl
+import es.joshluq.kmsafe.domain.repository.BillingRepository
 import javax.inject.Singleton
 
 /**
@@ -137,4 +139,10 @@ abstract class RepositoryModule {
     abstract fun bindAppOverlayRepository(
         repository: AppOverlayRepositoryImpl
     ): AppOverlayRepository
+
+    @Singleton
+    @Binds
+    abstract fun bindBillingRepository(
+        repository: BillingRepositoryImpl
+    ): BillingRepository
 }
