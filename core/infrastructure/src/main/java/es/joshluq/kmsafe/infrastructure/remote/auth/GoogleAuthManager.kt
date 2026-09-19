@@ -1,11 +1,13 @@
 package es.joshluq.kmsafe.infrastructure.remote.auth
 
 import android.content.Context
+import androidx.credentials.ClearCredentialStateRequest
 import androidx.credentials.CredentialManager
 import androidx.credentials.GetCredentialRequest
 import androidx.credentials.GetCredentialResponse
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
+import dagger.hilt.android.qualifiers.ApplicationContext
 import es.joshluq.foundationkit.log.LoggerKit
 import es.joshluq.kmsafe.domain.service.SocialAuthService
 import es.joshluq.kmsafe.infrastructure.InfrastructureConfig
@@ -17,6 +19,7 @@ import javax.inject.Singleton
  */
 @Singleton
 class GoogleAuthManager @Inject constructor(
+    @ApplicationContext private val context: Context,
     private val config: InfrastructureConfig,
     private val logger: LoggerKit
 ) : SocialAuthService {
@@ -30,7 +33,7 @@ class GoogleAuthManager @Inject constructor(
         val googleIdOption = GetGoogleIdOption.Builder()
             .setFilterByAuthorizedAccounts(false)
             .setServerClientId(config.googleWebClientId)
-            .setAutoSelectEnabled(true)
+            .setAutoSelectEnabled(false)
             .build()
 
         val request = GetCredentialRequest.Builder()
@@ -46,6 +49,19 @@ class GoogleAuthManager @Inject constructor(
         } catch (e: Exception) {
             logger.e("GoogleAuthManager", "Sign-in failed", e)
             null
+        }
+    }
+
+    /**
+     * Clears the credential state in CredentialManager upon sign out.
+     */
+    override suspend fun signOut() {
+        try {
+            val credentialManager = CredentialManager.create(context)
+            credentialManager.clearCredentialState(ClearCredentialStateRequest())
+            logger.i("GoogleAuthManager", "Credential state cleared successfully")
+        } catch (e: Exception) {
+            logger.e("GoogleAuthManager", "Failed to clear credential state", e)
         }
     }
 

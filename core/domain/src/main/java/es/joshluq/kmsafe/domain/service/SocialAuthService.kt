@@ -11,4 +11,9 @@ interface SocialAuthService {
      * @return The ID Token if successful, null otherwise.
      */
     suspend fun signIn(context: Any): String?
+
+    /**
+     * Clears the credential state for social sign-in providers.
+     */
+    suspend fun signOut(): Unit = Unit
 }

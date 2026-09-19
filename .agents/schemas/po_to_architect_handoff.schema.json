@@ -1,0 +1,131 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "POToArchitectHandoff",
+  "description": "Standardized transition payload from Product Owner to Software Architect",
+  "type": "object",
+  "required": [
+    "handoff_id",
+    "schema_version",
+    "timestamp",
+    "sender",
+    "recipient",
+    "feature_id",
+    "feature_title",
+    "prd_path",
+    "user_stories",
+    "functional_requirements",
+    "acceptance_criteria",
+    "non_functional_requirements"
+  ],
+  "properties": {
+    "handoff_id": {
+      "type": "string",
+      "pattern": "^HANDOFF-PO-ARCH-[A-Za-z0-9_-]+$"
+    },
+    "schema_version": {
+      "type": "string",
+      "enum": ["1.0.0"]
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "sender": {
+      "type": "object",
+      "required": ["role", "agent_id"],
+      "properties": {
+        "role": { "type": "string", "const": "Product Owner" },
+        "agent_id": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "recipient": {
+      "type": "object",
+      "required": ["role", "agent_id"],
+      "properties": {
+        "role": { "type": "string", "const": "Software Architect" },
+        "agent_id": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "feature_id": {
+      "type": "string",
+      "pattern": "^FEAT-[0-9]{3,}$"
+    },
+    "feature_title": {
+      "type": "string",
+      "minLength": 3
+    },
+    "prd_path": {
+      "type": "string",
+      "pattern": "^.*\\.md$"
+    },
+    "user_stories": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["story_id", "role", "want", "so_that"],
+        "properties": {
+          "story_id": { "type": "string", "pattern": "^US-[0-9]{2,}$" },
+          "role": { "type": "string" },
+          "want": { "type": "string" },
+          "so_that": { "type": "string" }
+        },
+        "additionalProperties": false
+      }
+    },
+    "functional_requirements": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["fr_id", "title", "statement"],
+        "properties": {
+          "fr_id": {
+            "type": "string",
+            "pattern": "^FR-[0-9]{2,}$"
+          },
+          "title": {
+            "type": "string",
+            "minLength": 3
+          },
+          "statement": {
+            "type": "string",
+            "minLength": 5
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "acceptance_criteria": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["ac_id", "scenario", "given", "when", "then"],
+        "properties": {
+          "ac_id": { "type": "string", "pattern": "^AC-[0-9]{2,}$" },
+          "scenario": { "type": "string" },
+          "given": { "type": "string" },
+          "when": { "type": "string" },
+          "then": { "type": "string" }
+        },
+        "additionalProperties": false
+      }
+    },
+    "non_functional_requirements": {
+      "type": "object",
+      "required": ["min_sdk", "target_sdk", "offline_supported", "accessibility_required"],
+      "properties": {
+        "min_sdk": { "type": "integer", "minimum": 24 },
+        "target_sdk": { "type": "integer", "minimum": 34 },
+        "offline_supported": { "type": "boolean" },
+        "accessibility_required": { "type": "boolean" },
+        "performance_budget_ms": { "type": "integer", "default": 16 }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

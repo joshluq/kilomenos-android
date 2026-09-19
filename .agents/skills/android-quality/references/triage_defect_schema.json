@@ -1,0 +1,47 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "TriageDefectTicket",
+  "description": "Schema for structured defects emitted by triage and quality gate scripts",
+  "type": "object",
+  "required": [
+    "crash_detected",
+    "defect_type",
+    "target_role_for_remediation"
+  ],
+  "properties": {
+    "crash_detected": {
+      "type": "boolean"
+    },
+    "anr_detected": {
+      "type": "boolean"
+    },
+    "exception_class": {
+      "type": ["string", "null"]
+    },
+    "message": {
+      "type": ["string", "null"]
+    },
+    "crashing_thread": {
+      "type": ["string", "null"]
+    },
+    "culprit_file": {
+      "type": ["string", "null"]
+    },
+    "culprit_line": {
+      "type": ["integer", "null"]
+    },
+    "stacktrace": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "target_role_for_remediation": {
+      "type": "string",
+      "enum": ["Senior Android Developer", "Software Architect", "Product Owner", "None"]
+    },
+    "defect_type": {
+      "type": "string",
+      "enum": ["IMPLEMENTATION_BUG", "DESIGN_FLAW", "REQUIREMENT_AMBIGUITY", "NONE"]
+    }
+  },
+  "additionalProperties": false
+}

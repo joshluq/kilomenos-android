@@ -28,6 +28,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import es.joshluq.kmsafe.core.analytics.AnalyticsTracker
+import es.joshluq.kmsafe.domain.service.SocialAuthService
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
@@ -44,7 +45,8 @@ class AuthRepositoryImpl @Inject constructor(
     private val errorMapper: ErrorMapper,
     private val logger: LoggerKit,
     private val dispatchers: DispatcherProvider,
-    private val analyticsTracker: AnalyticsTracker
+    private val analyticsTracker: AnalyticsTracker,
+    private val socialAuthService: SocialAuthService
 ) : AuthRepository {
 
     override fun signIn(email: String, password: String): Flow<User> = flow {
@@ -259,6 +261,11 @@ class AuthRepositoryImpl @Inject constructor(
         logger.i("AuthRepository", "Ending session. clearLocalData: $clearLocalData")
         analyticsTracker.setUserProperty("subscription_level", null)
         sessionDataSource.endSession()
+        try {
+            socialAuthService.signOut()
+        } catch (e: Exception) {
+            logger.e("AuthRepository", "Failed to clear social auth state", e)
+        }
         if (clearLocalData) {
             appDatabase.clearAllTables()
             preferencesDataSource.clearAllPreferences()
@@ -272,6 +279,11 @@ class AuthRepositoryImpl @Inject constructor(
         if (response.isSuccessful) {
             logger.i("AuthRepository", "Account deleted from server successfully")
             sessionDataSource.endSession()
+            try {
+                socialAuthService.signOut()
+            } catch (e: Exception) {
+                logger.e("AuthRepository", "Failed to clear social auth state", e)
+            }
             appDatabase.clearAllTables()
             preferencesDataSource.clearAllPreferences()
             analyticsTracker.setUserProperty("subscription_level", null)

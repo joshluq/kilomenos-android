@@ -1,0 +1,154 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "DevToQAHandoff",
+  "description": "Standardized transition payload from Senior Android Developer to QA/Testing Engineer",
+  "type": "object",
+  "required": [
+    "handoff_id",
+    "schema_version",
+    "timestamp",
+    "sender",
+    "recipient",
+    "feature_id",
+    "architect_handoff_ref",
+    "remediation_cycle",
+    "implementation_manifest",
+    "code_changes",
+    "developer_test_summary",
+    "lint_and_sanity"
+  ],
+  "properties": {
+    "handoff_id": {
+      "type": "string",
+      "pattern": "^HANDOFF-DEV-QA-[A-Za-z0-9_-]+$"
+    },
+    "schema_version": {
+      "type": "string",
+      "enum": ["1.0.0"]
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "sender": {
+      "type": "object",
+      "required": ["role", "agent_id"],
+      "properties": {
+        "role": { "type": "string", "const": "Senior Android Developer" },
+        "agent_id": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "recipient": {
+      "type": "object",
+      "required": ["role", "agent_id"],
+      "properties": {
+        "role": { "type": "string", "const": "QA/Testing Engineer" },
+        "agent_id": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "feature_id": {
+      "type": "string",
+      "pattern": "^FEAT-[0-9]{3,}$"
+    },
+    "architect_handoff_ref": {
+      "type": "string",
+      "pattern": "^HANDOFF-ARCH-DEV-[A-Za-z0-9_-]+$"
+    },
+    "remediation_cycle": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 3,
+      "default": 0
+    },
+    "implementation_manifest": {
+      "type": "object",
+      "required": ["module", "entry_point_composable", "viewmodel_class"],
+      "properties": {
+        "module": { "type": "string" },
+        "entry_point_composable": { "type": "string" },
+        "viewmodel_class": { "type": "string" },
+        "repository_class": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "code_changes": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["file_path", "action", "language", "line_count"],
+        "properties": {
+          "file_path": { "type": "string" },
+          "action": {
+            "type": "string",
+            "enum": ["CREATED", "MODIFIED", "DELETED"]
+          },
+          "language": {
+            "type": "string",
+            "enum": ["kotlin", "gradle", "xml"]
+          },
+          "line_count": {
+            "type": "integer",
+            "minimum": 1
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "developer_test_summary": {
+      "type": "object",
+      "required": [
+        "unit_tests_run",
+        "unit_tests_passed",
+        "unit_tests_failed",
+        "test_frameworks_used",
+        "test_files"
+      ],
+      "properties": {
+        "unit_tests_run": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "unit_tests_passed": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "unit_tests_failed": {
+          "type": "integer",
+          "const": 0
+        },
+        "test_frameworks_used": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "test_files": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      },
+      "additionalProperties": false
+    },
+    "lint_and_sanity": {
+      "type": "object",
+      "required": ["compilation_clean", "ktlint_clean", "detekt_clean"],
+      "properties": {
+        "compilation_clean": {
+          "type": "boolean",
+          "const": true
+        },
+        "ktlint_clean": {
+          "type": "boolean",
+          "const": true
+        },
+        "detekt_clean": {
+          "type": "boolean",
+          "const": true
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}
