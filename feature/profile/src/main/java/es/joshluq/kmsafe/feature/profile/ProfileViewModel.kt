@@ -44,7 +44,8 @@ class ProfileViewModel @Inject constructor(
         updateState { 
             copy(
                 termsUrl = profileConfig.getTermsUrl(),
-                privacyUrl = profileConfig.getPrivacyUrl()
+                privacyUrl = profileConfig.getPrivacyUrl(),
+                appVersion = profileConfig.getAppVersion()
             )
         }
     }

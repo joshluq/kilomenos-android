@@ -1,3 +1,4 @@
+@file:Suppress("UnstableApiUsage")
 import com.android.build.api.dsl.ApplicationExtension
 import java.util.Properties
 
@@ -37,6 +38,22 @@ configure<ApplicationExtension> {
         testInstrumentationRunner = "es.joshluq.kmsafe.HiltTestRunner"
     }
 
+    androidResources {
+        localeFilters += setOf("es", "en")
+    }
+
+    bundle {
+        language {
+            enableSplit = true
+        }
+        density {
+            enableSplit = true
+        }
+        abi {
+            enableSplit = true
+        }
+    }
+
     buildFeatures {
         buildConfig = true
     }
@@ -59,6 +76,10 @@ configure<ApplicationExtension> {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            ndk {
+                debugSymbolLevel = "SYMBOL_TABLE"
+                abiFilters += setOf("arm64-v8a", "armeabi-v7a")
+            }
         }
     }
 

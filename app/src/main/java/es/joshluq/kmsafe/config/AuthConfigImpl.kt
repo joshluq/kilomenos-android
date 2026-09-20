@@ -7,4 +7,5 @@ import javax.inject.Inject
 class AuthConfigImpl @Inject constructor() : AuthConfig {
     override fun getTermsUrl(): String = BuildConfig.TERMS_URL
     override fun getPrivacyUrl(): String = BuildConfig.PRIVACY_URL
+    override fun getAppVersion(): String = "${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})"
 }

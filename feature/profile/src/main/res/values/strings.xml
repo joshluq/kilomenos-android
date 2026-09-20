@@ -21,6 +21,7 @@
     <string name="profile_privacy_section">PRIVACIDAD Y DATOS</string>
     <string name="profile_privacy_policy">Política de privacidad</string>
     <string name="profile_terms_conditions">Términos y condiciones</string>
+    <string name="profile_app_version">Versión %1$s</string>
     <string name="profile_delete_account">Eliminar mi cuenta</string>
     <string name="profile_delete_account_confirmation_title">¿Eliminar cuenta permanentemente?</string>
     <string name="profile_delete_account_confirmation_message">Esta acción no se puede deshacer. Se borrarán todos tus vehículos, registros de kilometraje y datos de perfil tanto de este dispositivo como de la nube.</string>

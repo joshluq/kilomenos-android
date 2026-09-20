@@ -22,6 +22,7 @@ data class State(
     val pendingUser: User? = null,
     val termsUrl: String = "",
     val privacyUrl: String = "",
+    val appVersion: String = "",
     val error: TextProvider? = null
 ) : UiState {
 

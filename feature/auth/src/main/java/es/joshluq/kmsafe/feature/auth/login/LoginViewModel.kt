@@ -62,7 +62,8 @@ class LoginViewModel @Inject constructor(
         updateState { 
             copy(
                 termsUrl = authConfig.getTermsUrl(),
-                privacyUrl = authConfig.getPrivacyUrl()
+                privacyUrl = authConfig.getPrivacyUrl(),
+                appVersion = authConfig.getAppVersion()
             )
         }
     }

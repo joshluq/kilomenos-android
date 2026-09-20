@@ -65,6 +65,7 @@ class ProfileViewModelTest {
 
         every { profileConfig.getTermsUrl() } returns "https://example.com/terms"
         every { profileConfig.getPrivacyUrl() } returns "https://example.com/privacy"
+        every { profileConfig.getAppVersion() } returns "0.1.4 (6)"
         every { getCurrentUserUseCase(any()) } returns flowOf(GetCurrentUserUseCase.Output.Success(sampleUser))
         every { getEntitlementsUseCase(any()) } returns flowOf(GetEntitlementsUseCase.Output.Success(sampleEntitlements))
         every { setAppOverlayUseCase(any()) } returns flowOf(SetAppOverlayUseCase.Output.Success)
@@ -98,6 +99,7 @@ class ProfileViewModelTest {
         assertEquals(sampleEntitlements, state.entitlements)
         assertEquals("https://example.com/terms", state.termsUrl)
         assertEquals("https://example.com/privacy", state.privacyUrl)
+        assertEquals("0.1.4 (6)", state.appVersion)
     }
 
     @Test

@@ -36,6 +36,7 @@ import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -181,6 +182,19 @@ fun ProfileScreen(
                     variant = CanvasKitButtonVariant.Secondary,
                     modifier = Modifier.fillMaxWidth()
                 )
+
+                if (state.appVersion.isNotEmpty()) {
+                    Spacer(modifier = Modifier.height(CanvasKitTheme.spacing.md))
+                    Text(
+                        text = stringResource(R.string.profile_app_version, state.appVersion),
+                        style = CanvasKitTheme.typography.labelSmall,
+                        color = CanvasKitTheme.colors.textSecondary,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .testTag("profile_app_version")
+                    )
+                }
 
                 Spacer(modifier = Modifier.height(CanvasKitTheme.spacing.xl))
             }

@@ -291,6 +291,19 @@ fun LoginScreen(
                         onPrivacyClick = { uriHandler.openUri(state.privacyUrl) }
                     )
 
+                    if (state.appVersion.isNotEmpty()) {
+                        Spacer(modifier = Modifier.height(CanvasKitTheme.spacing.xs))
+                        Text(
+                            text = stringResource(R.string.login_app_version, state.appVersion),
+                            style = CanvasKitTheme.typography.labelSmall,
+                            color = CanvasKitTheme.colors.textSecondary,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .testTag("login_app_version")
+                        )
+                    }
+
                     Spacer(modifier = Modifier.height(24.dp))
                 }
             }

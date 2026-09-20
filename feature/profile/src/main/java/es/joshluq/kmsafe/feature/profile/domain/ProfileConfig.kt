@@ -9,4 +9,7 @@ interface ProfileConfig {
 
     /** Returns the URL for the Privacy Policy. */
     fun getPrivacyUrl(): String
+
+    /** Returns the application version name and code. */
+    fun getAppVersion(): String
 }

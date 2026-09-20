@@ -15,6 +15,7 @@
     <string name="login_conflict_message">Este dispositivo contiene datos de otro conductor. Para iniciar tu sesión, es necesario eliminar la información anterior.</string>
     <string name="login_conflict_confirm">Borrar y continuar</string>
     <string name="login_privacy_agreement">Al acceder, confirmas que has leído nuestros %1$s y %2$s.</string>
+    <string name="login_app_version">Versión %1$s</string>
 
     <!-- Signup -->
     <string name="signup_title">Registro de Conductor</string>

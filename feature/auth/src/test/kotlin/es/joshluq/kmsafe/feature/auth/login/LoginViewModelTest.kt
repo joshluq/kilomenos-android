@@ -66,6 +66,7 @@ class LoginViewModelTest {
         Dispatchers.setMain(testDispatcher)
         every { authConfig.getTermsUrl() } returns "https://example.com/terms"
         every { authConfig.getPrivacyUrl() } returns "https://example.com/privacy"
+        every { authConfig.getAppVersion() } returns "0.1.4 (6)"
         coEvery { fingerprintProvider.getFingerprint() } returns "test_fp"
         coEvery { validateCredentialsUseCase(any()) } returns Result.success(
             ValidateCredentialsUseCase.Output(isEmailValid = true, isPasswordValid = true, canLogin = true)
@@ -102,6 +103,17 @@ class LoginViewModelTest {
             analytics = analytics,
             logger = logger
         )
+    }
+
+    @Test
+    fun `init loads auth config including terms, privacy, and appVersion`() = runTest(testDispatcher) {
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        val state = viewModel.state.value
+        assertEquals("https://example.com/terms", state.termsUrl)
+        assertEquals("https://example.com/privacy", state.privacyUrl)
+        assertEquals("0.1.4 (6)", state.appVersion)
     }
 
     @Test
