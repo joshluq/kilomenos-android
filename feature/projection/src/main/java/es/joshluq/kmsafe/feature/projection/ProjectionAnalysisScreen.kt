@@ -132,6 +132,7 @@ fun ProjectionAnalysisScreen(
                 PaceSimulatorCard(
                     realDailyAverage = state.realDailyAverage,
                     simulatedDailyKm = state.simulatedDailyKm,
+                    paceMultiplier = state.paceMultiplier,
                     isOverLimit = state.isOverLimit,
                     onKmChanged = { onEvent(Event.OnSimulatedKmChanged(it)) },
                     onPresetSelected = { onEvent(Event.OnPacePresetSelected(it)) }

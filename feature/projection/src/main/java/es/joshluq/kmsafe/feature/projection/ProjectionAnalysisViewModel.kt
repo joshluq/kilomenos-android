@@ -145,7 +145,7 @@ class ProjectionAnalysisViewModel @Inject constructor(
 
     private fun handleSimulatedKmChanged(newValue: Float) {
         val basePace = state.value.realDailyAverage
-        val multiplier = if (basePace > 0f) newValue / basePace else 1.0f
+        val multiplier = if (basePace > 0f) newValue / basePace else if (newValue == 0f) 1.0f else 0f
         updateState {
             copy(
                 simulatedDailyKm = newValue,

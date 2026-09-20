@@ -74,7 +74,7 @@
     <string name="dashboard_item_home">Home</string>
     <string name="dashboard_item_history">History</string>
     <string name="dashboard_item_expenses">Expenses</string>
-    <string name="dashboard_item_projection">Projections</string>
+    <string name="dashboard_item_projection">Projection</string>
     <string name="dashboard_item_profile">Profile</string>
 
     <!-- Fuel Types -->

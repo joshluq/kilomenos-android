@@ -33,6 +33,25 @@ import es.joshluq.kmsafe.core.ui.util.NumberFormatter
 import es.joshluq.kmsafe.feature.projection.R
 
 /**
+ * Preset pace multipliers for simulation.
+ */
+enum class PacePreset(val multiplier: Float) {
+    MINUS_20(0.8f),
+    MINUS_10(0.9f),
+    NORMAL(1.0f),
+    PLUS_10(1.1f),
+    PLUS_20(1.2f);
+
+    fun isSelected(paceMultiplier: Float): Boolean {
+        return kotlin.math.abs(paceMultiplier - multiplier) < TOLERANCE
+    }
+
+    companion object {
+        const val TOLERANCE = 0.02f
+    }
+}
+
+/**
  * Layer 3A: Pace Simulator Card.
  * Enables 1-Tap pace presets (-20%, -10%, Normal, +10%, +20%) and fine slider adjustment.
  */
@@ -40,6 +59,7 @@ import es.joshluq.kmsafe.feature.projection.R
 fun PaceSimulatorCard(
     realDailyAverage: Float,
     simulatedDailyKm: Float,
+    paceMultiplier: Float = 1.0f,
     isOverLimit: Boolean,
     onKmChanged: (Float) -> Unit,
     onPresetSelected: (Float) -> Unit,
@@ -71,32 +91,32 @@ fun PaceSimulatorCard(
             ) {
                 PresetChip(
                     label = stringResource(R.string.projection_sandbox_preset_minus_20),
-                    isSelected = (simulatedDailyKm - (realDailyAverage * 0.8f)).let { kotlin.math.abs(it) < 0.5f },
-                    onClick = { onPresetSelected(0.8f) },
+                    isSelected = PacePreset.MINUS_20.isSelected(paceMultiplier),
+                    onClick = { onPresetSelected(PacePreset.MINUS_20.multiplier) },
                     modifier = Modifier.weight(1f)
                 )
                 PresetChip(
                     label = stringResource(R.string.projection_sandbox_preset_minus_10),
-                    isSelected = (simulatedDailyKm - (realDailyAverage * 0.9f)).let { kotlin.math.abs(it) < 0.5f },
-                    onClick = { onPresetSelected(0.9f) },
+                    isSelected = PacePreset.MINUS_10.isSelected(paceMultiplier),
+                    onClick = { onPresetSelected(PacePreset.MINUS_10.multiplier) },
                     modifier = Modifier.weight(1f)
                 )
                 PresetChip(
                     label = stringResource(R.string.projection_sandbox_preset_normal),
-                    isSelected = (simulatedDailyKm - realDailyAverage).let { kotlin.math.abs(it) < 0.5f },
-                    onClick = { onPresetSelected(1.0f) },
+                    isSelected = PacePreset.NORMAL.isSelected(paceMultiplier),
+                    onClick = { onPresetSelected(PacePreset.NORMAL.multiplier) },
                     modifier = Modifier.weight(1f)
                 )
                 PresetChip(
                     label = stringResource(R.string.projection_sandbox_preset_plus_10),
-                    isSelected = (simulatedDailyKm - (realDailyAverage * 1.1f)).let { kotlin.math.abs(it) < 0.5f },
-                    onClick = { onPresetSelected(1.1f) },
+                    isSelected = PacePreset.PLUS_10.isSelected(paceMultiplier),
+                    onClick = { onPresetSelected(PacePreset.PLUS_10.multiplier) },
                     modifier = Modifier.weight(1f)
                 )
                 PresetChip(
                     label = stringResource(R.string.projection_sandbox_preset_plus_20),
-                    isSelected = (simulatedDailyKm - (realDailyAverage * 1.2f)).let { kotlin.math.abs(it) < 0.5f },
-                    onClick = { onPresetSelected(1.2f) },
+                    isSelected = PacePreset.PLUS_20.isSelected(paceMultiplier),
+                    onClick = { onPresetSelected(PacePreset.PLUS_20.multiplier) },
                     modifier = Modifier.weight(1f)
                 )
             }
