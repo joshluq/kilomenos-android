@@ -57,13 +57,13 @@ enum class PacePreset(val multiplier: Float) {
  */
 @Composable
 fun PaceSimulatorCard(
+    modifier: Modifier = Modifier,
     realDailyAverage: Float,
     simulatedDailyKm: Float,
     paceMultiplier: Float = 1.0f,
     isOverLimit: Boolean,
     onKmChanged: (Float) -> Unit,
-    onPresetSelected: (Float) -> Unit,
-    modifier: Modifier = Modifier
+    onPresetSelected: (Float) -> Unit
 ) {
     var localSliderValue by remember(simulatedDailyKm) { mutableFloatStateOf(simulatedDailyKm) }
 

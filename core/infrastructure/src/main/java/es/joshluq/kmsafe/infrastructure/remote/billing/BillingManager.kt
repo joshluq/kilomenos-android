@@ -32,6 +32,7 @@ import kotlinx.coroutines.withTimeoutOrNull
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.coroutines.resume
+import kotlin.time.Duration.Companion.milliseconds
 
 /**
  * Manages Google Play Billing operations for subscriptions and coordinates
@@ -139,7 +140,7 @@ class BillingManager @Inject constructor(
             logger.i("BillingManager", "DEBUG MODE: Simulating purchase success")
             scope.launch {
                 _purchaseProcessingFlow.emit(true)
-                delay(300)
+                delay(300.milliseconds)
                 _purchaseSuccessFlow.emit("simulated_order_id")
             }
             return
@@ -189,23 +190,30 @@ class BillingManager @Inject constructor(
     }
 
     override fun onPurchasesUpdated(billingResult: BillingResult, purchases: List<Purchase>?) {
-        if (billingResult.responseCode == BillingClient.BillingResponseCode.OK && purchases != null) {
-            val hasPurchased = purchases.any { it.purchaseState == Purchase.PurchaseState.PURCHASED }
-            if (hasPurchased) {
-                logger.i("BillingManager", "Returning from Google Play with PURCHASED state. Emitting purchaseProcessing = true.")
-                scope.launch { _purchaseProcessingFlow.emit(true) }
+        when (billingResult.responseCode) {
+            BillingClient.BillingResponseCode.OK if purchases != null -> {
+                val hasPurchased = purchases.any { it.purchaseState == Purchase.PurchaseState.PURCHASED }
+                if (hasPurchased) {
+                    logger.i(
+                        "BillingManager",
+                        "Returning from Google Play with PURCHASED state. Emitting purchaseProcessing = true."
+                    )
+                    scope.launch { _purchaseProcessingFlow.emit(true) }
+                }
+                for (purchase in purchases) {
+                    handlePurchase(purchase)
+                }
             }
-            for (purchase in purchases) {
-                handlePurchase(purchase)
+            BillingClient.BillingResponseCode.USER_CANCELED -> {
+                logger.w("BillingManager", "User canceled the purchase")
+                scope.launch { _purchaseProcessingFlow.emit(false) }
             }
-        } else if (billingResult.responseCode == BillingClient.BillingResponseCode.USER_CANCELED) {
-            logger.w("BillingManager", "User canceled the purchase")
-            scope.launch { _purchaseProcessingFlow.emit(false) }
-        } else {
-            logger.e("BillingManager", "Error in purchase update: ${billingResult.debugMessage}")
-            scope.launch {
-                _purchaseProcessingFlow.emit(false)
-                _errorFlow.emit(billingResult.debugMessage)
+            else -> {
+                logger.e("BillingManager", "Error in purchase update: ${billingResult.debugMessage}")
+                scope.launch {
+                    _purchaseProcessingFlow.emit(false)
+                    _errorFlow.emit(billingResult.debugMessage)
+                }
             }
         }
     }
@@ -221,7 +229,7 @@ class BillingManager @Inject constructor(
             scope.launch(Dispatchers.IO) {
                 try {
                     logger.i("BillingManager", "Sending purchase token to backend verification endpoint")
-                    val response = withTimeoutOrNull(15_000L) {
+                    val response = withTimeoutOrNull(15_000.milliseconds) {
                         apiService.verifyPurchase(request)
                     }
                     if (response == null) {
@@ -232,7 +240,7 @@ class BillingManager @Inject constructor(
                     }
                     if (response.isSuccessful && response.body()?.success == true) {
                         logger.i("BillingManager", "Purchase successfully verified with backend")
-                        withTimeoutOrNull(10_000L) {
+                        withTimeoutOrNull(10_000.milliseconds) {
                             entitlementsRepository.getEntitlements(deviceFingerprint = "", forceRefresh = true).firstOrNull()
                         }
                         val token = purchase.orderId ?: purchase.purchaseToken
