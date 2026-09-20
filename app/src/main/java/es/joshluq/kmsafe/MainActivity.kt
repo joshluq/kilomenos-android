@@ -51,26 +51,10 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen()
         super.onCreate(savedInstanceState)
-
-        consentManager.gatherConsent(this) { canRequestAds ->
-            if (canRequestAds) {
-                consentManager.initializeAds(this)
+        runCatching { enableEdgeToEdge() }
+            .onFailure { error ->
+                logger.e("MainActivity", "Failed to enable edge-to-edge layout: ${error.message}", error)
             }
-        }
-
-        connectivityObserver.observe()
-            .onEach { status ->
-                logger.d("MainActivity", "Network status changed: $status")
-                if (status == NetworkConnectivityObserver.Status.Available) {
-                    // Small delay to ensure the data connection is stable
-                    delay(1000.milliseconds)
-                    logger.d("MainActivity", "Triggering background sync")
-                    syncManager.scheduleSync()
-                }
-            }
-            .launchIn(lifecycleScope)
-
-        enableEdgeToEdge()
 
         val destination = DeepLinkParser.parse(intent)
         if (destination != null) {
@@ -98,6 +82,24 @@ class MainActivity : ComponentActivity() {
                 )
             }
         }
+
+        consentManager.gatherConsent(this) { canRequestAds ->
+            if (canRequestAds) {
+                consentManager.initializeAds(this)
+            }
+        }
+
+        connectivityObserver.observe()
+            .onEach { status ->
+                logger.d("MainActivity", "Network status changed: $status")
+                if (status == NetworkConnectivityObserver.Status.Available) {
+                    // Small delay to ensure the data connection is stable
+                    delay(1000.milliseconds)
+                    logger.d("MainActivity", "Triggering background sync")
+                    syncManager.scheduleSync()
+                }
+            }
+            .launchIn(lifecycleScope)
     }
 
     override fun onNewIntent(intent: Intent) {
