@@ -91,8 +91,6 @@ fun LoginRoute(
     LoginScreen(
         state = state,
         onEvent = viewModel::sendEvent,
-        onNavigateToDashboard = onNavigateToDashboard,
-        onNavigateToPremiumPaywall = onNavigateToPremiumPaywall,
         onNavigateToSignup = onNavigateToSignup
     )
 }
@@ -102,8 +100,6 @@ fun LoginRoute(
 fun LoginScreen(
     state: State,
     onEvent: (Event) -> Unit,
-    onNavigateToDashboard: () -> Unit,
-    onNavigateToPremiumPaywall: () -> Unit,
     onNavigateToSignup: () -> Unit
 ) {
     val uriHandler = LocalUriHandler.current
@@ -372,8 +368,6 @@ internal fun LoginScreenPreview() {
                 isLoginEnabled = true
             ),
             onEvent = {},
-            onNavigateToDashboard = {},
-            onNavigateToPremiumPaywall = {},
             onNavigateToSignup = {}
         )
     }
