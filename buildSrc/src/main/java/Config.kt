@@ -16,8 +16,8 @@ interface Environment {
 
 object AppConfig : Config {
     override val applicationNamespace: String = "es.joshluq.kmsafe"
-    override val versionCode: Int = 5
-    override val versionName: String = "0.1.3"
+    override val versionCode: Int = 6
+    override val versionName: String = "0.1.4"
 
     object Environments {
         object Development : Environment {
