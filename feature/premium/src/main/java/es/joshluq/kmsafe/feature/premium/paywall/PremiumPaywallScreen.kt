@@ -526,7 +526,6 @@ private fun PlanSelectorSection(
             title = stringResource(R.string.premium_plan_monthly_title),
             price = stringResource(R.string.premium_plan_monthly_price),
             period = stringResource(R.string.premium_plan_monthly_period),
-            badge = stringResource(R.string.premium_plan_monthly_badge),
             enabled = enabled,
             onClick = { onPlanSelected(PremiumBillingPlan.MONTHLY) }
         )
@@ -541,7 +540,6 @@ private fun PlanOptionCard(
     title: String,
     price: String,
     period: String,
-    badge: String,
     enabled: Boolean = true,
     onClick: () -> Unit
 ) {
@@ -589,21 +587,6 @@ private fun PlanOptionCard(
                             fontWeight = FontWeight.Bold,
                             color = CanvasKitTheme.colors.textPrimary
                         )
-
-                        // Highlight Badge
-                        Box(
-                            modifier = Modifier
-                                .clip(CircleShape)
-                                .background(CanvasKitTheme.colors.brandAccent.copy(alpha = 0.15f))
-                                .padding(horizontal = 8.dp, vertical = 2.dp)
-                        ) {
-                            Text(
-                                text = badge,
-                                style = CanvasKitTheme.typography.labelSmall,
-                                color = CanvasKitTheme.colors.brandAccent,
-                                fontWeight = FontWeight.Bold
-                            )
-                        }
                     }
 
                     Spacer(modifier = Modifier.height(2.dp))
