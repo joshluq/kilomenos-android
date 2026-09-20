@@ -30,6 +30,7 @@ data class State(
 
     // UI State
     val showBluetoothPicker: Boolean = false,
+    val showDiscardConfirmDialog: Boolean = false,
     val error: TextProvider? = null,
     val vehicleNameError: TextProvider? = null,
     val durationMonthsError: TextProvider? = null,
@@ -44,6 +45,8 @@ data class State(
 sealed interface Event : UiEvent {
     data object OnBackClicked : Event
     data object OnSaveClicked : Event
+    data object OnDismissDiscardConfirmDialog : Event
+    data object OnConfirmDiscardChanges : Event
 
     // Input Changes
     data class OnVehicleNameChanged(val value: String) : Event

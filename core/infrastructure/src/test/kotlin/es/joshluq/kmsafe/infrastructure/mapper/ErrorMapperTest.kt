@@ -69,7 +69,7 @@ class ErrorMapperTest {
             {
               "success": false,
               "error": "PREMIUM_FEATURE_REQUIRED",
-              "message": "El escaneo de tickets mediante IA es una funcionalidad exclusiva de KmSafe Premium."
+              "message": "El escaneo de tickets mediante IA es una funcionalidad exclusiva de KiloMenos Premium."
             }
         """.trimIndent()
         val response = Response.error<Any>(403, json.toResponseBody())

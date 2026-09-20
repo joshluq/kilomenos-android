@@ -127,4 +127,12 @@
     <string name="welcome_discovery_action_start">Configurar mi vehículo ahora</string>
     <string name="welcome_discovery_action_understood">Entendido</string>
     <string name="welcome_discovery_action_skip">Omitir guía</string>
+
+    <!-- Edit Vehicle / Contract -->
+    <string name="edit_contract_title">Editar Vehículo</string>
+    <string name="edit_contract_save_action">Guardar</string>
+    <string name="edit_contract_discard_title">¿Descartar cambios?</string>
+    <string name="edit_contract_discard_message">Tienes cambios sin guardar en este vehículo. Si sales ahora, se perderán todas las modificaciones.</string>
+    <string name="edit_contract_discard_confirm">Descartar</string>
+    <string name="edit_contract_discard_cancel">Seguir editando</string>
 </resources>

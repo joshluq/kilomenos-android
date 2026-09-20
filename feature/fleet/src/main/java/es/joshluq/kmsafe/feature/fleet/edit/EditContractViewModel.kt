@@ -53,7 +53,20 @@ class EditContractViewModel @AssistedInject constructor(
 
     override fun handleEvent(event: Event) {
         when (event) {
-            Event.OnBackClicked -> launchEffect(Effect.NavigateBack)
+            Event.OnBackClicked -> {
+                if (state.value.isDirty) {
+                    updateState { copy(showDiscardConfirmDialog = true) }
+                } else {
+                    launchEffect(Effect.NavigateBack)
+                }
+            }
+            Event.OnDismissDiscardConfirmDialog -> {
+                updateState { copy(showDiscardConfirmDialog = false) }
+            }
+            Event.OnConfirmDiscardChanges -> {
+                updateState { copy(showDiscardConfirmDialog = false) }
+                launchEffect(Effect.NavigateBack)
+            }
             Event.OnSaveClicked -> handleSave()
 
             is Event.OnVehicleNameChanged -> {

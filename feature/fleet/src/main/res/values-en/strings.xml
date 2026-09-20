@@ -127,4 +127,12 @@
     <string name="welcome_discovery_action_start">Setup my vehicle now</string>
     <string name="welcome_discovery_action_understood">Understood</string>
     <string name="welcome_discovery_action_skip">Skip guide</string>
+
+    <!-- Edit Vehicle / Contract -->
+    <string name="edit_contract_title">Edit Vehicle</string>
+    <string name="edit_contract_save_action">Save</string>
+    <string name="edit_contract_discard_title">Discard changes?</string>
+    <string name="edit_contract_discard_message">You have unsaved changes on this vehicle. If you leave now, all modifications will be lost.</string>
+    <string name="edit_contract_discard_confirm">Discard</string>
+    <string name="edit_contract_discard_cancel">Keep editing</string>
 </resources>

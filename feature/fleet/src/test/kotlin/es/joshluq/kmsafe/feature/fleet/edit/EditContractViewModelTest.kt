@@ -136,17 +136,83 @@ class EditContractViewModelTest {
     }
 
     @Test
-    fun `given back clicked event then emits NavigateBack effect`() = runTest(testDispatcher) {
+    fun `given vehicle is not dirty when back clicked then emits NavigateBack effect`() = runTest(testDispatcher) {
         val effects = mutableListOf<Effect>()
         val viewModel = createViewModel()
         backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
             viewModel.effects.collect { effects.add(it) }
         }
+        advanceUntilIdle()
+
+        assertFalse(viewModel.state.value.isDirty)
+        viewModel.sendEvent(Event.OnBackClicked)
+        advanceUntilIdle()
+
+        assertFalse(viewModel.state.value.showDiscardConfirmDialog)
+        assertEquals(1, effects.size)
+        assertEquals(Effect.NavigateBack, effects.first())
+    }
+
+    @Test
+    fun `given vehicle is dirty when back clicked then shows discard confirmation dialog and does not emit NavigateBack`() = runTest(testDispatcher) {
+        val effects = mutableListOf<Effect>()
+        val viewModel = createViewModel()
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
+            viewModel.effects.collect { effects.add(it) }
+        }
+        advanceUntilIdle()
+
+        viewModel.sendEvent(Event.OnVehicleNameChanged("Seat Leon Modified"))
+        advanceUntilIdle()
+        assertTrue(viewModel.state.value.isDirty)
 
         viewModel.sendEvent(Event.OnBackClicked)
         advanceUntilIdle()
 
+        assertTrue(viewModel.state.value.showDiscardConfirmDialog)
+        assertTrue(effects.isEmpty())
+    }
+
+    @Test
+    fun `given discard dialog shown when confirm discard clicked then emits NavigateBack and hides dialog`() = runTest(testDispatcher) {
+        val effects = mutableListOf<Effect>()
+        val viewModel = createViewModel()
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
+            viewModel.effects.collect { effects.add(it) }
+        }
+        advanceUntilIdle()
+
+        viewModel.sendEvent(Event.OnVehicleNameChanged("Seat Leon Modified"))
+        viewModel.sendEvent(Event.OnBackClicked)
+        advanceUntilIdle()
+        assertTrue(viewModel.state.value.showDiscardConfirmDialog)
+
+        viewModel.sendEvent(Event.OnConfirmDiscardChanges)
+        advanceUntilIdle()
+
+        assertFalse(viewModel.state.value.showDiscardConfirmDialog)
         assertEquals(1, effects.size)
         assertEquals(Effect.NavigateBack, effects.first())
+    }
+
+    @Test
+    fun `given discard dialog shown when dismissed then hides dialog and does not emit NavigateBack`() = runTest(testDispatcher) {
+        val effects = mutableListOf<Effect>()
+        val viewModel = createViewModel()
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
+            viewModel.effects.collect { effects.add(it) }
+        }
+        advanceUntilIdle()
+
+        viewModel.sendEvent(Event.OnVehicleNameChanged("Seat Leon Modified"))
+        viewModel.sendEvent(Event.OnBackClicked)
+        advanceUntilIdle()
+        assertTrue(viewModel.state.value.showDiscardConfirmDialog)
+
+        viewModel.sendEvent(Event.OnDismissDiscardConfirmDialog)
+        advanceUntilIdle()
+
+        assertFalse(viewModel.state.value.showDiscardConfirmDialog)
+        assertTrue(effects.isEmpty())
     }
 }

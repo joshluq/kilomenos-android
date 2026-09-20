@@ -4,6 +4,7 @@ import android.Manifest
 import android.content.pm.PackageManager
 import android.content.res.Configuration
 import android.os.Build
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
@@ -29,14 +30,18 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Bluetooth
 import androidx.compose.material.icons.filled.Security
+import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusDirection
@@ -62,6 +67,7 @@ import es.joshluq.canvaskit.components.chips.CanvasKitChip
 import es.joshluq.canvaskit.components.chips.CanvasKitChipVariant
 import es.joshluq.canvaskit.components.feedback.CanvasKitAlertVariant
 import es.joshluq.canvaskit.components.feedback.CanvasKitBanner
+import es.joshluq.canvaskit.components.feedback.CanvasKitConfirmDialog
 import es.joshluq.canvaskit.components.inputs.CanvasKitTextField
 import es.joshluq.canvaskit.components.layout.CanvasKitLoadingScaffold
 import es.joshluq.canvaskit.components.navigation.CanvasKitTopBar
@@ -75,6 +81,7 @@ import es.joshluq.kmsafe.domain.model.FuelType
 import es.joshluq.kmsafe.domain.model.RentingContract
 import es.joshluq.kmsafe.feature.fleet.R
 import es.joshluq.kmsafe.feature.fleet.components.BluetoothDevicePicker
+import java.util.UUID
 import es.joshluq.kmsafe.core.ui.R as CoreR
 
 @Composable
@@ -83,8 +90,9 @@ fun EditContractRoute(
     onNavigateBack: () -> Unit,
     onNavigateToCropper: (String) -> Unit
 ) {
+    val editSessionId = rememberSaveable { UUID.randomUUID().toString() }
     val viewModel: EditContractViewModel = hiltViewModel(
-        key = "edit_contract_$vehicleId",
+        key = "edit_contract_${vehicleId}_$editSessionId",
         creationCallback = { factory: EditContractViewModel.Factory ->
             factory.create(vehicleId)
         }
@@ -125,6 +133,11 @@ fun EditContractScreen(
     val context = LocalContext.current
     val keyboardController = LocalSoftwareKeyboardController.current
 
+    BackHandler(enabled = true) {
+        keyboardController?.hide()
+        onEvent(Event.OnBackClicked)
+    }
+
     val permissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { isGranted ->
@@ -143,7 +156,7 @@ fun EditContractScreen(
             CanvasKitTopBar(
                 title = {
                     Text(
-                        text = stringResource(CoreR.string.history_edit_title),
+                        text = stringResource(R.string.edit_contract_title),
                         style = CanvasKitTheme.typography.headingMedium
                     )
                 },
@@ -159,6 +172,30 @@ fun EditContractScreen(
                             contentDescription = stringResource(CoreR.string.acc_back),
                             tint = CanvasKitTheme.colors.textPrimary
                         )
+                    }
+                },
+                actions = {
+                    TextButton(
+                        onClick = safeClick {
+                            keyboardController?.hide()
+                            onEvent(Event.OnSaveClicked)
+                        },
+                        enabled = !state.isSaving && state.isDirty
+                    ) {
+                        if (state.isSaving) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(18.dp),
+                                color = CanvasKitTheme.colors.brandAccent,
+                                strokeWidth = 2.dp
+                            )
+                        } else {
+                            Text(
+                                text = stringResource(R.string.edit_contract_save_action),
+                                style = CanvasKitTheme.typography.labelLarge,
+                                color = if (state.isDirty) CanvasKitTheme.colors.brandAccent else CanvasKitTheme.colors.textSecondary.copy(alpha = 0.4f),
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
                     }
                 },
                 centeredTitle = true
@@ -352,19 +389,6 @@ fun EditContractScreen(
                     }
                 }
 
-                Spacer(modifier = Modifier.height(CanvasKitTheme.spacing.xs))
-
-                CanvasKitButton(
-                    text = stringResource(CoreR.string.history_edit_save),
-                    onClick = safeClick {
-                        keyboardController?.hide()
-                        onEvent(Event.OnSaveClicked)
-                    },
-                    loading = state.isSaving,
-                    enabled = !state.isSaving && state.isDirty,
-                    modifier = Modifier.fillMaxWidth()
-                )
-
                 Spacer(modifier = Modifier.height(48.dp))
             }
 
@@ -394,6 +418,19 @@ fun EditContractScreen(
                         )
                     }
                 }
+            }
+
+            if (state.showDiscardConfirmDialog) {
+                CanvasKitConfirmDialog(
+                    title = stringResource(R.string.edit_contract_discard_title),
+                    message = stringResource(R.string.edit_contract_discard_message),
+                    confirmText = stringResource(R.string.edit_contract_discard_confirm),
+                    cancelText = stringResource(R.string.edit_contract_discard_cancel),
+                    onConfirm = { onEvent(Event.OnConfirmDiscardChanges) },
+                    onDismissRequest = { onEvent(Event.OnDismissDiscardConfirmDialog) },
+                    isDestructive = true,
+                    icon = Icons.Default.Warning
+                )
             }
         }
     }

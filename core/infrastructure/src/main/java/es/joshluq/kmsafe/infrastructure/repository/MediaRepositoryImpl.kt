@@ -26,6 +26,15 @@ class MediaRepositoryImpl @Inject constructor(
     override suspend fun getFileBytes(uriPath: String): ByteArray? = withContext(Dispatchers.IO) {
         try {
             val uri = uriPath.toUri()
+            if (uri.scheme == "file") {
+                val path = uri.path
+                if (path != null) {
+                    val file = java.io.File(path)
+                    if (file.exists() && file.isFile) {
+                        return@withContext file.readBytes()
+                    }
+                }
+            }
             context.contentResolver.openInputStream(uri)?.use { it.readBytes() }
         } catch (e: Exception) {
             logger.e("MediaRepository", "Failed to read bytes from URI: $uriPath", e)
