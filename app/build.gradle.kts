@@ -31,6 +31,7 @@ val secrets = Properties().apply {
 
 configure<ApplicationExtension> {
     namespace = AppConfig.applicationNamespace
+    ndkVersion = "27.0.12077973"
 
     defaultConfig {
         versionCode = AppConfig.versionCode

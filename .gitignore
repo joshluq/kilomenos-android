@@ -104,3 +104,4 @@ google-services.json
 .cxx
 local.properties
 /.artifacts/
+/app/Pro/release/native-debug-symbols.zip

@@ -55,3 +55,5 @@
 # --- Testing / JUnit ---
 -dontwarn org.junit.jupiter.api.extension.**
 
+# --- Android Maps Utils (XmlUtil ServiceLoader) ---
+-dontwarn nl.adaptivity.xmlutil.**
