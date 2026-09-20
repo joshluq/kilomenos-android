@@ -53,4 +53,6 @@
     <string name="premium_restore_success">¡Suscripción restaurada y ventajas Premium activadas!</string>
     <string name="premium_restore_empty">No se encontraron suscripciones activas en tu cuenta de Google Play.</string>
     <string name="premium_restore_error">Ha ocurrido un error al restaurar las compras. Inténtalo más tarde.</string>
+    <string name="premium_operation_timeout">La operación tardó más de lo esperado. Si tu compra se completó en Google Play, pulsa \"Restaurar compras\" para activar tus ventajas.</string>
+    <string name="premium_verifying_purchase">Verificando tu suscripción en tiempo real…</string>
 </resources>

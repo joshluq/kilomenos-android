@@ -1,6 +1,7 @@
 package es.joshluq.kmsafe.feature.premium.paywall
 
 import android.content.res.Configuration
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -60,6 +61,7 @@ import es.joshluq.canvaskit.components.cards.CanvasKitCardVariant
 import es.joshluq.canvaskit.components.feedback.CanvasKitAlertVariant
 import es.joshluq.canvaskit.components.feedback.CanvasKitBanner
 import es.joshluq.canvaskit.components.layout.CanvasKitLoadingScaffold
+import es.joshluq.canvaskit.components.layout.CanvasKitLoadingStrategy
 import es.joshluq.canvaskit.foundations.theme.CanvasKitTheme
 import es.joshluq.foundationkit.text.asString
 import es.joshluq.kmsafe.core.ui.util.safeClick
@@ -112,8 +114,13 @@ fun PremiumPaywallScreen(
     state: State,
     onEvent: (Event) -> Unit
 ) {
+    BackHandler(enabled = state.isLoading) {
+        // Blocks system back while billing verification or data migration is in progress
+    }
+
     CanvasKitLoadingScaffold(
-        isLoading = false,
+        isLoading = state.isLoading,
+        loadingStrategy = CanvasKitLoadingStrategy.OverlayFullscreen,
         containerColor = CanvasKitTheme.colors.backgroundPrimary,
         contentWindowInsets = WindowInsets(0, 0, 0, 0)
     ) { innerPadding ->
@@ -154,13 +161,14 @@ fun PremiumPaywallScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     IconButton(
-                        onClick = safeClick { onEvent(Event.OnDismissClicked) },
+                        onClick = safeClick { if (!state.isLoading) onEvent(Event.OnDismissClicked) },
+                        enabled = !state.isLoading,
                         modifier = Modifier.size(48.dp)
                     ) {
                         Icon(
                             imageVector = Icons.Default.Close,
                             contentDescription = stringResource(R.string.premium_upgrade_cancel),
-                            tint = CanvasKitTheme.colors.textSecondary,
+                            tint = if (state.isLoading) CanvasKitTheme.colors.textSecondary.copy(alpha = 0.38f) else CanvasKitTheme.colors.textSecondary,
                             modifier = Modifier.size(24.dp)
                         )
                     }
@@ -266,6 +274,7 @@ fun PremiumPaywallScreen(
 
                 // Layer 4: Interactive Plan Selector
                 PlanSelectorSection(
+                    enabled = !state.isLoading,
                     onPlanSelected = { onEvent(Event.OnPlanSelected(it)) }
                 )
 
@@ -301,12 +310,20 @@ fun PremiumPaywallScreen(
                             color = CanvasKitTheme.colors.brandAccent,
                             modifier = Modifier.padding(bottom = 4.dp)
                         )
+                    } else if (state.isLoading && !state.isRestoring) {
+                        Text(
+                            text = stringResource(R.string.premium_verifying_purchase),
+                            style = CanvasKitTheme.typography.labelSmall,
+                            color = CanvasKitTheme.colors.brandAccent,
+                            modifier = Modifier.padding(bottom = 4.dp)
+                        )
                     }
 
                     // Main Primary CTA Button
                     CanvasKitButton(
                         onClick = safeClick { onEvent(Event.OnUpgradeClicked) },
                         loading = state.isLoading && !state.isRestoring,
+                        enabled = !state.isLoading,
                         modifier = Modifier
                             .fillMaxWidth()
                             .testTag("premium_buy_now_button")
@@ -499,6 +516,7 @@ private fun LossAversionRoiBox() {
  */
 @Composable
 private fun PlanSelectorSection(
+    enabled: Boolean = true,
     onPlanSelected: (PremiumBillingPlan) -> Unit
 ) {
     Column(
@@ -509,6 +527,7 @@ private fun PlanSelectorSection(
             price = stringResource(R.string.premium_plan_monthly_price),
             period = stringResource(R.string.premium_plan_monthly_period),
             badge = stringResource(R.string.premium_plan_monthly_badge),
+            enabled = enabled,
             onClick = { onPlanSelected(PremiumBillingPlan.MONTHLY) }
         )
     }
@@ -523,6 +542,7 @@ private fun PlanOptionCard(
     price: String,
     period: String,
     badge: String,
+    enabled: Boolean = true,
     onClick: () -> Unit
 ) {
     val borderColor = CanvasKitTheme.colors.brandAccent
@@ -537,7 +557,7 @@ private fun PlanOptionCard(
             .clip(RoundedCornerShape(16.dp))
             .background(backgroundColor)
             .border(borderWidth, borderColor, RoundedCornerShape(16.dp))
-            .clickable(role = Role.RadioButton, onClick = onClick)
+            .clickable(enabled = enabled, role = Role.RadioButton, onClick = onClick)
             .padding(CanvasKitTheme.spacing.md)
             .testTag("premium_plan_monthly_card")
     ) {

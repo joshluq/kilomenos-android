@@ -7,5 +7,6 @@ import kotlinx.coroutines.flow.SharedFlow
  */
 interface BillingService {
     val purchaseSuccessFlow: SharedFlow<String>
+    val purchaseProcessingFlow: SharedFlow<Boolean>
     val errorFlow: SharedFlow<String>
 }

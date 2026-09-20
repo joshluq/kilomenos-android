@@ -22,11 +22,13 @@ import es.joshluq.kmsafe.infrastructure.remote.request.VerifyPurchaseRequest
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.withTimeoutOrNull
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.coroutines.resume
@@ -59,6 +61,9 @@ class BillingManager @Inject constructor(
 
     private val _purchaseSuccessFlow = MutableSharedFlow<String>()
     override val purchaseSuccessFlow: SharedFlow<String> = _purchaseSuccessFlow
+
+    private val _purchaseProcessingFlow = MutableSharedFlow<Boolean>()
+    override val purchaseProcessingFlow: SharedFlow<Boolean> = _purchaseProcessingFlow
 
     private val _errorFlow = MutableSharedFlow<String>()
     override val errorFlow: SharedFlow<String> = _errorFlow
@@ -133,6 +138,8 @@ class BillingManager @Inject constructor(
             // To test real Google Play flow, use License Testers in Play Console.
             logger.i("BillingManager", "DEBUG MODE: Simulating purchase success")
             scope.launch {
+                _purchaseProcessingFlow.emit(true)
+                delay(300)
                 _purchaseSuccessFlow.emit("simulated_order_id")
             }
             return
@@ -182,18 +189,23 @@ class BillingManager @Inject constructor(
     }
 
     override fun onPurchasesUpdated(billingResult: BillingResult, purchases: List<Purchase>?) {
-        when (billingResult.responseCode) {
-            BillingClient.BillingResponseCode.OK if purchases != null -> {
-                for (purchase in purchases) {
-                    handlePurchase(purchase)
-                }
+        if (billingResult.responseCode == BillingClient.BillingResponseCode.OK && purchases != null) {
+            val hasPurchased = purchases.any { it.purchaseState == Purchase.PurchaseState.PURCHASED }
+            if (hasPurchased) {
+                logger.i("BillingManager", "Returning from Google Play with PURCHASED state. Emitting purchaseProcessing = true.")
+                scope.launch { _purchaseProcessingFlow.emit(true) }
             }
-            BillingClient.BillingResponseCode.USER_CANCELED -> {
-                logger.w("BillingManager", "User canceled the purchase")
+            for (purchase in purchases) {
+                handlePurchase(purchase)
             }
-            else -> {
-                logger.e("BillingManager", "Error in purchase update: ${billingResult.debugMessage}")
-                scope.launch { _errorFlow.emit(billingResult.debugMessage) }
+        } else if (billingResult.responseCode == BillingClient.BillingResponseCode.USER_CANCELED) {
+            logger.w("BillingManager", "User canceled the purchase")
+            scope.launch { _purchaseProcessingFlow.emit(false) }
+        } else {
+            logger.e("BillingManager", "Error in purchase update: ${billingResult.debugMessage}")
+            scope.launch {
+                _purchaseProcessingFlow.emit(false)
+                _errorFlow.emit(billingResult.debugMessage)
             }
         }
     }
@@ -209,19 +221,31 @@ class BillingManager @Inject constructor(
             scope.launch(Dispatchers.IO) {
                 try {
                     logger.i("BillingManager", "Sending purchase token to backend verification endpoint")
-                    val response = apiService.verifyPurchase(request)
+                    val response = withTimeoutOrNull(15_000L) {
+                        apiService.verifyPurchase(request)
+                    }
+                    if (response == null) {
+                        logger.e("BillingManager", "Backend verification timed out (15s)")
+                        _purchaseProcessingFlow.emit(false)
+                        _errorFlow.emit("Tiempo de espera agotado al conectar con el servidor.")
+                        return@launch
+                    }
                     if (response.isSuccessful && response.body()?.success == true) {
                         logger.i("BillingManager", "Purchase successfully verified with backend")
-                        entitlementsRepository.getEntitlements(deviceFingerprint = "", forceRefresh = true).firstOrNull()
+                        withTimeoutOrNull(10_000L) {
+                            entitlementsRepository.getEntitlements(deviceFingerprint = "", forceRefresh = true).firstOrNull()
+                        }
                         val token = purchase.orderId ?: purchase.purchaseToken
                         _purchaseSuccessFlow.emit(token)
                     } else {
                         val errorMsg = response.body()?.error ?: "Error al verificar la suscripción con el servidor"
                         logger.e("BillingManager", "Backend verification rejected: $errorMsg")
+                        _purchaseProcessingFlow.emit(false)
                         _errorFlow.emit(errorMsg)
                     }
                 } catch (e: Exception) {
                     logger.e("BillingManager", "Exception during purchase verification", e)
+                    _purchaseProcessingFlow.emit(false)
                     _errorFlow.emit(e.message ?: "Error de red al verificar la suscripción")
                 }
             }

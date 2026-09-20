@@ -53,4 +53,6 @@
     <string name="premium_restore_success">Subscription restored and Premium benefits activated!</string>
     <string name="premium_restore_empty">No active subscriptions found in your Google Play account.</string>
     <string name="premium_restore_error">An error occurred while restoring purchases. Please try again later.</string>
+    <string name="premium_operation_timeout">The operation took longer than expected. If your purchase was completed on Google Play, tap \"Restore purchases\" to activate your benefits.</string>
+    <string name="premium_verifying_purchase">Verifying your subscription in real time…</string>
 </resources>

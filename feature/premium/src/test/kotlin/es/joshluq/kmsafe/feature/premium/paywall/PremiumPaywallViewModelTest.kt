@@ -10,6 +10,8 @@ import es.joshluq.kmsafe.domain.usecase.MigrateLocalDataToRemoteUseCase
 import es.joshluq.kmsafe.domain.usecase.RestorePurchasesUseCase
 import es.joshluq.kmsafe.domain.usecase.SyncContractsUseCase
 import es.joshluq.kmsafe.domain.usecase.UpdateSubscriptionUseCase
+import es.joshluq.foundationkit.text.TextProvider
+import es.joshluq.kmsafe.feature.premium.R
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
@@ -44,6 +46,7 @@ class PremiumPaywallViewModelTest {
     private val analytics = FakeAnalyticsTracker()
     private val logger: LoggerKit = mockk(relaxed = true)
 
+    private val purchaseProcessingFlow = MutableSharedFlow<Boolean>()
     private val purchaseSuccessFlow = MutableSharedFlow<String>()
     private val billingErrorFlow = MutableSharedFlow<String>()
 
@@ -57,6 +60,7 @@ class PremiumPaywallViewModelTest {
     fun setUp() {
         Dispatchers.setMain(testDispatcher)
 
+        every { billingService.purchaseProcessingFlow } returns purchaseProcessingFlow
         every { billingService.purchaseSuccessFlow } returns purchaseSuccessFlow
         every { billingService.errorFlow } returns billingErrorFlow
     }
@@ -287,5 +291,77 @@ class PremiumPaywallViewModelTest {
         assertFalse(viewModel.state.value.isLoading)
         assertFalse(viewModel.state.value.isRestoring)
         assertTrue(viewModel.state.value.error != null)
+    }
+
+    @Test
+    fun `purchaseProcessingFlow emitting true immediately sets isLoading to true`() = runTest(testDispatcher) {
+        val viewModel = createViewModel()
+        testScheduler.advanceUntilIdle()
+
+        purchaseProcessingFlow.emit(true)
+        testScheduler.runCurrent()
+
+        assertTrue(viewModel.state.value.isLoading)
+        assertNull(viewModel.state.value.error)
+    }
+
+    @Test
+    fun `purchaseProcessingFlow emitting false sets isLoading to false`() = runTest(testDispatcher) {
+        val viewModel = createViewModel()
+        testScheduler.advanceUntilIdle()
+
+        purchaseProcessingFlow.emit(true)
+        testScheduler.runCurrent()
+        assertTrue(viewModel.state.value.isLoading)
+
+        purchaseProcessingFlow.emit(false)
+        testScheduler.runCurrent()
+        assertFalse(viewModel.state.value.isLoading)
+    }
+
+    @Test
+    fun `events are ignored when isLoading is true`() = runTest(testDispatcher) {
+        val viewModel = createViewModel()
+        testScheduler.advanceUntilIdle()
+
+        purchaseProcessingFlow.emit(true)
+        testScheduler.runCurrent()
+        assertTrue(viewModel.state.value.isLoading)
+
+        // Try selecting plan
+        viewModel.sendEvent(Event.OnPlanSelected(PremiumBillingPlan.ANNUAL))
+        testScheduler.runCurrent()
+        assertEquals(PremiumBillingPlan.MONTHLY, viewModel.state.value.selectedPlan)
+
+        // Try upgrade
+        val effects = mutableListOf<Effect>()
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
+            viewModel.effects.collect { effects.add(it) }
+        }
+        viewModel.sendEvent(Event.OnUpgradeClicked)
+        testScheduler.runCurrent()
+        assertTrue(effects.isEmpty())
+
+        // Try dismiss
+        viewModel.sendEvent(Event.OnDismissClicked)
+        testScheduler.runCurrent()
+        assertTrue(effects.isEmpty())
+    }
+
+    @Test
+    fun `loading watchdog triggers after 25 seconds and resets isLoading with error`() = runTest(testDispatcher) {
+        val viewModel = createViewModel()
+        testScheduler.advanceUntilIdle()
+
+        purchaseProcessingFlow.emit(true)
+        testScheduler.runCurrent()
+        assertTrue(viewModel.state.value.isLoading)
+
+        // Advance past watchdog timeout (25_000ms)
+        testScheduler.advanceTimeBy(25_001L)
+        testScheduler.runCurrent()
+
+        assertFalse(viewModel.state.value.isLoading)
+        assertEquals(TextProvider.Resource(R.string.premium_operation_timeout), viewModel.state.value.error)
     }
 }

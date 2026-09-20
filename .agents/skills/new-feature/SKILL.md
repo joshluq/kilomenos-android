@@ -1,61 +1,61 @@
 ---
 name: new-feature
 description: >-
-  Pipeline de diseÃ±o e implementaciÃ³n modular de una nueva feature en KmSafe. GuÃ­a la creaciÃ³n paso a paso cumpliendo estrictamente la arquitectura en AGENTS.md: especificaciÃ³n en 4 capas, separaciÃ³n Route/Screen, mandato UseCase First en :core:domain, tokens CanvasKit y tests unitarios con Turbine.
+  Modular design and implementation pipeline for new features in KmSafe. Guides feature creation step-by-step strictly following AGENTS.md: 4-Layer visual architecture, Route/Screen separation, UseCase First mandate in :core:domain, CanvasKit tokens, and unit tests with Turbine.
 ---
 
-# New Feature â Pipeline de ConstrucciÃ³n Modular (KmSafe)
+# New Feature -- Modular Construction Pipeline (KmSafe)
 
-Este comando guÃ­a la *especificaciÃ³n, diseÃ±o e implementaciÃ³n de una nueva funcionalidad* en KmSafe, garantizando el cumplimiento riguroso de `AGENTS.md` y evitando atajos arquitectÃ³nicos.
+This command executes the **rigorous specification, design, and implementation pipeline for new features** in KmSafe, ensuring strict adherence to AGENTS.md and preventing architectural drift.
 
-Se apoya en `android-staff-engineer-compose`, `android-testing` y la plantilla `.agents/templates/component-spec-template.md`.
-
----
-
-## CuÃ¡ndo usar este comando
-- Para crear una nueva pantalla, pestaÃ±a, diÃ¡logo o flujo dentro de un mÃ³dulo `:feature:*`.
-- Para aÃ±adir un nuevo caso de uso con su interfaz de usuario y pruebas unitarias correspondientes.
+It coordinates ndroid-staff-engineer-compose, android-testing, and .agents/templates/component-spec-template.md.
 
 ---
 
-## Protocolo de EjecuciÃ³n (Paso a Paso)
+## When to Use This Command
+- To create a new screen, tab, modal, or user flow inside a :feature:* module.
+- To implement a new business process with its corresponding domain UseCase, MVI presentation layer, and unit tests.
 
-Cuando el usuario invoque `/new-feature [nombre o descripciÃ³n de la feature]`:
+---
 
-### Fase 1: EspecificaciÃ³n del Componente (Component Spec)
-Genera la especificaciÃ³n usando `.agents/templates/component-spec-template.md`:
-1. *Mapeo en 4 Capas Visuales*:
-   - *Layer 1 (The Pulse)*: MÃ©trica hero de alta visibilidad (< 2s).
-   - *Layer 2 (Decision Radar)*: Tarjetas glanceables de insights / comparaciÃ³n.
-   - *Layer 3 (Zero-Friction Action)*: Chips de 1-tap, FAB auditable, presets.
-   - *Layer 4 (Diagnostic Feed)*: Feed histÃ³rico contextual por ciclos.
-2. *Contratos MVI*:
-   - `UiState`: Data class inmutable con `@Immutable`.
-   - `UiAction`: Sealed interface con los intents del usuario.
-   - `UiEffect`: (Opcional) Canal de efectos de un solo disparo (navegaciÃ³n, snackbar).
+## Step-by-Step Execution Protocol
 
-### Fase 2: Mandato "UseCase First" (Dominio)
-1. Identifica o define los UseCases en `::core:domain` (`pluginkit.jvm.library`).
-2. *Regla de Oro*: Prohibido inyectar `*Repository` directamente en ViewModels. Todo pasa por UseCases especializados (`FlowUseCase` o `UseCase` de FoundationKit).
-3. Asegura pureza Kotlin/JVM (cero dependencias de Android SDK en dominio).
+When the user invokes /new-feature [feature name or brief description]:
 
-### Fase 3: ImplementaciÃ³n de PresentaciÃ³n (Coordinator / Route)
-1. *e[Feature]Route.kt*:
-   - Inyecta `hiltWiewModel(key = scopingKey)` con clave determinista si es entidad o sesiÃ³n.
-   - Observa `collectAsStateWithLifecycle()`.
-   - Maneja callbacks de navegaciÃ³n y `savedStateHandle`.
-2. *e[Feature]Screen.kt*:
-   - Composable puramente stateless.
-   - Utiliza exclusivamente tokens de `CanvasKitTheme` (tipografÃ­a, colores, espaciados).
-   - Elementos interactivos con touch targets >= 48dp y `contentDescription` accesible.
-   - Previews obligatorias para Loading, Content y Error.
-3. *e[Feature+ViewModel.kt*:
-   - MVI con `StateFlow<UiState>`.in
-   - InyecciÃ³n de `DispatcherProvider` (main-safety).
-   - Cero cÃ¡lculos matemáticos de negocio en el ViewModel (delegados a dominio).
+### Phase 1: Component Specification (Component Spec)
+Generate the technical specification following .agents/templates/component-spec-template.md:
+1. **4-Layer Visual Mapping**:
+   - *Layer 1 (The Pulse)*: Glanceable hero metric (< 2s scan).
+   - *Layer 2 (Decision Radar)*: Actionable insight cards and comparison deltas.
+   - *Layer 3 (Zero-Friction Action)*: 1-Tap preset chips, auditable FAB, quick forms.
+   - *Layer 4 (Diagnostic Feed)*: Contextual operational cycle history.
+2. **MVI Contracts**:
+   - UiState: Immutable Kotlin data class marked with @Immutable.
+   - UiAction: Sealed interface capturing all unidirectional user intents.
+   - UiEffect: (Optional) Single-shot side effect channel (navigation, snackbars).
 
-### Fase 4: Pruebas Automatizadas
-1. Genera el test unitario `[Feature]ViewModelTest.kt`:
-   - Usa *Turbine* (`viewModel.uiState.test { ... }`).
-   - Usa *MockK* para mockear exclusivamente los UseCases inyectados.
-   - Usa `StandardTestDispatcher` para control determinista de corrutinas.
+### Phase 2: "UseCase First" Mandate (Domain Layer)
+1. Define or identify the dedicated UseCase in :core:domain (pluginkit.jvm.library).
+2. **Golden Rule**: ViewModels **MUST NEVER** inject *Repository interfaces directly. All data access and business processes flow through domain UseCases (FlowUseCase or UseCase from FoundationKit).
+3. Ensure domain purity: strictly zero Android framework imports (ndroid.*) in :core:domain.
+
+### Phase 3: Presentation Implementation (Coordinator / Route)
+1. **[Feature]Route.kt**:
+   - Injects hiltViewModel(key = scopingKey) with deterministic entity or session keys for Navigation 3 scoping.
+   - Collects UI state using collectAsStateWithLifecycle().
+   - Coordinates navigation callbacks and savedStateHandle result handling.
+2. **[Feature]Screen.kt**:
+   - Pure, stateless Composable function accepting UiState and onAction lambda.
+   - Built exclusively with CanvasKitTheme tokens (typography, colors, spacing).
+   - Minimum 48dp touch targets on interactive elements and mandatory contentDescription.
+   - Mandatory @Preview composables for Loading, Content, and Error states.
+3. **[Feature]ViewModel.kt**:
+   - MVI state reducer exposing StateFlow<UiState>.
+   - Enforces main-safety using injected DispatcherProvider.
+   - **Zero business calculations**: all metrics are pre-computed by domain entities or UseCases.
+
+### Phase 4: Automated Testing
+1. Generate [Feature]ViewModelTest.kt:
+   - State flow emissions asserted with **Turbine** (iewModel.uiState.test { ... }).
+   - Mock only the injected UseCases with **MockK**.
+   - Use StandardTestDispatcher for deterministic coroutine execution.
