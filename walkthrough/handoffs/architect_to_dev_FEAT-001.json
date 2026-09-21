@@ -1,0 +1,59 @@
+{
+  "handoff_id": "HANDOFF-ARCH-DEV-FEAT001-V1",
+  "schema_version": "1.0.0",
+  "timestamp": "2026-09-17T14:35:00Z",
+  "sender": {
+    "role": "Software Architect",
+    "agent_id": "arch-agent-01"
+  },
+  "recipient": {
+    "role": "Senior Android Developer",
+    "agent_id": "dev-agent-01"
+  },
+  "feature_id": "FEAT-001",
+  "po_handoff_ref": "HANDOFF-PO-ARCH-FEAT001-V1",
+  "adr_path": "walkthrough/docs/ADR-FEAT-001.md",
+  "component_spec_path": "walkthrough/docs/COMP-SPEC-FEAT-001.md",
+  "remediation_cycle": 0,
+  "architecture_pattern": "MVI",
+  "module_targets": [
+    ":feature:profile",
+    ":core:domain",
+    ":core:data"
+  ],
+  "component_contracts": [
+    {
+      "component_name": "ProfileScreen",
+      "package_name": "com.example.app.feature.profile.ui",
+      "layer": "UI",
+      "state_models": [
+        "ProfileUiState"
+      ],
+      "action_events": [
+        "ProfileUiAction.Refresh",
+        "ProfileUiAction.ToggleTheme"
+      ],
+      "exposed_flows": [
+        "StateFlow<ProfileUiState>"
+      ]
+    }
+  ],
+  "file_manifest_plan": [
+    {
+      "target_path": "feature/profile/src/main/kotlin/ProfileScreen.kt",
+      "action": "CREATE",
+      "purpose": "Stateless Jetpack Compose UI component"
+    },
+    {
+      "target_path": "feature/profile/src/main/kotlin/ProfileViewModel.kt",
+      "action": "CREATE",
+      "purpose": "MVI ViewModel managing StateFlow<ProfileUiState>"
+    }
+  ],
+  "dependencies": [
+    {
+      "coordinate": "androidx.compose.material3:material3:1.2.0",
+      "scope": "implementation"
+    }
+  ]
+}

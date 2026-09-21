@@ -105,3 +105,7 @@ google-services.json
 local.properties
 /.artifacts/
 /app/Pro/release/native-debug-symbols.zip
+.atlassian_config.json
+__pycache__/
+*.pyc
+*.pyo

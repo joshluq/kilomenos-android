@@ -9,9 +9,7 @@ import androidx.work.WorkManager
 import dagger.hilt.android.HiltAndroidApp
 import es.joshluq.foundationkit.log.LoggerKit
 import es.joshluq.kmsafe.data.worker.ReminderWorker
-import es.joshluq.kmsafe.domain.usecase.GetOverviewDataUseCase
 import es.joshluq.kmsafe.domain.usecase.GetPreferencesUseCase
-import es.joshluq.kmsafe.feature.widget.manager.WidgetUpdateManager
 import es.joshluq.kmsafe.infrastructure.repository.tracking.AutoTrackingManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -36,12 +34,6 @@ class KiloMenosApplication : Application(), Configuration.Provider {
     @Inject
     lateinit var getPreferencesUseCase: GetPreferencesUseCase
 
-    @Inject
-    lateinit var getOverviewDataUseCase: GetOverviewDataUseCase
-
-    @Inject
-    lateinit var widgetUpdateManager: WidgetUpdateManager
-
     private val applicationScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
 
     override fun onCreate() {
@@ -49,22 +41,6 @@ class KiloMenosApplication : Application(), Configuration.Provider {
         logger.i("Application", "KiloMenos started. Version: ${BuildConfig.VERSION_NAME}")
         setupBackgroundWorkers()
         initializeAutoTracking()
-        observeWidgetData()
-    }
-
-    private fun observeWidgetData() {
-        applicationScope.launch {
-            try {
-                getOverviewDataUseCase(GetOverviewDataUseCase.Input)
-                    .collect { output ->
-                        if (output is GetOverviewDataUseCase.Output.Success) {
-                            widgetUpdateManager.updateWidget()
-                        }
-                    }
-            } catch (e: Exception) {
-                logger.e("Application", "Failed to observe overview data for widget updates", e)
-            }
-        }
     }
 
     private fun setupBackgroundWorkers() {

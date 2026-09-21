@@ -1,0 +1,65 @@
+{
+  "handoff_id": "HANDOFF-PO-ARCH-FEAT001-V1",
+  "schema_version": "1.0.0",
+  "timestamp": "2026-09-17T14:30:00Z",
+  "sender": {
+    "role": "Product Owner",
+    "agent_id": "po-agent-01"
+  },
+  "recipient": {
+    "role": "Software Architect",
+    "agent_id": "arch-agent-01"
+  },
+  "feature_id": "FEAT-001",
+  "feature_title": "User Profile & Preferences Management",
+  "prd_path": "walkthrough/docs/PRD-FEAT-001.md",
+  "user_stories": [
+    {
+      "story_id": "US-01",
+      "role": "mobile user",
+      "want": "view and update my profile settings offline",
+      "so_that": "my preferences persist seamlessly across network drops"
+    },
+    {
+      "story_id": "US-02",
+      "role": "accessibility user",
+      "want": "navigate all profile controls with TalkBack",
+      "so_that": "I can configure preferences independently"
+    }
+  ],
+  "functional_requirements": [
+    {
+      "fr_id": "FR-01",
+      "title": "Offline Preference Persistence",
+      "statement": "The system shall persist profile settings to local DataStore immediately upon modification."
+    },
+    {
+      "fr_id": "FR-02",
+      "title": "TalkBack Accessibility Support",
+      "statement": "The system shall expose screen reader semantics and labels on all profile interactive elements."
+    }
+  ],
+  "acceptance_criteria": [
+    {
+      "ac_id": "AC-01",
+      "scenario": "Successful profile load",
+      "given": "user has saved local profile data",
+      "when": "user opens the profile screen",
+      "then": "profile information is displayed within 16ms"
+    },
+    {
+      "ac_id": "AC-02",
+      "scenario": "Offline mutation persistence",
+      "given": "device is offline",
+      "when": "user toggles dark mode preference",
+      "then": "preference is updated locally in DataStore and UI reflects change"
+    }
+  ],
+  "non_functional_requirements": {
+    "min_sdk": 24,
+    "target_sdk": 35,
+    "offline_supported": true,
+    "accessibility_required": true,
+    "performance_budget_ms": 16
+  }
+}

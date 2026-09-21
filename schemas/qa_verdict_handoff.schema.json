@@ -1,0 +1,223 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "QAVerdictHandoff",
+  "description": "Standardized transition payload from QA/Testing Engineer to Product Owner or Remediation Loop",
+  "type": "object",
+  "required": [
+    "handoff_id",
+    "schema_version",
+    "timestamp",
+    "sender",
+    "recipient",
+    "feature_id",
+    "dev_handoff_ref",
+    "verdict",
+    "qa_report_path",
+    "remediation_cycle",
+    "test_execution_summary",
+    "acceptance_matrix",
+    "issues"
+  ],
+  "properties": {
+    "handoff_id": {
+      "type": "string",
+      "pattern": "^HANDOFF-QA-VERDICT-[A-Za-z0-9_-]+$"
+    },
+    "schema_version": {
+      "type": "string",
+      "enum": ["1.0.0"]
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "sender": {
+      "type": "object",
+      "required": ["role", "agent_id"],
+      "properties": {
+        "role": { "type": "string", "const": "QA/Testing Engineer" },
+        "agent_id": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "recipient": {
+      "type": "object",
+      "required": ["role", "agent_id"],
+      "properties": {
+        "role": {
+          "type": "string",
+          "enum": [
+            "Product Owner",
+            "Senior Android Developer",
+            "Software Architect",
+            "Remediation Router",
+            "Automated Remediation Router"
+          ]
+        },
+        "agent_id": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "feature_id": {
+      "type": "string",
+      "pattern": "^FEAT-[0-9]{3,}$"
+    },
+    "dev_handoff_ref": {
+      "type": "string",
+      "pattern": "^HANDOFF-DEV-QA-[A-Za-z0-9_-]+$"
+    },
+    "verdict": {
+      "type": "string",
+      "enum": ["PASS", "FAIL_REVISE"]
+    },
+    "qa_report_path": {
+      "type": "string",
+      "pattern": "^.*\\.md$"
+    },
+    "remediation_cycle": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 3,
+      "default": 0
+    },
+    "test_execution_summary": {
+      "type": "object",
+      "required": [
+        "total_tests",
+        "passed",
+        "failed",
+        "skipped",
+        "coverage_percentage"
+      ],
+      "properties": {
+        "total_tests": { "type": "integer", "minimum": 1 },
+        "passed": { "type": "integer", "minimum": 0 },
+        "failed": { "type": "integer", "minimum": 0 },
+        "skipped": { "type": "integer", "minimum": 0 },
+        "coverage_percentage": {
+          "type": "number",
+          "minimum": 0.0,
+          "maximum": 100.0
+        }
+      },
+      "additionalProperties": false
+    },
+    "acceptance_matrix": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["ac_id", "verified", "verifying_test_case", "notes"],
+        "properties": {
+          "ac_id": { "type": "string", "pattern": "^AC-[0-9]{2,}$" },
+          "verified": { "type": "boolean" },
+          "verifying_test_case": { "type": "string" },
+          "notes": { "type": "string" }
+        },
+        "additionalProperties": false
+      }
+    },
+    "ui_inspection_summary": {
+      "type": "object",
+      "required": [
+        "compose_semantics_valid",
+        "touch_targets_compliant",
+        "accessibility_labels_present"
+      ],
+      "properties": {
+        "compose_semantics_valid": { "type": "boolean" },
+        "touch_targets_compliant": { "type": "boolean" },
+        "accessibility_labels_present": { "type": "boolean" }
+      },
+      "additionalProperties": false
+    },
+    "issues": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "issue_id",
+          "severity",
+          "title",
+          "reproduction_steps",
+          "expected",
+          "actual",
+          "target_role_for_remediation",
+          "upstream_artifact_ref"
+        ],
+        "properties": {
+          "issue_id": { "type": "string", "pattern": "^DEF-[0-9]{2,}$" },
+          "severity": {
+            "type": "string",
+            "enum": ["BLOCKER", "CRITICAL", "MAJOR", "MINOR"]
+          },
+          "title": { "type": "string" },
+          "reproduction_steps": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "expected": { "type": "string" },
+          "actual": { "type": "string" },
+          "target_role_for_remediation": {
+            "type": "string",
+            "enum": [
+              "Senior Android Developer",
+              "Software Architect",
+              "Product Owner"
+            ]
+          },
+          "upstream_artifact_ref": {
+            "type": "string",
+            "minLength": 3
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "required": ["verdict"],
+        "properties": {
+          "verdict": { "const": "PASS" }
+        }
+      },
+      "then": {
+        "properties": {
+          "test_execution_summary": {
+            "properties": {
+              "failed": { "const": 0 }
+            }
+          },
+          "acceptance_matrix": {
+            "items": {
+              "properties": {
+                "verified": { "const": true }
+              }
+            }
+          },
+          "issues": {
+            "maxItems": 0
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "required": ["verdict"],
+        "properties": {
+          "verdict": { "const": "FAIL_REVISE" }
+        }
+      },
+      "then": {
+        "properties": {
+          "issues": {
+            "minItems": 1
+          }
+        }
+      }
+    }
+  ],
+  "additionalProperties": false
+}

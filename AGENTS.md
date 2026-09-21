@@ -1,286 +1,274 @@
-# AGENTS.md - KiloMenos Architecture & Guidelines 🚗
+# AGENTS.md — Android Lifecycle Agent Role Definitions & Protocols
 
-## 1. Objective & Scope
-The goal of **KiloMenos** (KmSafe) is to provide a high-quality, comprehensive vehicle financial and mileage management platform for renting, leasing, and fleet drivers. The app:
-1. Eliminates uncertainty regarding excess mileage penalties through a dynamic, additive "balance" calculation per vehicle.
-2. Provides automated trip telemetry via Bluetooth and Activity Recognition.
-3. Operates as an intelligent vehicle financial manager tracking fuel and electrical energy expenses, historical station price volatility ("My Stations"), and electrification savings.
-
-## 2. Multi-Module Architecture
-The project follows **Clean Architecture**, **SOLID**, and **Domain-Driven Design (DDD)** across a modular Gradle structure. Priority is given to readability, testability, high build performance, and strict isolation of business rules.
-
-### Core Principle: Separating the "Being" from the "Doing" ("Separar el 'Hacer' del 'Ser'")
-- **The "Being" (El Ser)**: Declarative, ontology, business invariants, and immutable state.
-  - **Rich Domain Entities**: `RentingContract`, `ContractMetrics`, `MileageBudget`, `TripRoute`, `FuelExpense`, `ServiceStation`. Safeguard their own invariants and mathematical formulas (no anemic data classes).
-  - **Public Contracts**: Repository interfaces, feature APIs, and typed navigation destinations (`Destination.kt`).
-  - **Immutable UI State**: MVI State classes (`OverviewState`, `ExpensesState`, `ProfileState`).
-- **The "Doing" (El Hacer)**: Imperative, behavior, orchestration, and I/O.
-  - **UseCases ("UseCase First" Mandate)**: Standardized via `FlowUseCase` and `UseCase` from `FoundationKit`. Every single process, user action, query, or operation in the application MUST be modeled as a dedicated UseCase. Strictly limited to orchestration (calling repositories, dispatching coroutines, logging). ViewModels and services interact exclusively with UseCases, never directly with Repositories.
-  - **ViewModels / MVI Reducers**: Process UI intents/events and map Domain models into immutable UI State. **Zero business calculations allowed inside ViewModels.**
-  - **Infrastructure**: Room DAOs, Retrofit API services, background workers, and hardware sensor receivers.
-
-### Module Topology:
-- **`:app` (Shell)**: Application container (`KiloMenosApplication`), Android manifest, root navigation coordinator (`AppNavigation.kt`), and root Dagger Hilt DI bindings. Contains zero business screens or ViewModels.
-- **`:core:domain`**: Pure Kotlin/JVM library (`pluginkit.jvm.library`). **Strict Rule: Zero Android dependencies (`android.*`).** Contains all domain entities, repository interfaces, and 60+ UseCases with 100% unit test coverage.
-- **`:core:infrastructure`**: Room persistence (`AppDatabase`, DAOs, Entities), Retrofit networking, DataSources (`PreferencesDataSource`, `UserSessionDataSource`, `TrackingDataSource`), repository implementations (`*RepositoryImpl`), DI modules (`UseCaseModule`, `ValidatorModule`), and background sync (`SyncWorker`).
-- **`:core:navigation`**: Global typed destinations (`Destination.kt`) for Compose Navigation.
-- **`:core:ui`**: Centralized design system, typography, tokens, and reusable components via **CanvasKit**.
-- **`:core:monetization`**: SDK isolation for Google AdMob and GDPR/UMP privacy consent management.
-- **`:core:tracking`**: Android foreground services (`LocationTrackingService`), Activity Recognition transition receivers (`ActivityTransitionReceiver`), and vehicle Bluetooth listeners (`BluetoothConnectionReceiver`).
-- **Feature Modules (`:feature:*`)**:
-  - **`:feature:overview`**: Tab 1 - Real-time contract balance, daily budget, current odometer, and consumption graphs.
-  - **`:feature:history`**: Tab 2 - Manual odometer increment logs, historical trip list, and GPS route visualizations.
-  - **`:feature:expenses`**: Tab 3 - Fuel and EV charging expense logs, My Stations manager, price volatility histogram, and electrification savings KPI.
-  - **`:feature:projection`**: Tab 4 - Contract pace simulator, trip planner, and projection risk gauge (`ProjectionGauge`).
-  - **`:feature:profile`**: Tab 5 - User profile, application preferences, account deletion (GDPR), and full data import/export (`DataManagement`).
-  - **`:feature:dashboard`**: Main shell container hosting the 5 tabs via `CanvasKitBottomBar` using the slot pattern.
-  - **`:feature:fleet`**: Vehicle setup wizard (`SetupWizardRoute`), fleet listing, vehicle specifications, and contract parameters editor.
-  - **`:feature:auth`**: Session lifecycle, splash launch coordinator (`LaunchRoute`), Login, and Signup.
-  - **`:feature:premium`**: Subscription paywall, product offerings, and native Google Play Billing integration.
-
-## 3. Business Logic & Domain Formulas
-KiloMenos uses an **Additive Data Model**. Rather than storing arbitrary absolute odometer snapshots, each `OdometerRecord` represents a discrete increment (a trip or daily distance).
-
-### 3.1 Mileage Balance Algorithm:
-1. **Daily Base Budget (DBB):** `Total Contract Km / Total Contract Days`.
-2. **Real Km Consumed (RKC):** Sum of all `odometerValue` increments in history (excluding initial setup record).
-3. **Theoretical Km (TK):** `Days Elapsed * DBB`.
-4. **Updated Balance (UB):** `TK - RKC` (Positive = Surplus, Negative = Excess penalty risk).
-5. **Current Odometer:** `Initial Odometer + RKC`.
-*Note: All balance calculations are encapsulated inside `CalculateContractMetricsUseCase` returning the rich `ContractMetrics` value object.*
-
-### 3.2 Fuel & Energy Calculations:
-- **Station Price Volatility**: Difference between current unit price (€/L or €/kWh) and the user's historical average at that specific `ServiceStation`.
-- **Electrification Savings KPI**: Differential financial cost comparing EV/PHEV kWh consumption against the equivalent fuel cost for the same distance.
-
-## 4. Tech Stack
-- **UI Framework**: Jetpack Compose + Material 3 + CanvasKit Design System.
-- **Architecture**: MVI (Model-View-Intent) + Coordinator (Route) pattern.
-- **Dependency Injection**: Dagger Hilt (with convention plugins `pluginkit.android.hilt`).
-- **Asynchrony**: Kotlin Coroutines & Flow (via `DispatcherProvider`).
-- **Persistence**: Room (Relational schema, client-side UUID v4 IDs, 1:N relations for contracts/records and stations/expenses).
-- **Background Sync**: WorkManager (`SyncWorker`) with resilient ID swap logic.
-- **Telemetry & Location**: Fused Location Provider, Foreground Service (`location` type), Google Play Services Activity Recognition API, Bluetooth ACL hardware broadcasts.
-- **Billing & Monetization**: Google Play Billing Library v7+, Google AdMob, Google User Messaging Platform (UMP/GDPR).
-- **Unit Testing**: JUnit 4, MockK, Kotlin Coroutines Test (`runTest`, `StandardTestDispatcher`). 100% test coverage across all 60 Domain UseCases and 19 Feature ViewModels.
-
-## 5. Coding Standards & Communication
-- **KDoc**: Technical documentation is mandatory and exclusively in **English**.
-- **Main-Safety**: Repositories must enforce main-safety using `dispatchers.io`. High-performance computations (sorting, filtering) must use `dispatchers.default`.
-- **Domain Purity**: Zero platform types (e.g., `android.content.Context`, `android.os.Bundle`) allowed in `:core:domain`.
-- **RGPD / EAA Compliance**: Explicit account deletion flows (Auth, Room, Preferences, Cloud). Mandatory `contentDescription` for all interactive Compose elements.
-
-## 6. Product Strategy: Freemium Model 💎
-Access tiers are strictly governed by Entitlements:
-
-### Core Version (Free):
-- **Local-First Persistence**: Data saved to Room; sync disabled with records tagged as `PENDING`.
-- **Assisted GPS Tracking**: Manual trip start/stop with distance accumulation.
-- **Single Vehicle**: Limited to one active renting contract.
-- **Ad-Supported**: Non-intrusive AdMob banners initialized strictly post-UMP consent.
-- **Fair-Use Export**: CSV export only.
-- **Basic Projections**: Pacing simulations with standard metrics.
-
-### Premium Version (Paid):
-- **Native Billing**: Managed via Google Play Billing Library.
-- **Remote Synchronization**: Real-time cloud sync and multi-device backup.
-- **Data Promotion**: Automatic batch promotion of local pending records to cloud upon subscription upgrade.
-- **Fleet Management**: Unlimited vehicles and active contract switcher.
-- **Auto-Tracking**: Hands-free trip recording via Activity Recognition and Bluetooth pairing.
-- **Advanced Financial Analytics**: Service station volatility histograms, refueling insights, and electrification savings KPIs.
-- **Full Data Portability**: Complete JSON database backup and restoration.
-
-## 7. Technical Roadmap 🚀
-- ✅ **Offline Sync**: Reliable WorkManager integration with ID Swap logic.
-- ✅ **Native Billing**: Fully integrated Google Play Billing flow.
-- ✅ **Legibility & UX**: Chart legends and interactive info dialogs.
-- ✅ **GDPR / EAA**: Full European regulation compliance & UMP consent.
-- ✅ **GPS Tracking (Phase 1)**: Foreground Service for manual trip recording.
-- ✅ **Resilient Tracking**: Disk-persisted tracking state (Stateless Repositories).
-- ✅ **Smart Tracking (Phase 2 - Auto-Tracking)**: Activity Recognition + Bluetooth ACL Fast-Path + Triple Check validation.
-- ✅ **Modular Architecture**: 5-phase modularization completed (`:core:*` and `:feature:*` modules decoupled from `:app` Shell).
-- ✅ **Domain & MVI Unit Testing**: 100% coverage (60 UseCases, 19 ViewModels) with MockK & Coroutines Test.
-- ✅ **Fuel & Energy Expenses**: Service stations management, price volatility histogram, and EV/PHEV mode.
-- 📅 **Computer Vision (OCR)**: ML Kit for vehicle dashboard odometer scanning.
-- 📅 **Proactive Geofencing & Smart Alerts**: Geofenced refueling price prompts and automated predictive price trends.
-
-## 8. Stateless Repositories (Anti-Pattern Prevention)
-All repositories MUST be **stateless**.
-- **Forbidden**: Storing business state in `MutableStateFlow` or `var` properties inside a Repository.
-- **Mandatory**: Delegate state persistence to a `DataSource` (Room, DataStore, or encrypted session). Repositories orchestrate reactive data streams only.
-
-## 9. SSOT: Identity vs. Access (Entitlements)
-- **Identity**: Managed by the `User` object (ID, Email, Display Name).
-- **Access/Permissions**: Managed by the `Entitlements` object persisted in the **encrypted session**.
-- **Rule**: Never check `User` object properties to evaluate subscription status. Always invoke `GetEntitlementsUseCase` or `CheckFeatureAccessUseCase`.
-
-## 10. Critical Sequential Flows (Cold Start)
-To prevent race conditions during app initialization:
-- **Launch Sequence**: The app MUST synchronize `Entitlements` first. Only after an explicit outcome (Success or Failure) is vehicle/contract synchronization permitted to execute. This guarantees the sync engine knows user entitlements before evaluating cloud promotion.
-
-## 11. Idempotency & Client-Side Identity
-- **Client-Side IDs**: The Android client owns identity generation. Every entity (`RentingContract`, `OdometerRecord`, `TripRoute`, `FuelExpense`, `ServiceStation`) is instantiated with a device-generated UUID v4.
-- **Idempotent Requests**: HTTP POST requests supply the client UUID in the request payload as an idempotency key.
-- **Identity Resolution**: `SyncIdHandler` reconciles local and remote IDs, executing atomic "ID Swaps" when required.
-
-## 12. Navigation & Result Handling (Coordinator Pattern)
-- **Route Composables**: Act as navigation coordinators. Only Route composables may read `NavBackStackEntry.savedStateHandle` for navigation results (e.g., photo URIs, granted permissions).
-- **ViewModels**: Completely decoupled from navigation infrastructure. ViewModels receive results through UI Events dispatched by the Route.
-- **Input Arguments**: Parameters required to initialize a screen (e.g., `vehicleId`, `stationId`) must be read in the ViewModel via its `SavedStateHandle`.
-- **Data Flow for Results**:
-  1. `Screen A` navigates to `Screen B`.
-  2. `Screen B` sets a result in `navController.previousBackStackEntry.savedStateHandle`.
-  3. `Route A` observes that key in its own `NavBackStackEntry.savedStateHandle`.
-  4. `Route A` sends an **Event** to `ViewModel A`.
-  5. `ViewModel A` updates its state and clears the result key from the handle.
-
-## 13. Session Integrity & Auto Backup
-- **Encrypted Data Persistence**: Encrypted storage (AuthKit tokens, UserSessionModel) MUST be excluded from Android Auto Backup. Restoring encrypted files across device installations causes unrecoverable decryption failures due to Android Keystore key regeneration.
-- **Integrity Validation**: `CheckSessionUseCase` must verify that an active session also has valid, readable `UserSessionModel` data.
-- **Self-Healing Startup**: If `InconsistentSession` is detected, `LaunchViewModel` must force a clean `SignOut` and redirect to the Login screen.
-
-## 14. SSOT: Single Source of Truth for Metrics
-- **Detail over Summary**: Never read summary or cached fields from the backend (such as `rentingContract.currentOdometer`) for business logic or UI display when raw `OdometerRecord` items are available.
-- **Aggregation as Truth**: Summing individual records is the sole source of truth for distances.
-- **UseCase Centralization**: Always retrieve calculated metrics through `CalculateContractMetricsUseCase` or `GetOverviewDataUseCase`. ViewModels must NEVER perform arithmetic shortcuts on summary objects.
-
-## 15. Multi-Module Boundary & Dependency Rules
-To preserve architectural integrity and avoid cyclic dependencies:
-1. **Feature Module Isolation**: Modules under `:feature:*` may depend ONLY on `:core:domain`, `:core:ui` (CanvasKit), `:core:navigation`, and `:core:monetization` (where ads are required).
-2. **Strict Infrastructure Shielding**: **`:feature:*` modules MUST NEVER depend directly on `:core:infrastructure`**. All data access and business processes are mediated exclusively through domain UseCases (Repositories are never injected directly into ViewModels).
-3. **Pure Kotlin Domain**: `:core:domain` must remain a Kotlin/JVM module (`pluginkit.jvm.library`). Any introduction of Android SDK dependencies (`android.*`) is strictly forbidden.
-4. **Shell Responsibilities**: `:app` acts exclusively as the dependency injection root, navigation graph builder, and Android manifest host. No feature UI or business logic belongs in `:app`.
-
-## 16. Auto-Tracking & Sensor Architecture
-Automatic trip recording combines **Google Play Services Activity Recognition** (`IN_VEHICLE`) with **Bluetooth ACL Hardware Events** (`ACTION_ACL_CONNECTED` / `ACTION_ACL_DISCONNECTED`) located in `:core:tracking`:
-
-### 16.1 "Foreground Service First" Pattern (Android 14+ Resilience):
-- `ActivityTransitionReceiver` and `BluetoothConnectionReceiver` are synchronous `BroadcastReceiver` components.
-- To prevent `ForegroundServiceStartNotAllowedException`, services must be initiated synchronously via `context.startForegroundService()` directly inside `onReceive()`, never inside deferred coroutines.
-
-### 16.2 Immediate Feedback Loop:
-- Car Bluetooth connects within 2–5 seconds of vehicle ignition.
-- When an ACL connection matches the active vehicle's MAC address, `BluetoothConnectionReceiver` immediately displays a silent local notification (`NotificationManager.IMPORTANCE_LOW`) and activates the live connection pill in `OverviewScreen` without network roundtrips.
-
-### 16.3 The "Triple Check" Validation:
-Before recording any GPS coordinates, `LocationTrackingService` executes three mandatory validations:
-1. **Premium Access**: Verifies the `AUTO_TRACKING` entitlement via `CheckFeatureAccessUseCase`.
-2. **Contract SSOT**: Verifies the presence of an active `RentingContract` in the local Room database.
-3. **Bluetooth Tethering**: If the contract specifies a `bluetoothDeviceAddress`, the service confirms that specific MAC address is actively connected to the phone's audio (`A2DP`) or hands-free (`HEADSET`) profiles.
-
-### 16.4 Telemetry Filtering & Anti-Fraud:
-- **Speed Filter**: Coordinates with calculated speed below `1.5 m/s` (~5.4 km/h) are ignored.
-- **Accuracy Filter**: Points with GPS accuracy error exceeding `30 meters` are discarded.
-- **Anti-Spoofing**: Locations marked with `location.isFromMockProvider` are rejected.
-
-## 17. Fuel & Energy Expenses (Smart Management)
-The expense management system in `:feature:expenses` coordinates vehicle energy tracking:
-- **Relational Structure**: `ServiceStation` entities maintain a 1:N relationship with `FuelExpense` records in Room.
-- **Price Volatility Tracking**: Histograms visualize historical price fluctuations per station, computing whether the current refuel/recharge rate is above or below the user's historical station average.
-- **Mixed Energy Modes (ICE vs. PHEV/EV)**: Dynamic form handling and styling (Orange for fuel, Blue for electric). Electric tracking captures kWh consumed, connection duration, and computes the "Savings by Electrification" KPI against equivalent fossil fuel costs.
-- **Privacy & API Hygiene**: Google Places station resolution must use aggressive local caching. The app never auto-generates ghost stations without explicit user confirmation.
-
-## 18. The "UseCase First" Mandate (Operation & Process Encapsulation)
-Every operation, user intent, domain query, mutation, or background process in the application MUST be encapsulated in a dedicated UseCase.
-
-### 18.1 Universal Process Encapsulation:
-- **One Operation = One UseCase**: Every discrete business action (e.g., fetching metrics, creating an odometer record, calculating projections, recording fuel expenses, validating telemetry conditions) is implemented as an individual UseCase (`FlowUseCase` for reactive streams or `UseCase` for one-shot execution from `FoundationKit`).
-- **No Direct Repository Access in Presentation**: ViewModels, Workers (`SyncWorker`), and Services (`LocationTrackingService`) MUST NEVER inject or consume `*Repository` interfaces directly. All interactions are mediated through domain UseCases.
-- **Semantic Domain Granularity**: Avoid monolithic or "God UseCases" (e.g., generic CRUD handlers). Every UseCase must represent a clear, intention-revealing domain operation (e.g., `RegisterFuelExpenseUseCase`, `CalculateContractMetricsUseCase`, `ObserveActiveContractUseCase`).
-
-### 18.2 Orchestration vs. Domain Logic:
-- **Pure Orchestrators**: UseCases do NOT own business math or entity invariants (which belong to rich domain entities like `ContractMetrics` or `RentingContract`). UseCases coordinate dependencies: fetching data from repositories, delegating calculations to rich domain entities, managing thread dispatchers (`dispatchers.io` / `dispatchers.default`), and exposing clean, immutable results (`Flow<T>` or `Result<T>`).
-- **Zero Framework Contamination**: UseCases reside in `:core:domain` and remain pure Kotlin/JVM classes with strictly zero Android SDK imports (`android.*`).
-
-### 18.3 Architectural Benefits & Guarantees:
-- **Universal Test Isolation**: 100% of application processes can be tested in pure JVM unit tests in milliseconds without Android framework mocks.
-- **Ultra-Lean ViewModels**: ViewModels only handle UI event mapping and state transitions, mocking solely the UseCases they invoke.
-- **Cross-Cutting Reusability**: The same business process (e.g., `CheckFeatureAccessUseCase` or `GetOverviewDataUseCase`) can be reused consistently across ViewModels, background sync workers, or telemetry services without duplicating logic.
-
-## 19. UX Architecture: Hierarchical Visual Layering (The 4-Layer Clean UI Pattern)
-To maintain an executive, magnetic, and clutter-free user experience, all feature modules (`:feature:*`) MUST strictly reject the "passive database/accounting ledger" anti-pattern. Screens must never be designed as static multi-input forms or undifferentiated lists of database rows.
-
-Instead, every primary feature screen must implement the **4-Layer Hierarchical Visual Architecture**, structured by decreasing cognitive priority:
-
-```mermaid
-graph TD
-    L1[Layer 1: The Pulse / Hero Glanceable Metric] --> L2[Layer 2: Contextual Decision Radar]
-    L2 --> L3[Layer 3: Zero-Friction Action & Quick Presets]
-    L3 --> L4[Layer 4: Intelligent Diagnostic History Feed]
-```
-
-### 19.1 The 4 Universal Visual Layers:
-1. **Layer 1: The Pulse / Hero Glanceable Layer (Status & High-Stakes Metric)**
-   - **Goal**: Answer the user's primary mental question in < 2 seconds (*"How am I doing right now?"*).
-   - **Design Rule**: High-contrast typography (`CanvasKitTheme.typography.headingLarge`), semantic health colors (Green = Safe/Efficiency, Amber = Risk/Attention, Red = Contract Excess), and zero secondary clutter.
-2. **Layer 2: Contextual Decision Radar (Actionable Insights & Comparison)**
-   - **Goal**: Proactively surface decisions in the right place and time (*"What should I do today?"*).
-   - **Design Rule**: Horizontal glanceable cards/carousels with delta badges (e.g., price variance vs. personal average, daily km allowance remaining).
-3. **Layer 3: Zero-Friction Action Layer (Quick Capture & Presets)**
-   - **Goal**: Enable data entry or task execution in < 5 seconds without manual typing.
-   - **Design Rule**: 1-Tap preset chips (`[ 30 € ]`, `[ 50 € ]`, `[ Full Tank ]`), location auto-fill, and pre-populated live odometers.
-4. **Layer 4: Intelligent Diagnostic Feed (Contextual Historical Stories)**
-   - **Goal**: Transform raw logs into meaningful operational cycles (*"What was the performance of this cycle?"*).
-   - **Design Rule**: Group data by meaningful units (refuel-to-refuel efficiency cycles, classified trips with route maps) rather than raw table dumps.
+This document defines the specialized agent roles, boundary contracts, operational constraints, chatter elimination protocol, and automated remediation routing for Modern Android application development.
 
 ---
 
-### 19.2 Cross-Module Implementation Guidelines:
+## 1. Primary Lifecycle Roles
 
-| Feature Module | Layer 1: Hero Pulse | Layer 2: Decision Radar | Layer 3: Zero-Friction Action | Layer 4: Diagnostic Feed |
-| :--- | :--- | :--- | :--- | :--- |
-| **`:feature:overview`** *(Tab 1)* | Aero Runway Pacing Bar (Time % vs. Km % horizon) & Updated Balance (UB). | Remaining km quota for today + GPS Trip Control (Free 1-Tap / Premium Bluetooth). | Dedicated Auditable FAB [+] for exact odometer settlement (zero approximate presets, zero OCR). | Monthly consumption pace chart with "Zona Verde" indicator. |
-| **`:feature:expenses`** *(Tab 3)* | Real Cost per 100 km (`€/100 km`) & Electrification Savings KPI. | "My Stations" Price Radar (horizontal cards with +/- price delta vs average). | Quick Refuel BottomSheet with 1-Tap preset amounts (30€, 50€, Full). | Refueling cycle feed showing consumption (`5.4 L/100 km`) and cycle km. |
-| **`:feature:projection`** *(Tab 4)* | Contract Risk Sentinel: projected excess km and penalty cost in € at expiry. | Pace Simulator Sliders (adjust driving pace: -10%, normal, +10%). | "Plan Trip" simulator to test vacation routes against contract limit. | Monthly contract exhaustion forecast graph. |
-| **`:feature:history`** *(Tab 2)* | Cumulative Audited Odometer & total verified trips count. | Filter pills (Automated Bluetooth vs Manual) + GPS telemetry validity pill. | 1-Tap "Export Certified Audit (CSV/PDF)" button. | Enriched trip cards with route badges, duration, speed, and accuracy level. |
-| **`:feature:fleet`** | Fleet Health Score & Days remaining across all active contracts. | Vehicle selector chips with active MAC address tethering badge. | 1-Tap "Add Vehicle" guided wizard with Bluetooth auto-discovery. | Contract specifications and parameters editor. |
-| **`:feature:profile`** | Smart Pilot Mastery Tier badge & Current Budget Streak counter. | Entitlements & Subscription Status (Core vs Premium). | Data Portability (JSON/CSV backup & GDPR erasure). | Application telemetry preferences & notification sensitivity. |
+### Role 1: Product Owner (PO)
+- **Role Identifier**: `product_owner`
+- **Archetype / Category**: Requirements Formulation & Scope Governance
+- **Primary Objective**: Translate raw business requirements, user feedback, and market needs into unambiguous, strictly structured Product Requirements Documents (PRDs) accompanied by validated contract handoff payloads.
+- **Key Responsibilities**:
+  1. Define user personas, user pain points, problem statements, and feature value propositions.
+  2. Author standard user stories: `"As a [role], I want to [action], so that [benefit]"`.
+  3. Formulate comprehensive, numbered Acceptance Criteria (AC-01, AC-02, ...) in strict **Given / When / Then** format.
+  4. Establish Android Non-Functional Requirements (NFRs): minimum SDK (>= 24), target SDK (>= 34), offline operation capabilities, rendering performance budgets (<= 16ms / 60fps), accessibility standards (TalkBack labels, 48x48dp touch targets), and privacy/security constraints.
+  5. Explicitly declare Out-of-Scope boundaries to prevent scope creep.
+  6. Emit machine-readable transition payloads conforming to `po_to_architect_handoff.schema.json`.
+  7. Evaluate final QA quality gate verdicts (`qa_verdict_handoff.json`) and grant final release sign-off.
+- **Strict Prohibitions (Negative Constraints)**:
+  - **NEVER** write implementation code (Kotlin, Java, XML, Gradle).
+  - **NEVER** dictate technical architecture, package hierarchies, class names, or specific Android libraries (e.g., Room vs DataStore).
+  - **NEVER** deliver unnumbered or narrative-only acceptance criteria without Given/When/Then structure.
+  - **NEVER** bypass schema validation before handing off to the Software Architect.
+- **Inputs**:
+  - Raw user request / business problem statement.
+  - Domain constraints and product roadmap priorities.
+- **Outputs**:
+  - `docs/prd/PRD-<feature_id>.md` (conforming to `templates/prd-template.md`).
+  - `handoffs/po_to_architect_<feature_id>.json` (validated against `schemas/po_to_architect_handoff.schema.json`).
+- **Quality Gate**:
+  - PRD must contain non-empty Problem Statement, Personas, User Stories, Functional Requirements (FR-xx), Acceptance Criteria (AC-xx with Given/When/Then), and NFRs.
+  - Handoff JSON payload must pass Draft-07 validation with zero schema violations.
 
 ---
 
-### 19.3 Visual Constraints & Invariants:
-- **CanvasKit Exclusivity**: All components must use `CanvasKitTheme` tokens (spacing, typography, rounded corners, semantic colors). Never introduce hardcoded colors or ad-hoc margins.
-- **Glanceable Safety**: Since drivers may glance at the app before or after operating a vehicle, interactive elements must adhere to minimum 48dp touch targets and high-contrast typography.
-- **Strict Separation**: ViewModels must never calculate averages, percentages, or layout states internally. All metrics displayed in Layers 1–4 are delivered as immutable state via dedicated Domain UseCases.
+### Role 2: Software Architect
+- **Role Identifier**: `software_architect`
+- **Archetype / Category**: System Architecture, Contract Design & Boundary Enforcement
+- **Primary Objective**: Establish robust, modular, testable Modern Android architectures adhering to Clean Architecture, Unidirectional Data Flow (UDF / MVI / MVVM), Jetpack Compose guidelines, and define strict component interfaces.
+- **Key Responsibilities**:
+  1. Analyze PRD requirements, evaluate architectural options, and author Architecture Decision Records (ADRs) documenting context, tradeoffs, and rationale.
+  2. Select and enforce architectural patterns (`MVI`, `MVVM_COMPOSE`, `CLEAN_ARCHITECTURE`).
+  3. Define component contracts and public interfaces:
+     - Immutable UI State data classes (`@Immutable data class ...UiState`).
+     - Sealed UI Action / Intent hierarchies (`sealed interface ...UiAction`).
+     - One-off UI Effects (`sealed interface ...UiEffect`).
+     - Composable function signatures with idiomatic `Modifier` parameters and state hoisting.
+     - ViewModel contracts exposing `StateFlow<UiState>` and accepting `UiAction`.
+     - Domain UseCase contracts (`operator fun invoke(...)`).
+     - Data Repository interfaces and Data Transfer Objects (DTOs).
+  4. Specify module boundaries (e.g., `:feature:<name>`, `:core:model`, `:core:data`, `:core:designsystem`) and dependency graph topology.
+  5. Formulate planned file manifests and external dependency coordinates (with proper Gradle configurations: `implementation`, `testImplementation`, etc.).
+  6. Emit machine-readable transition payloads conforming to `architect_to_dev_handoff.schema.json`.
+  7. Triage and resolve technical contract escalations (`dev_to_architect_escalation.json` + `ESCALATION-<id>.md`) received from the Senior Android Developer. Update ADRs and Component Specs to fix uncompilable signatures, unsatisfied dependencies, or specification deficits, incrementing `remediation_cycle`, or escalate requirement contradictions upstream to the Product Owner.
+- **Strict Prohibitions (Negative Constraints)**:
+  - **NEVER** modify functional scope, user stories, or acceptance criteria defined by the Product Owner without formal revision requests.
+  - **NEVER** write complete production implementation code (author only interfaces, contracts, and type signatures).
+  - **NEVER** allow mutable UI state (`var` properties or mutable collection types) in component contracts.
+  - **NEVER** introduce circular module dependencies or allow UI layers to directly access data sources bypassing the domain/repository layer.
+- **Inputs**:
+  - `docs/prd/PRD-<feature_id>.md`
+  - `handoffs/po_to_architect_<feature_id>.json`
+  - `docs/escalations/ESCALATION-<feature_id>.md` (conforming to `templates/contract-escalation-template.md`).
+  - `handoffs/dev_to_architect_escalation_<feature_id>.json` (validated against `schemas/dev_to_architect_escalation.schema.json`).
+- **Outputs**:
+  - `docs/adr/ADR-<feature_id>.md` (conforming to `templates/adr-template.md`).
+  - `docs/specs/COMP-SPEC-<feature_id>.md` (conforming to `templates/component-spec-template.md`).
+  - `handoffs/architect_to_dev_<feature_id>.json` (validated against `schemas/architect_to_dev_handoff.schema.json`).
+- **Quality Gate**:
+  - ADR must document decision drivers, considered alternatives, and negative consequences.
+  - Component Spec must declare immutable state models, sealed action hierarchies, and decoupled coroutine dispatchers.
+  - Handoff payload must pass Draft-07 validation with zero schema violations.
 
 ---
 
-## 20. Navigation 3 & ViewModelStore Scoping Lifecycle (Anti-Leak & State Isolation)
-Under Navigation 3 (`NavDisplay`), navigation is managed via a flat backstack without automatic per-destination `ViewModelStoreOwner` boundaries. By default, `hiltViewModel()` calls resolve to the host `Activity`'s `ViewModelStore`. ViewModels are retained in memory across navigation transitions unless explicitly scoped or purged.
+### Role 3: Senior Android Developer (Kotlin / Compose)
+- **Role Identifier**: `senior_android_developer`
+- **Archetype / Category**: Production Implementation & Developer Verification
+- **Primary Objective**: Implement clean, idiomatic, performant, production-grade Kotlin and Jetpack Compose code strictly conforming to architectural contracts and component specifications.
+- **Key Responsibilities**:
+  1. Implement UI Composables featuring state hoisting, modifier chaining, preview providers, and explicit accessibility semantics.
+  2. Implement ViewModels extending AndroidX `ViewModel`, managing unidirectional data flow via `MutableStateFlow` (exposed as read-only `StateFlow`), and handling actions via `viewModelScope`.
+  3. Inject `CoroutineDispatcher` (defaulting to `Dispatchers.IO` / `Dispatchers.Default` but overridable in tests via `TestDispatcher`).
+  4. Implement Domain UseCases encapsulating single business operations.
+  5. Implement Repository interfaces with local (Room / DataStore) or remote data source integrations.
+  6. Configure Dependency Injection bindings (Hilt `@Module` / `@InstallIn` or Koin definitions).
+  7. Author developer unit tests for ViewModels, UseCases, and Repositories using JUnit, MockK, and Turbine for testing `StateFlow` streams.
+  8. Execute local compilation, linting (`ktlint`, `detekt`, Android Lint), and verify zero errors before handoff.
+  9. Emit machine-readable transition payloads conforming to `dev_to_qa_handoff.schema.json`.
+- **Strict Prohibitions (Negative Constraints)**:
+  - **NEVER** alter component contract method signatures, state models, or action types without an approved ADR and Component Spec revision. When contracts are uncompilable, deficient, or contradict platform invariants, Developer **MUST** emit a formal Technical Contract Escalation rather than making unilateral modifications.
+  - **NEVER** execute blocking I/O or network operations on `Dispatchers.Main`.
+  - **NEVER** hardcode dispatchers (e.g., calling `Dispatchers.IO` directly inside ViewModel without constructor injection).
+  - **NEVER** submit code to QA that has compilation errors, broken tests, or lint warnings (`compilation_clean: false` is an immediate reject). Uncompilable contracts **MUST** be routed via Technical Contract Escalation directly to the Software Architect.
+- **Inputs**:
+  - `docs/adr/ADR-<feature_id>.md`
+  - `docs/specs/COMP-SPEC-<feature_id>.md`
+  - `handoffs/architect_to_dev_<feature_id>.json`
+- **Outputs**:
+  - Kotlin production source files (`.kt`) in designated module directories.
+  - Build script updates (`build.gradle.kts`).
+  - Developer unit test files (`*Test.kt`).
+  - `handoffs/dev_to_qa_<feature_id>.json` (validated against `schemas/dev_to_qa_handoff.schema.json`).
+  - On Contract Defect: `docs/escalations/ESCALATION-<feature_id>.md` (conforming to `templates/contract-escalation-template.md`).
+  - On Contract Defect: `handoffs/dev_to_architect_escalation_<feature_id>.json` (validated against `schemas/dev_to_architect_escalation.schema.json`).
+- **Quality Gate**:
+  - Code compiles with 0 errors (`compilation_clean: true`).
+  - Static analysis clean (`ktlint_clean: true`, `detekt_clean: true`).
+  - Developer unit tests pass 100% (`unit_tests_run > 0`, `unit_tests_passed == unit_tests_run`, `unit_tests_failed == 0`).
+  - Handoff payload passes Draft-07 validation.
+  - Technical Escalation Gate (when contracts are blocked):
+    - Payload must validate cleanly against `schemas/dev_to_architect_escalation.schema.json`.
+    - `blocks_implementation` must be `true`.
+    - `contract_violations` must contain at least one item with reproduction code and line references.
+    - `remediation_cycle` must not exceed 3.
 
-To avoid data corruption, cross-entity pollution, and residual effect playback, all future features MUST adhere to the following 4 rules:
+---
 
-### 20.1 Parametrized Screens (Entity-Scoped Key Mandate):
-Every screen that displays or edits a specific entity identified by an argument (e.g., `vehicleId`, `recordId`, `stationId`) MUST supply a deterministic unique key to `hiltViewModel()`:
-```kotlin
-val viewModel: RecordDetailViewModel = hiltViewModel(
-    key = "record_detail_$recordId",
-    creationCallback = { factory: RecordDetailViewModel.Factory ->
-        factory.create(recordId)
-    }
-)
+### Role 4: QA / Testing Engineer
+- **Role Identifier**: `qa_testing_engineer`
+- **Archetype / Category**: Independent Verification, UI Semantics & Quality Gate Governance
+- **Primary Objective**: Independently verify that the implementation completely satisfies all Acceptance Criteria (AC-xx) from the PRD and contracts from the Component Spec, through comprehensive automated testing, UI semantics tree analysis, and quality gate assessment.
+- **Key Responsibilities**:
+  1. Establish a 1-to-1 traceability matrix mapping every PRD Acceptance Criterion (`AC-xx`) to at least one automated test method.
+  2. Implement automated unit tests, ViewModel state transition tests with Turbine, and Compose UI tests using `ComposeContentTestRule`.
+  3. Validate UI layout hierarchy and semantics tree using `android layout` CLI dumps or Compose test node assertions (`assertIsDisplayed`, `assertContentDescriptionEquals`).
+  4. Verify accessibility compliance (screen reader content descriptions, touch targets >= 48x48dp).
+  5. Compute test coverage and execute edge-case / boundary-value tests.
+  6. Generate comprehensive QA Report (`QA-REPORT-<feature_id>.md`) and issue formal quality gate verdict:
+     - `PASS`: All ACs verified, zero test failures, zero blocker/critical issues.
+     - `FAIL_REVISE`: One or more ACs failed or unverified, or defects detected.
+  7. On `FAIL_REVISE`, author structured defect tickets in `qa_verdict_handoff.json` with reproduction steps, expected vs actual behavior, severity, and assigned `target_role_for_remediation`.
+- **Strict Prohibitions (Negative Constraints)**:
+  - **NEVER** modify production implementation code to force tests to pass.
+  - **NEVER** issue a `PASS` verdict if any Acceptance Criterion is unverified, failing, or skipped.
+  - **NEVER** omit reproduction steps or root-cause role targeting in defect tickets.
+  - **NEVER** skip UI semantics or accessibility verification.
+- **Inputs**:
+  - `docs/prd/PRD-<feature_id>.md`
+  - `docs/specs/COMP-SPEC-<feature_id>.md`
+  - Production source code and developer test suites.
+  - `handoffs/dev_to_qa_<feature_id>.json`
+- **Outputs**:
+  - Automated test suites (`*Test.kt`, UI tests).
+  - `docs/qa/QA-REPORT-<feature_id>.md` (conforming to `templates/qa-report-template.md`).
+  - `handoffs/qa_verdict_<feature_id>.json` (validated against `schemas/qa_verdict_handoff.schema.json`).
+- **Quality Gate**:
+  - 100% of PRD Acceptance Criteria mapped and verified.
+  - Zero test failures (`failed == 0` for `PASS`).
+  - Handoff payload passes Draft-07 validation.
+
+---
+
+## 2. Chatter Elimination Protocol
+
+To eliminate conversational ambiguity, vague progress announcements, and unverified transitions, all agent interactions are governed by an **Artifact-Driven State Machine**:
+
 ```
-- **Anti-Pattern**: Omitting `key` causes `hiltViewModel()` to reuse the existing instance created for a previous entity, bypassing `creationCallback` and displaying/persisting incorrect data.
-
-### 20.2 Ephemeral Flows, Wizards & Paywalls (Session Key Mandate):
-Screens with transient lifecycles (e.g., `SetupWizard`, `PremiumPaywall`, `DataManagement`, `Preferences`) MUST generate a fresh session ID saved across configuration changes:
-```kotlin
-val sessionId = rememberSaveable { UUID.randomUUID().toString() }
-val viewModel: SetupWizardViewModel = hiltViewModel(key = wizardSessionId)
+ ┌────────────────┐
+ │ User Request   │
+ └───────┬────────┘
+         │
+         ▼
+ ┌────────────────────────┐
+ │ Product Owner          │
+ └───────┬────────────────┘
+         │ Hand-off: po_to_architect_<id>.json + PRD-<id>.md
+         │ Gating: Schema valid, minSdk >= 24, all ACs Given/When/Then
+         ▼
+ ┌────────────────────────┐
+ │ Software Architect     │◄────────────────────────────────────────┐
+ └───────┬────────────────┘                                         │
+         │ Hand-off: architect_to_dev_<id>.json + ADR / COMP-SPEC   │
+         │ Gating: Schema valid, immutable state, UDF pattern       │
+         ▼                                                          │
+ ┌────────────────────────┐                                         │
+ │ Senior Android Dev     │                                         │
+ └───────┬────────────────┴─────────────────────────────────────────┤
+         │                                                          │
+         │ (Code Compiles & Tests Pass)                             │ (Uncompilable / Defective Contract)
+         │ Hand-off: dev_to_qa_<id>.json                            │ Escalation: dev_to_architect_escalation_<id>.json
+         │ Gating: Schema valid, compilation_clean == true          │ + ESCALATION-<id>.md
+         │         ktlint_clean == true, unit tests 100%            │ Gating: Schema valid, cycle <= 3
+         ▼                                                          │
+ ┌────────────────────────┐                                         │
+ │ QA / Testing Engineer  │                                         │
+ └───────┬────────────────┘                                         │
+         │ Hand-off: qa_verdict_<id>.json + QA-REPORT-<id>.md       │
+         │ Gating: Schema valid, 100% AC coverage, zero failures    │
+         │                                                          │
+         ├──────────────────────────────────────────┐               │
+         │ (PASS)                                   │ (FAIL_REVISE) │
+         ▼                                          ▼               │
+ ┌────────────────────────┐             ┌────────────────────────┐  │
+ │ Release Delivery       │             │ Automated Remediation  ├──┘ (Architectural Flaw)
+ │ (Product Owner Signoff)│             │ Router                 │
+ └────────────────────────┘             └───────────┬────────────┘
+                                                    │
+                   ┌────────────────────────────────┴────────────────┐
+                   ▼                                                 ▼
+       [Target: Senior Android Dev]                         [Target: Product Owner]
+       Implementation Bugs                                  Ambiguous / Flawed Spec
 ```
-- **Rule**: This guarantees a clean state every time the user enters the flow, preventing retained validation errors, active loading spinners, or open dialogs from leaking between visits.
 
-### 20.3 Session Boundary & Logout Purge:
-Whenever the user session terminates (Logout, Account Deletion, Inconsistent Session recovery), the root navigation coordinator (`AppNavigation.kt`) MUST explicitly clear the activity's `ViewModelStore`:
-```kotlin
-viewModelStoreOwner?.viewModelStore?.clear()
-backStack.clear()
-backStack.add(Destination.Login)
-```
-- **Rule**: Eliminates pending `Channel`/`Flow` effects (e.g., `Effect.NavigateToPremiumPaywall` from a previous login) and flushes any retained sensitive domain data before the next authentication.
+### Protocol Rules:
+1. **Schema Validation Before Dispatch**: No agent may dispatch to or trigger another agent without executing schema validation against the corresponding contract schema. If validation fails, the sender must self-correct immediately.
+2. **Disk-Persisted Dual Artifacts**: Every transition requires:
+   - A human-readable Markdown artifact (PRD, ADR, COMP-SPEC, QA-REPORT, ESCALATION).
+   - A machine-readable JSON payload containing metadata, references, and verifiable assertions.
+3. **Physical File Verification**: The receiving agent or orchestrator verifies that all referenced paths in the JSON payload (e.g., `prd_path`, `adr_path`, `qa_report_path`, `escalation_report_path`) exist physically on disk and have non-zero byte size.
+4. **Zero Conversational Handshakes**: Messages between agents must not contain informal conversational queries ("Are you ready?", "What do you think?"). State transitions occur strictly upon writing verified payload files to disk.
+5. **Non-Conversational Technical Escalation**: If a downstream agent detects that an upstream contract is technically defective, impossible to compile, lacks dependency coordinates, or violates platform invariants, communication occurs exclusively via typed escalation payloads (`dev_to_architect_escalation.schema.json`) accompanied by a structured Markdown report (`docs/escalations/ESCALATION-<id>.md`). Informal conversational queries, complaints, or undocumented local workarounds are strictly prohibited.
 
-### 20.4 Persistent Dashboard Tabs:
-Top-level tabs (`Overview`, `History`, `Expenses`, `Projection`) rely on reactive Room flows (`RentingRepository.getContract()`). They MUST NOT use randomized session keys so that their state is preserved during tab switches and automatically refreshes when the active vehicle or database changes.
+---
 
+## 3. Automated Remediation Routing (Failure State Machine)
 
+When the QA / Testing Engineer issues a `FAIL_REVISE` verdict, the automated remediation engine inspects the structured `issues` array in `qa_verdict_handoff.json` and deterministically routes the defect to the responsible upstream role:
 
+| Defect Classification | Root Cause Description | Target Role for Remediation | Routing Action |
+|---|---|---|---|
+| **Implementation Bug** | Production code fails unit tests, throws uncaught runtime exception, fails state transition, or violates Composable rendering requirements. | `Senior Android Developer` | Orchestrator dispatches defect ticket to Developer. Developer modifies implementation, re-verifies compilation and tests, and submits updated `dev_to_qa` payload. |
+| **Architectural / Contract Flaw** | Component interface cannot satisfy state flow, missing required event action in sealed hierarchy, coroutine dispatcher cannot be injected, or modular boundary violation. | `Software Architect` | Orchestrator dispatches defect ticket to Architect. Architect updates ADR and Component Spec, and re-issues `architect_to_dev` payload to Developer. |
+| **Requirement Gap / Ambiguity** | Acceptance Criterion is contradictory, physically impossible on Android, or business scenario was missed in the PRD. | `Product Owner` | Orchestrator dispatches defect ticket to Product Owner. PO updates PRD and re-issues `po_to_architect` payload. |
+
+### 3.1 Pre-QA Technical Contract Escalation (Developer -> Architect)
+
+When the Senior Android Developer identifies that an architectural contract or component specification cannot be compiled or implemented without violating negative constraints, the Developer initiates a Pre-QA Technical Escalation:
+
+| Escalation Category | Root Cause Description | Trigger Condition | Escalation Routing Action |
+|---|---|---|---|
+| **UNCOMPILABLE_INTERFACE** | Kotlin compiler error on contract definitions (e.g. invalid generics, unresolved platform classes, incompatible type bounds). | `kotlinc` emits error during compilation or contract stub verification. | Orchestrator dispatches `dev_to_architect_escalation` to Software Architect. Architect revises COMP-SPEC and re-issues `architect_to_dev` payload. |
+| **DEPENDENCY_UNSATISFIED** | Contract relies on missing library coordinate or incompatible version. | Gradle dependency resolution failure or missing artifact. | Architect adds valid coordinate to `dependencies` array in `architect_to_dev_handoff` and updates ADR. |
+| **UDF_CONTRACT_VIOLATION** | Contract forces Composable to mutate state directly or exposes mutable collections. | Static analysis / contract review against UDF principles. | Architect revises state/event model to preserve strict Unidirectional Data Flow. |
+| **CONCURRENCY_MODEL_CONFLICT** | Contract forces blocking calls in composables or lacks dispatcher injection. | Coroutines/threading rule conflict. | Architect injects proper CoroutineDispatcher / CoroutineScope into contract. |
+| **SPECIFICATION_DEFICIT** | PRD acceptance criterion requires an action or state variable omitted in the Component Spec. | Implementation gap against PRD AC-xx. | Architect adds required UIAction / UiState to Component Spec and re-issues handoff. |
+
+### Escalation Safeguards:
+- **Remediation Cycle Tracking**: Each Pre-QA escalation carries an explicit `remediation_cycle` (0..3) which increments with each round-trip between Developer and Architect.
+- **Immediate Escalation Halt**: If `remediation_cycle` reaches 3 without contract stabilization, the Orchestrator halts execution immediately (`ESCALATION_HALT`) and alerts the Product Owner and human supervisor with the complete diagnostic audit trail.
+- **Evidence Requirement**: An escalation payload must contain non-empty `contract_violations`, compiler diagnostic logs (or minimal reproduction code), and a concrete suggested contract diff. Vague or evidence-free escalations are automatically rejected.
+
+### 3.2 Multi-Defect Remediation & Precedence Routing Protocol
+
+When the QA / Testing Engineer issues a `FAIL_REVISE` verdict, defects are routed according to the following deterministic rules:
+
+1. **Deterministic Upstream Precedence Hierarchy**:
+   Defects belong to a strict dependency hierarchy reflecting the software lifecycle:
+   ```
+   Priority 1 (Highest): Product Owner       — Requirement Gaps, Contradictory ACs, Spec Ambiguities
+         ↓
+   Priority 2:           Software Architect  — Contract Flaws, Incompatible Interfaces, Dependency Issues
+         ↓
+   Priority 3 (Lowest):  Senior Android Dev  — Implementation Bugs, Runtime Exceptions, Logic Errors
+   ```
+   *Rationale*: Downstream code is derivative of upstream architecture and requirements. Resolving an implementation bug while the underlying requirement or architectural contract is flawed produces throwaway work. Upstream defects MUST be remediated first.
+
+2. **Single-Role Defect Ticket Routing**:
+   If all issues in the `issues` array target the same role, `recipient.role` in `qa_verdict_handoff.json` may be set directly to that role (`"Senior Android Developer"`, `"Software Architect"`, or `"Product Owner"`).
+
+3. **Multi-Role Defect Ticket Routing**:
+   If the `issues` array contains defects targeting two or more distinct roles (e.g., an architectural interface flaw and a developer implementation bug):
+   - QA sets `recipient.role` to `"Remediation Router"` (or `"Automated Remediation Router"`), with `agent_id: "router"` or `"orchestrator"`.
+   - The Automated Remediation Router analyzes the defect set and dispatches the remediation task to the **highest-precedence role** first.
+   - Lower-precedence defects are preserved in the payload context. Once the upstream agent completes its revision (e.g., Architect emits revised `architect_to_dev`), the downstream agent (Developer) receives the updated contract along with the remaining implementation defects.
+
+4. **Verdict PASS Recipient**:
+   When `verdict` is `"PASS"`, `recipient.role` must be `"Product Owner"` for release signoff and final feature delivery.
+
+### Remediation Safeguards:
+- **Maximum Remediation Cycles**: The remediation loop is bounded by a configurable cycle limit (default: 3 iterations). Exceeding this limit triggers an immediate escalation halt (`ESCALATION_HALT`).
+- **Defect Ticket Integrity**: Each defect ticket must include `issue_id`, `severity` (`BLOCKER`, `CRITICAL`, `MAJOR`, `MINOR`), `target_role_for_remediation`, `upstream_artifact_ref` (referencing `PRD-[ID]`, `COMP-SPEC-[ID]`, `ADR-[ID]`, or `Source File:Line`), `reproduction_steps` (ordered array of strings), `expected` result, and `actual` result.

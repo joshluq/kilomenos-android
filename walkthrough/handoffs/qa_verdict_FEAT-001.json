@@ -1,0 +1,45 @@
+{
+  "handoff_id": "HANDOFF-QA-VERDICT-FEAT001-V1",
+  "schema_version": "1.0.0",
+  "timestamp": "2026-09-17T14:45:00Z",
+  "sender": {
+    "role": "QA/Testing Engineer",
+    "agent_id": "qa-agent-01"
+  },
+  "recipient": {
+    "role": "Product Owner",
+    "agent_id": "po-agent-01"
+  },
+  "feature_id": "FEAT-001",
+  "dev_handoff_ref": "HANDOFF-DEV-QA-FEAT001-V1",
+  "verdict": "PASS",
+  "qa_report_path": "walkthrough/docs/QA-REPORT-FEAT-001.md",
+  "remediation_cycle": 0,
+  "test_execution_summary": {
+    "total_tests": 12,
+    "passed": 12,
+    "failed": 0,
+    "skipped": 0,
+    "coverage_percentage": 92.5
+  },
+  "acceptance_matrix": [
+    {
+      "ac_id": "AC-01",
+      "verified": true,
+      "verifying_test_case": "ProfileViewModelTest#testInitialLoad",
+      "notes": "Verified state emitted within 10ms"
+    },
+    {
+      "ac_id": "AC-02",
+      "verified": true,
+      "verifying_test_case": "ProfileViewModelTest#testOfflineToggle",
+      "notes": "DataStore update verified"
+    }
+  ],
+  "ui_inspection_summary": {
+    "compose_semantics_valid": true,
+    "touch_targets_compliant": true,
+    "accessibility_labels_present": true
+  },
+  "issues": []
+}
