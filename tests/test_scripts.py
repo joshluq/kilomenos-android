@@ -32,35 +32,21 @@ class TestHelperScripts(unittest.TestCase):
             skills_dir = PROJECT_ROOT / ".gemini" / "antigravity" / "skills"
         else:
             skills_dir = PROJECT_ROOT / "skills"
-        cls.device_runner = load_module(
-            "device_runner", skills_dir / "android-device" / "scripts" / "device_runner.py"
-        )
-        cls.inspect_layout = load_module(
-            "inspect_layout", skills_dir / "android-device" / "scripts" / "inspect_layout.py"
-        )
-        cls.run_journey = load_module(
-            "run_journey", skills_dir / "android-device" / "scripts" / "run_journey.py"
-        )
-        cls.test_runner = load_module(
-            "test_runner", skills_dir / "android-testing" / "scripts" / "test_runner.py"
-        )
-        cls.generate_test_scaffold = load_module(
-            "generate_test_scaffold",
-            skills_dir / "android-testing" / "scripts" / "generate_test_scaffold.py",
-        )
-        cls.lint_triage = load_module(
-            "lint_triage", skills_dir / "android-quality" / "scripts" / "lint_triage.py"
-        )
-        cls.logcat_triage = load_module(
-            "logcat_triage", skills_dir / "android-quality" / "scripts" / "logcat_triage.py"
-        )
-        cls.sanity_check = load_module(
-            "sanity_check", skills_dir / "android-quality" / "scripts" / "sanity_check.py"
-        )
-        cls.crash_listener = load_module(
-            "crash_listener",
-            skills_dir / "senior-debugging-engineer" / "scripts" / "crash_listener.py",
-        )
+        def safe_load(attr_name, mod_name, script_path):
+            if script_path.is_file():
+                setattr(cls, attr_name, load_module(mod_name, script_path))
+            else:
+                setattr(cls, attr_name, None)
+
+        safe_load("device_runner", "device_runner", skills_dir / "android-device" / "scripts" / "device_runner.py")
+        safe_load("inspect_layout", "inspect_layout", skills_dir / "android-device" / "scripts" / "inspect_layout.py")
+        safe_load("run_journey", "run_journey", skills_dir / "android-device" / "scripts" / "run_journey.py")
+        safe_load("test_runner", "test_runner", skills_dir / "android-testing" / "scripts" / "test_runner.py")
+        safe_load("generate_test_scaffold", "generate_test_scaffold", skills_dir / "android-testing" / "scripts" / "generate_test_scaffold.py")
+        safe_load("lint_triage", "lint_triage", skills_dir / "android-quality" / "scripts" / "lint_triage.py")
+        safe_load("logcat_triage", "logcat_triage", skills_dir / "android-quality" / "scripts" / "logcat_triage.py")
+        safe_load("sanity_check", "sanity_check", skills_dir / "android-quality" / "scripts" / "sanity_check.py")
+        safe_load("crash_listener", "crash_listener", skills_dir / "senior-debugging-engineer" / "scripts" / "crash_listener.py")
         cls.openspec_cli = load_module(
             "openspec_cli",
             PROJECT_ROOT / "scripts" / "openspec_cli.py",
@@ -77,9 +63,15 @@ class TestHelperScripts(unittest.TestCase):
             "workflow",
             PROJECT_ROOT / "scripts" / "workflow.py",
         )
+        cls.backend_sanity_check = load_module(
+            "backend_sanity_check",
+            PROJECT_ROOT / "scripts" / "backend_sanity_check.py",
+        )
 
     # 1. device_runner.py tests
     def test_device_runner_parser_and_env(self):
+        if not self.device_runner:
+            self.skipTest("device_runner not present in profile")
         parser = self.device_runner.build_parser()
         self.assertIsNotNone(parser)
         help_text = parser.format_help()
@@ -95,6 +87,8 @@ class TestHelperScripts(unittest.TestCase):
 
     # 2. inspect_layout.py tests
     def test_inspect_layout_parsing_and_center_calculation(self):
+        if not self.inspect_layout:
+            self.skipTest("inspect_layout not present in profile")
         # Bounds parsing
         b_str = "[100,200][300,600]"
         x1, y1, x2, y2 = self.inspect_layout.parse_bounds(b_str)
@@ -125,6 +119,8 @@ class TestHelperScripts(unittest.TestCase):
 
     # 3. run_journey.py tests
     def test_run_journey_parsing_and_evaluation(self):
+        if not self.run_journey:
+            self.skipTest("run_journey not present in profile")
         journey_xml = """<journey name="Login Flow">
           <description>Test user login</description>
           <actions>
@@ -155,6 +151,8 @@ class TestHelperScripts(unittest.TestCase):
 
     # 4. test_runner.py tests
     def test_test_runner_junit_parsing_and_ac_mapping(self):
+        if not self.test_runner:
+            self.skipTest("test_runner not present in profile")
         junit_xml = """<?xml version="1.0" encoding="UTF-8"?>
         <testsuite name="com.example.profile.ProfileViewModelTest" tests="3" skipped="0" failures="0" errors="0" time="0.85">
           <testcase name="ac01_whenInitialLoad_emitsLoadingThenSuccess" classname="com.example.profile.ProfileViewModelTest" time="0.3"/>
@@ -184,6 +182,8 @@ class TestHelperScripts(unittest.TestCase):
 
     # 5. generate_test_scaffold.py tests
     def test_generate_test_scaffold_viewmodel_and_screen(self):
+        if not self.generate_test_scaffold:
+            self.skipTest("generate_test_scaffold not present in profile")
         spec_text = """# Component Specification: ProfileViewModel
 Package: `com.example.profile`
 Dependencies:
@@ -220,6 +220,8 @@ Acceptance Criteria:
 
     # 6. lint_triage.py tests
     def test_lint_triage_xml_parsing_and_gating(self):
+        if not self.lint_triage:
+            self.skipTest("lint_triage not present in profile")
         lint_xml = """<?xml version="1.0" encoding="UTF-8"?>
         <issues format="6" by="lint 8.2.0">
           <issue id="HardcodedText" severity="Warning" message="Hardcoded string" category="Internationalization" priority="5">
@@ -252,6 +254,8 @@ Acceptance Criteria:
 
     # 7. logcat_triage.py tests
     def test_logcat_triage_crash_and_anr_extraction(self):
+        if not self.logcat_triage:
+            self.skipTest("logcat_triage not present in profile")
         logcat_text = """09-17 15:30:12.123 1024 1024 E AndroidRuntime: FATAL EXCEPTION: main
 09-17 15:30:12.123 1024 1024 E AndroidRuntime: Process: com.example.profile, PID: 1024
 09-17 15:30:12.123 1024 1024 E AndroidRuntime: java.lang.NullPointerException: Required user profile was null
@@ -270,6 +274,8 @@ Acceptance Criteria:
 
     # 8. sanity_check.py tests
     def test_sanity_check_handoff_validation(self):
+        if not self.sanity_check:
+            self.skipTest("sanity_check not present in profile")
         clean_handoff = self.sanity_check.generate_sample_dev_handoff("FEAT-001")
         with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
             f.write(json.dumps(clean_handoff))
@@ -292,6 +298,8 @@ Acceptance Criteria:
 
     # 9. crash_listener.py tests
     def test_crash_listener_parser(self):
+        if not self.crash_listener:
+            self.skipTest("crash_listener not present in profile")
         parser = self.crash_listener.build_parser()
         self.assertIsNotNone(parser)
         help_text = parser.format_help()
@@ -302,6 +310,8 @@ Acceptance Criteria:
         self.assertIn("--package", help_text)
 
     def test_crash_listener_simulation_npe(self):
+        if not self.crash_listener:
+            self.skipTest("crash_listener not present in profile")
         sim_log = self.crash_listener.generate_simulation("npe", "es.joshluq.kmsafe")
         crashes = self.crash_listener.parse_logcat_text(sim_log, "es.joshluq.kmsafe")
         self.assertEqual(len(crashes), 1)
@@ -316,6 +326,8 @@ Acceptance Criteria:
         self.assertIn("es.joshluq.kmsafe", primary["class_name"])
 
     def test_crash_listener_simulation_compose(self):
+        if not self.crash_listener:
+            self.skipTest("crash_listener not present in profile")
         sim_log = self.crash_listener.generate_simulation("compose", "es.joshluq.kmsafe")
         crashes = self.crash_listener.parse_logcat_text(sim_log, "es.joshluq.kmsafe")
         self.assertEqual(len(crashes), 1)
@@ -327,6 +339,8 @@ Acceptance Criteria:
         self.assertEqual(primary["line"], 64)
 
     def test_crash_listener_simulation_anr(self):
+        if not self.crash_listener:
+            self.skipTest("crash_listener not present in profile")
         sim_log = self.crash_listener.generate_simulation("anr", "es.joshluq.kmsafe")
         crashes = self.crash_listener.parse_logcat_text(sim_log, "es.joshluq.kmsafe")
         self.assertEqual(len(crashes), 1)
@@ -336,6 +350,8 @@ Acceptance Criteria:
         self.assertEqual(crash.thread_name, "main")
 
     def test_crash_listener_defect_ticket_generation(self):
+        if not self.crash_listener:
+            self.skipTest("crash_listener not present in profile")
         sim_log = self.crash_listener.generate_simulation("npe", "es.joshluq.kmsafe")
         crashes = self.crash_listener.parse_logcat_text(sim_log, "es.joshluq.kmsafe")
         defect = crashes[0].to_defect_issue()
@@ -429,6 +445,9 @@ Acceptance Criteria:
 
     # 12. install_to_project.py Hub & Spoke Profiles tests
     def test_install_to_project_profiles(self):
+        if not (PROJECT_ROOT / "profiles").is_dir():
+            self.skipTest("Hub-and-spoke multi-profile installation requires hub repository with profiles/ directory.")
+
         with tempfile.TemporaryDirectory() as tmp_dir:
             tmp_root = Path(tmp_dir)
 
@@ -594,8 +613,120 @@ Acceptance Criteria:
             for f in (self.workflow.ROOT_DIR / "handoffs").glob(f"*{change_id}*"):
                 f.unlink(missing_ok=True)
 
+    def test_sanity_check_inner_loop(self):
+        """Tests Android sanity_check.py with target_module and fast inner-loop mode."""
+        if not self.sanity_check:
+            self.skipTest("sanity_check not present in profile")
+        from unittest.mock import patch
+
+        # Mock run_gradle_task to simulate fast execution
+        with patch.object(self.sanity_check, "run_gradle_task", return_value=(True, 450, "BUILD SUCCESSFUL")):
+            res = self.sanity_check.execute_live_sanity_check(
+                Path("app"),
+                target_module=":feature:profile",
+                fast=True
+            )
+            self.assertTrue(res["can_handoff_to_qa"])
+            self.assertTrue(res["compilation_clean"])
+            self.assertTrue(res["ktlint_clean"])
+            self.assertTrue(res["lint_clean"])
+            self.assertTrue(res["metrics"]["fast_mode"])
+            self.assertEqual(res["metrics"]["target_module"], ":feature:profile")
+
+    def test_backend_sanity_check_suite(self):
+        """Tests backend_sanity_check.py: migration audit, mock handoff, and schema compliance."""
+        # 1. Test sample payload schema validation
+        sample = self.backend_sanity_check.generate_sample_dev_handoff("FEAT-009")
+        schema_path = PROJECT_ROOT / "schemas" / "dev_to_qa_handoff.schema.json"
+        schema = json.loads(schema_path.read_text(encoding="utf-8"))
+        self.workflow.validate_schema(sample, schema)
+        self.assertEqual(sample["sender"]["role"], "Senior Backend Developer")
+        self.assertEqual(sample["recipient"]["role"], "Backend QA Engineer")
+
+        # 2. Test migration auditing with temp directory
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmp_path = Path(tmpdir)
+            mig_dir = tmp_path / "supabase" / "migrations"
+            mig_dir.mkdir(parents=True)
+
+            # Insecure migration (CREATE TABLE without RLS)
+            insecure_sql = mig_dir / "20260901_insecure.sql"
+            insecure_sql.write_text("CREATE TABLE public.unprotected_items (id uuid primary key);", encoding="utf-8")
+            audit1 = self.backend_sanity_check.audit_supabase_migrations(tmp_path)
+            self.assertFalse(audit1["passed"])
+            self.assertTrue(any("unprotected_items" in v for v in audit1["violations"]))
+
+            # Add RLS and policy
+            secure_sql = mig_dir / "20260902_secure.sql"
+            secure_sql.write_text("""
+            ALTER TABLE public.unprotected_items ENABLE ROW LEVEL SECURITY;
+            CREATE POLICY "Users can access own items" ON public.unprotected_items
+                FOR ALL USING (auth.uid() = user_id);
+            """, encoding="utf-8")
+            audit2 = self.backend_sanity_check.audit_supabase_migrations(tmp_path)
+            self.assertTrue(audit2["passed"])
+
+            # Test secret leakage detection
+            leak_sql = mig_dir / "20260903_leak.sql"
+            leak_sql.write_text("SUPABASE_SERVICE_ROLE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.secretkeyhere12345';", encoding="utf-8")
+            audit3 = self.backend_sanity_check.audit_supabase_migrations(tmp_path)
+            self.assertFalse(audit3["passed"])
+            self.assertTrue(any("Security Violation" in v for v in audit3["violations"]))
+
+    def test_workflow_approval_gate(self):
+        """Tests workflow.py approve command and build --check-approval gate."""
+        change_id = "TEST-APPROVAL-01"
+        try:
+            # Phase 1: Plan
+            self.workflow.cmd_workflow_plan(
+                change_id,
+                title="Test Approval Workflow",
+                profile="backend",
+                simulate=True,
+                no_jira=True
+            )
+            proposal_file = self.workflow.CHANGES_DIR / change_id / "proposal.md"
+            self.assertTrue(proposal_file.is_file())
+
+            # Initially unapproved: build with check_approval must fail
+            is_approved, reason = self.workflow.check_approval_status(proposal_file)
+            self.assertFalse(is_approved)
+
+            build_blocked = self.workflow.cmd_workflow_build(
+                change_id,
+                profile="backend",
+                simulate=True,
+                no_jira=True,
+                check_approval=True
+            )
+            self.assertFalse(build_blocked)
+
+            # Approve via command
+            approve_ok = self.workflow.cmd_workflow_approve(change_id, approver="PO Lead")
+            self.assertTrue(approve_ok)
+
+            # Now build with check_approval must pass
+            is_approved_after, _ = self.workflow.check_approval_status(proposal_file)
+            self.assertTrue(is_approved_after)
+
+            build_ok = self.workflow.cmd_workflow_build(
+                change_id,
+                profile="backend",
+                simulate=True,
+                no_jira=True,
+                check_approval=True
+            )
+            self.assertTrue(build_ok)
+
+        finally:
+            import shutil
+            shutil.rmtree(self.workflow.CHANGES_DIR / change_id, ignore_errors=True)
+            for f in (self.workflow.ROOT_DIR / "handoffs").glob(f"*{change_id}*"):
+                f.unlink(missing_ok=True)
+
 
 if __name__ == "__main__":
     unittest.main()
+
 
 

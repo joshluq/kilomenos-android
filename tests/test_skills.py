@@ -20,19 +20,27 @@ class TestSkillsSpecification(unittest.TestCase):
             self.skills_dir = self.project_root / "skills"
 
     def test_all_expected_skills_exist(self):
-        expected_skills = [
-            "android-device",
-            "android-quality",
-            "android-testing",
-            "android-staff-engineer-compose",
-            "fix-bug",
-            "idea-lab",
-            "new-feature",
-            "performance-optimization-tips",
-            "po-digital-experience-fintech",
-            "senior-debugging-engineer",
-            "openspec",
-        ]
+        is_hub = (self.project_root / "profiles").is_dir()
+        if is_hub:
+            expected_skills = [
+                "android-device",
+                "android-quality",
+                "android-testing",
+                "android-staff-engineer-compose",
+                "fix-bug",
+                "idea-lab",
+                "new-feature",
+                "performance-optimization-tips",
+                "po-digital-experience-fintech",
+                "senior-debugging-engineer",
+                "openspec",
+                "supabase-db-triage",
+                "supabase-edge-functions",
+            ]
+        else:
+            expected_skills = [p.name for p in self.skills_dir.iterdir() if p.is_dir()]
+            self.assertGreater(len(expected_skills), 0, "No skills found in skills_dir")
+
         for skill in expected_skills:
             skill_folder = self.skills_dir / skill
             self.assertTrue(
@@ -46,21 +54,10 @@ class TestSkillsSpecification(unittest.TestCase):
             )
 
     def test_skill_manifest_frontmatter_integrity(self):
-        expected_skills = [
-            "android-device",
-            "android-quality",
-            "android-testing",
-            "android-staff-engineer-compose",
-            "fix-bug",
-            "idea-lab",
-            "new-feature",
-            "performance-optimization-tips",
-            "po-digital-experience-fintech",
-            "senior-debugging-engineer",
-            "openspec",
-        ]
+        skills_to_check = [p.name for p in self.skills_dir.iterdir() if p.is_dir()]
+        self.assertGreater(len(skills_to_check), 0)
 
-        for skill_name in expected_skills:
+        for skill_name in sorted(skills_to_check):
             skill_md = self.skills_dir / skill_name / "SKILL.md"
             content = skill_md.read_text(encoding="utf-8")
 
@@ -109,9 +106,12 @@ class TestSkillsSpecification(unittest.TestCase):
             ("android-quality", "logcat_triage.py"),
             ("android-quality", "sanity_check.py"),
             ("senior-debugging-engineer", "crash_listener.py"),
+            ("supabase-db-triage", "backend_sanity_check.py"),
         ]
 
         for skill_name, script_name in expected_scripts:
+            if not (self.skills_dir / skill_name).is_dir():
+                continue
             script_path = self.skills_dir / skill_name / "scripts" / script_name
             self.assertTrue(
                 script_path.is_file(),

@@ -194,13 +194,19 @@ def install_ecosystem(target_dir: Path, mode: str = 'both', profile: str = 'andr
     if mode in ('antigravity', 'both'):
         skills_dst = target_dir / '.gemini' / 'antigravity' / 'skills'
         skills_src = source_root / 'skills'
+        if not skills_src.is_dir():
+            skills_src = source_root / '.gemini' / 'antigravity' / 'skills'
         print(f"\n[1] Installing filtered skills for profile '{profile}'...")
-        copy_dir(skills_src, skills_dst, overwrite, filter_names=allowed_skills)
-        agents_skills_dst = target_dir / '.agents' / 'skills'
-        if agents_skills_dst.parent.exists():
-            copy_dir(skills_src, agents_skills_dst, overwrite, filter_names=allowed_skills)
-        installed = [p.name for p in skills_dst.iterdir() if p.is_dir()]
-        print(f"    -> Installed {len(installed)} skills: {', '.join(sorted(installed))}")
+        if skills_src.is_dir():
+            copy_dir(skills_src, skills_dst, overwrite, filter_names=allowed_skills)
+            agents_skills_dst = target_dir / '.agents' / 'skills'
+            if agents_skills_dst.parent.exists():
+                copy_dir(skills_src, agents_skills_dst, overwrite, filter_names=allowed_skills)
+        if skills_dst.is_dir():
+            installed = [p.name for p in skills_dst.iterdir() if p.is_dir()]
+            print(f"    -> Installed {len(installed)} skills: {', '.join(sorted(installed))}")
+        else:
+            print("    -> No skills installed.")
 
     # 2. Install SDD Contracts, Schemas, Templates, Walkthrough & OpenSpec
     if mode in ('standalone', 'both'):

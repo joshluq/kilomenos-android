@@ -505,6 +505,27 @@ def check_halt_gate_blocking_questions(proposal_path: Path) -> List[str]:
     return blocking_issues
 
 
+def check_approval_status(proposal_path: Path) -> Tuple[bool, str]:
+    """Verifies that proposal.md contains an explicit sign-off / approved status."""
+    if not proposal_path.is_file():
+        return False, "proposal.md not found"
+    content = proposal_path.read_text(encoding="utf-8")
+
+    approval_patterns = [
+        r"\*\*Status\*\*\s*:\s*Approved",
+        r"\*\*Estado\*\*\s*:\s*Aprobado",
+        r"Status\s*:\s*Approved",
+        r"Estado\s*:\s*Aprobado",
+        r"-\s*\[x\]\s*(?:Aprobado|Approved|Sign-off)",
+        r"Approval\s*:\s*(?:PASS|APPROVED|APROBADO)",
+    ]
+    for pattern in approval_patterns:
+        if re.search(pattern, content, re.IGNORECASE):
+            return True, "Formal approval confirmed in proposal.md"
+
+    return False, "Proposal status is unapproved (expected '**Status**: Approved' or '- [x] Approved')."
+
+
 def cmd_workflow_plan(
     change_id: str,
     title: Optional[str] = None,
@@ -589,9 +610,62 @@ def cmd_workflow_plan(
     print("   Status            : Awaiting Human Approval")
     print("\n   [NEXT ACTIONS]:")
     print(f"   1. Review proposal.md and verify Business Rules (BR-xx) and Acceptance Criteria.")
-    print(f"   2. Confirm approval by typing 'Aprobado' in chat, or execute:")
+    print(f"   2. Formally approve the change:")
+    print(f"      python scripts/workflow.py approve {change_id}")
+    print(f"   3. Proceed to implementation:")
     print(f"      python scripts/workflow.py build {change_id}")
     print("===========================================================\n")
+    return True
+
+
+def cmd_workflow_approve(change_id: str, approver: str = "Stakeholder/PO/Architect") -> bool:
+    """Marks an OpenSpec proposal as formally approved."""
+    change_dir = CHANGES_DIR / change_id
+    if not change_dir.is_dir():
+        print(f"[ERROR] Change directory not found: {change_dir}")
+        return False
+
+    proposal_path = change_dir / "proposal.md"
+    if not proposal_path.is_file():
+        print(f"[ERROR] proposal.md not found in: {change_dir}")
+        return False
+
+    content = proposal_path.read_text(encoding="utf-8")
+
+    # Update Status to Approved
+    if re.search(r"\*\*Status\*\*\s*:\s*Proposed", content, re.IGNORECASE):
+        content = re.sub(r"\*\*Status\*\*\s*:\s*Proposed", "**Status**: Approved", content, flags=re.IGNORECASE)
+    elif re.search(r"Status\s*:\s*Proposed", content, re.IGNORECASE):
+        content = re.sub(r"Status\s*:\s*Proposed", "Status: Approved", content, flags=re.IGNORECASE)
+    elif "**Status**:" not in content and "Status:" not in content:
+        content = f"**Status**: Approved\n" + content
+    else:
+        content = re.sub(r"(\*\*Status\*\*\s*:\s*)[^\n]+", r"\1Approved", content)
+
+    # Check off blocking question if present
+    content = re.sub(
+        r"-\s*\[\s*\]\s*No existen dudas abiertas",
+        "- [x] No existen dudas abiertas",
+        content,
+        flags=re.IGNORECASE
+    )
+
+    # Add audit trail if not already present
+    now_str = datetime.datetime.now(datetime.timezone.utc).isoformat()
+    approval_marker = f"\n<!-- APPROVAL_AUDIT -->\n**Approved By**: `{approver}`  \n**Approved At**: `{now_str}`\n"
+    if "<!-- APPROVAL_AUDIT -->" in content:
+        content = re.sub(r"<!-- APPROVAL_AUDIT -->.*", approval_marker.strip(), content, flags=re.DOTALL)
+    else:
+        content += approval_marker
+
+    proposal_path.write_text(content.strip() + "\n", encoding="utf-8")
+
+    print("===========================================================")
+    print(f"   ✅ Change Proposal '{change_id}' APPROVED")
+    print(f"   Approver  : {approver}")
+    print(f"   Timestamp : {now_str}")
+    print("   Proposal is cleared for implementation phase (`workflow.py build`).")
+    print("===========================================================")
     return True
 
 
@@ -599,7 +673,8 @@ def cmd_workflow_build(
     change_id: str,
     profile: Optional[str] = None,
     simulate: bool = False,
-    no_jira: bool = False
+    no_jira: bool = False,
+    check_approval: bool = False
 ) -> bool:
     """Phase 2: Verifies approval gate, transitions Jira, generates Dev-to-QA handoff, and initiates build."""
     target_profile = profile or detect_platform_profile(ROOT_DIR)
@@ -626,6 +701,15 @@ def cmd_workflow_build(
         print("\nResolve all blocking questions before proceeding to code implementation.")
         return False
     print("✅ Halt Gate PASSED: Zero unresolved blocking questions.")
+
+    # 1b. Enforce Formal Approval Check (if requested)
+    if check_approval:
+        approved, reason = check_approval_status(proposal_path)
+        if not approved:
+            print(f"❌ [APPROVAL GATE BLOCKED] {reason}")
+            print(f"   Run 'python scripts/workflow.py approve {change_id}' to sign off before building.")
+            return False
+        print(f"✅ Approval Gate PASSED: {reason}")
 
     # 2. Transition Jira ticket to 'En curso' / 'In Progress'
     atlassian_client = AtlassianClient(simulate=simulate)
@@ -789,12 +873,18 @@ def build_parser() -> argparse.ArgumentParser:
     p_plan.add_argument("--no-jira", action="store_true", help="Do not interact with Jira")
     p_plan.add_argument("--as-comment", action="store_true", default=True, help="Post refinement to Jira as structured comment")
 
+    # approve
+    p_approve = subparsers.add_parser("approve", help="Formally approve an OpenSpec proposal (PO / Architect sign-off).")
+    p_approve.add_argument("change_id", help="Jira ticket key or custom change ID")
+    p_approve.add_argument("--approver", default="Stakeholder/PO/Architect", help="Approver role or identifier")
+
     # build
     p_build = subparsers.add_parser("build", help="Phase 2: Verify halt gate, transition Jira, and emit Dev-to-QA handoff.")
     p_build.add_argument("change_id", help="Jira ticket key or custom change ID")
     p_build.add_argument("--profile", choices=["android", "backend", "web", "all"], help="Platform discipline profile")
     p_build.add_argument("--simulate", action="store_true", help="Simulate Jira calls without network access")
     p_build.add_argument("--no-jira", action="store_true", help="Do not interact with Jira")
+    p_build.add_argument("--check-approval", action="store_true", help="Enforce formal approval status check before allowing build")
 
     # verify
     p_verify = subparsers.add_parser("verify", help="Phase 3: QA verification, living spec archival, and Jira closure.")
@@ -829,12 +919,19 @@ def main():
             as_comment=args.as_comment
         )
         sys.exit(0 if success else 1)
+    elif args.command == "approve":
+        success = cmd_workflow_approve(
+            change_id=args.change_id,
+            approver=args.approver
+        )
+        sys.exit(0 if success else 1)
     elif args.command == "build":
         success = cmd_workflow_build(
             change_id=args.change_id,
             profile=args.profile,
             simulate=args.simulate,
-            no_jira=args.no_jira
+            no_jira=args.no_jira,
+            check_approval=args.check_approval
         )
         sys.exit(0 if success else 1)
     elif args.command == "verify":

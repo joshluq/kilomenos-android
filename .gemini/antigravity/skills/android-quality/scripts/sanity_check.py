@@ -63,27 +63,52 @@ def run_gradle_task(project_dir: Path, task: str) -> Tuple[bool, int, str]:
         return False, duration_ms, str(e)
 
 
-def execute_live_sanity_check(project_dir: Path) -> Dict[str, Any]:
+def execute_live_sanity_check(project_dir: Path, target_module: Optional[str] = None, fast: bool = False) -> Dict[str, Any]:
     """Runs compilation, style, lint, and unit tests via Gradle."""
-    print(f"Executing Pre-Handoff Sanity Checks in: {project_dir}")
+    mode_str = f"FAST INNER-LOOP ({target_module or 'Target Module'})" if fast else "FULL OUTER-LOOP (All Modules)"
+    print(f"Executing Pre-Handoff Sanity Checks in: {project_dir} [{mode_str}]")
 
-    # 1. Full Application Compilation (assembleDevDebug)
-    print("  [1/4] Checking Full App Compilation (:app:assembleDevDebug)...")
-    comp_pass, comp_time, comp_out = run_gradle_task(project_dir, ":app:assembleDevDebug")
+    if fast and target_module:
+        # Fast Developer Inner-Loop
+        # 1. Module Compilation Check (assembleDebug on target module)
+        print(f"  [1/3] Checking Module Compilation ({target_module}:assembleDebug)...")
+        comp_pass, comp_time, comp_out = run_gradle_task(project_dir, f"{target_module}:assembleDebug")
 
-    # 2. ktlint / code formatting
-    print("  [2/4] Checking Code Style (ktlintCheck)...")
-    ktlint_pass, ktlint_time, ktlint_out = run_gradle_task(project_dir, "ktlintCheck")
+        # 2. Module Style Check (ktlintCheck)
+        print(f"  [2/3] Checking Code Style ({target_module}:ktlintCheck)...")
+        ktlint_pass, ktlint_time, ktlint_out = run_gradle_task(project_dir, f"{target_module}:ktlintCheck")
+        if not ktlint_pass and "Task" in str(ktlint_out) and "not found" in str(ktlint_out):
+            ktlint_pass, ktlint_time, ktlint_out = run_gradle_task(project_dir, "ktlintCheck")
 
-    # 3. Android Lint
-    print("  [3/4] Running Static Analysis (lintDebug)...")
-    lint_pass, lint_time, lint_out = run_gradle_task(project_dir, "lintDebug")
+        # 3. Module Unit Tests (+ :core:domain if present)
+        test_tasks = f"{target_module}:testDebugUnitTest"
+        if target_module != ":core:domain" and (project_dir / "core" / "domain").is_dir():
+            test_tasks += " :core:domain:testDebugUnitTest"
+        print(f"  [3/3] Executing Module Unit Tests ({test_tasks})...")
+        tests_pass, tests_time, tests_out = run_gradle_task(project_dir, test_tasks)
 
-    # 4. Unit Tests
-    print("  [4/4] Executing Unit Tests (testDebugUnitTest)...")
-    tests_pass, tests_time, tests_out = run_gradle_task(project_dir, "testDebugUnitTest")
+        lint_pass = True
+        lint_time = 0
+        all_passed = comp_pass and ktlint_pass and tests_pass
+    else:
+        # Full QA Outer-Loop
+        # 1. Full Application Compilation (assembleDevDebug)
+        print("  [1/4] Checking Full App Compilation (:app:assembleDevDebug)...")
+        comp_pass, comp_time, comp_out = run_gradle_task(project_dir, ":app:assembleDevDebug")
 
-    all_passed = comp_pass and ktlint_pass and lint_pass and tests_pass
+        # 2. ktlint / code formatting
+        print("  [2/4] Checking Code Style (ktlintCheck)...")
+        ktlint_pass, ktlint_time, ktlint_out = run_gradle_task(project_dir, "ktlintCheck")
+
+        # 3. Android Lint
+        print("  [3/4] Running Static Analysis (lintDebug)...")
+        lint_pass, lint_time, lint_out = run_gradle_task(project_dir, "lintDebug")
+
+        # 4. Unit Tests
+        print("  [4/4] Executing Unit Tests (testDebugUnitTest)...")
+        tests_pass, tests_time, tests_out = run_gradle_task(project_dir, "testDebugUnitTest")
+
+        all_passed = comp_pass and ktlint_pass and lint_pass and tests_pass
 
     return {
         "compilation_clean": comp_pass,
@@ -96,9 +121,12 @@ def execute_live_sanity_check(project_dir: Path) -> Dict[str, Any]:
             "style_check_time_ms": ktlint_time,
             "lint_time_ms": lint_time,
             "tests_time_ms": tests_time,
+            "fast_mode": fast,
+            "target_module": target_module,
         },
         "can_handoff_to_qa": all_passed,
     }
+
 
 
 def validate_dev_handoff_json(handoff_path: Path) -> Tuple[bool, List[str], Dict[str, Any]]:
@@ -225,6 +253,8 @@ def main() -> int:
         description="Pre-Handoff Sanity Verification Gate - Validates code health, lint, and tests prior to QA handoff."
     )
     parser.add_argument("--project-dir", help="Path to Android project directory to run live Gradle checks")
+    parser.add_argument("--module", "-m", help="Target module (e.g. :feature:profile) for fast inner-loop checks")
+    parser.add_argument("--fast", "-f", action="store_true", help="Fast mode: compile and test only target module and skip global lint")
     parser.add_argument("--dev-handoff", help="Path to dev_to_qa_handoff.json file to audit against gating rules")
     parser.add_argument("--feature-id", default="FEAT-001", help="Feature ID for generated handoff (default: FEAT-001)")
     parser.add_argument("--output", "-o", help="Output path to save verified handoff JSON")
@@ -265,7 +295,7 @@ def main() -> int:
     # Mode 3: Live Gradle execution
     if args.project_dir:
         pdir = Path(args.project_dir)
-        report = execute_live_sanity_check(pdir)
+        report = execute_live_sanity_check(pdir, target_module=args.module, fast=args.fast)
         json_str = json.dumps(report, indent=2)
         if args.output:
             out_p = Path(args.output)

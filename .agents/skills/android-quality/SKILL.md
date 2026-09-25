@@ -148,7 +148,10 @@ The primary automated verification gate for the Senior Android Developer before 
 
 #### Usage:
 ```bash
-# Execute live pre-handoff sanity check against Android project
+# Fast Developer Inner-Loop (compiles target module, runs ktlint and unit tests, skips global lint)
+python skills/android-quality/scripts/sanity_check.py --project-dir ./app --module :feature:profile --fast --output handoffs/dev_to_qa_FEAT-001.json
+
+# Full QA Outer-Loop verification (:app:assembleDevDebug, ktlintCheck, lintDebug, testDebugUnitTest)
 python skills/android-quality/scripts/sanity_check.py --project-dir ./app --output handoffs/dev_to_qa_FEAT-001.json
 
 # Validate an existing Dev-to-QA handoff JSON payload against quality gates
