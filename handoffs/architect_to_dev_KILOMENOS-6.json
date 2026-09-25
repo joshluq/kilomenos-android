@@ -1,0 +1,111 @@
+{
+  "handoff_id": "HANDOFF-ARCH-DEV-KILOMENOS-6",
+  "schema_version": "1.0.0",
+  "timestamp": "2026-09-25T16:30:00Z",
+  "sender": {
+    "role": "Software Architect",
+    "agent_id": "software_architect"
+  },
+  "recipient": {
+    "role": "Senior Android Developer",
+    "agent_id": "senior_android_developer"
+  },
+  "feature_id": "KILOMENOS-6",
+  "po_handoff_ref": "HANDOFF-PO-ARCH-KILOMENOS-6",
+  "adr_path": "docs/adr/ADR-KILOMENOS-6.md",
+  "component_spec_path": "docs/specs/COMP-SPEC-KILOMENOS-6.md",
+  "remediation_cycle": 0,
+  "architecture_pattern": "CLEAN_ARCHITECTURE",
+  "module_targets": [
+    ":core:domain",
+    ":core:tracking",
+    ":core:infrastructure",
+    ":feature:overview"
+  ],
+  "component_contracts": [
+    {
+      "component_name": "TrackingServiceController",
+      "package_name": "es.joshluq.kmsafe.domain.service",
+      "layer": "DOMAIN",
+      "state_models": [],
+      "action_events": ["startTrackingService", "stopTrackingService", "dismissTripFinishedNotification"],
+      "exposed_flows": []
+    },
+    {
+      "component_name": "DismissTripNotificationUseCase",
+      "package_name": "es.joshluq.kmsafe.domain.usecase",
+      "layer": "DOMAIN",
+      "state_models": ["DismissTripNotificationUseCase.Input", "DismissTripNotificationUseCase.Output"],
+      "action_events": ["invoke"],
+      "exposed_flows": []
+    },
+    {
+      "component_name": "OverviewContract",
+      "package_name": "es.joshluq.kmsafe.feature.overview",
+      "layer": "UI",
+      "state_models": ["State"],
+      "action_events": ["Event.OnCancelTrackedTripClicked", "Event.OnSaveOdometerClicked"],
+      "exposed_flows": ["effects"]
+    },
+    {
+      "component_name": "OverviewViewModel",
+      "package_name": "es.joshluq.kmsafe.feature.overview",
+      "layer": "VIEWMODEL",
+      "state_models": ["State"],
+      "action_events": ["sendEvent"],
+      "exposed_flows": ["state", "effects"]
+    }
+  ],
+  "file_manifest_plan": [
+    {
+      "target_path": "core/domain/src/main/java/es/joshluq/kmsafe/domain/service/TrackingServiceController.kt",
+      "action": "MODIFY",
+      "purpose": "Añadir método dismissTripFinishedNotification al contrato de servicio de dominio"
+    },
+    {
+      "target_path": "core/domain/src/main/java/es/joshluq/kmsafe/domain/usecase/DismissTripNotificationUseCase.kt",
+      "action": "CREATE",
+      "purpose": "Crear caso de uso de dominio para la cancelación de la notificación de viaje finalizado"
+    },
+    {
+      "target_path": "core/tracking/src/main/java/es/joshluq/kmsafe/core/tracking/LocationTrackingService.kt",
+      "action": "MODIFY",
+      "purpose": "Modificar visibilidad de NOTIFICATION_ID_TRIP_FINISHED a internal"
+    },
+    {
+      "target_path": "core/tracking/src/main/java/es/joshluq/kmsafe/core/tracking/TrackingServiceControllerImpl.kt",
+      "action": "MODIFY",
+      "purpose": "Implementar dismissTripFinishedNotification cancelando la notificación de forma segura"
+    },
+    {
+      "target_path": "core/infrastructure/src/main/java/es/joshluq/kmsafe/infrastructure/di/UseCaseModule.kt",
+      "action": "MODIFY",
+      "purpose": "Registrar el binding de DismissTripNotificationUseCase en Hilt"
+    },
+    {
+      "target_path": "feature/overview/src/main/java/es/joshluq/kmsafe/feature/overview/Contract.kt",
+      "action": "MODIFY",
+      "purpose": "Eliminar Effect.DismissTrackingNotifications de la jerarquía de efectos"
+    },
+    {
+      "target_path": "feature/overview/src/main/java/es/joshluq/kmsafe/feature/overview/OverviewScreen.kt",
+      "action": "MODIFY",
+      "purpose": "Eliminar el manejo de NotificationManager y la constante 1002 de la vista Composable"
+    },
+    {
+      "target_path": "feature/overview/src/main/java/es/joshluq/kmsafe/feature/overview/OverviewViewModel.kt",
+      "action": "MODIFY",
+      "purpose": "Inyectar y llamar DismissTripNotificationUseCase al guardar odómetro o cancelar viaje"
+    },
+    {
+      "target_path": "core/domain/src/test/kotlin/es/joshluq/kmsafe/domain/usecase/DismissTripNotificationUseCaseTest.kt",
+      "action": "CREATE",
+      "purpose": "Crear pruebas unitarias para DismissTripNotificationUseCase"
+    },
+    {
+      "target_path": "feature/overview/src/test/kotlin/es/joshluq/kmsafe/feature/overview/OverviewViewModelTest.kt",
+      "action": "MODIFY",
+      "purpose": "Actualizar pruebas unitarias del ViewModel reflejando la llamada al UseCase y la eliminación del efecto"
+    }
+  ]
+}

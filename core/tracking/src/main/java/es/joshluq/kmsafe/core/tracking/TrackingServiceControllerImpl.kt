@@ -1,5 +1,6 @@
 package es.joshluq.kmsafe.core.tracking
 
+import android.app.NotificationManager
 import android.content.Context
 import android.content.Intent
 import android.os.Build
@@ -37,5 +38,11 @@ class TrackingServiceControllerImpl @Inject constructor(
             action = LocationTrackingService.ACTION_STOP
         }
         context.startService(intent)
+    }
+
+    override fun dismissTripFinishedNotification() {
+        logger.d("TrackingServiceController", "Dismissing trip finished notification")
+        val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as? NotificationManager
+        notificationManager?.cancel(LocationTrackingService.NOTIFICATION_ID_TRIP_FINISHED)
     }
 }

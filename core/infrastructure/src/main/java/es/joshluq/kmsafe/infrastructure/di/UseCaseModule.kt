@@ -152,6 +152,8 @@ import es.joshluq.kmsafe.domain.usecase.StopTrackingUseCase
 import es.joshluq.kmsafe.domain.usecase.StopTrackingUseCaseImpl
 import es.joshluq.kmsafe.domain.usecase.StopTripTrackingUseCase
 import es.joshluq.kmsafe.domain.usecase.StopTripTrackingUseCaseImpl
+import es.joshluq.kmsafe.domain.usecase.DismissTripNotificationUseCase
+import es.joshluq.kmsafe.domain.usecase.DismissTripNotificationUseCaseImpl
 import es.joshluq.kmsafe.domain.usecase.SyncContractsUseCase
 import es.joshluq.kmsafe.domain.usecase.SyncContractsUseCaseImpl
 import es.joshluq.kmsafe.domain.usecase.SyncFuelExpensesUseCase
@@ -382,6 +384,9 @@ abstract class UseCaseModule {
 
     @Binds
     abstract fun bindStopTripTrackingUseCase(impl: StopTripTrackingUseCaseImpl): StopTripTrackingUseCase
+
+    @Binds
+    abstract fun bindDismissTripNotificationUseCase(impl: DismissTripNotificationUseCaseImpl): DismissTripNotificationUseCase
 
     @Binds
     abstract fun bindUpdateBluetoothConnectionStateUseCase(impl: UpdateBluetoothConnectionStateUseCaseImpl): UpdateBluetoothConnectionStateUseCase

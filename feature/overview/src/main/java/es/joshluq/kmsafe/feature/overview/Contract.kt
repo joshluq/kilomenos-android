@@ -124,9 +124,4 @@ sealed interface Effect : UiEffect {
     data class NavigateToNotificationDetail(val notificationId: String) : Effect
     data class NavigateToDeepLink(val deepLinkUri: String) : Effect
     data object NavigateToNotificationsList : Effect
-    /**
-     * Signals the Route to cancel any residual tracking notifications
-     * (e.g., "Trip Finished") after the user saves or discards a trip.
-     */
-    data object DismissTrackingNotifications : Effect
 }

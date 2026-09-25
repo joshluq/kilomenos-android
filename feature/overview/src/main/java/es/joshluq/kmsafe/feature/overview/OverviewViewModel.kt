@@ -23,6 +23,7 @@ import es.joshluq.kmsafe.domain.model.SubscriptionLevel
 import es.joshluq.kmsafe.domain.model.TripProjection
 import es.joshluq.kmsafe.domain.usecase.AddOdometerRecordUseCase
 import es.joshluq.kmsafe.domain.usecase.ClearTrackingUseCase
+import es.joshluq.kmsafe.domain.usecase.DismissTripNotificationUseCase
 import es.joshluq.kmsafe.domain.usecase.GetAllContractsUseCase
 import es.joshluq.kmsafe.domain.usecase.GetEntitlementsUseCase
 import es.joshluq.kmsafe.domain.usecase.GetMonthlyUsageUseCase
@@ -74,6 +75,7 @@ class OverviewViewModel @Inject constructor(
     private val stopAutoTrackingUseCase: StopAutoTrackingUseCase,
     private val startTripTrackingUseCase: StartTripTrackingUseCase,
     private val stopTripTrackingUseCase: StopTripTrackingUseCase,
+    private val dismissTripNotificationUseCase: DismissTripNotificationUseCase,
     private val syncStationGeofencesUseCase: SyncStationGeofencesUseCase,
     private val observeActiveNotificationsUseCase: ObserveActiveNotificationsUseCase,
     private val markNotificationAsReadUseCase: MarkNotificationAsReadUseCase,
@@ -569,7 +571,9 @@ class OverviewViewModel @Inject constructor(
                         }
                         updateState { copy(isSaving = false, showBottomSheet = false, isLoading = false) }
                         clearTrackingUseCase(ClearTrackingUseCase.Input).launchIn(viewModelScope)
-                        launchEffect(Effect.DismissTrackingNotifications)
+                        viewModelScope.launch {
+                            dismissTripNotificationUseCase(DismissTripNotificationUseCase.Input)
+                        }
                     }
                     is AddOdometerRecordUseCase.Output.Failure -> {
                         updateState {
@@ -666,8 +670,8 @@ class OverviewViewModel @Inject constructor(
         viewModelScope.launch {
             stopTripTrackingUseCase(StopTripTrackingUseCase.Input)
             clearTrackingUseCase(ClearTrackingUseCase.Input).collect()
+            dismissTripNotificationUseCase(DismissTripNotificationUseCase.Input)
         }
-        launchEffect(Effect.DismissTrackingNotifications)
     }
 
     private fun handleAutoTrackingToggled(enabled: Boolean) {

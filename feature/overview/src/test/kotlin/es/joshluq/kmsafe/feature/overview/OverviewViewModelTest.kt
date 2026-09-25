@@ -13,6 +13,7 @@ import es.joshluq.kmsafe.domain.model.UserPreferences
 import es.joshluq.kmsafe.feature.overview.model.StatusCapsuleUiModel
 import es.joshluq.kmsafe.domain.usecase.AddOdometerRecordUseCase
 import es.joshluq.kmsafe.domain.usecase.ClearTrackingUseCase
+import es.joshluq.kmsafe.domain.usecase.DismissTripNotificationUseCase
 import es.joshluq.kmsafe.domain.usecase.GetAllContractsUseCase
 import es.joshluq.kmsafe.domain.usecase.GetEntitlementsUseCase
 import es.joshluq.kmsafe.domain.usecase.GetMonthlyUsageUseCase
@@ -78,6 +79,7 @@ class OverviewViewModelTest {
     private val stopAutoTrackingUseCase: StopAutoTrackingUseCase = mockk(relaxed = true)
     private val startTripTrackingUseCase: StartTripTrackingUseCase = mockk(relaxed = true)
     private val stopTripTrackingUseCase: StopTripTrackingUseCase = mockk(relaxed = true)
+    private val dismissTripNotificationUseCase: DismissTripNotificationUseCase = mockk(relaxed = true)
     private val syncStationGeofencesUseCase: SyncStationGeofencesUseCase = mockk(relaxed = true)
     private val observeActiveNotificationsUseCase: es.joshluq.kmsafe.domain.usecase.ObserveActiveNotificationsUseCase = mockk(relaxed = true)
     private val markNotificationAsReadUseCase: es.joshluq.kmsafe.domain.usecase.MarkNotificationAsReadUseCase = mockk(relaxed = true)
@@ -199,6 +201,7 @@ class OverviewViewModelTest {
             stopAutoTrackingUseCase = stopAutoTrackingUseCase,
             startTripTrackingUseCase = startTripTrackingUseCase,
             stopTripTrackingUseCase = stopTripTrackingUseCase,
+            dismissTripNotificationUseCase = dismissTripNotificationUseCase,
             syncStationGeofencesUseCase = syncStationGeofencesUseCase,
             observeActiveNotificationsUseCase = observeActiveNotificationsUseCase,
             markNotificationAsReadUseCase = markNotificationAsReadUseCase,
@@ -284,6 +287,7 @@ class OverviewViewModelTest {
         assertFalse(viewModel.state.value.isSaving)
         assertFalse(viewModel.state.value.showBottomSheet)
         coVerify { clearTrackingUseCase(ClearTrackingUseCase.Input) }
+        coVerify { dismissTripNotificationUseCase(DismissTripNotificationUseCase.Input) }
     }
 
     @Test
@@ -362,7 +366,7 @@ class OverviewViewModelTest {
     }
 
     @Test
-    fun `given cancel tracked trip clicked then stops service and clears tracking data`() = runTest(testDispatcher) {
+    fun `given cancel tracked trip clicked then stops service, clears tracking data and dismisses notification`() = runTest(testDispatcher) {
         val effects = mutableListOf<Effect>()
         val viewModel = createViewModel()
         backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
@@ -374,7 +378,8 @@ class OverviewViewModelTest {
 
         coVerify(exactly = 1) { stopTripTrackingUseCase(StopTripTrackingUseCase.Input) }
         coVerify(exactly = 1) { clearTrackingUseCase(ClearTrackingUseCase.Input) }
-        assertTrue(effects.contains(Effect.DismissTrackingNotifications))
+        coVerify(exactly = 1) { dismissTripNotificationUseCase(DismissTripNotificationUseCase.Input) }
+        assertTrue(effects.isEmpty())
     }
 
     @Test

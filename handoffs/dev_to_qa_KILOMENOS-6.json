@@ -1,0 +1,99 @@
+{
+  "handoff_id": "HANDOFF-DEV-QA-KILOMENOS-6",
+  "schema_version": "1.0.0",
+  "timestamp": "2026-09-25T16:37:00Z",
+  "sender": {
+    "role": "Senior Android Developer",
+    "agent_id": "senior_android_developer"
+  },
+  "recipient": {
+    "role": "QA/Testing Engineer",
+    "agent_id": "qa_testing_engineer"
+  },
+  "feature_id": "KILOMENOS-6",
+  "architect_handoff_ref": "HANDOFF-ARCH-DEV-KILOMENOS-6",
+  "remediation_cycle": 0,
+  "implementation_manifest": {
+    "module": ":feature:overview",
+    "entry_point_composable": "es.joshluq.kmsafe.feature.overview.OverviewScreen",
+    "viewmodel_class": "es.joshluq.kmsafe.feature.overview.OverviewViewModel",
+    "repository_class": "es.joshluq.kmsafe.domain.service.TrackingServiceController"
+  },
+  "code_changes": [
+    {
+      "file_path": "core/domain/src/main/java/es/joshluq/kmsafe/domain/service/TrackingServiceController.kt",
+      "action": "MODIFIED",
+      "language": "kotlin",
+      "line_count": 22
+    },
+    {
+      "file_path": "core/domain/src/main/java/es/joshluq/kmsafe/domain/usecase/DismissTripNotificationUseCase.kt",
+      "action": "CREATED",
+      "language": "kotlin",
+      "line_count": 26
+    },
+    {
+      "file_path": "core/tracking/src/main/java/es/joshluq/kmsafe/core/tracking/LocationTrackingService.kt",
+      "action": "MODIFIED",
+      "language": "kotlin",
+      "line_count": 718
+    },
+    {
+      "file_path": "core/tracking/src/main/java/es/joshluq/kmsafe/core/tracking/TrackingServiceControllerImpl.kt",
+      "action": "MODIFIED",
+      "language": "kotlin",
+      "line_count": 49
+    },
+    {
+      "file_path": "core/infrastructure/src/main/java/es/joshluq/kmsafe/infrastructure/di/UseCaseModule.kt",
+      "action": "MODIFIED",
+      "language": "kotlin",
+      "line_count": 436
+    },
+    {
+      "file_path": "feature/overview/src/main/java/es/joshluq/kmsafe/feature/overview/Contract.kt",
+      "action": "MODIFIED",
+      "language": "kotlin",
+      "line_count": 128
+    },
+    {
+      "file_path": "feature/overview/src/main/java/es/joshluq/kmsafe/feature/overview/OverviewScreen.kt",
+      "action": "MODIFIED",
+      "language": "kotlin",
+      "line_count": 1032
+    },
+    {
+      "file_path": "feature/overview/src/main/java/es/joshluq/kmsafe/feature/overview/OverviewViewModel.kt",
+      "action": "MODIFIED",
+      "language": "kotlin",
+      "line_count": 710
+    },
+    {
+      "file_path": "core/domain/src/test/kotlin/es/joshluq/kmsafe/domain/usecase/DismissTripNotificationUseCaseTest.kt",
+      "action": "CREATED",
+      "language": "kotlin",
+      "line_count": 36
+    },
+    {
+      "file_path": "feature/overview/src/test/kotlin/es/joshluq/kmsafe/feature/overview/OverviewViewModelTest.kt",
+      "action": "MODIFIED",
+      "language": "kotlin",
+      "line_count": 745
+    }
+  ],
+  "developer_test_summary": {
+    "unit_tests_run": 25,
+    "unit_tests_passed": 25,
+    "unit_tests_failed": 0,
+    "test_frameworks_used": ["JUnit4", "MockK", "Turbine", "kotlinx-coroutines-test"],
+    "test_files": [
+      "core/domain/src/test/kotlin/es/joshluq/kmsafe/domain/usecase/DismissTripNotificationUseCaseTest.kt",
+      "feature/overview/src/test/kotlin/es/joshluq/kmsafe/feature/overview/OverviewViewModelTest.kt"
+    ]
+  },
+  "lint_and_sanity": {
+    "compilation_clean": true,
+    "ktlint_clean": true,
+    "detekt_clean": true
+  }
+}

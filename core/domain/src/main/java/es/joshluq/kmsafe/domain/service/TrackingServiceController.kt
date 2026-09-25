@@ -13,4 +13,9 @@ interface TrackingServiceController {
      * Stops the background/foreground tracking service.
      */
     fun stopTrackingService()
+
+    /**
+     * Dismisses the trip finished notification.
+     */
+    fun dismissTripFinishedNotification()
 }

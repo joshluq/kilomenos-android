@@ -1,8 +1,6 @@
 package es.joshluq.kmsafe.feature.overview
 
 import android.Manifest
-import android.app.NotificationManager
-import android.content.Context
 import android.content.Intent
 import android.content.res.Configuration
 import android.net.Uri
@@ -106,9 +104,6 @@ import es.joshluq.kmsafe.core.monetization.components.AdMobBanner
 import es.joshluq.kmsafe.core.ui.components.BrandingLogo
 import es.joshluq.kmsafe.core.ui.util.DateUtils
 import es.joshluq.kmsafe.core.ui.util.safeClick
-import es.joshluq.kmsafe.domain.model.Notification
-import es.joshluq.kmsafe.domain.model.NotificationPriority
-import es.joshluq.kmsafe.domain.model.NotificationTopic
 import es.joshluq.kmsafe.domain.model.RentingContract
 import es.joshluq.kmsafe.domain.model.SubscriptionLevel
 import es.joshluq.kmsafe.domain.model.TripProjection
@@ -200,10 +195,6 @@ fun OverviewRoute(
                 is Effect.NavigateToNotificationDetail -> onNavigateToNotificationDetail(effect.notificationId)
                 is Effect.NavigateToDeepLink -> onNavigateToDeepLink(effect.deepLinkUri)
                 Effect.NavigateToNotificationsList -> onNavigateToNotificationsList()
-                Effect.DismissTrackingNotifications -> {
-                    val nm = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-                    nm.cancel(1002) // NOTIFICATION_ID_TRIP_FINISHED
-                }
             }
         }
     }

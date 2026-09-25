@@ -89,7 +89,7 @@ class LocationTrackingService : Service() {
     companion object {
         private const val CHANNEL_ID = "location_tracking_channel_v3"
         private const val NOTIFICATION_ID = 1001
-        private const val NOTIFICATION_ID_TRIP_FINISHED = 1002
+        internal const val NOTIFICATION_ID_TRIP_FINISHED = 1002
         /**
          * Bluetooth connected notification ID from [BluetoothConnectionReceiver].
          * Canceled here to avoid duplicate ongoing notifications.

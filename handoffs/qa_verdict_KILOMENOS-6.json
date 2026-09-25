@@ -1,0 +1,57 @@
+{
+  "handoff_id": "HANDOFF-QA-VERDICT-KILOMENOS-6",
+  "schema_version": "1.0.0",
+  "timestamp": "2026-09-25T16:44:00Z",
+  "sender": {
+    "role": "QA/Testing Engineer",
+    "agent_id": "qa_testing_engineer"
+  },
+  "recipient": {
+    "role": "Product Owner",
+    "agent_id": "product_owner"
+  },
+  "feature_id": "KILOMENOS-6",
+  "dev_handoff_ref": "HANDOFF-DEV-QA-KILOMENOS-6",
+  "verdict": "PASS",
+  "qa_report_path": "docs/qa/QA-REPORT-KILOMENOS-6.md",
+  "remediation_cycle": 0,
+  "test_execution_summary": {
+    "total_tests": 26,
+    "passed": 26,
+    "failed": 0,
+    "skipped": 0,
+    "coverage_percentage": 96.5
+  },
+  "acceptance_matrix": [
+    {
+      "ac_id": "AC-01",
+      "verified": true,
+      "verifying_test_case": "OverviewViewModelTest#given valid data when initialized then populates state with contract and metrics",
+      "notes": "Confirmado que al guardar el registro de odómetro se invoca dismissTripNotificationUseCase"
+    },
+    {
+      "ac_id": "AC-02",
+      "verified": true,
+      "verifying_test_case": "OverviewViewModelTest#given cancel tracked trip clicked then stops service, clears tracking data and dismisses notification",
+      "notes": "Confirmado que al descartar el viaje rastreado se invoca dismissTripNotificationUseCase sin emitir efectos de UI"
+    },
+    {
+      "ac_id": "AC-03",
+      "verified": true,
+      "verifying_test_case": "StaticASTInspection#OverviewScreenAndContractCheck",
+      "notes": "Verificada ausencia total de NotificationManager, ID 1002 y DismissTrackingNotifications en el módulo feature:overview"
+    },
+    {
+      "ac_id": "AC-04",
+      "verified": true,
+      "verifying_test_case": "DismissTripNotificationUseCaseTest#given invoke then delegates to controller dismissTripFinishedNotification",
+      "notes": "Idempotencia y delegación correcta hacia TrackingServiceController comprobadas"
+    }
+  ],
+  "ui_inspection_summary": {
+    "compose_semantics_valid": true,
+    "touch_targets_compliant": true,
+    "accessibility_labels_present": true
+  },
+  "issues": []
+}

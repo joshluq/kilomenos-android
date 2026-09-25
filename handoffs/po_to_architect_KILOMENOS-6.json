@@ -1,0 +1,100 @@
+{
+  "handoff_id": "HANDOFF-PO-ARCH-KILOMENOS-6",
+  "schema_version": "1.0.0",
+  "timestamp": "2026-09-25T16:09:00Z",
+  "sender": {
+    "role": "Product Owner",
+    "agent_id": "product_owner"
+  },
+  "recipient": {
+    "role": "Software Architect",
+    "agent_id": "software_architect"
+  },
+  "feature_id": "KILOMENOS-6",
+  "feature_title": "Desacoplamiento de la Cancelación de Notificación de Viaje",
+  "prd_path": "docs/prd/PRD-KILOMENOS-6.md",
+  "user_stories": [
+    {
+      "story_id": "US-01",
+      "role": "conductor que finaliza y guarda un viaje rastreado desde la pantalla de Overview",
+      "want": "que la notificación de viaje finalizado se elimine automáticamente de la barra de estado del sistema al confirmar el registro",
+      "so_that": "mi centro de notificaciones se mantenga limpio sin requerir esfuerzo manual"
+    },
+    {
+      "story_id": "US-02",
+      "role": "conductor que descarta un viaje no deseado en la tarjeta de viaje de Overview",
+      "want": "que la notificación de viaje finalizado se descarte de inmediato sin que la interfaz sufra parpadeos ni bloqueos",
+      "so_that": "tenga una experiencia de usuario ágil y confiable"
+    },
+    {
+      "story_id": "US-03",
+      "role": "equipo de ingeniería y arquitectura",
+      "want": "que el ciclo de vida de las notificaciones del servicio de tracking esté encapsulado en las capas de dominio y tracking sin que Compose UI acceda a NotificationManager ni a IDs mágicos",
+      "so_that": "se respete Clean Architecture y la modularidad del proyecto"
+    }
+  ],
+  "functional_requirements": [
+    {
+      "fr_id": "FR-01",
+      "title": "Desacoplamiento de la Capa de Presentación",
+      "statement": "La interfaz OverviewScreen y el contrato MVI Contract.kt de :feature:overview no deben contener efectos (Effect.DismissTrackingNotifications), callbacks ni referencias directas a NotificationManager ni identificadores numéricos mágicos (1002)."
+    },
+    {
+      "fr_id": "FR-02",
+      "title": "Encapsulación de Cancelación en Dominio e Infraestructura",
+      "statement": "La cancelación de la notificación de viaje finalizado debe ejecutarse a través de abstracciones del dominio (:core:domain) implementadas en el módulo de tracking (:core:tracking)."
+    },
+    {
+      "fr_id": "FR-03",
+      "title": "Cancelación al Guardar Registro de Odómetro",
+      "statement": "Cuando el usuario guarda exitosamente el registro de kilometraje desde la hoja inferior (Bottom Sheet) de Overview tras un viaje rastreado, el sistema debe ejecutar la cancelación de la notificación de viaje finalizado."
+    },
+    {
+      "fr_id": "FR-04",
+      "title": "Cancelación al Descartar Viaje Rastreado",
+      "statement": "Cuando el usuario pulsa en cancelar/descartar el viaje rastreado (OnCancelTrackedTripClicked), el sistema debe detener el servicio, limpiar el estado persistido y cancelar la notificación de viaje finalizado en la capa de tracking."
+    },
+    {
+      "fr_id": "FR-05",
+      "title": "Idempotencia y Tolerancia a Fallos",
+      "statement": "La operación de cancelación de la notificación debe ser idempotente: si la notificación ya fue descartada o nunca fue mostrada, la llamada debe completarse de forma segura sin arrojar excepciones ni alterar el flujo de la aplicación."
+    }
+  ],
+  "acceptance_criteria": [
+    {
+      "ac_id": "AC-01",
+      "scenario": "Cancelación de Notificación al Guardar Registro de Odómetro",
+      "given": "un viaje rastreado finalizado pendiente de confirmación en OverviewScreen con la notificación de viaje finalizado activa en la bandeja del sistema",
+      "when": "el usuario introduce el kilometraje y pulsa el botón de guardar registro de odómetro con éxito",
+      "then": "el sistema cancela la notificación de viaje finalizado a través del contrato de tracking sin emitir ningún efecto hacia la interfaz Composable"
+    },
+    {
+      "ac_id": "AC-02",
+      "scenario": "Cancelación de Notificación al Descartar Viaje Rastreado",
+      "given": "un viaje rastreado presentado en la tarjeta de viaje en OverviewScreen con la notificación de viaje finalizado visible",
+      "when": "el usuario pulsa en cancelar el viaje rastreado (OnCancelTrackedTripClicked)",
+      "then": "el sistema detiene el tracking, limpia los datos persistidos y cancela la notificación de viaje finalizado directamente desde la lógica de negocio sin intervención de la vista"
+    },
+    {
+      "ac_id": "AC-03",
+      "scenario": "Ausencia de Gestión de Notificaciones en Compose UI",
+      "given": "el módulo :feature:overview",
+      "when": "se analizan las clases Contract.kt y OverviewScreen.kt",
+      "then": "no existe Effect.DismissTrackingNotifications, ni llamadas a context.getSystemService(Context.NOTIFICATION_SERVICE), ni referencias a la constante numérico-mágica 1002"
+    },
+    {
+      "ac_id": "AC-04",
+      "scenario": "Idempotencia y Ejecución Segura",
+      "given": "que la notificación de viaje finalizado ya ha sido descartada por el usuario o no fue emitida por restricciones del sistema operativo",
+      "when": "se ejecuta la cancelación al guardar o descartar el viaje",
+      "then": "la operación finaliza con éxito sin arrojar SecurityException, NullPointerException ni bloquear la corrutina en ejecución"
+    }
+  ],
+  "non_functional_requirements": {
+    "min_sdk": 24,
+    "target_sdk": 35,
+    "offline_supported": true,
+    "accessibility_required": true,
+    "performance_budget_ms": 16
+  }
+}
