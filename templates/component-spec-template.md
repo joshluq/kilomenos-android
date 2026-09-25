@@ -1,6 +1,6 @@
 # Component Interface Specification: [COMPONENT_NAME]
 
-**Feature ID**: [KILOMENOS-XXX]  
+**Feature ID**: [FEAT-XXX]  
 **Component Identifier**: [e.g., OverviewRoute / ExpensesRoute / ProfileRoute]  
 **Package**: es.joshluq.kmsafe.feature.[feature_name]  
 **Target Modules**: :feature:[feature_name], :core:domain, :core:ui (CanvasKit)  

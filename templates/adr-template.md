@@ -1,6 +1,6 @@
 # ADR-[ID]: [Short Title of Architectural Decision]
 
-**Feature ID**: [KILOMENOS-XXX]  
+**Feature ID**: [FEAT-XXX]  
 **Status**: PROPOSED | ACCEPTED | REJECTED | DEPRECATED | SUPERSEDED  
 **Deciders**: Software Architect  
 **Date**: YYYY-MM-DD  

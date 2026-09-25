@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "DevToQAHandoff",
-  "description": "Standardized transition payload from Senior Android Developer to QA/Testing Engineer",
+  "description": "Standardized transition payload from Senior Developer to QA/Testing Engineer across platforms",
   "type": "object",
   "required": [
     "handoff_id",
@@ -34,7 +34,15 @@
       "type": "object",
       "required": ["role", "agent_id"],
       "properties": {
-        "role": { "type": "string", "const": "Senior Android Developer" },
+        "role": {
+          "type": "string",
+          "enum": [
+            "Senior Android Developer",
+            "Senior Backend Developer",
+            "Senior Web Developer",
+            "Senior Developer"
+          ]
+        },
         "agent_id": { "type": "string" }
       },
       "additionalProperties": false
@@ -43,14 +51,22 @@
       "type": "object",
       "required": ["role", "agent_id"],
       "properties": {
-        "role": { "type": "string", "const": "QA/Testing Engineer" },
+        "role": {
+          "type": "string",
+          "enum": [
+            "QA/Testing Engineer",
+            "QA Engineer",
+            "Backend QA Engineer",
+            "Web QA Engineer"
+          ]
+        },
         "agent_id": { "type": "string" }
       },
       "additionalProperties": false
     },
     "feature_id": {
       "type": "string",
-      "pattern": "^(KILOMENOS-[0-9]+|FEAT-[0-9]{3,})$"
+      "pattern": "^FEAT-[0-9]{3,}$"
     },
     "architect_handoff_ref": {
       "type": "string",
@@ -64,9 +80,11 @@
     },
     "implementation_manifest": {
       "type": "object",
-      "required": ["module", "entry_point_composable", "viewmodel_class"],
+      "required": ["module"],
       "properties": {
         "module": { "type": "string" },
+        "entry_point_service": { "type": "string" },
+        "routes": { "type": "array", "items": { "type": "string" } },
         "entry_point_composable": { "type": "string" },
         "viewmodel_class": { "type": "string" },
         "repository_class": { "type": "string" }
@@ -87,7 +105,11 @@
           },
           "language": {
             "type": "string",
-            "enum": ["kotlin", "gradle", "xml"]
+            "enum": [
+              "kotlin", "gradle", "xml",
+              "typescript", "javascript", "sql", "json", "python",
+              "astro", "html", "css"
+            ]
           },
           "line_count": {
             "type": "integer",
@@ -132,19 +154,23 @@
     },
     "lint_and_sanity": {
       "type": "object",
-      "required": ["compilation_clean", "ktlint_clean", "detekt_clean"],
+      "required": ["compilation_clean"],
       "properties": {
         "compilation_clean": {
           "type": "boolean",
           "const": true
         },
         "ktlint_clean": {
-          "type": "boolean",
-          "const": true
+          "type": "boolean"
         },
         "detekt_clean": {
-          "type": "boolean",
-          "const": true
+          "type": "boolean"
+        },
+        "typecheck_clean": {
+          "type": "boolean"
+        },
+        "eslint_clean": {
+          "type": "boolean"
         }
       },
       "additionalProperties": false

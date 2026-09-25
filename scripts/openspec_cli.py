@@ -50,6 +50,15 @@ Describe the user problem this change solves, target user personas, and expected
 ## 3. Dependencies & Compatibility
 - **Dependencies**: (e.g. Android API 26+, CanvasKit design tokens)
 - **Breaking Changes**: None (Preserves backwards compatibility)
+
+## 4. Reglas de Negocio con Consecuencia de Fallo (BR-xx)
+| ID Regla | Enunciado de Regla | Condición de Fallo | Consecuencia en Sistema / Error |
+|---|---|---|---|
+| **BR-01** | ... | ... | ... |
+
+## 5. Dudas Abiertas Bloqueantes (HITL Halt Gate)
+> **GATE BLOQUEANTE**: Si existen dudas abiertas sin resolver, queda prohibido avanzar a diseño e implementación (`/opsx apply`).
+- [ ] No existen dudas abiertas bloqueantes pendientes.
 """
 
 DESIGN_TEMPLATE = """# Architecture & Technical Design: {title}

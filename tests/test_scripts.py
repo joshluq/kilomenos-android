@@ -73,6 +73,10 @@ class TestHelperScripts(unittest.TestCase):
             "install_to_project",
             PROJECT_ROOT / "scripts" / "install_to_project.py",
         )
+        cls.workflow = load_module(
+            "workflow",
+            PROJECT_ROOT / "scripts" / "workflow.py",
+        )
 
     # 1. device_runner.py tests
     def test_device_runner_parser_and_env(self):
@@ -286,19 +290,6 @@ Acceptance Criteria:
             if temp_json.is_file():
                 temp_json.unlink()
 
-    def test_kilomenos_key_schema_acceptance(self):
-        clean_handoff = self.sanity_check.generate_sample_dev_handoff("KILOMENOS-14")
-        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
-            f.write(json.dumps(clean_handoff))
-            temp_json = Path(f.name)
-        try:
-            is_clean, errors, data = self.sanity_check.validate_dev_handoff_json(temp_json)
-            self.assertTrue(is_clean, f"Errors: {errors}")
-            self.assertEqual(data["feature_id"], "KILOMENOS-14")
-        finally:
-            if temp_json.is_file():
-                temp_json.unlink()
-
     # 9. crash_listener.py tests
     def test_crash_listener_parser(self):
         parser = self.crash_listener.build_parser()
@@ -438,56 +429,173 @@ Acceptance Criteria:
 
     # 12. install_to_project.py Hub & Spoke Profiles tests
     def test_install_to_project_profiles(self):
-        skills_src = PROJECT_ROOT / "skills" if (PROJECT_ROOT / "skills").exists() else (PROJECT_ROOT / ".agents" / "skills")
-        dummy_skills = ['supabase-db-triage', 'supabase-edge-functions', 'legal-compliance-audit', 'web-lighthouse-seo']
-        created_dummies = []
-        for s in dummy_skills:
-            d = skills_src / s
-            if not d.exists():
-                d.mkdir(parents=True, exist_ok=True)
-                (d / "SKILL.md").write_text(f"---\nname: {s}\n---\nMock skill", encoding="utf-8")
-                created_dummies.append(d)
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            tmp_root = Path(tmp_dir)
+
+            # Test Backend profile
+            backend_target = tmp_root / "backend"
+            backend_target.mkdir()
+            self.install_to_project.install_ecosystem(backend_target, profile="backend", mode="both")
+
+            skills_installed = [p.name for p in (backend_target / ".gemini" / "antigravity" / "skills").iterdir() if p.is_dir()]
+            self.assertIn("supabase-db-triage", skills_installed)
+            self.assertIn("supabase-edge-functions", skills_installed)
+            self.assertIn("openspec", skills_installed)
+            self.assertIn("atlassian-bridge", skills_installed)
+            self.assertNotIn("android-staff-engineer-compose", skills_installed)
+            self.assertNotIn("legal-compliance-audit", skills_installed)
+
+            # Verify profile config
+            config_ex = backend_target / ".atlassian_config.json.example"
+            self.assertTrue(config_ex.exists())
+            config_json = json.loads(config_ex.read_text(encoding="utf-8"))
+            self.assertEqual(config_json["board_id"], "1")
+            self.assertEqual(config_json["label"], "backend")
+
+            # Verify profile-tailored AGENTS.md, templates, and scripts
+            backend_agents = (backend_target / "AGENTS.md").read_text(encoding="utf-8")
+            self.assertIn("Backend Software Architect", backend_agents)
+            self.assertNotIn("Role 3: Mobile Software Architect", backend_agents)
+            self.assertTrue((backend_target / "scripts" / "supabase_deployer.py").is_file())
+            self.assertTrue((backend_target / "openspec" / "specs" / "architecture" / "backend_layered_architecture.md").is_file())
+
+            # Verify .github/copilot_instructions.md for Backend
+            copilot_backend = (backend_target / ".github" / "copilot_instructions.md").read_text(encoding="utf-8")
+            self.assertIn("Profile: BACKEND", copilot_backend)
+            self.assertIn("HALT GATE", copilot_backend)
+            self.assertIn("Zero Ghost Code", copilot_backend)
+            self.assertIn("Negative Testing for Business Rules (`BR-xx`)", copilot_backend)
+            self.assertIn("Supabase", copilot_backend)
+
+            # Verify PRD and QA templates contain new SDD sections
+            backend_prd = (backend_target / "templates" / "prd-template.md").read_text(encoding="utf-8")
+            self.assertIn("Reglas de Negocio con Consecuencia Explícita si Fallan (BR-xx)", backend_prd)
+            self.assertIn("Dudas Abiertas Bloqueantes (HITL Halt Gate)", backend_prd)
+
+            backend_qa = (backend_target / "templates" / "qa-report-template.md").read_text(encoding="utf-8")
+            self.assertIn("Pre-Verdict Audit Checklist: Paridad Spec vs. Implementación", backend_qa)
+            self.assertIn("Zero Ghost Code", backend_qa)
+
+            # Test Web profile
+            web_target = tmp_root / "web"
+            web_target.mkdir()
+            self.install_to_project.install_ecosystem(web_target, profile="web", mode="both")
+
+            web_skills = [p.name for p in (web_target / ".gemini" / "antigravity" / "skills").iterdir() if p.is_dir()]
+            self.assertIn("legal-compliance-audit", web_skills)
+            self.assertIn("web-lighthouse-seo", web_skills)
+            self.assertNotIn("supabase-db-triage", web_skills)
+            self.assertNotIn("android-device", web_skills)
+
+            web_agents = (web_target / "AGENTS.md").read_text(encoding="utf-8")
+            self.assertIn("Web Software Architect", web_agents)
+            self.assertNotIn("Backend Software Architect", web_agents)
+            self.assertTrue((web_target / "openspec" / "specs" / "architecture" / "web_ssg_architecture.md").is_file())
+
+            # Verify scripts installation includes workflow.py
+            self.assertTrue((backend_target / "scripts" / "workflow.py").is_file())
+
+            # Verify .github/copilot_instructions.md for Web
+            copilot_web = (web_target / ".github" / "copilot_instructions.md").read_text(encoding="utf-8")
+            self.assertIn("Profile: WEB", copilot_web)
+            self.assertIn("Astro", copilot_web)
+            self.assertIn("HALT GATE", copilot_web)
+
+    # 13. workflow.py Unified 2-Phase Orchestrator tests
+    def test_workflow_orchestrator_lifecycle(self):
+        change_id = "TEST-WF-UNIT"
+        title = "Workflow Unit Test Feature"
+
+        # 1. Test Parser
+        parser = self.workflow.build_parser()
+        self.assertIsNotNone(parser)
+        help_text = parser.format_help()
+        self.assertIn("plan", help_text)
+        self.assertIn("build", help_text)
+        self.assertIn("verify", help_text)
+        self.assertIn("status", help_text)
 
         try:
-            with tempfile.TemporaryDirectory() as tmp_dir:
-                tmp_root = Path(tmp_dir)
+            # 2. Test Phase 1: Plan
+            plan_success = self.workflow.cmd_workflow_plan(
+                change_id,
+                title=title,
+                profile="android",
+                simulate=True,
+                no_jira=True
+            )
+            self.assertTrue(plan_success)
 
-                # Test Backend profile
-                backend_target = tmp_root / "backend"
-                backend_target.mkdir()
-                self.install_to_project.install_ecosystem(backend_target, profile="backend", mode="both")
+            change_dir = self.workflow.CHANGES_DIR / change_id
+            self.assertTrue(change_dir.is_dir())
+            self.assertTrue((change_dir / "proposal.md").is_file())
+            self.assertTrue((change_dir / "design.md").is_file())
+            self.assertTrue((change_dir / "tasks.md").is_file())
 
-                skills_installed = [p.name for p in (backend_target / ".gemini" / "antigravity" / "skills").iterdir() if p.is_dir()]
-                self.assertIn("supabase-db-triage", skills_installed)
-                self.assertIn("supabase-edge-functions", skills_installed)
-                self.assertIn("openspec", skills_installed)
-                self.assertIn("atlassian-bridge", skills_installed)
-                self.assertNotIn("android-staff-engineer-compose", skills_installed)
-                self.assertNotIn("legal-compliance-audit", skills_installed)
+            # Check derived handoffs exist
+            po_handoff = self.workflow.ROOT_DIR / "handoffs" / f"po_to_architect_{change_id}.json"
+            arch_handoff = self.workflow.ROOT_DIR / "handoffs" / f"architect_to_dev_{change_id}.json"
+            self.assertTrue(po_handoff.is_file())
+            self.assertTrue(arch_handoff.is_file())
 
-                # Verify profile config
-                config_ex = backend_target / ".atlassian_config.json.example"
-                self.assertTrue(config_ex.exists())
-                config_json = json.loads(config_ex.read_text(encoding="utf-8"))
-                self.assertEqual(config_json["board_id"], "1")
-                self.assertEqual(config_json["label"], "backend")
+            # 3. Test Phase 2: Build Halt Gate (should fail with pending questions)
+            build_blocked = self.workflow.cmd_workflow_build(
+                change_id,
+                profile="android",
+                simulate=True,
+                no_jira=True
+            )
+            self.assertFalse(build_blocked)
 
-                # Test Web profile
-                web_target = tmp_root / "web"
-                web_target.mkdir()
-                self.install_to_project.install_ecosystem(web_target, profile="web", mode="both")
+            # Resolve blocking question in proposal.md
+            proposal_file = change_dir / "proposal.md"
+            content = proposal_file.read_text(encoding="utf-8")
+            proposal_file.write_text(content.replace("- [ ]", "- [x]"), encoding="utf-8")
 
-                web_skills = [p.name for p in (web_target / ".gemini" / "antigravity" / "skills").iterdir() if p.is_dir()]
-                self.assertIn("legal-compliance-audit", web_skills)
-                self.assertIn("web-lighthouse-seo", web_skills)
-                self.assertNotIn("supabase-db-triage", web_skills)
-                self.assertNotIn("android-device", web_skills)
+            # Retry Phase 2: Build (should pass now)
+            build_success = self.workflow.cmd_workflow_build(
+                change_id,
+                profile="android",
+                simulate=True,
+                no_jira=True
+            )
+            self.assertTrue(build_success)
+
+            dev_handoff = self.workflow.ROOT_DIR / "handoffs" / f"dev_to_qa_{change_id}.json"
+            self.assertTrue(dev_handoff.is_file())
+
+            # 4. Test Phase 3: Verify (PASS)
+            verify_success = self.workflow.cmd_workflow_verify(
+                change_id,
+                verdict="PASS",
+                profile="android",
+                simulate=True,
+                no_jira=True
+            )
+            self.assertTrue(verify_success)
+
+            # Check QA report and verdict handoff
+            qa_report = self.workflow.ROOT_DIR / "docs" / "qa" / f"QA-REPORT-{change_id}.md"
+            qa_verdict = self.workflow.ROOT_DIR / "handoffs" / f"qa_verdict_{change_id}.json"
+            self.assertTrue(qa_report.is_file())
+            self.assertTrue(qa_verdict.is_file())
+
+            # Verify OpenSpec was archived
+            archive_dir = self.workflow.ARCHIVE_DIR / change_id
+            self.assertTrue(archive_dir.is_dir())
+
         finally:
+            # Clean up test artifacts
             import shutil
-            for d in created_dummies:
-                shutil.rmtree(d, ignore_errors=True)
+            shutil.rmtree(self.workflow.CHANGES_DIR / change_id, ignore_errors=True)
+            shutil.rmtree(self.workflow.ARCHIVE_DIR / change_id, ignore_errors=True)
+            (self.workflow.SPECS_DIR / f"features_{change_id.lower().replace('-', '_')}.md").unlink(missing_ok=True)
+            (self.workflow.ROOT_DIR / "docs" / "qa" / f"QA-REPORT-{change_id}.md").unlink(missing_ok=True)
+            for f in (self.workflow.ROOT_DIR / "handoffs").glob(f"*{change_id}*"):
+                f.unlink(missing_ok=True)
 
 
 if __name__ == "__main__":
     unittest.main()
+
 

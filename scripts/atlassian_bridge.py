@@ -19,10 +19,8 @@ Authentication:
 import argparse
 import base64
 import datetime
-import html
 import json
 import os
-import re
 import sys
 import urllib.error
 import urllib.parse
@@ -33,152 +31,6 @@ from typing import Any, Dict, List, Optional, Tuple
 ROOT_DIR = Path(__file__).resolve().parent.parent
 if str(ROOT_DIR) not in sys.path:
     sys.path.insert(0, str(ROOT_DIR))
-
-
-def markdown_to_confluence_html(markdown_text: str) -> str:
-    """Converts Markdown text into valid XHTML Confluence Storage Format."""
-    lines = markdown_text.replace("\r\n", "\n").split("\n")
-    output = []
-    in_code_block = False
-    code_lines = []
-    in_list = False
-    list_tag = "ul"
-    in_table = False
-    table_has_header = False
-
-    def inline_format(text: str) -> str:
-        text = re.sub(r'\[([^\]]+)\]\(([^)]+)\)', r'<a href="\2">\1</a>', text)
-        text = re.sub(r'\*\*\*([^\*]+)\*\*\*', r'<strong><em>\1</em></strong>', text)
-        text = re.sub(r'\*\*([^\*]+)\*\*', r'<strong>\1</strong>', text)
-        text = re.sub(r'__([^_]+)__', r'<strong>\1</strong>', text)
-        text = re.sub(r'\*([^\*]+)\*', r'<em>\1</em>', text)
-        text = re.sub(r'_([^_]+)_', r'<em>\1</em>', text)
-        text = re.sub(r'`([^`]+)`', r'<code>\1</code>', text)
-        return text
-
-    idx = 0
-    while idx < len(lines):
-        line = lines[idx]
-
-        # 1. Code block fence
-        if line.strip().startswith("```"):
-            if in_code_block:
-                escaped_code = html.escape("\n".join(code_lines))
-                output.append(f"<pre><code>{escaped_code}</code></pre>")
-                in_code_block = False
-                code_lines = []
-            else:
-                if in_list:
-                    output.append(f"</{list_tag}>")
-                    in_list = False
-                if in_table:
-                    output.append("</tbody></table>")
-                    in_table = False
-                in_code_block = True
-            idx += 1
-            continue
-
-        if in_code_block:
-            code_lines.append(line)
-            idx += 1
-            continue
-
-        # 2. Table row
-        if line.strip().startswith("|") and line.strip().endswith("|"):
-            if not in_table:
-                if in_list:
-                    output.append(f"</{list_tag}>")
-                    in_list = False
-                output.append("<table>")
-                in_table = True
-                table_has_header = False
-
-            # Check if current line is separator line |---|---|
-            if re.match(r'^\s*\|(\s*[-:]+[-|\s:]*)\|\s*$', line):
-                idx += 1
-                continue
-
-            raw_cells = [c.strip() for c in line.strip().split("|")[1:-1]]
-            is_header = False
-            if not table_has_header:
-                if idx + 1 < len(lines) and re.match(r'^\s*\|(\s*[-:]+[-|\s:]*)\|\s*$', lines[idx + 1]):
-                    is_header = True
-                    table_has_header = True
-
-            cell_tag = "th" if is_header else "td"
-            row_html = "".join(f"<{cell_tag}>{inline_format(html.escape(c))}</{cell_tag}>" for c in raw_cells)
-            if is_header:
-                output.append(f"<thead><tr>{row_html}</tr></thead><tbody>")
-            else:
-                output.append(f"<tr>{row_html}</tr>")
-            idx += 1
-            continue
-        elif in_table:
-            output.append("</tbody></table>")
-            in_table = False
-
-        # 3. Lists (- or * or 1.)
-        m_ul = re.match(r'^\s*[-*]\s+(.*)$', line)
-        m_ol = re.match(r'^\s*(\d+)\.\s+(.*)$', line)
-        if m_ul or m_ol:
-            cur_list_tag = "ul" if m_ul else "ol"
-            item_content = m_ul.group(1) if m_ul else m_ol.group(1)
-            if not in_list:
-                output.append(f"<{cur_list_tag}>")
-                in_list = True
-                list_tag = cur_list_tag
-            elif list_tag != cur_list_tag:
-                output.append(f"</{list_tag}>")
-                output.append(f"<{cur_list_tag}>")
-                list_tag = cur_list_tag
-            output.append(f"<li>{inline_format(html.escape(item_content))}</li>")
-            idx += 1
-            continue
-        elif in_list:
-            output.append(f"</{list_tag}>")
-            in_list = False
-
-        # 4. Headings
-        m_h = re.match(r'^(#{1,6})\s+(.*)$', line)
-        if m_h:
-            level = len(m_h.group(1))
-            h_text = inline_format(html.escape(m_h.group(2).strip()))
-            output.append(f"<h{level}>{h_text}</h{level}>")
-            idx += 1
-            continue
-
-        # 5. Horizontal rule
-        if re.match(r'^\s*[-*_]{3,}\s*$', line):
-            output.append("<hr />")
-            idx += 1
-            continue
-
-        # 6. Blockquote
-        if line.strip().startswith(">"):
-            bq_text = inline_format(html.escape(line.strip()[1:].strip()))
-            output.append(f"<blockquote><p>{bq_text}</p></blockquote>")
-            idx += 1
-            continue
-
-        # 7. Blank lines / Paragraphs
-        stripped = line.strip()
-        if not stripped:
-            idx += 1
-            continue
-
-        p_text = inline_format(html.escape(stripped))
-        output.append(f"<p>{p_text}</p>")
-        idx += 1
-
-    if in_code_block:
-        escaped_code = html.escape("\n".join(code_lines))
-        output.append(f"<pre><code>{escaped_code}</code></pre>")
-    if in_list:
-        output.append(f"</{list_tag}>")
-    if in_table:
-        output.append("</tbody></table>")
-
-    return "\n".join(output)
 
 
 # ==============================================================================
@@ -510,55 +362,8 @@ class AtlassianClient:
         return self._http_request("POST", f"rest/api/3/issue/{issue_key}/transitions", payload)
 
     # --------------------------------------------------------------------------
-    # Confluence & Epic Operations
+    # Confluence Operations
     # --------------------------------------------------------------------------
-
-    def get_epic_issues(self, epic_key: str) -> List[Dict[str, Any]]:
-        """Fetches all child issues of an epic using /rest/api/3/search/jql."""
-        if self.simulate:
-            return [{"key": f"{epic_key}-1", "summary": "Simulated Issue", "status": "Finalizada"}]
-        jql = urllib.parse.quote(f"parent = {epic_key}")
-        fields = "summary,status,priority,description,issuetype,resolution,comment,updated,created"
-        res = self._http_request("GET", f"rest/api/3/search/jql?jql={jql}&fields={fields}")
-        issues = res.get("issues", [])
-        parsed = []
-        for iss in sorted(issues, key=lambda x: int(x.get("key", "0-0").split("-")[1]) if "-" in x.get("key", "") and x.get("key", "").split("-")[1].isdigit() else 0):
-            f = iss.get("fields", {})
-            desc = self._extract_adf_text(f.get("description", "")).strip()
-            comments = [
-                {
-                    "author": c.get("author", {}).get("displayName"),
-                    "created": c.get("created"),
-                    "body": self._extract_adf_text(c.get("body", "")).strip()
-                }
-                for c in f.get("comment", {}).get("comments", [])
-            ]
-            parsed.append({
-                "key": iss.get("key"),
-                "summary": f.get("summary"),
-                "status": f.get("status", {}).get("name"),
-                "priority": f.get("priority", {}).get("name"),
-                "type": f.get("issuetype", {}).get("name"),
-                "resolution": f.get("resolution", {}).get("name") if f.get("resolution") else None,
-                "created": f.get("created"),
-                "updated": f.get("updated"),
-                "description": desc,
-                "comments": comments
-            })
-        return parsed
-
-    def find_confluence_page(self, space_key: str, title: str) -> Optional[Dict[str, Any]]:
-        """Finds an existing page by title in a Confluence space."""
-        if self.simulate:
-            return None
-        encoded_title = urllib.parse.quote(title)
-        endpoint = f"wiki/rest/api/content?spaceKey={space_key}&title={encoded_title}&expand=version,ancestors"
-        try:
-            res = self._http_request("GET", endpoint)
-            results = res.get("results", [])
-            return results[0] if results else None
-        except Exception:
-            return None
 
     def publish_confluence_page(
         self,
@@ -567,7 +372,7 @@ class AtlassianClient:
         markdown_body: str,
         parent_id: Optional[str] = None,
     ) -> Dict[str, Any]:
-        """Publishes or updates a living specification/document in Confluence with native HTML formatting."""
+        """Publishes or updates a living specification in Confluence."""
         if self.simulate:
             return {
                 "id": "20001",
@@ -575,52 +380,26 @@ class AtlassianClient:
                 "space": space_key,
                 "url": f"https://example.atlassian.net/wiki/spaces/{space_key}/pages/20001",
                 "simulated": True,
-                "action": "simulated",
             }
 
-        html_body = markdown_to_confluence_html(markdown_body)
-        existing = self.find_confluence_page(space_key, title)
+        # Simple HTML conversion for Confluence Storage Format
+        html_body = f"<pre>{markdown_body}</pre>"
 
-        if existing:
-            page_id = existing["id"]
-            current_ver = existing.get("version", {}).get("number", 1)
-            payload = {
-                "id": page_id,
-                "type": "page",
-                "title": title,
-                "space": {"key": space_key},
-                "body": {
-                    "storage": {
-                        "value": html_body,
-                        "representation": "storage",
-                    }
-                },
-                "version": {
-                    "number": current_ver + 1
+        payload = {
+            "title": title,
+            "type": "page",
+            "space": {"key": space_key},
+            "body": {
+                "storage": {
+                    "value": html_body,
+                    "representation": "storage",
                 }
-            }
-            if parent_id:
-                payload["ancestors"] = [{"id": parent_id}]
-            res = self._http_request("PUT", f"wiki/rest/api/content/{page_id}", payload)
-            res["action"] = "updated"
-            return res
-        else:
-            payload = {
-                "title": title,
-                "type": "page",
-                "space": {"key": space_key},
-                "body": {
-                    "storage": {
-                        "value": html_body,
-                        "representation": "storage",
-                    }
-                },
-            }
-            if parent_id:
-                payload["ancestors"] = [{"id": parent_id}]
-            res = self._http_request("POST", "wiki/rest/api/content", payload)
-            res["action"] = "created"
-            return res
+            },
+        }
+        if parent_id:
+            payload["ancestors"] = [{"id": parent_id}]
+
+        return self._http_request("POST", "wiki/rest/api/content", payload)
 
 
 # ==============================================================================
@@ -684,7 +463,7 @@ def cmd_fetch(client: AtlassianClient, issue_key: str, scaffold_openspec: bool =
         sys.exit(1)
 
 
-def cmd_refine(client: AtlassianClient, issue_key: str, criteria_file_or_text: str, transition_to: Optional[str] = None):
+def cmd_refine(client: AtlassianClient, issue_key: str, criteria_file_or_text: str, transition_to: Optional[str] = None, as_comment: bool = False, overwrite_desc: bool = False):
     print(f"[*] PO Refinement: Updating Jira ticket {issue_key} with formal acceptance criteria...")
     try:
         # Check if input is a file path
@@ -694,8 +473,28 @@ def cmd_refine(client: AtlassianClient, issue_key: str, criteria_file_or_text: s
         else:
             new_desc = criteria_file_or_text
 
-        client.update_jira_issue(issue_key, description=new_desc)
-        print(f"✅ Issue {issue_key} description successfully updated with refined specifications.")
+        if as_comment:
+            comment_body = f"📋 **[REFINAMIENTO TÉCNICO - PO & ARQUITECTURA]**\n\n{new_desc}"
+            client.add_jira_comment(issue_key, comment_body)
+            print(f"✅ Refinement posted as structured comment on issue {issue_key}.")
+        elif overwrite_desc:
+            client.update_jira_issue(issue_key, description=new_desc)
+            print(f"✅ Issue {issue_key} description successfully replaced with refined specifications.")
+        else:
+            try:
+                issue_data = client.get_jira_issue(issue_key)
+                existing_desc = (issue_data.get("description") or "").strip()
+            except Exception:
+                existing_desc = ""
+
+            header_tag = "--- REFINAMIENTO TÉCNICO ---"
+            if existing_desc and header_tag not in existing_desc:
+                combined_desc = f"{existing_desc}\n\n---\n## 📋 {header_tag}\n\n{new_desc}"
+            else:
+                combined_desc = new_desc
+
+            client.update_jira_issue(issue_key, description=combined_desc)
+            print(f"✅ Issue {issue_key} description successfully updated with appended specifications.")
 
         if transition_to:
             print(f"[*] Moving issue to '{transition_to}'...")
@@ -706,32 +505,14 @@ def cmd_refine(client: AtlassianClient, issue_key: str, criteria_file_or_text: s
         sys.exit(1)
 
 
-def cmd_transition(client: AtlassianClient, issue_key: str, status_name: str, comment: Optional[str] = None):
+
+def cmd_transition(client: AtlassianClient, issue_key: str, status_name: str):
+    print(f"[*] Transitioning issue {issue_key} to '{status_name}'...")
     try:
-        if comment:
-            print(f"[*] Posting comment to {issue_key}...")
-            client.add_jira_comment(issue_key, comment)
-            print(f"✅ Comment posted successfully.")
-        print(f"[*] Transitioning issue {issue_key} to '{status_name}'...")
         res = client.transition_jira_issue(issue_key, status_name)
         print(f"✅ Issue {issue_key} transitioned successfully to '{status_name}'.")
     except Exception as e:
         print(f"❌ Error transitioning issue: {e}")
-        sys.exit(1)
-
-
-def cmd_resolve(client: AtlassianClient, issue_key: str, comment: Optional[str] = None, status_name: str = "Listo"):
-    """Atomically post resolution comment and transition ticket to completed/done status."""
-    print(f"[*] Resolving issue {issue_key} (Target Status: '{status_name}')...")
-    try:
-        if comment:
-            print(f"[*] Posting resolution comment to {issue_key}...")
-            client.add_jira_comment(issue_key, comment)
-            print(f"✅ Resolution comment posted.")
-        client.transition_jira_issue(issue_key, status_name)
-        print(f"✅ Issue {issue_key} marked as '{status_name}'.")
-    except Exception as e:
-        print(f"❌ Error resolving issue: {e}")
         sys.exit(1)
 
 
@@ -824,74 +605,6 @@ def cmd_sync_confluence(client: AtlassianClient, space_key: str):
     print("===========================================================")
 
 
-def cmd_fetch_epic(client: AtlassianClient, epic_key: str, output_path: Optional[str] = None):
-    print(f"[*] Fetching child issues for Epic '{epic_key}' from Jira...")
-    try:
-        issues = client.get_epic_issues(epic_key)
-        print("===========================================================")
-        print(f"   EPIC {epic_key} CHILD ISSUES ({len(issues)})")
-        print("===========================================================")
-        for iss in issues:
-            res_str = f" ({iss.get('resolution')})" if iss.get('resolution') else ""
-            print(f"   [{iss.get('status'):<14}] {iss.get('key'):<12} : {iss.get('summary')}{res_str}")
-        print("===========================================================")
-
-        if output_path:
-            out_file = Path(output_path)
-            out_file.parent.mkdir(parents=True, exist_ok=True)
-            out_file.write_text(json.dumps(issues, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
-            print(f"✅ Saved {len(issues)} issues to {out_file.resolve()}")
-    except Exception as e:
-        print(f"❌ Error fetching epic issues: {e}")
-        sys.exit(1)
-
-
-def cmd_publish_doc(
-    client: AtlassianClient,
-    file_path: str,
-    space_key: Optional[str] = None,
-    title: Optional[str] = None,
-    parent_id: Optional[str] = None,
-    parent_title: Optional[str] = None,
-):
-    path = Path(file_path)
-    if not path.is_file():
-        print(f"[ERROR] Document file not found: {path}")
-        sys.exit(1)
-
-    content = path.read_text(encoding="utf-8")
-    space = space_key or client.confluence_space or "KILOMENOS"
-
-    if not title:
-        m = re.search(r'^\s*#\s+(.+)$', content, re.MULTILINE)
-        if m:
-            title = m.group(1).strip()
-        else:
-            title = path.stem.replace("_", " ").title()
-
-    resolved_parent_id = parent_id
-    if not resolved_parent_id and parent_title:
-        p_page = client.find_confluence_page(space, parent_title)
-        if p_page:
-            resolved_parent_id = p_page["id"]
-            print(f"[*] Found parent page '{parent_title}' (ID: {resolved_parent_id})")
-        else:
-            print(f"⚠️ Parent page '{parent_title}' not found in space '{space}'. Publishing at space root.")
-
-    print(f"[*] Publishing '{title}' from {path.name} to Confluence Space '{space}'...")
-    try:
-        res = client.publish_confluence_page(space, title, content, parent_id=resolved_parent_id)
-        action = res.get("action", "processed")
-        print(f"✅ Successfully {action} Confluence page: '{title}' (ID: {res.get('id')})")
-        if "url" in res:
-            print(f"   URL: {res.get('url')}")
-        elif client.base_url:
-            print(f"   URL: {client.base_url}/wiki/spaces/{space}/pages/{res.get('id')}")
-    except Exception as e:
-        print(f"❌ Error publishing to Confluence: {e}")
-        sys.exit(1)
-
-
 # ==============================================================================
 # 3. CLI ARGUMENT PARSER
 # ==============================================================================
@@ -932,18 +645,13 @@ def build_parser() -> argparse.ArgumentParser:
     p_refine.add_argument("issue_key", help="Jira issue key (e.g. KMSAFE-105)")
     p_refine.add_argument("criteria", help="Path to markdown file or string containing refined Acceptance Criteria")
     p_refine.add_argument("--status", default="Refined", help="Status to transition issue after refinement (default: Refined)")
+    p_refine.add_argument("--as-comment", action="store_true", help="Post refinement as a comment instead of updating issue description")
+    p_refine.add_argument("--overwrite-desc", action="store_true", help="Overwrite the issue description completely rather than appending")
 
     # transition
     p_trans = subparsers.add_parser("transition", help="Transition Jira issue status.")
     p_trans.add_argument("issue_key", help="Jira issue key")
-    p_trans.add_argument("target_status", help="Target status name (e.g. 'Ready for Dev', 'In Progress', 'Done', 'Listo')")
-    p_trans.add_argument("--comment", "-c", help="Optional comment to post alongside the transition")
-
-    # resolve
-    p_resolve = subparsers.add_parser("resolve", help="Atomically post summary comment and transition Jira issue to completed/done status.")
-    p_resolve.add_argument("issue_key", help="Jira issue key (e.g. KILOMENOS-14)")
-    p_resolve.add_argument("--comment", "-c", help="Resolution summary comment")
-    p_resolve.add_argument("--status", "-s", default="Listo", help="Target resolution status (default: 'Listo')")
+    p_trans.add_argument("target_status", help="Target status name (e.g. 'Ready for Dev', 'In Progress', 'Done')")
 
     # comment
     p_com = subparsers.add_parser("comment", help="Add a comment to a Jira issue.")
@@ -958,19 +666,6 @@ def build_parser() -> argparse.ArgumentParser:
     # sync-confluence
     p_sync = subparsers.add_parser("sync-confluence", help="Publish OpenSpec living specs to Confluence.")
     p_sync.add_argument("space_key", nargs="?", help="Confluence Space Key (defaults to configured space)")
-
-    # fetch-epic
-    p_epic = subparsers.add_parser("fetch-epic", help="Fetch all child issues of a Jira Epic.")
-    p_epic.add_argument("epic_key", help="Jira Epic Key (e.g. KILOMENOS-3)")
-    p_epic.add_argument("--output", "-o", help="Optional output JSON file path to save issue dump")
-
-    # publish-doc
-    p_pubdoc = subparsers.add_parser("publish-doc", help="Publish or update any markdown file in Confluence.")
-    p_pubdoc.add_argument("file_path", help="Path to markdown document to publish")
-    p_pubdoc.add_argument("--space", "-s", help="Confluence Space Key (defaults to configured space)")
-    p_pubdoc.add_argument("--title", "-t", help="Confluence page title (defaults to H1 or filename)")
-    p_pubdoc.add_argument("--parent-id", help="Parent Confluence page ID")
-    p_pubdoc.add_argument("--parent-title", help="Parent Confluence page title")
 
     return parser
 
@@ -1000,20 +695,14 @@ def main():
         cmd_board(client, board_id=args.board_id, status=args.status, project_key=args.project_key, label=getattr(args, "label", None))
     elif args.command == "fetch":
         cmd_fetch(client, args.issue_key, scaffold_openspec=args.scaffold_openspec, require_status=args.require_status)
-    elif args.command == "fetch-epic":
-        cmd_fetch_epic(client, args.epic_key, output_path=args.output)
     elif args.command == "refine":
-        cmd_refine(client, args.issue_key, args.criteria, transition_to=args.status)
+        cmd_refine(client, args.issue_key, args.criteria, transition_to=args.status, as_comment=args.as_comment, overwrite_desc=args.overwrite_desc)
     elif args.command == "transition":
-        cmd_transition(client, args.issue_key, args.target_status, comment=args.comment)
-    elif args.command == "resolve":
-        cmd_resolve(client, args.issue_key, comment=args.comment, status_name=args.status)
+        cmd_transition(client, args.issue_key, args.target_status)
     elif args.command == "comment":
         cmd_comment(client, args.issue_key, args.message)
     elif args.command == "report-crash":
         cmd_report_crash(client, args.project_key, args.defect_json)
-    elif args.command == "publish-doc":
-        cmd_publish_doc(client, args.file_path, space_key=args.space, title=args.title, parent_id=args.parent_id, parent_title=args.parent_title)
     elif args.command == "sync-confluence":
         target_space = args.space_key or client.confluence_space
         if not target_space and not client.simulate:

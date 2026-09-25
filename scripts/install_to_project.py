@@ -98,6 +98,78 @@ def generate_profile_config(target_dir: Path, profile: str):
     print(f"    -> Generated {config_file.name} for profile '{profile}'.")
 
 
+def generate_copilot_instructions(target_dir: Path, profile: str):
+    github_dir = target_dir / '.github'
+    github_dir.mkdir(parents=True, exist_ok=True)
+    copilot_file = github_dir / 'copilot_instructions.md'
+
+    platform_rules = {
+        'android': """### Platform Guardrails: Android (Kotlin / Jetpack Compose)
+- **Architecture**: Clean Architecture + MVI. Follow 4-Layer Compose (Screen -> Coordinator -> Content -> Components).
+- **Presentation**: Pure Unidirectional Data Flow (UDF). State is immutable StateFlow; actions are sealed interfaces.
+- **Testing**: Test StateFlow with Turbine; mock dependencies with MockK; test UI with ComposeTestRule.
+- **Boundaries**: Strictly NO direct database/SQL or backend code. Respect Min SDK 24 / Target SDK 35.
+- **Design Tokens**: Enforce design tokens (CanvasKit / FoundationKit). Never hardcode hex colors or raw dimensions.
+- **Roles & Governance**: Refer to `AGENTS.md` (PO, Solutions Architect, Mobile Architect, Senior Android Dev, Android QA).""",
+        'backend': """### Platform Guardrails: Backend (Supabase / PostgreSQL / Edge Functions / Deno)
+- **Database & Migrations**: All PostgreSQL migrations MUST be wrapped in atomic `BEGIN ... COMMIT` blocks with idempotency.
+- **Multi-Tenant Security**: Enforce PostgreSQL Row Level Security (RLS) on all tables (`auth.uid() = user_id`). Never bypass RLS.
+- **API & Edge Functions**: Use TypeScript / Deno for Edge Functions. Implement defensive schema validation.
+- **Secrets Management**: Public clients only receive `anon` key. Never expose `service_role` key.
+- **Boundaries**: Strictly NO Android/Kotlin/Compose dependencies. Focus exclusively on backend, DB, and APIs.
+- **Roles & Governance**: Refer to `AGENTS.md` (PO, Solutions Architect, Backend Architect, Senior Backend Dev, Backend QA, DevOps).""",
+        'web': """### Platform Guardrails: Web (Astro SSG / Tailwind CSS)
+- **Architecture**: Astro Static Site Generation (SSG) with semantic HTML and Tailwind CSS.
+- **Performance Budget**: Target Google Lighthouse >= 90 across Performance, Accessibility, Best Practices, SEO.
+- **Zero JS Bloat**: Pure static HTML output for legal and informational pages. Avoid unnecessary client-side JS.
+- **Compliance**: Adhere to GDPR, privacy disclosures, and app store account deletion policy requirements.
+- **Boundaries**: Strictly NO mobile Android code or server-side DB operations.
+- **Roles & Governance**: Refer to `AGENTS.md` (PO, Solutions Architect, Web Architect, Senior Web Dev, Web QA).""",
+        'all': """### Platform Guardrails: Full Multi-Disciplinary System
+- Adhere to the specific platform boundaries (Android, Backend, Web) depending on the target module.
+- Refer to `AGENTS.md` for role boundaries, schemas, and architectural guidelines."""
+    }
+
+    selected_platform_rule = platform_rules.get(profile, platform_rules['all'])
+
+    content = f"""# GitHub Copilot & AI Developer Instructions
+
+You are assisting developers working in an enterprise **Specification-Driven Development (SDD)** ecosystem governed by `AGENTS.md`.
+
+## 1. Golden Rules of Development
+
+1. **Spec-First (No Spec, No Code)**:
+   - NEVER generate, propose, or write code without an approved upstream specification (`openspec/changes/` or `templates/prd-template.md`).
+   - All code changes must trace directly to explicit functional requirements (`FR-xx`) and acceptance criteria (`AC-xx`).
+
+2. **HITL 2-Stage Gate (Human-In-The-Loop)**:
+   - **Stage 1 (Specification & Technical Design)**: PO and Architect align on requirements, failure consequences, and interface contracts.
+   - **HALT GATE**: If there are unresolved open questions (`Dudas Abiertas Bloqueantes`), **STOP IMMEDIATELY**. You must prompt the developer/stakeholder for clarification before proceeding.
+   - **Stage 2 (Implementation & Verification)**: Only write code after Stage 1 is fully approved.
+
+3. **Zero Ghost Code (Anti-Scope Creep)**:
+   - Strictly prohibit adding unrequested endpoints, hidden parameters, undeclared UI components, or phantom behaviors.
+   - Implement ONLY what is documented in the approved specification.
+
+4. **Negative Testing for Business Rules (`BR-xx`)**:
+   - Every business rule must define an explicit failure consequence (`BR-xx`).
+   - Every failure branch must have automated negative test coverage (HTTP 4xx/5xx, localized error UI, fallback state).
+
+## 2. Platform Discipline Profile: {profile.upper()}
+
+{selected_platform_rule}
+
+## 3. Workflow References
+
+- Role Specifications & Technical Guardrails: `AGENTS.md` (Section 5)
+- Living Specifications: `openspec/specs/`
+- Active Changes & Proposals: `openspec/changes/`
+- Handoff & Validation Schemas: `schemas/`
+"""
+    copilot_file.write_text(content.strip() + "\n", encoding="utf-8")
+    print(f"    -> Generated {copilot_file.relative_to(target_dir)} for profile '{profile}'.")
+
+
 def install_ecosystem(target_dir: Path, mode: str = 'both', profile: str = 'android', overwrite: bool = True, update_agents: bool = False):
     source_root = Path(__file__).resolve().parent.parent
     target_dir = target_dir.resolve()
@@ -107,6 +179,8 @@ def install_ecosystem(target_dir: Path, mode: str = 'both', profile: str = 'andr
         sys.exit(1)
 
     allowed_skills = PROFILE_SKILLS.get(profile)
+
+    profile_dir = source_root / 'profiles' / profile
 
     print("===========================================================")
     print("   Hub & Spoke Agentic Ecosystem Deployer")
@@ -119,39 +193,65 @@ def install_ecosystem(target_dir: Path, mode: str = 'both', profile: str = 'andr
     # 1. Install Skills (.gemini/antigravity/skills and .agents/skills)
     if mode in ('antigravity', 'both'):
         skills_dst = target_dir / '.gemini' / 'antigravity' / 'skills'
-        skills_src = source_root / 'skills' if (source_root / 'skills').exists() else (source_root / '.agents' / 'skills')
+        skills_src = source_root / 'skills'
         print(f"\n[1] Installing filtered skills for profile '{profile}'...")
         copy_dir(skills_src, skills_dst, overwrite, filter_names=allowed_skills)
         agents_skills_dst = target_dir / '.agents' / 'skills'
         if agents_skills_dst.parent.exists():
             copy_dir(skills_src, agents_skills_dst, overwrite, filter_names=allowed_skills)
-        installed = [p.name for p in skills_dst.iterdir() if p.is_dir()] if skills_dst.exists() else []
+        installed = [p.name for p in skills_dst.iterdir() if p.is_dir()]
         print(f"    -> Installed {len(installed)} skills: {', '.join(sorted(installed))}")
 
     # 2. Install SDD Contracts, Schemas, Templates, Walkthrough & OpenSpec
     if mode in ('standalone', 'both'):
-        for folder in ('schemas', 'templates', 'walkthrough', 'openspec'):
+        # Universal Schemas & Walkthrough
+        for folder in ('schemas', 'walkthrough'):
             src_f = source_root / folder
             dst_f = target_dir / folder
             print(f"\n[2] Installing {folder} to {dst_f}...")
             copy_dir(src_f, dst_f, overwrite)
 
+        # Templates: Profile-tailored or base
+        tmpl_dst = target_dir / 'templates'
+        if profile_dir.is_dir() and (profile_dir / 'templates').is_dir():
+            tmpl_src = profile_dir / 'templates'
+            print(f"\n[2] Installing profile-tailored templates ({profile}) to {tmpl_dst}...")
+            copy_dir(tmpl_src, tmpl_dst, overwrite)
+        else:
+            tmpl_src = source_root / 'templates'
+            print(f"\n[2] Installing templates to {tmpl_dst}...")
+            copy_dir(tmpl_src, tmpl_dst, overwrite)
+
+        # OpenSpec: Universal contracts + Profile-tailored specs
+        openspec_dst = target_dir / 'openspec'
+        print(f"\n[2] Installing openspec structure to {openspec_dst}...")
+        (openspec_dst / 'changes').mkdir(parents=True, exist_ok=True)
+        (openspec_dst / 'archive').mkdir(parents=True, exist_ok=True)
+        contracts_src = source_root / 'openspec' / 'specs' / 'contracts'
+        if contracts_src.is_dir():
+            copy_dir(contracts_src, openspec_dst / 'specs' / 'contracts', overwrite)
+        if profile_dir.is_dir() and (profile_dir / 'openspec' / 'specs').is_dir():
+            print(f"    -> Installing profile living specs from profiles/{profile}/openspec/specs...")
+            copy_dir(profile_dir / 'openspec' / 'specs', openspec_dst / 'specs', overwrite)
+        else:
+            copy_dir(source_root / 'openspec' / 'specs', openspec_dst / 'specs', overwrite)
+
         # Copy PROJECT.md ONLY if not already existing (preserve project-specific configuration)
-        proj_src = source_root / 'PROJECT.md'
         proj_dst = target_dir / 'PROJECT.md'
+        proj_src = profile_dir / 'PROJECT.md' if (profile_dir.is_dir() and (profile_dir / 'PROJECT.md').is_file()) else source_root / 'PROJECT.md'
         if proj_src.exists() and not proj_dst.exists():
-            print(f"    -> Copying PROJECT.md to target root...")
+            print(f"    -> Copying profile PROJECT.md to target root...")
             shutil.copy2(proj_src, proj_dst)
         elif proj_dst.exists():
             print(f"    -> Target already has PROJECT.md, preserving existing file.")
 
-        # Copy or update AGENTS.md
-        agents_src = source_root / 'AGENTS.md'
+        # Copy or update AGENTS.md (Profile-specific if available)
         agents_dst = target_dir / 'AGENTS.md'
+        agents_src = profile_dir / 'AGENTS.md' if (profile_dir.is_dir() and (profile_dir / 'AGENTS.md').is_file()) else source_root / 'AGENTS.md'
         if agents_src.exists():
             if not agents_dst.exists() or update_agents:
                 action_str = "Updating" if agents_dst.exists() else "Copying"
-                print(f"    -> {action_str} AGENTS.md in target root...")
+                print(f"    -> {action_str} AGENTS.md ({profile}) in target root...")
                 shutil.copy2(agents_src, agents_dst)
             else:
                 print(f"    -> Target already has AGENTS.md, preserving existing file (pass --update-agents to refresh).")
@@ -160,6 +260,9 @@ def install_ecosystem(target_dir: Path, mode: str = 'both', profile: str = 'andr
         scripts_dst = target_dir / 'scripts'
         scripts_src = source_root / 'scripts'
         copy_dir(scripts_src, scripts_dst, overwrite)
+        if profile_dir.is_dir() and (profile_dir / 'scripts').is_dir():
+            print(f"    -> Installing profile-specific scripts ({profile}) to {scripts_dst}...")
+            copy_dir(profile_dir / 'scripts', scripts_dst, overwrite)
 
         tests_dst = target_dir / 'tests'
         tests_src = source_root / 'tests'
@@ -167,6 +270,9 @@ def install_ecosystem(target_dir: Path, mode: str = 'both', profile: str = 'andr
 
         # Generate profile-tailored .atlassian_config.json.example
         generate_profile_config(target_dir, profile)
+
+        # Generate profile-tailored .github/copilot_instructions.md
+        generate_copilot_instructions(target_dir, profile)
 
     print("\n===========================================================")
     print(f"   🎉 Deployment Complete for Profile: {profile.upper()}")

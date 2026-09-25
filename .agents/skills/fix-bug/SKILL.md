@@ -1,50 +1,59 @@
 ---
 name: fix-bug
-description: Surgical investigation, root-cause triage, and regression-proof fix protocol for KmSafe. Analyzes stacktraces, Logcat dumps, or anomalous behavior, authors a failing reproduction test, applies the minimal resilient fix, and verifies system sanity without cosmetic workarounds.
+description: Surgical root-cause investigation and regression-proof bugfix protocol across platforms. Diagnoses errors, authors a failing reproduction test, applies minimal resilient fixes, and verifies system integrity.
 ---
-# Fix Bug -- Surgical Triage & Regression Defense (KmSafe)
+# Fix Bug -- Surgical Triage & Regression Defense Pipeline
 
-This command executes a **systematic root-cause investigation** to diagnose and eradicate software defects, strictly rejecting cosmetic band-aids or silent exception suppression.
-
-It coordinates senior-debugging-engineer, android-quality (logcat_triage.py), and performance-optimization-tips.
+This skill executes a **systematic root-cause investigation** to diagnose and eradicate software defects across KiloMenos platforms (Android, Supabase Backend, Web). It strictly rejects cosmetic band-aids, premature workarounds, or silent exception suppression in favor of definitive architectural resolution.
 
 ---
 
-## When to Use This Command
-- When troubleshooting a crash, ANR, or unhandled exception in KmSafe.
-- When a business metric (balance, odometer, fuel/EV expense, penalty projection) yields incorrect calculations.
-- When experiencing UI flickering, infinite recomposition loops, or Navigation 3 state leaks.
+## Diagnostic Tooling Delegation Matrix
+
+`fix-bug` orchestrates the universal triage and fix lifecycle, while delegating diagnostic tooling to the active platform skills:
+
+| Platform Target | Active Profile | Platform Diagnostic Skills | Diagnostic Utilities & Strategies |
+|---|---|---|---|
+| **Android (Mobile)** | `android` | `android-quality`, `senior-debugging-engineer` | `logcat_triage.py`, `crash_listener.py` (live/dump logcat), Compose recomposition triage |
+| **Backend (Cloud / DB)** | `backend` | `supabase-db-triage`, `senior-debugging-engineer` | PostgreSQL error codes, RLS policy audit, Edge Function Deno logs, route parity audit |
+| **Web (SSG / Portals)** | `web` | `web-lighthouse-seo` | Lighthouse CI audit, WCAG contrast analyzer, responsive viewport inspection |
 
 ---
 
 ## Step-by-Step Execution Protocol
 
-When the user invokes /fix-bug [description, logcat dump, or stacktrace]:
+When the user invokes `/fix-bug [description, log dump, or stacktrace]`:
 
 ### Phase 1: Root-Cause Triage (Symptom vs. Defect)
-1. **Identify the Broken Invariant**: Which architectural contract or domain invariant from AGENTS.md was violated?
-2. **Execution Tracing**:
-   - Was an I/O operation or heavy computation executed on Dispatchers.Main?
-   - Is repository main-safety missing dispatchers.io?
-   - Did a Navigation 3 instance leak occur due to a missing key in hiltViewModel?
-   - Was a Foreground Service started outside the synchronous onReceive() lifecycle?
-3. **Isolation**: Separate the immediate trigger (e.g., null pointer or malformed payload) from the underlying architectural defect.
+1. **Identify the Violated Invariant**: Determine which architectural contract, domain invariant, or security boundary from `AGENTS.md` was violated.
+2. **Platform-Specific Execution Tracing**:
+   - **Android**: Was an I/O operation executed on the Main dispatcher? Was a Navigation 3 scoping key omitted? Is a Composable state mutation unhoisted?
+   - **Backend**: Was Row Level Security bypassed? Is a database migration non-transactional? Did an Edge Function fail CORS headers or JWT validation? Is an FCM token dead or unpruned?
+   - **Web**: Is an interactive element inaccessible via keyboard/screen reader? Is a client-side script bloating the initial paint?
+3. **Isolate the Trigger from the Root Cause**: Separate the immediate symptom (e.g. `NullPointerException`, `401 Unauthorized`, `LCP > 2.5s`) from the underlying defect in state, contract, or architecture.
 
 ### Phase 2: Author the Reproduction Test (Red Phase)
-1. Before modifying production code, write an isolated unit test in the target module ([Feature]ViewModelTest, CalculateMetricsUseCaseTest, etc.).
-2. The test must deterministically reproduce the failure and assert the expected contract, failing cleanly (RED).
+1. **Pre-Fix Imperative**: Before modifying production implementation code, author an automated test that deterministically reproduces the defect.
+   - **Android**: Author a failing unit test in Kotlin (`[Feature]ViewModelTest`, `[UseCase]Test`) asserting the expected contract with Turbine/MockK.
+   - **Backend**: Author an integration test in TypeScript (`tests/test_[feature].ts`) asserting the expected HTTP status code, database row mutation, or guard behavior.
+   - **Web**: Author an automated test or assertion verifying the broken element, link, or Lighthouse audit rule.
+2. **Verify Failure**: Run the test to ensure it fails cleanly (RED), proving the bug is captured.
 
 ### Phase 3: Surgical Correction (Green Phase)
-1. Implement the minimal, robust fix addressing the verified root cause.
-2. Invariant Checklist:
-   - Prohibited: Suppressing errors with empty 	ry/catch blocks.
-   - Prohibited: Adding mutable state to Repositories (they must remain stateless).
-   - Prohibited: Placing business calculations inside ViewModels or Composables.
+1. Implement the **minimal, resilient, and backward-compatible** fix addressing the verified root cause.
+2. **Negative Constraints Checklist**:
+   - **NEVER** suppress errors with empty `try/catch` blocks or silent catch-all handlers.
+   - **NEVER** alter public API contracts or domain interfaces without an approved ADR/Component Spec revision.
+   - **NEVER** bypass Row Level Security or write raw privileged queries to circumvent permissions.
+   - **NEVER** put business calculation math inside ViewModels, Composables, or HTTP handlers.
 
-### Phase 4: Verification & Sanity Check
-1. Execute the reproduction test to verify it now passes (GREEN).
-2. Run pre-existing module tests to guarantee zero regressions.
-3. Report back to the user:
-   - **Root Cause Identified**: The definitive explanation of the defect.
+### Phase 4: Verification & Regression Immunity
+1. **Execute Reproduction Test**: Verify that the reproduction test now passes cleanly (GREEN).
+2. **Run Full Test Suite**: Execute the module/project test suite to ensure zero secondary regressions:
+   - **Android**: `./gradlew :app:assembleDevDebug` + unit tests.
+   - **Backend**: `npx tsc --noEmit` + test suite.
+   - **Web**: `npm run build` + Lighthouse audit.
+3. **Report Deliverable**:
+   - **Root Cause Identified**: Clear technical explanation of the failure mechanism.
    - **Fix Applied**: Summary of files and logic modified.
-   - **Regression Test Added**: Path and test case safeguarding future releases.
+   - **Regression Defense**: Automated test path safeguarding against future recurrence.

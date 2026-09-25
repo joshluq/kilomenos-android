@@ -36,7 +36,16 @@
       "type": "object",
       "required": ["role", "agent_id"],
       "properties": {
-        "role": { "type": "string", "const": "Software Architect" },
+        "role": {
+          "type": "string",
+          "enum": [
+            "Software Architect",
+            "Solutions Architect",
+            "Backend Software Architect",
+            "Web Software Architect",
+            "Mobile Software Architect"
+          ]
+        },
         "agent_id": { "type": "string" }
       },
       "additionalProperties": false
@@ -45,14 +54,22 @@
       "type": "object",
       "required": ["role", "agent_id"],
       "properties": {
-        "role": { "type": "string", "const": "Senior Android Developer" },
+        "role": {
+          "type": "string",
+          "enum": [
+            "Senior Android Developer",
+            "Senior Backend Developer",
+            "Senior Web Developer",
+            "Senior Developer"
+          ]
+        },
         "agent_id": { "type": "string" }
       },
       "additionalProperties": false
     },
     "feature_id": {
       "type": "string",
-      "pattern": "^(KILOMENOS-[0-9]+|FEAT-[0-9]{3,})$"
+      "pattern": "^FEAT-[0-9]{3,}$"
     },
     "po_handoff_ref": {
       "type": "string",

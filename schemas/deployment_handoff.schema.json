@@ -1,0 +1,105 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "DeploymentHandoff",
+  "description": "Standardized deployment and release payload from DevOps Deployment Specialist to Product Owner / Jira",
+  "type": "object",
+  "required": [
+    "handoff_id",
+    "schema_version",
+    "timestamp",
+    "sender",
+    "recipient",
+    "feature_id",
+    "qa_handoff_ref",
+    "target_environment",
+    "project_ref",
+    "migrations_applied",
+    "functions_deployed",
+    "smoke_test_status",
+    "jira_transition"
+  ],
+  "properties": {
+    "handoff_id": {
+      "type": "string",
+      "pattern": "^HANDOFF-DEPLOY-[A-Za-z0-9_-]+$"
+    },
+    "schema_version": {
+      "type": "string",
+      "enum": ["1.0.0"]
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "sender": {
+      "type": "object",
+      "required": ["role", "agent_id"],
+      "properties": {
+        "role": { "type": "string", "const": "DevOps Deployment Specialist" },
+        "agent_id": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "recipient": {
+      "type": "object",
+      "required": ["role", "agent_id"],
+      "properties": {
+        "role": {
+          "type": "string",
+          "enum": ["Product Owner", "Release Governance", "Jira Automation"]
+        },
+        "agent_id": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "feature_id": {
+      "type": "string",
+      "pattern": "^FEAT-[0-9]{3,}$"
+    },
+    "qa_handoff_ref": {
+      "type": "string",
+      "pattern": "^HANDOFF-QA-VERDICT-[A-Za-z0-9_-]+$"
+    },
+    "target_environment": {
+      "type": "string",
+      "enum": ["development", "production", "staging"]
+    },
+    "project_ref": {
+      "type": "string",
+      "minLength": 10
+    },
+    "migrations_applied": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "functions_deployed": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "status"],
+        "properties": {
+          "name": { "type": "string" },
+          "version": { "type": "integer" },
+          "status": { "type": "string" }
+        },
+        "additionalProperties": false
+      }
+    },
+    "smoke_test_status": {
+      "type": "string",
+      "enum": ["PASSED", "FAILED", "SKIPPED"]
+    },
+    "jira_transition": {
+      "type": "object",
+      "required": ["issue_key", "target_status", "status_updated"],
+      "properties": {
+        "issue_key": { "type": "string" },
+        "target_status": { "type": "string" },
+        "status_updated": { "type": "boolean" },
+        "comment_id": { "type": "string" }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

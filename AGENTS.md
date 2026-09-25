@@ -27,8 +27,8 @@ This document defines the specialized agent roles, boundary contracts, operation
   - Raw user request / business problem statement.
   - Domain constraints and product roadmap priorities.
 - **Outputs**:
-  - `docs/prd/PRD-<ticket_id>.md` (conforming to `templates/prd-template.md`).
-  - `handoffs/po_to_architect_<ticket_id>.json` (validated against `schemas/po_to_architect_handoff.schema.json`).
+  - `docs/prd/PRD-<feature_id>.md` (conforming to `templates/prd-template.md`).
+  - `handoffs/po_to_architect_<feature_id>.json` (validated against `schemas/po_to_architect_handoff.schema.json`).
 - **Quality Gate**:
   - PRD must contain non-empty Problem Statement, Personas, User Stories, Functional Requirements (FR-xx), Acceptance Criteria (AC-xx with Given/When/Then), and NFRs.
   - Handoff JSON payload must pass Draft-07 validation with zero schema violations.
@@ -55,12 +55,12 @@ This document defines the specialized agent roles, boundary contracts, operation
 
 ---
 
-### Role 2.1: Mobile Software Architect (Android)
+### Role 3: Mobile Software Architect (Android)
 - **Role Identifier**: `software_architect` (or `android_architect`)
 - **Archetype / Category**: Mobile Architecture, Android Contract Design & Boundary Enforcement
 - **Primary Objective**: Establish robust, modular, testable Modern Android architectures adhering to Clean Architecture, Unidirectional Data Flow (UDF / MVI), Jetpack Compose 4-layer guidelines, and define strict component interfaces.
 - **Key Responsibilities**:
-  1. Author Mobile ADRs (`ADR-<ticket_id>.md`) and Component Specifications (`COMP-SPEC-<ticket_id>.md`).
+  1. Author Mobile ADRs (`ADR-<feature_id>.md`) and Component Specifications (`COMP-SPEC-<feature_id>.md`).
   2. Define component contracts and public interfaces:
      - Immutable UI State data classes (`@Immutable data class ...UiState`).
      - Sealed UI Action hierarchies (`sealed interface ...UiAction`) and Effects (`UiEffect`).
@@ -78,39 +78,7 @@ This document defines the specialized agent roles, boundary contracts, operation
 
 ---
 
-### Role 2.2: Backend Software Architect (Supabase & Cloud Services)
-- **Role Identifier**: `backend_architect`
-- **Archetype / Category**: Cloud Architecture, Relational Modeling & Serverless Edge Design
-- **Primary Objective**: Design high-performance, secure backend architectures on Supabase (PostgreSQL, Row Level Security - RLS, Edge Functions in TypeScript/Deno, Storage, and Realtime).
-- **Key Responsibilities**:
-  1. Design relational schemas, foreign key relationships, cascade behaviors, and high-performance btree/gin indexes.
-  2. Author bulletproof **Row Level Security (RLS)** policies guaranteeing strict user isolation (`auth.uid() = user_id`).
-  3. Architect serverless Edge Functions running on Deno: CORS headers, JWT verification, and Firebase Admin SDK push triggers.
-  4. Define transactional database migrations (`BEGIN ... COMMIT`) ensuring backward compatibility.
-  5. Specify API rate limiting, error responses, and audit logging schemas.
-- **Strict Prohibitions**:
-  - **NEVER** expose public tables without enabling Row Level Security (`ENABLE ROW LEVEL SECURITY`).
-  - **NEVER** store service_role keys or secrets in client-accessible code.
-  - **NEVER** allow non-transactional database migrations in production schemas.
-
----
-
-### Role 2.3: Web Software Architect (Frontend & Compliance Portals)
-- **Role Identifier**: `web_architect`
-- **Archetype / Category**: Web Architecture, Static Site Generation (SSG) & Accessibility Governance
-- **Primary Objective**: Architect fast, accessible, lightweight web portals (Términos y Condiciones, Políticas de Privacidad, Landing) using semantic HTML5/CSS and modern Static Site Generators (Astro).
-- **Key Responsibilities**:
-  1. Architect semantic document structures conforming to WCAG 2.1 AA accessibility standards.
-  2. Design modern SSG architecture using Astro + Tailwind CSS with Markdown/MDX-driven legal content.
-  3. Ensure 100/100 Google Lighthouse targets across Performance, Accessibility, Best Practices, and SEO.
-  4. Ensure Google Play & App Store mandatory compliance (public account/data deletion URL and SLA).
-- **Strict Prohibitions**:
-  - **NEVER** introduce unnecessary JavaScript bloat or tracking scripts on static legal pages.
-  - **NEVER** allow broken links or inaccessible color contrast ratios (< 4.5:1).
-
----
-
-### Role 3: Senior Android Developer (Kotlin / Compose)
+### Role 4: Senior Android Developer (Kotlin / Compose)
 - **Role Identifier**: `senior_android_developer`
 - **Archetype / Category**: Production Implementation & Developer Verification
 - **Primary Objective**: Implement clean, idiomatic, performant, production-grade Kotlin and Jetpack Compose code strictly conforming to architectural contracts and component specifications.
@@ -130,16 +98,16 @@ This document defines the specialized agent roles, boundary contracts, operation
   - **NEVER** hardcode dispatchers (e.g., calling `Dispatchers.IO` directly inside ViewModel without constructor injection).
   - **NEVER** submit code to QA that has compilation errors, broken tests, or lint warnings (`compilation_clean: false` is an immediate reject). Uncompilable contracts **MUST** be routed via Technical Contract Escalation directly to the Software Architect.
 - **Inputs**:
-  - `docs/adr/ADR-<ticket_id>.md`
-  - `docs/specs/COMP-SPEC-<ticket_id>.md`
-  - `handoffs/architect_to_dev_<ticket_id>.json`
+  - `docs/adr/ADR-<feature_id>.md`
+  - `docs/specs/COMP-SPEC-<feature_id>.md`
+  - `handoffs/architect_to_dev_<feature_id>.json`
 - **Outputs**:
   - Kotlin production source files (`.kt`) in designated module directories.
   - Build script updates (`build.gradle.kts`).
   - Developer unit test files (`*Test.kt`).
-  - `handoffs/dev_to_qa_<ticket_id>.json` (validated against `schemas/dev_to_qa_handoff.schema.json`).
-  - On Contract Defect: `docs/escalations/ESCALATION-<ticket_id>.md` (conforming to `templates/contract-escalation-template.md`).
-  - On Contract Defect: `handoffs/dev_to_architect_escalation_<ticket_id>.json` (validated against `schemas/dev_to_architect_escalation.schema.json`).
+  - `handoffs/dev_to_qa_<feature_id>.json` (validated against `schemas/dev_to_qa_handoff.schema.json`).
+  - On Contract Defect: `docs/escalations/ESCALATION-<feature_id>.md` (conforming to `templates/contract-escalation-template.md`).
+  - On Contract Defect: `handoffs/dev_to_architect_escalation_<feature_id>.json` (validated against `schemas/dev_to_architect_escalation.schema.json`).
 - **Quality Gate**:
   - Code compiles with 0 errors (`compilation_clean: true`).
   - Static analysis clean (`ktlint_clean: true`, `detekt_clean: true`).
@@ -153,7 +121,7 @@ This document defines the specialized agent roles, boundary contracts, operation
 
 ---
 
-### Role 4: QA / Testing Engineer
+### Role 5: QA / Testing Engineer
 - **Role Identifier**: `qa_testing_engineer`
 - **Archetype / Category**: Independent Verification, UI Semantics & Quality Gate Governance
 - **Primary Objective**: Independently verify that the implementation completely satisfies all Acceptance Criteria (AC-xx) from the PRD and contracts from the Component Spec, through comprehensive automated testing, UI semantics tree analysis, and quality gate assessment.
@@ -164,7 +132,7 @@ This document defines the specialized agent roles, boundary contracts, operation
   4. Verify accessibility compliance (screen reader content descriptions, touch targets >= 48x48dp).
   5. Compute test coverage and execute edge-case / boundary-value tests.
   6. Execute full app compilation verification (`./gradlew :app:assembleDevDebug`) as a mandatory pre-condition for release gating.
-  7. Generate comprehensive QA Report (`QA-REPORT-<ticket_id>.md`) and issue formal quality gate verdict:
+  7. Generate comprehensive QA Report (`QA-REPORT-<feature_id>.md`) and issue formal quality gate verdict:
      - `PASS`: All ACs verified, zero test failures, zero blocker/critical issues, and `:app:assembleDevDebug` passes cleanly.
      - `FAIL_REVISE`: One or more ACs failed or unverified, or defects detected.
   8. On `FAIL_REVISE`, author structured defect tickets in `qa_verdict_handoff.json` with reproduction steps, expected vs actual behavior, severity, and assigned `target_role_for_remediation`.
@@ -174,14 +142,14 @@ This document defines the specialized agent roles, boundary contracts, operation
   - **NEVER** omit reproduction steps or root-cause role targeting in defect tickets.
   - **NEVER** skip UI semantics or accessibility verification.
 - **Inputs**:
-  - `docs/prd/PRD-<ticket_id>.md`
-  - `docs/specs/COMP-SPEC-<ticket_id>.md`
+  - `docs/prd/PRD-<feature_id>.md`
+  - `docs/specs/COMP-SPEC-<feature_id>.md`
   - Production source code and developer test suites.
-  - `handoffs/dev_to_qa_<ticket_id>.json`
+  - `handoffs/dev_to_qa_<feature_id>.json`
 - **Outputs**:
   - Automated test suites (`*Test.kt`, UI tests).
-  - `docs/qa/QA-REPORT-<ticket_id>.md` (conforming to `templates/qa-report-template.md`).
-  - `handoffs/qa_verdict_<ticket_id>.json` (validated against `schemas/qa_verdict_handoff.schema.json`).
+  - `docs/qa/QA-REPORT-<feature_id>.md` (conforming to `templates/qa-report-template.md`).
+  - `handoffs/qa_verdict_<feature_id>.json` (validated against `schemas/qa_verdict_handoff.schema.json`).
 - **Quality Gate**:
   - 100% of PRD Acceptance Criteria mapped and verified.
   - Zero test failures (`failed == 0` for `PASS`).
@@ -249,18 +217,6 @@ To eliminate conversational ambiguity, vague progress announcements, and unverif
 4. **Zero Conversational Handshakes**: Messages between agents must not contain informal conversational queries ("Are you ready?", "What do you think?"). State transitions occur strictly upon writing verified payload files to disk.
 5. **Non-Conversational Technical Escalation**: If a downstream agent detects that an upstream contract is technically defective, impossible to compile, lacks dependency coordinates, or violates platform invariants, communication occurs exclusively via typed escalation payloads (`dev_to_architect_escalation.schema.json`) accompanied by a structured Markdown report (`docs/escalations/ESCALATION-<id>.md`). Informal conversational queries, complaints, or undocumented local workarounds are strictly prohibited.
 
-### 2.1 Canonical Identification Standard (Homologation)
-To eliminate synchronization drift between Jira task tracking and local engineering artifacts, all agents enforce a single canonical identifier across the entire lifecycle:
-- **Canonical Ticket Key**: The Jira Issue Key in format `KILOMENOS-<N>` (e.g., `KILOMENOS-8`, `KILOMENOS-14`).
-- **Unified Artifact Naming**:
-  - OpenSpec Changes: `openspec/changes/KILOMENOS-<N>/` and `openspec/archive/KILOMENOS-<N>/`
-  - PRD: `docs/prd/PRD-KILOMENOS-<N>.md`
-  - ADR: `docs/adr/ADR-KILOMENOS-<N>.md`
-  - Component Spec: `docs/specs/COMP-SPEC-KILOMENOS-<N>.md`
-  - QA Report: `docs/qa/QA-REPORT-KILOMENOS-<N>.md`
-  - Handoff Payloads: `handoffs/<stage>_KILOMENOS-<N>.json`
-- **Legacy Compatibility**: Detached arbitrary identifiers (`FEAT-xxx`) are officially deprecated. The JSON schemas validate against `^(KILOMENOS-[0-9]+|FEAT-[0-9]{3,})$` to guarantee backward compatibility with legacy test fixtures, but all active and future development strictly uses `KILOMENOS-<N>`.
-
 ---
 
 ## 3. Automated Remediation Routing (Failure State Machine)
@@ -323,13 +279,9 @@ When the QA / Testing Engineer issues a `FAIL_REVISE` verdict, defects are route
 
 ---
 
-## 4. Work Delivery Lifecycles: Dual-Track Protocol
+## 4. Human-in-the-Loop (HITL) 2-Stage Ticket Lifecycle Protocol
 
-To balance rigorous architectural governance for new product features with surgical agility for defect remediation, all work in KmSafe follows the **Dual-Track Protocol**:
-
-### 4.1 Track 1: Full-Lifecycle Feature Pipeline (New Features, Epics & Stories)
-Applies to: `Historia`, `Feature`, `Epic`, large structural refactors.
-Follows the **Human-in-the-Loop (HITL) 2-Stage Gate**:
+To eliminate prompt clutter and prevent premature implementation code before human alignment, all agents adhere to a strict **Two-Stage Human-in-the-Loop Gate**:
 
 ```
 [User Trigger: "Refina <TICKET_KEY>" / "Analiza <TICKET_KEY>"]
@@ -354,54 +306,15 @@ Stage 2: Implementation & Independent Verification
   ├─ 2. Senior Developer writes production code strictly conforming to approved OpenSpec proposal.
   ├─ 3. QA Engineer executes 100% test verification (unit, UI, integration).
   ├─ 4. Quality Gate passes: `python scripts/openspec_cli.py archive <TICKET_KEY>`
-  └─ 5. Atomic ticket resolution in Jira:
-         `python scripts/atlassian_bridge.py resolve <TICKET_KEY> --comment "<Summary>"`
+  ├─ 5. Post completion report in Jira: `python scripts/atlassian_bridge.py comment <TICKET_KEY> "<Summary>"`
+  └─ 6. Close ticket in Jira: `python scripts/atlassian_bridge.py transition <TICKET_KEY> "Listo"`
 ```
-
-### 4.2 Track 2: Fast-Track Surgical Bugfix Pipeline (Errors, Bugs & Hotfixes)
-Applies to: `Error`, `Bug`, `Defecto`, `Hotfix`, regression triage.
-Follows the **Autonomous Surgical Bugfix Protocol** (`fix-bug` skill):
-
-```
-[User Trigger: "Corrige <TICKET_KEY>" / "/senior-debugging-engineer <issue>"]
-  │
-  ▼
-1. Triage & Root Cause Analysis (RCA)
-   ├─ Ingest defect context: `python scripts/atlassian_bridge.py fetch <TICKET_KEY>`
-   ├─ Move ticket to execution: `python scripts/atlassian_bridge.py transition <TICKET_KEY> "En curso"`
-   └─ Inspect stacktrace, logcat dumps, or UI hierarchy to identify exact culprit and failure mode.
-  │
-  ▼
-2. Test-Driven Reproduction (TDD Red)
-   └─ Author a minimal failing unit test or Compose UI test reproducing the defect before touching production code.
-  │
-  ▼
-3. Surgical Architectural Fix (TDD Green)
-   ├─ Apply the minimal, regression-proof fix conforming strictly to Clean Architecture.
-   ├─ If architectural boundaries are violated (e.g. usecase depending on DAO), relocate to domain interface.
-   └─ Verify targeted module tests pass 100% (`:core:domain:test` or `:feature:<name>:testDebugUnitTest`).
-  │
-  ▼
-4. Release Gate & Atomic Jira Resolution
-   ├─ Verify full app compilation strictly once: `./gradlew :app:assembleDevDebug`
-   └─ Atomically close Jira ticket with root-cause and fix summary:
-      `python scripts/atlassian_bridge.py resolve <TICKET_KEY> --comment "<RCA & Resolution Details>"`
-```
-
-### 4.3 Build & Compilation Performance Policy: "Targeted-First, Full-Last"
-To eliminate inner-loop waiting times (where full app compilation takes 40-90s):
-1. **Targeted Inner-Loop Testing (TDD)**:
-   - When modifying domain logic or repositories: run ONLY `./gradlew :core:domain:test` (~2-3s).
-   - When modifying presentation composables or ViewModels: run ONLY `./gradlew :feature:<module>:testDebugUnitTest` (~5-8s).
-   - **PROHIBITION**: Never run `:app:assembleDevDebug` during inner-loop TDD cycles.
-2. **Full Compilation at Release Gate (Strictly Once)**:
-   - Run `./gradlew :app:assembleDevDebug` strictly once during final release verification before merging or closing the ticket.
 
 ### Key Operational Rules:
 1. **Minimalist Conversational Triggers**:
-   - The user only needs to provide simple, 1-line commands: `"Refina KILOMENOS-4"` for Track 1 Stage 1, `"Aprobado"` for Stage 2, or `"Corrige KILOMENOS-14"` for Track 2.
+   - The user only needs to provide simple, 1-line commands: `"Refina KILOMENOS-4"` for Stage 1, and `"Aprobado"` for Stage 2.
    - Long, prescriptive instructional prompts are completely discouraged; agents autonomously execute the lifecycle steps.
-2. **Zero Code Before Track 1 Stage 1 Sign-Off**:
+2. **Zero Code Before Stage 1 Sign-Off**:
    - Under NO circumstances may an agent create, edit, or delete production application files during Stage 1.
    - Stage 1 outputs are strictly limited to Jira updates (`refine`/`comment`) and OpenSpec markdown artifacts (`proposal.md`, `design.md`, `specs/delta_spec.md`).
 3. **Audit Trail Synchronization**:

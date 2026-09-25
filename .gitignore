@@ -112,3 +112,5 @@ __pycache__/
 
 # Scratch & Temporary agent files
 scratch/
+/tests/__init__.py
+/scripts/__init__.py

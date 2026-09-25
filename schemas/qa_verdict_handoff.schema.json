@@ -35,7 +35,15 @@
       "type": "object",
       "required": ["role", "agent_id"],
       "properties": {
-        "role": { "type": "string", "const": "QA/Testing Engineer" },
+        "role": {
+          "type": "string",
+          "enum": [
+            "QA/Testing Engineer",
+            "QA Engineer",
+            "Backend QA Engineer",
+            "Web QA Engineer"
+          ]
+        },
         "agent_id": { "type": "string" }
       },
       "additionalProperties": false
@@ -49,9 +57,18 @@
           "enum": [
             "Product Owner",
             "Senior Android Developer",
+            "Senior Backend Developer",
+            "Senior Web Developer",
+            "Senior Developer",
             "Software Architect",
+            "Solutions Architect",
+            "Backend Software Architect",
+            "Web Software Architect",
+            "Mobile Software Architect",
             "Remediation Router",
-            "Automated Remediation Router"
+            "Automated Remediation Router",
+            "DevOps Deployment Specialist",
+            "DevOps Specialist"
           ]
         },
         "agent_id": { "type": "string" }
@@ -60,7 +77,7 @@
     },
     "feature_id": {
       "type": "string",
-      "pattern": "^(KILOMENOS-[0-9]+|FEAT-[0-9]{3,})$"
+      "pattern": "^FEAT-[0-9]{3,}$"
     },
     "dev_handoff_ref": {
       "type": "string",

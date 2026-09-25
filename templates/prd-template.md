@@ -1,6 +1,6 @@
 # Product Requirements Document: [FEATURE_NAME]
 
-**Feature ID**: [KILOMENOS-XXX]  
+**Feature ID**: [FEAT-XXX]  
 **Version**: 1.0.0  
 **Status**: DRAFT | APPROVED | SUPERSEDED  
 **Author**: Product Owner  
@@ -26,6 +26,14 @@
 - **FR-01**: [Requirement Title] — The system shall [specific, unambiguous functional requirement statement].
 - **FR-02**: [Requirement Title] — The system shall [specific, unambiguous functional requirement statement].
 - **FR-03**: [Requirement Title] — The system shall [specific, unambiguous functional requirement statement].
+
+### 4.1 Reglas de Negocio con Consecuencia Explícita si Fallan (BR-xx)
+Toda regla de negocio debe definir inequívocamente su condición de activación y la consecuencia observable en caso de incumplimiento:
+
+| ID Regla | Enunciado de Regla | Condición de Fallo / Violación | Consecuencia en Sistema / Código de Error / Feedback UI |
+|---|---|---|---|
+| **BR-01** | [Regla de negocio principal] | [Condición que invalida la regla] | [Código de error HTTP, Estado UI o bloqueo específico] |
+| **BR-02** | [Regla de validación o acceso] | [Payload inválido o sesión expirada] | [Rechazo 401/403, mensaje localizado, retry affordance] |
 
 ## 5. Acceptance Criteria (Given / When / Then)
 - **AC-01**: [Scenario Title — e.g., Successful initial load]
@@ -57,5 +65,13 @@
   - Encryption at rest for user preferences using AndroidX EncryptedSharedPreferences / Jetpack DataStore.
   - Zero sensitive tokens or Personally Identifiable Information (PII) written to Android Logcat.
 
-## 7. Out of Scope
+## 7. Dudas Abiertas Bloqueantes (HITL Halt Gate)
+> [!IMPORTANT]
+> **GATE BLOQUEANTE**: Si existen dudas de producto, legales, de negocio o dependencias técnicas no resueltas en esta tabla, **QUEDA ESTRICTAMENTE PROHIBIDO AVANZAR A DISEÑO TÉCNICO O ESCRITURA DE CÓDIGO**. El Product Owner y los Stakeholders deben resolverlas antes de desbloquear la fase de Arquitectura e Implementación.
+
+| ID Duda | Pregunta / Ambigüedad Detectada | Impacto si no se resuelve | Propietario / Stakeholder | Estado (BLOQUEANTE / RESUELTA) | Decisión Final Acordada |
+|---|---|---|---|---|---|
+| D-01 | [Ej: ¿Qué ocurre si el usuario cancela a mitad del flujo?] | Alto: diseño de rollback | Product Owner | RESUELTA | [Detalle del comportamiento acordado] |
+
+## 8. Out of Scope
 - [Explicit list of capabilities, platforms, or variations deliberately excluded from this release]

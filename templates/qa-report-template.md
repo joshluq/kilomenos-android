@@ -1,6 +1,6 @@
 # QA Quality Gate Report: [FEATURE_NAME]
 
-**Feature ID**: [KILOMENOS-XXX]  
+**Feature ID**: [FEAT-XXX]  
 **Evaluation Date**: YYYY-MM-DDTHH:MM:SSZ  
 **QA Lead**: QA / Testing Engineer  
 **Upstream Dev Handoff Ref**: HANDOFF-DEV-QA-[ID]  
@@ -52,7 +52,23 @@ Automated verification of Compose Semantics and Android accessibility guidelines
 
 ---
 
-## 4. Structured Defect Tickets (Required for FAIL_REVISE)
+## 4. Pre-Verdict Audit Checklist: Paridad Spec vs. Implementación
+
+Antes de emitir el veredicto final (`PASS`), el QA Engineer debe auditar de manera rigurosa:
+
+- [ ] **Paridad Funcional 1-a-1 (Anti-Scope Creep)**:
+  - Todas las capacidades descritas en la PRD / Spec están implementadas (`PASS`).
+  - **Zero Ghost Code**: No se han introducido endpoints, pantallas, parámetros o lógicas no especificados en el documento de requerimientos (`PASS`).
+- [ ] **Cobertura de Consecuencias de Fallo (`BR-xx`)**:
+  - Cada regla de negocio (`BR-xx`) cuenta con al menos un test automatizado negativo que verifica su consecuencia ante fallos (HTTP 4xx/5xx, mensaje de error en UI, fallback) (`PASS`).
+- [ ] **Dudas Abiertas Resueltas**:
+  - Se confirmó que el 100% de las dudas de la PRD / Spec fueron marcadas como `RESUELTA` antes de la fase de construcción (`PASS`).
+- [ ] **Alineación Arquitectónica**:
+  - El código cumple con las directrices de arquitectura de la plataforma y no viola los límites de dependencias (`PASS`).
+
+---
+
+## 5. Structured Defect Tickets (Required for FAIL_REVISE)
 
 If the quality gate verdict is `FAIL_REVISE`, each failure must be formulated as a structured remediation ticket below:
 

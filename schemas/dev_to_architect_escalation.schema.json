@@ -38,7 +38,12 @@
       "properties": {
         "role": {
           "type": "string",
-          "const": "Senior Android Developer"
+          "enum": [
+            "Senior Android Developer",
+            "Senior Backend Developer",
+            "Senior Web Developer",
+            "Senior Developer"
+          ]
         },
         "agent_id": {
           "type": "string"
@@ -52,7 +57,13 @@
       "properties": {
         "role": {
           "type": "string",
-          "const": "Software Architect"
+          "enum": [
+            "Software Architect",
+            "Solutions Architect",
+            "Backend Software Architect",
+            "Web Software Architect",
+            "Mobile Software Architect"
+          ]
         },
         "agent_id": {
           "type": "string"
@@ -62,7 +73,7 @@
     },
     "feature_id": {
       "type": "string",
-      "pattern": "^(KILOMENOS-[0-9]+|FEAT-[0-9]{3,})$"
+      "pattern": "^FEAT-[0-9]{3,}$"
     },
     "architect_handoff_ref": {
       "type": "string",
