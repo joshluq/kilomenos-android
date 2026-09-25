@@ -28,11 +28,6 @@ interface PreferencesRepository {
     suspend fun saveLastEmail(email: String)
 
     /**
-     * Updates the projection banner visibility for a specific user.
-     */
-    suspend fun setShowProjectionBanner(userId: String, enabled: Boolean)
-
-    /**
      * Updates the auto-tracking setting for a specific user.
      */
     suspend fun setAutoTrackingEnabled(userId: String, enabled: Boolean)

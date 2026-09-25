@@ -2,7 +2,6 @@
 name: android-testing
 description: Standards and automated generators for Android unit tests (JUnit 4/5, MockK, Turbine) and Jetpack Compose UI tests (ComposeTestRule, Semantics, Robolectric), including test execution and AC traceability.
 ---
-
 # Android Testing & Verification Skill
 
 ## 1. Overview & Purpose

@@ -1,0 +1,150 @@
+{
+  "handoff_id": "HANDOFF-PO-ARCH-FEAT-002",
+  "schema_version": "1.0.0",
+  "timestamp": "2026-09-22T16:33:00Z",
+  "sender": {
+    "role": "Product Owner",
+    "agent_id": "po-digital-experience-fintech"
+  },
+  "recipient": {
+    "role": "Software Architect",
+    "agent_id": "software_architect"
+  },
+  "feature_id": "FEAT-002",
+  "feature_title": "Módulo de Notificaciones y Sincronización de Entitlements",
+  "prd_path": "docs/prd/PRD-FEAT-002.md",
+  "user_stories": [
+    {
+      "story_id": "US-01",
+      "role": "conductor en Overview",
+      "want": "visualizar la notificación no leída más relevante en una píldora superior compacta (topic y título)",
+      "so_that": "esté informado de eventos críticos sin saturar la pantalla"
+    },
+    {
+      "story_id": "US-02",
+      "role": "usuario móvil",
+      "want": "que al pulsar sobre una píldora se marque como leída y navegue a su detalle o por deeplink a proyecciones",
+      "so_that": "acceda a la información relevante y resuelva la alerta con mínima fricción"
+    },
+    {
+      "story_id": "US-03",
+      "role": "usuario con múltiples avisos",
+      "want": "pulsar en Ver más para acceder a una bandeja con el historial cronológico de todas las notificaciones",
+      "so_that": "pueda consultar notificaciones pasadas y gestionar alertas archivadas"
+    },
+    {
+      "story_id": "US-04",
+      "role": "Product Owner",
+      "want": "que un mensaje push de Firebase (FCM) actualice inmediatamente los entitlements en segundo plano o primer plano ante downgrades de Premium a Free",
+      "so_that": "se revoquen funciones de pago y se impulse la conversión al paywall de renovación sin requerir reinicio del app"
+    },
+    {
+      "story_id": "US-05",
+      "role": "desarrollador de módulos de dominio",
+      "want": "emitir alertas funcionales a través de un contrato agnóstico en :core:domain",
+      "so_that": "el módulo de notificaciones no conozca la lógica interna de cálculo garantizando el principio de responsabilidad única"
+    }
+  ],
+  "functional_requirements": [
+    {
+      "fr_id": "FR-01",
+      "title": "Módulo Autónomo de Notificaciones",
+      "statement": "El sistema creará el módulo Gradle :feature:notifications registrado en settings.gradle.kts estructurado según Clean Architecture."
+    },
+    {
+      "fr_id": "FR-02",
+      "title": "Componente Píldora en Overview",
+      "statement": "La primera sección de OverviewScreen integrará un componente píldora interactivo que mostrará topic y título del aviso no leído más relevante."
+    },
+    {
+      "fr_id": "FR-03",
+      "title": "DeepLink a Proyecciones",
+      "statement": "Las notificaciones de tipo PROJECTION enrutarán mediante deeplink directamente a la pantalla de proyecciones al pulsar la píldora."
+    },
+    {
+      "fr_id": "FR-04",
+      "title": "Detalle y Auto-Mark Read",
+      "statement": "Para notificaciones estándar, el tap navegará a NotificationDetailScreen marcando automáticamente la notificación como leída."
+    },
+    {
+      "fr_id": "FR-05",
+      "title": "Bandeja de Notificaciones",
+      "statement": "La interfaz ofrecerá una acción Ver más para abrir NotificationsListScreen con listado cronológico de avisos leídos y no leídos."
+    },
+    {
+      "fr_id": "FR-06",
+      "title": "Recepción FCM y Sincronización de Entitlements",
+      "statement": "KmFirebaseMessagingService procesará mensajes push y activará la actualización inmediata de entitlements en background y foreground ante cambios de suscripción."
+    },
+    {
+      "fr_id": "FR-07",
+      "title": "Contrato Agnóstico en Dominio",
+      "statement": "El módulo :core:domain definirá los contratos y modelos agnósticos de notificación para desacoplar a los emisores de alertas de la capa de presentación."
+    }
+  ],
+  "acceptance_criteria": [
+    {
+      "ac_id": "AC-01",
+      "scenario": "Visualización de Píldora en Overview",
+      "given": "el usuario tiene al menos una notificación no leída o alerta activa",
+      "when": "se renderiza la pantalla OverviewScreen",
+      "then": "se muestra una píldora en la sección superior con tag de topic y título con tamaño táctil mínimo de 48x48dp"
+    },
+    {
+      "ac_id": "AC-02",
+      "scenario": "Navegación a Detalle Estándar y Marcado Automático",
+      "given": "se visualiza una píldora con una notificación general",
+      "when": "el usuario pulsa sobre la píldora",
+      "then": "la app navega a NotificationDetailScreen mostrando cuerpo completo y actualiza el estado a READ"
+    },
+    {
+      "ac_id": "AC-03",
+      "scenario": "Navegación por DeepLink para Notificaciones de Proyección",
+      "given": "se visualiza una píldora de notificación de tipo PROJECTION",
+      "when": "el usuario pulsa sobre la píldora",
+      "then": "la app enruta mediante deeplink a la pantalla de Proyecciones y marca la notificación como READ"
+    },
+    {
+      "ac_id": "AC-04",
+      "scenario": "Bandeja de Notificaciones Ver más",
+      "given": "el usuario está en la sección de notificaciones de OverviewScreen",
+      "when": "pulsa la acción Ver más",
+      "then": "se abre NotificationsListScreen mostrando el listado ordenado por fecha descendente con distinción leída y no leída"
+    },
+    {
+      "ac_id": "AC-05",
+      "scenario": "Sincronización de Entitlements por FCM Push",
+      "given": "la app está en segundo plano o primer plano y la suscripción cambia de Premium a Free en backend",
+      "when": "se recibe el push FCM con payload de sincronización de entitlements",
+      "then": "el cliente ejecuta refreshEntitlements, persiste el nuevo estado en local, actualiza la UI y muestra aviso con CTA al Paywall"
+    },
+    {
+      "ac_id": "AC-06",
+      "scenario": "Desacoplamiento de Alertas de Proyección",
+      "given": "el módulo :feature:projection detecta una desviación de kilometraje",
+      "when": "emite el aviso al contrato de notificaciones del dominio",
+      "then": "la píldora muestra la alerta como topic PROJECTION sin que :feature:notifications dependa de :feature:projection"
+    },
+    {
+      "ac_id": "AC-07",
+      "scenario": "Estado Vacío y Colapso de Píldora",
+      "given": "el usuario no tiene notificaciones no leídas ni alertas activas",
+      "when": "se muestra OverviewScreen",
+      "then": "la sección de la píldora se colapsa limpiamente sin saltos de layout ni espacios residuales"
+    },
+    {
+      "ac_id": "AC-08",
+      "scenario": "Resiliencia Offline",
+      "given": "el dispositivo se encuentra sin conexión de red",
+      "when": "el usuario abre la bandeja o el detalle de notificaciones",
+      "then": "se visualizan las notificaciones previamente almacenadas en la base de datos local sin fallos"
+    }
+  ],
+  "non_functional_requirements": {
+    "min_sdk": 24,
+    "target_sdk": 35,
+    "offline_supported": true,
+    "accessibility_required": true,
+    "performance_budget_ms": 16
+  }
+}

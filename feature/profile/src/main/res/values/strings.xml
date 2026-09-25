@@ -4,6 +4,7 @@
     <string name="profile_renting_option">Mi Renting</string>
     <string name="profile_vehicles_option">Mis Vehículos</string>
     <string name="profile_preferences_option">Preferencias</string>
+    <string name="profile_notifications_option">Notificaciones</string>
     <string name="profile_logout_button">Cerrar Sesión</string>
     <string name="profile_logout_confirmation_title">Cerrar sesión</string>
     <string name="profile_logout_confirmation_message_free">Tus datos se mantendrán en este dispositivo al cerrar la sesión. Sin embargo, si otro conductor inicia sesión en este móvil, se le pedirá eliminar tu información local para evitar conflictos.</string>
@@ -50,8 +51,6 @@
     <string name="preferences_account_settings_title">AJUSTES DE CUENTA</string>
     <string name="preferences_remember_email_label">Recordar email</string>
     <string name="preferences_remember_email_desc">Muestra automáticamente tu email en la pantalla de inicio de sesión.</string>
-    <string name="preferences_projection_banner_label">Alertas de proyección</string>
-    <string name="preferences_projection_banner_desc">Muestra un aviso en el inicio sobre el estado final estimado de tu contrato.</string>
     <string name="preferences_oss_licenses_label">Créditos de software</string>
     <string name="preferences_oss_licenses_desc">Licencias de las librerías de código abierto utilizadas.</string>
     <string name="preferences_about_header">ACERCA DE</string>

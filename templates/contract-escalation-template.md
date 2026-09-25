@@ -1,15 +1,15 @@
 # Technical Contract Escalation: [FEATURE_ID]
 
 **Escalation ID**: ESC-[FEATURE_ID]-[SEQUENCE_ID]  
-**Feature ID**: [FEAT-XXX]  
+**Feature ID**: [KILOMENOS-XXX]  
 **Date**: [YYYY-MM-DDTHH:MM:SSZ]  
 **Sender**: Senior Android Developer ([Agent ID])  
 **Recipient**: Software Architect ([Agent ID])  
 **Remediation Cycle**: [1|2|3]  
 **Upstream Contract Handoff Ref**: [HANDOFF-ARCH-DEV-XXX]  
 **Target Specifications**:  
-- ADR: `docs/adr/ADR-[FEAT-XXX].md`  
-- Component Spec: `docs/specs/COMP-SPEC-[FEAT-XXX].md`  
+- ADR: `docs/adr/ADR-[KILOMENOS-XXX].md`  
+- Component Spec: `docs/specs/COMP-SPEC-[KILOMENOS-XXX].md`  
 
 ---
 
@@ -73,7 +73,7 @@
 ---
 
 ## 5. Next Actions & Handoff
-1. Software Architect evaluates this escalation artifact alongside `handoffs/dev_to_architect_escalation_[FEAT-ID].json`.
-2. Software Architect issues revised `ADR-[FEAT-ID].md` and `COMP-SPEC-[FEAT-ID].md`.
+1. Software Architect evaluates this escalation artifact alongside `handoffs/dev_to_architect_escalation_[KILOMENOS-ID].json`.
+2. Software Architect issues revised `ADR-[KILOMENOS-ID].md` and `COMP-SPEC-[KILOMENOS-ID].md`.
 3. Software Architect re-issues `architect_to_dev_<id>.json` with incremented `remediation_cycle`.
 4. If remediation cycle limit (3) is exceeded, Orchestrator halts execution for Product Owner and human supervisor review.

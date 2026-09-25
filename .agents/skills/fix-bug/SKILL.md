@@ -1,9 +1,7 @@
 ---
 name: fix-bug
-description: >-
-  Surgical investigation, root-cause triage, and regression-proof fix protocol for KmSafe. Analyzes stacktraces, Logcat dumps, or anomalous behavior, authors a failing reproduction test, applies the minimal resilient fix, and verifies system sanity without cosmetic workarounds.
+description: Surgical investigation, root-cause triage, and regression-proof fix protocol for KmSafe. Analyzes stacktraces, Logcat dumps, or anomalous behavior, authors a failing reproduction test, applies the minimal resilient fix, and verifies system sanity without cosmetic workarounds.
 ---
-
 # Fix Bug -- Surgical Triage & Regression Defense (KmSafe)
 
 This command executes a **systematic root-cause investigation** to diagnose and eradicate software defects, strictly rejecting cosmetic band-aids or silent exception suppression.

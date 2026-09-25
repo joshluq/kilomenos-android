@@ -67,6 +67,10 @@ class ProfileViewModel @Inject constructor(
                 logger.d("ProfileViewModel", "Effect launched: NavigateToPreferences")
                 launchEffect(Effect.NavigateToPreferences)
             }
+            Event.OnNotificationsClicked -> {
+                logger.d("ProfileViewModel", "Effect launched: NavigateToNotificationsList")
+                launchEffect(Effect.NavigateToNotificationsList)
+            }
             Event.OnLogoutClicked -> updateState { copy(showLogoutConfirmation = true) }
             Event.OnLogoutConfirmed -> {
                 analytics.track(KmAnalyticsEvent.Profile.LogoutConfirmed)

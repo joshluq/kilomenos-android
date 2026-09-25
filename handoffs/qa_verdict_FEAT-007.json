@@ -1,0 +1,58 @@
+{
+  "handoff_id": "HANDOFF-QA-VERDICT-FEAT-007",
+  "schema_version": "1.0.0",
+  "timestamp": "2026-09-24T11:50:00Z",
+  "sender": {
+    "role": "QA/Testing Engineer",
+    "agent_id": "qa_testing_engineer"
+  },
+  "recipient": {
+    "role": "Product Owner",
+    "agent_id": "product_owner"
+  },
+  "feature_id": "FEAT-007",
+  "dev_handoff_ref": "HANDOFF-DEV-QA-FEAT-007",
+  "verdict": "PASS",
+  "qa_report_path": "docs/qa/QA-REPORT-FEAT-007.md",
+  "remediation_cycle": 0,
+  "test_execution_summary": {
+    "total_tests": 14,
+    "passed": 14,
+    "failed": 0,
+    "skipped": 0,
+    "coverage_percentage": 95.8
+  },
+  "acceptance_matrix": [
+    {
+      "ac_id": "AC-01",
+      "verified": true,
+      "verifying_test_case": "NotificationsListViewModelTest.given projection notification clicked then emits NavigateToProjection effect and marks read",
+      "notes": "Verified direct navigation to ProjectionAnalysisScreen bypassing NotificationDetailScreen"
+    },
+    {
+      "ac_id": "AC-02",
+      "verified": true,
+      "verifying_test_case": "NotificationsListViewModelTest.given system bluetooth notification clicked then emits NavigateToEditContract effect and marks read",
+      "notes": "Verified direct navigation to EditContract with contractId"
+    },
+    {
+      "ac_id": "AC-03",
+      "verified": true,
+      "verifying_test_case": "NotificationsListViewModelTest.given projection notification clicked then emits NavigateToProjection effect and marks read",
+      "notes": "Verified navigation effect emitted immediately in Main thread and markAsRead running asynchronously in background"
+    },
+    {
+      "ac_id": "AC-04",
+      "verified": true,
+      "verifying_test_case": "NotificationsListViewModelTest.given subscription notification clicked then emits NavigateToPaywall effect and marks read",
+      "notes": "Verified NavigateToPaywall and NavigateToDeepLink routing"
+    },
+    {
+      "ac_id": "AC-05",
+      "verified": true,
+      "verifying_test_case": "NotificationsListViewModelTest.given notification clicked then marks read optimistically in state",
+      "notes": "Verified unreadCount decrements and notification status becomes READ immediately"
+    }
+  ],
+  "issues": []
+}

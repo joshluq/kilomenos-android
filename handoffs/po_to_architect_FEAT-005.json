@@ -1,0 +1,149 @@
+{
+  "handoff_id": "HANDOFF-PO-ARCH-FEAT-005",
+  "schema_version": "1.0.0",
+  "timestamp": "2026-09-24T09:00:00Z",
+  "sender": {
+    "role": "Product Owner",
+    "agent_id": "product_owner"
+  },
+  "recipient": {
+    "role": "Software Architect",
+    "agent_id": "software_architect"
+  },
+  "feature_id": "FEAT-005",
+  "feature_title": "Mejoras en el Comportamiento y Lectura de Notificaciones",
+  "prd_path": "docs/prd/PRD-FEAT-005.md",
+  "user_stories": [
+    {
+      "story_id": "US-01",
+      "role": "conductor que visualiza una alerta en NotificationPill",
+      "want": "pulsar en cualquier parte de la píldora sin botones secundarios confusos",
+      "so_that": "la app me lleve directamente a resolver el aviso con un único gesto accesible"
+    },
+    {
+      "story_id": "US-02",
+      "role": "conductor en la pantalla principal",
+      "want": "tener un icono de campana en la barra superior como navigationIcon",
+      "so_that": "pueda acceder directamente a mi historial de notificaciones sin depender de botones en la píldora"
+    },
+    {
+      "story_id": "US-03",
+      "role": "conductor con una alerta de proyección de kilometraje",
+      "want": "pulsar la píldora para ir directamente a ProjectionAnalysisScreen",
+      "so_that": "pueda analizar mis cálculos y que la notificación se marque como leída automáticamente"
+    },
+    {
+      "story_id": "US-04",
+      "role": "conductor con una alerta de Bluetooth no configurado",
+      "want": "pulsar la píldora para ir directamente a EditContractScreen",
+      "so_that": "pueda configurar el dispositivo Bluetooth marcándose la alerta como leída al instante"
+    },
+    {
+      "story_id": "US-05",
+      "role": "usuario que ya leyó y descartó una alerta de proyección o Bluetooth",
+      "want": "que el sistema no vuelva a mostrarme la misma alerta en la cabecera",
+      "so_that": "el recalculo de datos en background no resucite notificaciones que ya atendí"
+    },
+    {
+      "story_id": "US-06",
+      "role": "desarrollador de la aplicación",
+      "want": "eliminar la función obsoleta de setShowProjectionBanner",
+      "so_that": "el código permanezca limpio y libre de funciones sin uso"
+    }
+  ],
+  "functional_requirements": [
+    {
+      "fr_id": "FR-01",
+      "title": "Simplificación de NotificationPill",
+      "statement": "Eliminar el botón 'Ver más' dentro de NotificationPill, convirtiendo el contenedor completo en un área táctil unificada con semántica accesible y altura mínima de 48dp."
+    },
+    {
+      "fr_id": "FR-02",
+      "title": "Acceso a Notificaciones como NavigationIcon",
+      "statement": "Añadir un icono de campana de notificaciones en OverviewTopBar dentro de navigationIcon para navegar a NotificationsListScreen."
+    },
+    {
+      "fr_id": "FR-03",
+      "title": "Navegación Directa y Marcado para Proyecciones",
+      "statement": "Al hacer click en NotificationPill sobre una notificación con topic PROJECTION, el sistema debe marcarla como leída y navegar directamente a ProjectionAnalysisScreen."
+    },
+    {
+      "fr_id": "FR-04",
+      "title": "Navegación Directa y Marcado para Alerta de Bluetooth",
+      "statement": "Al hacer click en NotificationPill sobre una notificación con topic SYSTEM de Bluetooth, el sistema debe marcarla como leída y navegar directamente a EditContractScreen."
+    },
+    {
+      "fr_id": "FR-05",
+      "title": "Caso de Uso PublishNotificationIfUnreadUseCase",
+      "statement": "Crear un nuevo caso de uso que valide mediante los metadatos semánticos si la notificación ya fue leída en Room, invocando PublishNotificationUseCase solo si no está leída."
+    },
+    {
+      "fr_id": "FR-06",
+      "title": "Delegación en OverviewViewModel",
+      "statement": "OverviewViewModel mantendrá la lógica de cálculo y construcción de la entidad Notification pero delegará su publicación en PublishNotificationIfUnreadUseCase."
+    },
+    {
+      "fr_id": "FR-07",
+      "title": "Eliminación Definitiva de setShowProjectionBanner",
+      "statement": "Eliminar por completo la función setShowProjectionBanner de PreferencesDataSource, repositorio, modelo y casos de uso."
+    }
+  ],
+  "acceptance_criteria": [
+    {
+      "ac_id": "AC-01",
+      "scenario": "Eliminación del Botón Ver más en NotificationPill",
+      "given": "una notificación activa renderizada en OverviewScreen",
+      "when": "se visualiza el componente NotificationPill",
+      "then": "el componente no presenta el botón 'Ver más' y toda la píldora responde como un único elemento interactivo clicable"
+    },
+    {
+      "ac_id": "AC-02",
+      "scenario": "Acceso a Notificaciones como NavigationIcon en OverviewTopBar",
+      "given": "el usuario en la pantalla principal OverviewScreen",
+      "when": "visualiza la barra superior OverviewTopBar",
+      "then": "se muestra un icono de campana en navigationIcon que lanza NavigateToNotificationsList abriendo el historial"
+    },
+    {
+      "ac_id": "AC-03",
+      "scenario": "Navegación Directa y Lectura para Alerta de Proyección",
+      "given": "una notificación activa con topic PROJECTION mostrada en NotificationPill",
+      "when": "el usuario pulsa en la píldora",
+      "then": "el sistema ejecuta markNotificationAsReadUseCase y lanza NavigateToProjection navegando a ProjectionAnalysisScreen"
+    },
+    {
+      "ac_id": "AC-04",
+      "scenario": "Navegación Directa y Lectura para Alerta de Bluetooth",
+      "given": "una notificación activa con topic SYSTEM y clave bt_missing en NotificationPill",
+      "when": "el usuario pulsa en la píldora",
+      "then": "el sistema marca la notificación como leída y lanza NavigateToOnboarding con isEdit=true abriendo EditContractScreen"
+    },
+    {
+      "ac_id": "AC-05",
+      "scenario": "Prevención de Republicación de Notificaciones Ya Leídas",
+      "given": "que una notificación con clave semántica ya fue leída previamente por el usuario",
+      "when": "OverviewViewModel evalúa transiciones e invoca PublishNotificationIfUnreadUseCase",
+      "then": "el caso de uso detecta que la clave ya está en estado READ y omite la llamada a PublishNotificationUseCase"
+    },
+    {
+      "ac_id": "AC-06",
+      "scenario": "Publicación Exitosa de Alertas No Leídas o Nuevas",
+      "given": "una condición nueva o no leída de exceso de proyección o Bluetooth faltante",
+      "when": "PublishNotificationIfUnreadUseCase es invocado",
+      "then": "el caso de uso constata la ausencia de registros leídos y delega en PublishNotificationUseCase persistiendo la alerta"
+    },
+    {
+      "ac_id": "AC-07",
+      "scenario": "Eliminación Completa de setShowProjectionBanner",
+      "given": "el código fuente de preferencias en core:domain y core:infrastructure",
+      "when": "se compila y verifica el proyecto",
+      "then": "setShowProjectionBanner ha sido eliminado sin generar errores de compilación"
+    }
+  ],
+  "non_functional_requirements": {
+    "min_sdk": 24,
+    "target_sdk": 35,
+    "offline_supported": true,
+    "accessibility_required": true,
+    "performance_budget_ms": 16
+  }
+}

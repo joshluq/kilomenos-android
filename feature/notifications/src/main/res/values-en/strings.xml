@@ -1,0 +1,74 @@
+<resources>
+    <!-- Screen: Notifications List -->
+    <string name="notifications_title">Notifications</string>
+    <string name="notifications_pending_count">%1$d pending notices</string>
+    <string name="notifications_all_caught_up">All caught up</string>
+    <string name="notifications_subtitle">Contract, telemetry, and subscription alerts</string>
+    <string name="notifications_mark_all_read">Mark all as read</string>
+    <string name="notifications_empty_title">Inbox is empty</string>
+    <string name="notifications_empty_description">You have no pending alerts or notifications at this time.</string>
+    <string name="notifications_active_vehicle">Active vehicle</string>
+    <string name="notifications_delete">Delete</string>
+    <string name="notifications_mark_read">Mark as read</string>
+
+    <!-- Filters -->
+    <string name="notifications_filter_all">All</string>
+    <string name="notifications_filter_projection">Projections</string>
+    <string name="notifications_filter_fleet">Fleet</string>
+    <string name="notifications_filter_system">System</string>
+    <string name="notifications_filter_subscription">Subscription</string>
+
+    <!-- Pro Paywall Banner -->
+    <string name="notifications_pro_banner_title">Cloud history with KiloMenos Pro</string>
+    <string name="notifications_pro_banner_desc">Local notifications are kept on your device. Upgrade to Pro to sync with the cloud and receive real-time alerts.</string>
+    <string name="notifications_pro_banner_cta">View Pro plans</string>
+    <string name="notifications_pro_banner_close">Dismiss KiloMenos Pro banner</string>
+
+    <!-- Frontend Localized Notification Texts (Topic-driven) -->
+    <!-- Topic: PROJECTION -->
+    <string name="notification_projection_excess_title">Projected excess warning</string>
+    <string name="notification_projection_excess_body">Your current pace projects exceeding contract limit by %1$s km.</string>
+    <string name="notification_projection_safe_title">Mileage pace recovered</string>
+    <string name="notification_projection_safe_body">Your current projection is within contract limits.</string>
+    <string name="notification_projection_action">View Projection</string>
+
+    <!-- Topic: SYSTEM (Bluetooth) -->
+    <string name="notification_system_bt_missing_title">Bluetooth device not configured</string>
+    <string name="notification_system_bt_missing_body">Configure your vehicle\'s Bluetooth to enable smart auto-tracking.</string>
+    <string name="notification_system_bt_missing_action">Configure</string>
+
+    <!-- Topic: SUBSCRIPTION -->
+    <string name="notification_subscription_title">Upgrade to KiloMenos Pro</string>
+    <string name="notification_subscription_body">Unlock multi-vehicle sync, telemetry, and smart copilot.</string>
+    <string name="notification_subscription_action">View Plans</string>
+
+    <!-- Topic: FLEET -->
+    <string name="notification_fleet_title">Fleet Update</string>
+    <string name="notification_fleet_body">Check updated data for your vehicles.</string>
+
+    <!-- Topic Tags -->
+    <string name="notification_topic_projection">Projection</string>
+    <string name="notification_topic_system">Notice</string>
+    <string name="notification_topic_subscription">Subscription</string>
+    <string name="notification_topic_fleet">Fleet</string>
+
+    <!-- Notification Pill -->
+    <string name="notification_pill_content_description">Notice: %1$s, %2$s. Tap to view.</string>
+
+    <!-- Notification Detail -->
+    <string name="notification_detail_title">Notice Detail</string>
+    <string name="notification_detail_back">Back to inbox</string>
+    <string name="notification_detail_mark_as_read">Mark as read</string>
+    <string name="notification_detail_delete">Delete notification</string>
+    <string name="notification_detail_technical_data">Technical Data &amp; Metadata</string>
+    <string name="notification_detail_empty_body">No additional details.</string>
+    <string name="notification_detail_view_in_app">View in App</string>
+    <string name="notification_detail_not_found">Notice not found</string>
+
+    <!-- Additional UI Labels -->
+    <string name="notifications_nav_back">Go back</string>
+    <string name="notifications_unread_prefix">Unread: </string>
+    <string name="notifications_empty_filter">No notifications found for this filter</string>
+    <string name="notifications_delete_content_description">Delete notification</string>
+</resources>
+

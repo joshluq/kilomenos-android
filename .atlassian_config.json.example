@@ -1,8 +1,9 @@
 {
   "url": "https://joshluq-dev.atlassian.net",
   "email": "josh.luque@gmail.com",
-  "api_token": "TU_API_TOKEN_AQUI",
+  "api_token": "PASTE_YOUR_API_TOKEN_HERE",
   "project_key": "KILOMENOS",
   "board_id": "1",
+  "label": "android",
   "confluence_space": "KILOMENOS"
 }

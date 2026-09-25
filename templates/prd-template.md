@@ -1,6 +1,6 @@
 # Product Requirements Document: [FEATURE_NAME]
 
-**Feature ID**: [FEAT-XXX]  
+**Feature ID**: [KILOMENOS-XXX]  
 **Version**: 1.0.0  
 **Status**: DRAFT | APPROVED | SUPERSEDED  
 **Author**: Product Owner  

@@ -1,0 +1,120 @@
+{
+  "handoff_id": "HANDOFF-PO-ARCH-FEAT-004",
+  "schema_version": "1.0.0",
+  "timestamp": "2026-09-23T19:35:00Z",
+  "sender": {
+    "role": "Product Owner",
+    "agent_id": "product_owner"
+  },
+  "recipient": {
+    "role": "Software Architect",
+    "agent_id": "software_architect"
+  },
+  "feature_id": "FEAT-004",
+  "feature_title": "Formato Canónico UUID v4 y Deduplicación Semántica de Notificaciones",
+  "prd_path": "docs/prd/PRD-FEAT-004.md",
+  "user_stories": [
+    {
+      "story_id": "US-01",
+      "role": "conductor que revisa una alerta de proyección",
+      "want": "pulsar en 'Marcar como leída'",
+      "so_that": "la notificación se marque como leída inmediatamente en local y en el servidor remoto sin fallos HTTP 500"
+    },
+    {
+      "story_id": "US-02",
+      "role": "usuario en modo offline",
+      "want": "que las alertas de telemetría y proyección se guarden con identificadores UUID v4 canónicos válidos",
+      "so_that": "al recuperar conectividad se sincronicen de forma transparente con el backend sin ser rechazadas por la base de datos"
+    },
+    {
+      "story_id": "US-03",
+      "role": "conductor que consulta sus proyecciones periódicamente",
+      "want": "que las alertas de proyección de un mismo contrato y día no se dupliquen visualmente en mi historial",
+      "so_that": "mi lista de notificaciones permanezca limpia y libre de elementos redundantes"
+    },
+    {
+      "story_id": "US-04",
+      "role": "usuario con notificaciones heredadas en base de datos local",
+      "want": "que el sistema maneje alertas con IDs no-UUID con seguridad",
+      "so_that": "no se intenten enviar identificadores malformados a los endpoints REST remotos evitando caídas del servidor"
+    }
+  ],
+  "functional_requirements": [
+    {
+      "fr_id": "FR-01",
+      "title": "Identificador Canónico UUID v4",
+      "statement": "Toda notificación generada en la plataforma Android debe poseer como clave primaria id un UUID v4 canónico generado mediante UUID.randomUUID().toString()."
+    },
+    {
+      "fr_id": "FR-02",
+      "title": "Preservación de Clave Semántica en Data",
+      "statement": "Los identificadores compuestos de negocio (tales como proj_${contractId}_${todayEpochDay}) deben viajar dentro del mapa/JSON data bajo la propiedad projection_key, nunca en el campo id."
+    },
+    {
+      "fr_id": "FR-03",
+      "title": "Estrategia de Deduplicación Local en Room",
+      "statement": "La persistencia local en Room debe evitar la inserción redundante de alertas que compartan la misma clave semántica para un mismo contrato y día, actualizando la entidad existente o descartando duplicados."
+    },
+    {
+      "fr_id": "FR-04",
+      "title": "Conformidad de Contrato en Rutas y Cuerpos de Red",
+      "statement": "Todas las peticiones HTTP que interactúan con endpoints de notificación (PATCH /read, POST /sync, DELETE) deben enviar exclusivamente valores UUID v4 válidos y propagar el mapa data."
+    },
+    {
+      "fr_id": "FR-05",
+      "title": "Tratamiento Defensivo de IDs Heredados",
+      "statement": "Al interactuar con el repositorio o el cliente de red, si una notificación local posee un id que no cumple con el formato UUID canónico, el cliente de red debe evitar invocar el endpoint remoto con dicho parámetro para no provocar errores HTTP 500 en PostgreSQL."
+    }
+  ],
+  "acceptance_criteria": [
+    {
+      "ac_id": "AC-01",
+      "scenario": "Creación de Alerta de Proyección con UUID v4 Canónico",
+      "given": "el usuario experimenta una transición de proyección de kilometraje",
+      "when": "OverviewViewModel detecta la condición y publica la notificación mediante PublishNotificationUseCase",
+      "then": "la notificación generada tiene como id un UUID v4 válido y el mapa data contiene projection_key con la clave semántica"
+    },
+    {
+      "ac_id": "AC-02",
+      "scenario": "Marcado como Leída con UUID v4 en Endpoint REST",
+      "given": "una notificación de proyección generada con UUID v4 almacenada en Room",
+      "when": "el usuario pulsa en 'Marcar como leída' en NotificationsListScreen",
+      "then": "la interfaz actualiza el estado inmediatamente a READ y la llamada de red ejecuta PATCH /v1/notifications/{uuid}/read respondiendo HTTP 200 OK"
+    },
+    {
+      "ac_id": "AC-03",
+      "scenario": "Sincronización Remota de Lotes con Formato de ID Válido",
+      "given": "notificaciones locales pendientes de sincronización en Room",
+      "when": "se ejecuta la sincronización de lotes mediante POST /v1/notifications/sync",
+      "then": "cada elemento enviado posee un id en formato UUID canónico y su respectivo objeto data, respondiendo el backend HTTP 200 OK"
+    },
+    {
+      "ac_id": "AC-04",
+      "scenario": "Deduplicación Semántica en Base de Datos Local",
+      "given": "que ya existe en Room una notificación de proyección activa con una clave semántica específica",
+      "when": "el motor de cálculo emite nuevamente una alerta con la misma projection_key",
+      "then": "el sistema evita generar un elemento duplicado redundante en la lista de notificaciones"
+    },
+    {
+      "ac_id": "AC-05",
+      "scenario": "Tratamiento Resiliente de Identificadores Heredados No-UUID",
+      "given": "una notificación almacenada localmente en Room con id no conforme a UUID canónico",
+      "when": "el usuario la marca como leída o la elimina",
+      "then": "la operación local en Room se completa de inmediato y el cliente de red valida el formato evitando enviar cadenas malformadas a PostgreSQL"
+    },
+    {
+      "ac_id": "AC-06",
+      "scenario": "Creación de Alerta de Configuración Bluetooth con UUID v4",
+      "given": "un contrato con auto-tracking activado pero sin dirección Bluetooth configurada",
+      "when": "el sistema genera la alerta de configuración de Bluetooth",
+      "then": "la notificación se crea con un UUID v4 en id y la clave semántica se aloja en data bajo deduplication_key"
+    }
+  ],
+  "non_functional_requirements": {
+    "min_sdk": 24,
+    "target_sdk": 35,
+    "offline_supported": true,
+    "accessibility_required": true,
+    "performance_budget_ms": 16
+  }
+}

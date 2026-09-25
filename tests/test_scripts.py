@@ -69,6 +69,10 @@ class TestHelperScripts(unittest.TestCase):
             "atlassian_bridge",
             PROJECT_ROOT / "scripts" / "atlassian_bridge.py",
         )
+        cls.install_to_project = load_module(
+            "install_to_project",
+            PROJECT_ROOT / "scripts" / "install_to_project.py",
+        )
 
     # 1. device_runner.py tests
     def test_device_runner_parser_and_env(self):
@@ -282,6 +286,19 @@ Acceptance Criteria:
             if temp_json.is_file():
                 temp_json.unlink()
 
+    def test_kilomenos_key_schema_acceptance(self):
+        clean_handoff = self.sanity_check.generate_sample_dev_handoff("KILOMENOS-14")
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
+            f.write(json.dumps(clean_handoff))
+            temp_json = Path(f.name)
+        try:
+            is_clean, errors, data = self.sanity_check.validate_dev_handoff_json(temp_json)
+            self.assertTrue(is_clean, f"Errors: {errors}")
+            self.assertEqual(data["feature_id"], "KILOMENOS-14")
+        finally:
+            if temp_json.is_file():
+                temp_json.unlink()
+
     # 9. crash_listener.py tests
     def test_crash_listener_parser(self):
         parser = self.crash_listener.build_parser()
@@ -419,6 +436,58 @@ Acceptance Criteria:
         self.assertEqual(page["space"], "DEV")
         self.assertEqual(page["id"], "20001")
 
+    # 12. install_to_project.py Hub & Spoke Profiles tests
+    def test_install_to_project_profiles(self):
+        skills_src = PROJECT_ROOT / "skills" if (PROJECT_ROOT / "skills").exists() else (PROJECT_ROOT / ".agents" / "skills")
+        dummy_skills = ['supabase-db-triage', 'supabase-edge-functions', 'legal-compliance-audit', 'web-lighthouse-seo']
+        created_dummies = []
+        for s in dummy_skills:
+            d = skills_src / s
+            if not d.exists():
+                d.mkdir(parents=True, exist_ok=True)
+                (d / "SKILL.md").write_text(f"---\nname: {s}\n---\nMock skill", encoding="utf-8")
+                created_dummies.append(d)
+
+        try:
+            with tempfile.TemporaryDirectory() as tmp_dir:
+                tmp_root = Path(tmp_dir)
+
+                # Test Backend profile
+                backend_target = tmp_root / "backend"
+                backend_target.mkdir()
+                self.install_to_project.install_ecosystem(backend_target, profile="backend", mode="both")
+
+                skills_installed = [p.name for p in (backend_target / ".gemini" / "antigravity" / "skills").iterdir() if p.is_dir()]
+                self.assertIn("supabase-db-triage", skills_installed)
+                self.assertIn("supabase-edge-functions", skills_installed)
+                self.assertIn("openspec", skills_installed)
+                self.assertIn("atlassian-bridge", skills_installed)
+                self.assertNotIn("android-staff-engineer-compose", skills_installed)
+                self.assertNotIn("legal-compliance-audit", skills_installed)
+
+                # Verify profile config
+                config_ex = backend_target / ".atlassian_config.json.example"
+                self.assertTrue(config_ex.exists())
+                config_json = json.loads(config_ex.read_text(encoding="utf-8"))
+                self.assertEqual(config_json["board_id"], "1")
+                self.assertEqual(config_json["label"], "backend")
+
+                # Test Web profile
+                web_target = tmp_root / "web"
+                web_target.mkdir()
+                self.install_to_project.install_ecosystem(web_target, profile="web", mode="both")
+
+                web_skills = [p.name for p in (web_target / ".gemini" / "antigravity" / "skills").iterdir() if p.is_dir()]
+                self.assertIn("legal-compliance-audit", web_skills)
+                self.assertIn("web-lighthouse-seo", web_skills)
+                self.assertNotIn("supabase-db-triage", web_skills)
+                self.assertNotIn("android-device", web_skills)
+        finally:
+            import shutil
+            for d in created_dummies:
+                shutil.rmtree(d, ignore_errors=True)
+
 
 if __name__ == "__main__":
     unittest.main()
+

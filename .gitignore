@@ -109,3 +109,6 @@ local.properties
 __pycache__/
 *.pyc
 *.pyo
+
+# Scratch & Temporary agent files
+scratch/

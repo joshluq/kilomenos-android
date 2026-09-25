@@ -1,0 +1,105 @@
+{
+  "handoff_id": "HANDOFF-ARCH-DEV-FEAT-003",
+  "schema_version": "1.0.0",
+  "timestamp": "2026-09-23T16:30:00Z",
+  "sender": {
+    "role": "Software Architect",
+    "agent_id": "software_architect"
+  },
+  "recipient": {
+    "role": "Senior Android Developer",
+    "agent_id": "senior_android_developer"
+  },
+  "feature_id": "FEAT-003",
+  "po_handoff_ref": "HANDOFF-PO-ARCH-FEAT-003",
+  "adr_path": "docs/adr/ADR-FEAT-003.md",
+  "component_spec_path": "docs/specs/COMP-SPEC-FEAT-003.md",
+  "remediation_cycle": 0,
+  "architecture_pattern": "MVI",
+  "module_targets": [
+    ":feature:notifications",
+    ":core:domain",
+    ":core:infrastructure"
+  ],
+  "component_contracts": [
+    {
+      "component_name": "NotificationsListViewModel",
+      "package_name": "es.joshluq.kmsafe.feature.notifications.ui.list",
+      "layer": "VIEWMODEL",
+      "state_models": ["NotificationsListUiState"],
+      "action_events": ["NotificationsListUiAction"],
+      "exposed_flows": ["state", "effect"]
+    },
+    {
+      "component_name": "NotificationsApiService",
+      "package_name": "es.joshluq.kmsafe.infrastructure.remote.api",
+      "layer": "DATA",
+      "state_models": ["NotificationsListResponse", "NotificationSyncResponse"],
+      "action_events": [],
+      "exposed_flows": []
+    },
+    {
+      "component_name": "NotificationDao",
+      "package_name": "es.joshluq.kmsafe.infrastructure.local.dao",
+      "layer": "DATA",
+      "state_models": ["NotificationEntity"],
+      "action_events": [],
+      "exposed_flows": ["getAllNotifications", "getUnreadCount"]
+    },
+    {
+      "component_name": "NotificationRepository",
+      "package_name": "es.joshluq.kmsafe.domain.repository",
+      "layer": "DOMAIN",
+      "state_models": ["Notification"],
+      "action_events": [],
+      "exposed_flows": ["observeNotifications", "observeUnreadCount"]
+    }
+  ],
+  "file_manifest_plan": [
+    {
+      "target_path": "core/infrastructure/src/main/java/es/joshluq/kmsafe/infrastructure/remote/api/NotificationsApiService.kt",
+      "action": "CREATE",
+      "purpose": "Retrofit service definition for Supabase v1 notifications endpoints"
+    },
+    {
+      "target_path": "core/infrastructure/src/main/java/es/joshluq/kmsafe/infrastructure/remote/dto/NotificationDtos.kt",
+      "action": "CREATE",
+      "purpose": "Remote DTOs for Supabase notifications API requests and responses"
+    },
+    {
+      "target_path": "core/infrastructure/src/main/java/es/joshluq/kmsafe/infrastructure/local/entity/NotificationEntity.kt",
+      "action": "MODIFY",
+      "purpose": "Extend Room entity with remote sync columns and indices"
+    },
+    {
+      "target_path": "core/infrastructure/src/main/java/es/joshluq/kmsafe/infrastructure/local/dao/NotificationDao.kt",
+      "action": "MODIFY",
+      "purpose": "Add pending sync queries and batch update methods"
+    },
+    {
+      "target_path": "core/infrastructure/src/main/java/es/joshluq/kmsafe/infrastructure/local/AppDatabase.kt",
+      "action": "MODIFY",
+      "purpose": "Increment database version to 21 and provide MIGRATION_20_21"
+    },
+    {
+      "target_path": "core/infrastructure/src/main/java/es/joshluq/kmsafe/infrastructure/worker/SyncNotificationsWorker.kt",
+      "action": "CREATE",
+      "purpose": "Hilt CoroutineWorker for background sync with network constraints"
+    },
+    {
+      "target_path": "core/infrastructure/src/main/java/es/joshluq/kmsafe/infrastructure/repository/NotificationRepositoryImpl.kt",
+      "action": "MODIFY",
+      "purpose": "Implement optimistic UI and remote sync calls with 403 handling"
+    },
+    {
+      "target_path": "feature/notifications/src/main/java/es/joshluq/kmsafe/feature/notifications/ui/list/NotificationsListViewModel.kt",
+      "action": "MODIFY",
+      "purpose": "Handle 403 premium required banner and optimistic actions"
+    },
+    {
+      "target_path": "feature/notifications/src/main/java/es/joshluq/kmsafe/feature/notifications/ui/list/NotificationsListScreen.kt",
+      "action": "MODIFY",
+      "purpose": "Render Pro upgrade banner when isPremiumRequiredBannerVisible is true"
+    }
+  ]
+}

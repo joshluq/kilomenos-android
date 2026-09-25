@@ -49,10 +49,6 @@ class PreferencesViewModel @Inject constructor(
                 analytics.track(KmAnalyticsEvent.Profile.PreferenceToggled("remember_email", event.enabled))
                 handleRememberEmailToggled(event.enabled)
             }
-            is Event.OnProjectionBannerToggled -> {
-                analytics.track(KmAnalyticsEvent.Profile.PreferenceToggled("projection_banner", event.enabled))
-                handleProjectionBannerToggled(event.enabled)
-            }
             is Event.OnAutoTrackingToggled -> {
                 logger.i("PreferencesViewModel", "Auto-tracking toggle requested: ${event.enabled}")
                 analytics.track(KmAnalyticsEvent.Profile.PreferenceToggled("autotracking", event.enabled))
@@ -109,7 +105,6 @@ class PreferencesViewModel @Inject constructor(
                     updateState {
                         copy(
                             rememberEmail = output.preferences.rememberEmail,
-                            showProjectionBanner = output.preferences.showProjectionBanner,
                             autoTrackingEnabled = output.preferences.autoTrackingEnabled
                         )
                     }
@@ -131,15 +126,6 @@ class PreferencesViewModel @Inject constructor(
             .onEach { output ->
                 if (output is UpdatePreferencesUseCase.Output.Success) {
                     updateState { copy(rememberEmail = enabled) }
-                }
-            }.launchIn(viewModelScope)
-    }
-
-    private fun handleProjectionBannerToggled(enabled: Boolean) {
-        updatePreferencesUseCase(UpdatePreferencesUseCase.Input(showProjectionBanner = enabled))
-            .onEach { output ->
-                if (output is UpdatePreferencesUseCase.Output.Success) {
-                    updateState { copy(showProjectionBanner = enabled) }
                 }
             }.launchIn(viewModelScope)
     }

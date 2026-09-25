@@ -55,6 +55,9 @@ fun DashboardRoute(
             is Destination.Expenses -> {
                 viewModel.sendEvent(Event.OnTabSelected(DashboardTab.EXPENSES))
             }
+            Destination.ProjectionAnalysis -> {
+                viewModel.sendEvent(Event.OnTabSelected(DashboardTab.PROJECTION))
+            }
             else -> Unit
         }
     }

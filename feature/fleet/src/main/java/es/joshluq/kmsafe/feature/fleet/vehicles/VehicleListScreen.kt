@@ -131,7 +131,8 @@ fun VehicleListScreen(
                             tint = CanvasKitTheme.colors.brandAccent
                         )
                     }
-                }
+                },
+                centeredTitle = true
             )
         },
         containerColor = CanvasKitTheme.colors.backgroundSecondary

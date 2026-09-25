@@ -1,0 +1,107 @@
+{
+  "handoff_id": "HANDOFF-PO-ARCH-FEAT-007",
+  "schema_version": "1.0.0",
+  "timestamp": "2026-09-24T11:15:00Z",
+  "sender": {
+    "role": "Product Owner",
+    "agent_id": "product_owner"
+  },
+  "recipient": {
+    "role": "Software Architect",
+    "agent_id": "software_architect"
+  },
+  "feature_id": "FEAT-007",
+  "feature_title": "Navegación Contextual e Inmediata en Lista de Notificaciones",
+  "prd_path": "docs/prd/PRD-FEAT-007.md",
+  "user_stories": [
+    {
+      "story_id": "US-01",
+      "role": "conductor que revisa su historial de notificaciones",
+      "want": "pulsar en una alerta de proyección para ir directamente a ProjectionAnalysisScreen",
+      "so_that": "pueda revisar mis cálculos de kilometraje en un solo toque"
+    },
+    {
+      "story_id": "US-02",
+      "role": "conductor con un aviso de Bluetooth no configurado en la lista",
+      "want": "pulsar sobre el aviso para abrir la pantalla de edición del contrato",
+      "so_that": "pueda configurar mi dispositivo sin rodeos"
+    },
+    {
+      "story_id": "US-03",
+      "role": "usuario de la app",
+      "want": "que la transición de pantalla tras pulsar una notificación sea instantánea y que el estado de lectura se sincronice en segundo plano",
+      "so_that": "no sufra demoras ni bloqueos perceptibles en la interfaz"
+    }
+  ],
+  "functional_requirements": [
+    {
+      "fr_id": "FR-01",
+      "title": "Navegación Directa a ProjectionAnalysisScreen",
+      "statement": "En NotificationsListViewModel, al pulsar una notificación con topic PROJECTION, se debe emitir un efecto de navegación directo a ProjectionAnalysisScreen sin pasar por la pantalla de detalle."
+    },
+    {
+      "fr_id": "FR-02",
+      "title": "Navegación Directa a Edición de Contrato",
+      "statement": "Al pulsar una notificación con topic SYSTEM vinculada a Bluetooth no configurado, se debe emitir un efecto de navegación a la edición del vehículo pasando el vehicleId."
+    },
+    {
+      "fr_id": "FR-03",
+      "title": "Navegación Inmediata Asíncrona (Optimistic UI)",
+      "statement": "El click en la notificación debe emitir el efecto de navegación de inmediato sin esperar la respuesta remota del servidor, despachando markNotificationAsReadUseCase en background."
+    },
+    {
+      "fr_id": "FR-04",
+      "title": "Mapeo en AppNavigation",
+      "statement": "En AppNavigation.kt, NotificationsListRoute debe coordinar los efectos NavigateToProjection y NavigateToEditContract redirigiendo a los destinos respectivos."
+    },
+    {
+      "fr_id": "FR-05",
+      "title": "Actualización Reactiva de Lectura",
+      "statement": "Al pulsar la notificación, esta debe reflejarse como leída localmente en Room de forma inmediata, actualizando el estado de la lista y el contador de no leídos."
+    }
+  ],
+  "acceptance_criteria": [
+    {
+      "ac_id": "AC-01",
+      "scenario": "Navegación Directa a ProjectionAnalysisScreen",
+      "given": "el usuario visualizando la lista de notificaciones en NotificationsListScreen",
+      "when": "pulsa sobre una notificación con topic PROJECTION",
+      "then": "el sistema emite inmediatamente el efecto de navegación hacia Destination.ProjectionAnalysis sin pasar por la pantalla de detalle"
+    },
+    {
+      "ac_id": "AC-02",
+      "scenario": "Navegación Directa a Edición de Contrato para Alertas de Bluetooth",
+      "given": "una notificación en la lista con topic SYSTEM vinculada a Bluetooth no configurado",
+      "when": "el usuario pulsa sobre la notificación",
+      "then": "el sistema obtiene el contract_id y emite el efecto de navegación hacia Destination.Onboarding(vehicleId = contractId, isEdit = true)"
+    },
+    {
+      "ac_id": "AC-03",
+      "scenario": "Navegación Inmediata Asíncrona (Optimistic UI)",
+      "given": "una notificación pulsada en NotificationsListScreen",
+      "when": "se despacha el evento NotificationClicked",
+      "then": "el efecto de navegación se emite de forma inmediata en el hilo principal (< 16ms) y markNotificationAsReadUseCase se ejecuta en background sin demorar la transición de pantalla"
+    },
+    {
+      "ac_id": "AC-04",
+      "scenario": "Soporte de Alertas de Suscripción y Deep Links",
+      "given": "una notificación con topic SUBSCRIPTION o con deepLinkUri configurado",
+      "when": "el usuario pulsa sobre ella",
+      "then": "el sistema navega a Destination.PremiumPaywall o procesa el deep link contextual correspondiente, sin abrir NotificationDetailScreen"
+    },
+    {
+      "ac_id": "AC-05",
+      "scenario": "Coherencia de Estado Local y Contador de No Leídos",
+      "given": "una notificación no leída en la lista",
+      "when": "el usuario pulsa sobre ella",
+      "then": "la notificación se marca como leída localmente en Room de forma optimista y el contador de notificaciones no leídas se actualiza automáticamente"
+    }
+  ],
+  "non_functional_requirements": {
+    "min_sdk": 24,
+    "target_sdk": 35,
+    "offline_supported": true,
+    "accessibility_required": true,
+    "performance_budget_ms": 16
+  }
+}

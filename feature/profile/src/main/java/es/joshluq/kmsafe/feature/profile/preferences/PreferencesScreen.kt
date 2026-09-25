@@ -237,18 +237,6 @@ fun PreferencesScreen(
                         )
 
                         PreferenceSwitchItem(
-                            label = stringResource(R.string.preferences_projection_banner_label),
-                            description = stringResource(R.string.preferences_projection_banner_desc),
-                            checked = state.showProjectionBanner,
-                            onCheckedChange = { onEvent(Event.OnProjectionBannerToggled(it)) }
-                        )
-
-                        HorizontalDivider(
-                            modifier = Modifier.padding(horizontal = 16.dp),
-                            color = CanvasKitTheme.colors.borderSubtle.copy(alpha = 0.5f)
-                        )
-
-                        PreferenceSwitchItem(
                             label = stringResource(R.string.preferences_auto_tracking_label),
                             description = stringResource(R.string.preferences_auto_tracking_desc),
                             checked = state.autoTrackingEnabled,

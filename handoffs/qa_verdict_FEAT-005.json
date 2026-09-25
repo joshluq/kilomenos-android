@@ -1,0 +1,75 @@
+{
+  "handoff_id": "HANDOFF-QA-VERDICT-FEAT-005",
+  "schema_version": "1.0.0",
+  "timestamp": "2026-09-24T09:28:30Z",
+  "sender": {
+    "role": "QA/Testing Engineer",
+    "agent_id": "qa_testing_engineer"
+  },
+  "recipient": {
+    "role": "Product Owner",
+    "agent_id": "product_owner"
+  },
+  "feature_id": "FEAT-005",
+  "dev_handoff_ref": "HANDOFF-DEV-QA-FEAT-005",
+  "verdict": "PASS",
+  "qa_report_path": "docs/qa/QA-REPORT-FEAT-005.md",
+  "remediation_cycle": 0,
+  "test_execution_summary": {
+    "total_tests": 35,
+    "passed": 35,
+    "failed": 0,
+    "skipped": 0,
+    "coverage_percentage": 94.5
+  },
+  "acceptance_matrix": [
+    {
+      "ac_id": "AC-01",
+      "verified": true,
+      "verifying_test_case": "NotificationPillTest / ComposePreview inspection",
+      "notes": "Ver más button eliminated. Single pill target >= 48dp."
+    },
+    {
+      "ac_id": "AC-02",
+      "verified": true,
+      "verifying_test_case": "OverviewViewModelTest#when view all notifications clicked then emits NavigateToNotificationsList effect",
+      "notes": "Bell icon added as navigationIcon in OverviewTopBar."
+    },
+    {
+      "ac_id": "AC-03",
+      "verified": true,
+      "verifying_test_case": "OverviewViewModelTest#given projection notification when pill clicked then marks read and emits NavigateToProjection effect",
+      "notes": "Direct navigation to Projection screen and optimistic markAsRead."
+    },
+    {
+      "ac_id": "AC-04",
+      "verified": true,
+      "verifying_test_case": "OverviewViewModelTest#given system bluetooth notification when pill clicked then marks read and emits NavigateToOnboarding effect",
+      "notes": "Direct navigation to vehicle onboarding in edit mode."
+    },
+    {
+      "ac_id": "AC-05",
+      "verified": true,
+      "verifying_test_case": "PublishNotificationIfUnreadUseCaseImplTest#given notification with semantic key already read with isRead true when invoke then skips publication",
+      "notes": "Prevents republishing read alerts with SkippedAlreadyRead."
+    },
+    {
+      "ac_id": "AC-06",
+      "verified": true,
+      "verifying_test_case": "PublishNotificationIfUnreadUseCaseImplTest#given notification without semantic key when invoke then delegates and publishes",
+      "notes": "Delegates new alerts to PublishNotificationUseCase."
+    },
+    {
+      "ac_id": "AC-07",
+      "verified": true,
+      "verifying_test_case": "UpdatePreferencesUseCaseTest & PreferencesViewModelTest",
+      "notes": "setShowProjectionBanner completely eliminated across all modules."
+    }
+  ],
+  "ui_inspection_summary": {
+    "compose_semantics_valid": true,
+    "touch_targets_compliant": true,
+    "accessibility_labels_present": true
+  },
+  "issues": []
+}

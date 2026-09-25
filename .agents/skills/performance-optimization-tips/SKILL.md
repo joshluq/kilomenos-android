@@ -1,9 +1,7 @@
 ---
 name: performance-optimization-tips
-description: >-
-  Optimizes software performance across execution speed, memory footprint, and architectural scalability. Identifies CPU bottlenecks, inefficient algorithms, excessive allocations, memory leaks, and unnecessary UI rendering or recompositions, delivering benchmarkable, production-ready code. Use this skill when diagnosing slowness, high memory consumption, frame drops, or when profiling performance-critical code paths.
+description: Optimizes software performance across execution speed, memory footprint, and architectural scalability. Identifies CPU bottlenecks, inefficient algorithms, excessive allocations, memory leaks, and unnecessary UI rendering or recompositions, delivering benchmarkable, production-ready code. Use this skill when diagnosing slowness, high memory consumption, frame drops, or when profiling performance-critical code paths.
 ---
-
 # Performance Optimization Tips
 
 This skill provides an engineering framework to diagnose, analyze, and eliminate performance bottlenecks. It focuses on maximizing execution speed, minimizing memory consumption, and ensuring sustainable scalability while preserving code readability and correctness.

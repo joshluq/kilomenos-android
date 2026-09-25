@@ -1,0 +1,156 @@
+{
+  "handoff_id": "HANDOFF-PO-ARCH-FEAT-003",
+  "schema_version": "1.0.0",
+  "timestamp": "2026-09-23T15:52:00Z",
+  "sender": {
+    "role": "Product Owner",
+    "agent_id": "po-digital-experience-fintech"
+  },
+  "recipient": {
+    "role": "Software Architect",
+    "agent_id": "software_architect"
+  },
+  "feature_id": "FEAT-003",
+  "feature_title": "Integración Local-First de Notificaciones y Sincronización Remota",
+  "prd_path": "docs/prd/PRD-FEAT-003.md",
+  "user_stories": [
+    {
+      "story_id": "US-01",
+      "role": "conductor con o sin conexión a internet",
+      "want": "consultar mis notificaciones inmediatamente al abrir la aplicación",
+      "so_that": "esté al tanto de mis alertas de kilometraje y renting sin experimentar retrasos de red"
+    },
+    {
+      "story_id": "US-02",
+      "role": "usuario de KmSafe",
+      "want": "que cuando marque una o todas mis notificaciones como leídas, el cambio se refleje al instante en la interfaz (Optimistic UI)",
+      "so_that": "la experiencia sea fluida y se sincronice automáticamente en segundo plano con el servidor"
+    },
+    {
+      "story_id": "US-03",
+      "role": "conductor con plan Free",
+      "want": "ver un banner informativo explicativo sobre las ventajas de KiloMenos Pro cuando se intente sincronizar el historial remoto",
+      "so_that": "pueda seguir consultando mis alertas locales con total normalidad y sin bloqueos"
+    },
+    {
+      "story_id": "US-04",
+      "role": "usuario con múltiples dispositivos",
+      "want": "que las notificaciones generadas localmente en mi terminal se envíen de forma segura y desduplicada al backend al recuperar red",
+      "so_that": "mantenga mi historial unificado y consistente"
+    },
+    {
+      "story_id": "US-05",
+      "role": "suscriptor de KmSafe",
+      "want": "que al recibir un mensaje push FCM con código REFRESH_ENTITLEMENTS se actualicen mis derechos de acceso en segundo plano",
+      "so_that": "mi estado de suscripción esté siempre al día sin reiniciar la aplicación"
+    },
+    {
+      "story_id": "US-06",
+      "role": "conductor",
+      "want": "poder eliminar notificaciones individuales de mi historial",
+      "so_that": "desaparezcan de mi dispositivo y se eliminen de forma coherente en el servidor"
+    }
+  ],
+  "functional_requirements": [
+    {
+      "fr_id": "FR-01",
+      "title": "Persistencia Local-First Enriquecida",
+      "statement": "El sistema actualizará NotificationEntity en Room para incluir id (UUID v4), userId, origin (LOCAL/REMOTE), topic, title, body, data (JSON), deepLink, isRead, readAt, createdAt y syncStatus (PENDING/SYNCED)."
+    },
+    {
+      "fr_id": "FR-02",
+      "title": "Cliente de Red Supabase Edge Functions",
+      "statement": "Se implementará un cliente HTTP REST en :core:network configurado para consumir los endpoints v1 de Supabase (/v1/notifications, /v1/notifications/sync, /v1/notifications/:id/read, /v1/notifications/read-all, /v1/notifications/:id) con cabeceras de autorización y apikey."
+    },
+    {
+      "fr_id": "FR-03",
+      "title": "Trabajo en Segundo Plano con WorkManager",
+      "statement": "Se creará SyncNotificationsWorker con restricciones de red conectada para ejecutar la sincronización por lotes de registros pendientes (syncStatus == PENDING) y descargar notificaciones remotas nuevas."
+    },
+    {
+      "fr_id": "FR-04",
+      "title": "Actualización Optimista de Estado de Lectura",
+      "statement": "Al marcar como leída o marcar todas como leídas, el repositorio actualizará Room de inmediato en memoria y disco, emitiendo el cambio a la UI y programando la sincronización remota."
+    },
+    {
+      "fr_id": "FR-05",
+      "title": "Tratamiento Pedagógico de Plan Free (403)",
+      "statement": "Al recibir HTTP 403 con PREMIUM_REQUIRED, el sistema no bloqueará la app ni ocultará las notificaciones locales de Room, sino que mostrará un banner informativo para actualizar al plan Pro."
+    },
+    {
+      "fr_id": "FR-06",
+      "title": "Desduplicación e Idempotencia",
+      "statement": "La sincronización remota utilizará el identificador UUID generado por el cliente como clave única para evitar registros duplicados ante reintentos de red."
+    },
+    {
+      "fr_id": "FR-07",
+      "title": "Procesamiento de Push FCM HTTP v1",
+      "statement": "El servicio KmFirebaseMessagingService procesará el payload FCM: refrescará entitlements si contiene REFRESH_ENTITLEMENTS y persistirá en Room con origin REMOTE publicando notificación en sistema si incluye título y cuerpo."
+    }
+  ],
+  "acceptance_criteria": [
+    {
+      "ac_id": "AC-01",
+      "scenario": "Visualización Inmediata Local-First Offline",
+      "given": "que el usuario abre NotificationsListScreen sin conexión a internet activa",
+      "when": "la pantalla se renderiza",
+      "then": "el sistema observa el flujo reactivo de Room mostrando todas las alertas cacheadas sin spinner bloqueante ni fallo"
+    },
+    {
+      "ac_id": "AC-02",
+      "scenario": "Sincronización en Segundo Plano con WorkManager",
+      "given": "que existen notificaciones en Room con syncStatus = PENDING",
+      "when": "el dispositivo recupera conectividad de red y se ejecuta SyncNotificationsWorker",
+      "then": "el worker envía el lote a POST /v1/notifications/sync, actualiza a SYNCED en Room tras 200 OK y consulta GET /v1/notifications"
+    },
+    {
+      "ac_id": "AC-03",
+      "scenario": "Marcado como Leída con Optimistic UI",
+      "given": "una notificación no leída en NotificationsListScreen",
+      "when": "el usuario pulsa en Marcar como leída",
+      "then": "el estado visual cambia inmediatamente a READ, Room actualiza isRead = true y readAt = now(), y se encola PATCH /v1/notifications/:id/read"
+    },
+    {
+      "ac_id": "AC-04",
+      "scenario": "Marcado Masivo de Notificaciones",
+      "given": "múltiples notificaciones no leídas en la lista",
+      "when": "el usuario pulsa la acción Marcar todas como leídas",
+      "then": "todas las notificaciones pasan a estado READ instantáneamente en la UI y Room, y se dispara POST /v1/notifications/read-all"
+    },
+    {
+      "ac_id": "AC-05",
+      "scenario": "Manejo Resiliente de Error 403 PREMIUM_REQUIRED (Plan Free)",
+      "given": "un usuario con plan Free autenticado",
+      "when": "se invoca GET /v1/notifications y el backend responde HTTP 403 PREMIUM_REQUIRED",
+      "then": "la app no se bloquea, mantiene visibles las notificaciones locales en Room y despliega un banner informativo invitando a suscribirse a Pro"
+    },
+    {
+      "ac_id": "AC-06",
+      "scenario": "Procesamiento de Push FCM HTTP v1 y Alerta de Sistema",
+      "given": "que la app recibe un mensaje push FCM con origin = REMOTE, topic, title y body",
+      "when": "KmFirebaseMessagingService procesa el evento",
+      "then": "persiste la entidad en Room con origin = REMOTE y syncStatus = SYNCED y muestra una notificación en la barra de estado con su deep link"
+    },
+    {
+      "ac_id": "AC-07",
+      "scenario": "Refresco Reactivo de Derechos ante Push de Entitlements",
+      "given": "un push FCM con action_code = REFRESH_ENTITLEMENTS",
+      "when": "el dispositivo procesa el mensaje en primer o segundo plano",
+      "then": "se invalida la caché de sesión de usuario y se dispara la sincronización de derechos de suscripción"
+    },
+    {
+      "ac_id": "AC-08",
+      "scenario": "Eliminación Individual de Notificación",
+      "given": "una notificación existente en el historial",
+      "when": "el usuario desliza o pulsa eliminar",
+      "then": "la notificación se elimina de inmediato de Room y de la lista en pantalla y se ejecuta DELETE /v1/notifications/:id"
+    }
+  ],
+  "non_functional_requirements": {
+    "min_sdk": 24,
+    "target_sdk": 35,
+    "offline_supported": true,
+    "accessibility_required": true,
+    "performance_budget_ms": 16
+  }
+}

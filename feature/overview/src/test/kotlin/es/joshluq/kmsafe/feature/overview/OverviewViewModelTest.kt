@@ -29,10 +29,14 @@ import es.joshluq.kmsafe.domain.usecase.StopTrackingUseCase
 import es.joshluq.kmsafe.domain.usecase.StopTripTrackingUseCase
 import es.joshluq.kmsafe.domain.usecase.UpdatePreferencesUseCase
 import io.mockk.clearAllMocks
+import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.unmockkAll
+import es.joshluq.kmsafe.domain.model.NotificationPriority
+import es.joshluq.kmsafe.domain.model.NotificationTopic
+import es.joshluq.kmsafe.domain.usecase.PublishNotificationIfUnreadUseCase
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -75,6 +79,9 @@ class OverviewViewModelTest {
     private val startTripTrackingUseCase: StartTripTrackingUseCase = mockk(relaxed = true)
     private val stopTripTrackingUseCase: StopTripTrackingUseCase = mockk(relaxed = true)
     private val syncStationGeofencesUseCase: SyncStationGeofencesUseCase = mockk(relaxed = true)
+    private val observeActiveNotificationsUseCase: es.joshluq.kmsafe.domain.usecase.ObserveActiveNotificationsUseCase = mockk(relaxed = true)
+    private val markNotificationAsReadUseCase: es.joshluq.kmsafe.domain.usecase.MarkNotificationAsReadUseCase = mockk(relaxed = true)
+    private val publishNotificationIfUnreadUseCase: PublishNotificationIfUnreadUseCase = mockk(relaxed = true)
     private val monetizationConfig: MonetizationConfig = mockk(relaxed = true)
     private val analytics = FakeAnalyticsTracker()
     private val logger: LoggerKit = mockk(relaxed = true)
@@ -161,6 +168,9 @@ class OverviewViewModelTest {
         every { observeVehicleBluetoothConnectionUseCase(any()) } returns flowOf(
             ObserveVehicleBluetoothConnectionUseCase.Output.Success(isConnected = false)
         )
+        every { observeActiveNotificationsUseCase(any()) } returns flowOf(
+            es.joshluq.kmsafe.domain.usecase.ObserveActiveNotificationsUseCase.Output.Success(emptyList())
+        )
     }
 
     @After
@@ -190,6 +200,9 @@ class OverviewViewModelTest {
             startTripTrackingUseCase = startTripTrackingUseCase,
             stopTripTrackingUseCase = stopTripTrackingUseCase,
             syncStationGeofencesUseCase = syncStationGeofencesUseCase,
+            observeActiveNotificationsUseCase = observeActiveNotificationsUseCase,
+            markNotificationAsReadUseCase = markNotificationAsReadUseCase,
+            publishNotificationIfUnreadUseCase = publishNotificationIfUnreadUseCase,
             monetizationConfig = monetizationConfig,
             analytics = analytics,
             logger = logger
@@ -413,128 +426,6 @@ class OverviewViewModelTest {
     }
 
     @Test
-    fun `given contract without bluetooth and auto tracking enabled then statusCapsule is BluetoothMissing`() = runTest(testDispatcher) {
-        val noBtContract = sampleContract.copy(bluetoothDeviceAddress = null)
-        every { getOverviewDataUseCase(any()) } returns flowOf(
-            GetOverviewDataUseCase.Output.Success(
-                contract = noBtContract,
-                actualKmsDrivenSinceStart = 2500.0,
-                isSyncPending = false,
-                metrics = sampleMetrics.copy(contract = noBtContract)
-            )
-        )
-        every { getPreferencesUseCase(any()) } returns flowOf(
-            GetPreferencesUseCase.Output.Success(UserPreferences(autoTrackingEnabled = true))
-        )
-
-        val viewModel = createViewModel()
-        advanceUntilIdle()
-
-        val capsule = viewModel.state.value.statusCapsule
-        assertNotNull(capsule)
-        assertTrue(capsule is StatusCapsuleUiModel.BluetoothMissing)
-    }
-
-    @Test
-    fun `given projection over limit and banner active then statusCapsule is CriticalRisk`() = runTest(testDispatcher) {
-        val projection = TripProjection(
-            projectedTotalKms = 16200.0,
-            expectedFinalBalance = -1200.0,
-            dailyAverage = 50.0,
-            isOverLimit = true,
-            hasEnoughData = true
-        )
-        every { getTripProjectionUseCase(any()) } returns flowOf(
-            GetTripProjectionUseCase.Output.Success(projection)
-        )
-        every { getPreferencesUseCase(any()) } returns flowOf(
-            GetPreferencesUseCase.Output.Success(
-                UserPreferences(showProjectionBanner = true, lastKnownOverLimit = null)
-            )
-        )
-
-        val viewModel = createViewModel()
-        advanceUntilIdle()
-
-        val capsule = viewModel.state.value.statusCapsule
-        assertNotNull(capsule)
-        assertTrue(capsule is StatusCapsuleUiModel.CriticalRisk)
-        assertTrue((capsule as StatusCapsuleUiModel.CriticalRisk).isOverLimit)
-    }
-
-    @Test
-    fun `given OnStatusCapsuleClicked with CriticalRisk then emits NavigateToProjection effect`() = runTest(testDispatcher) {
-        val effects = mutableListOf<Effect>()
-        val viewModel = createViewModel()
-        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
-            viewModel.effects.collect { effects.add(it) }
-        }
-
-        val dummyRisk = StatusCapsuleUiModel.CriticalRisk(
-            message = es.joshluq.foundationkit.text.TextProvider.Dynamic("Risk"),
-            isOverLimit = true
-        )
-        viewModel.sendEvent(Event.OnStatusCapsuleClicked(dummyRisk))
-        advanceUntilIdle()
-
-        assertEquals(1, effects.size)
-        assertEquals(Effect.NavigateToProjection, effects.first())
-    }
-
-    @Test
-    fun `given OnStatusCapsuleClicked with BluetoothMissing then emits NavigateToOnboarding edit effect`() = runTest(testDispatcher) {
-        val effects = mutableListOf<Effect>()
-        val viewModel = createViewModel()
-        advanceUntilIdle()
-        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
-            viewModel.effects.collect { effects.add(it) }
-        }
-
-        val dummyBt = StatusCapsuleUiModel.BluetoothMissing(
-            message = es.joshluq.foundationkit.text.TextProvider.Dynamic("Bluetooth")
-        )
-        viewModel.sendEvent(Event.OnStatusCapsuleClicked(dummyBt))
-        advanceUntilIdle()
-
-        assertEquals(1, effects.size)
-        assertEquals(Effect.NavigateToOnboarding("contract-1", isEdit = true), effects.first())
-    }
-
-    @Test
-    fun `given OnDismissStatusCapsule then clears statusCapsule in state`() = runTest(testDispatcher) {
-        val viewModel = createViewModel()
-        advanceUntilIdle()
-
-        viewModel.sendEvent(Event.OnDismissStatusCapsule)
-        advanceUntilIdle()
-
-        assertEquals(null, viewModel.state.value.statusCapsule)
-    }
-
-    @Test
-    fun `given projection loaded for contract then resolves and displays CriticalRisk statusCapsule`() = runTest(testDispatcher) {
-        val testProjection = TripProjection(
-            contractId = "contract-1",
-            projectedTotalKms = 18000.0,
-            expectedFinalBalance = -3000.0,
-            isOverLimit = true,
-            dailyAverage = 50.0,
-            hasEnoughData = true
-        )
-        every { getTripProjectionUseCase(any()) } returns flowOf(
-            GetTripProjectionUseCase.Output.Success(testProjection)
-        )
-
-        val viewModel = createViewModel()
-        advanceUntilIdle()
-
-        val capsule = viewModel.state.value.statusCapsule
-        assertTrue(capsule is StatusCapsuleUiModel.CriticalRisk)
-        assertTrue((capsule as StatusCapsuleUiModel.CriticalRisk).isOverLimit)
-        assertEquals(testProjection, viewModel.state.value.projection)
-    }
-
-    @Test
     fun `given OnSwitchVehicleClicked when contract exists then triggers switch with overlay state and completes`() = runTest(testDispatcher) {
         val targetVehicle = sampleContract.copy(id = "contract-2", vehicleName = "Peugeot 3008")
         every { getAllContractsUseCase(any()) } returns flowOf(
@@ -583,5 +474,265 @@ class OverviewViewModelTest {
 
         // Verify isTracking remains false in UI state because bottom sheet is open
         assertFalse(viewModel.state.value.isTracking)
+    }
+
+    @Test
+    fun `given projection notification when pill clicked then marks read and emits NavigateToProjection effect`() = runTest(testDispatcher) {
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        val sampleNotif = es.joshluq.kmsafe.domain.model.Notification(
+            id = "proj-pill-1",
+            topic = es.joshluq.kmsafe.domain.model.NotificationTopic.PROJECTION,
+            title = "Alerta de proyección",
+            body = "Revisar cálculo",
+            priority = es.joshluq.kmsafe.domain.model.NotificationPriority.CRITICAL,
+            status = es.joshluq.kmsafe.domain.model.NotificationStatus.UNREAD,
+            deepLinkUri = "kmsafe://feature/projection"
+        )
+
+        var emittedEffect: Effect? = null
+        val job = launch {
+            viewModel.effects.collect { emittedEffect = it }
+        }
+
+        viewModel.sendEvent(Event.OnNotificationPillClicked(sampleNotif))
+        advanceUntilIdle()
+
+        coVerify(exactly = 1) {
+            markNotificationAsReadUseCase(es.joshluq.kmsafe.domain.usecase.MarkNotificationAsReadUseCase.Input("proj-pill-1"))
+        }
+        assertTrue(emittedEffect is Effect.NavigateToProjection)
+        assertEquals(null, viewModel.state.value.activeNotification)
+        job.cancel()
+    }
+
+    @Test
+    fun `given system bluetooth notification when pill clicked then marks read and emits NavigateToOnboarding effect`() = runTest(testDispatcher) {
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        val sampleNotif = es.joshluq.kmsafe.domain.model.Notification(
+            id = "bt-pill-1",
+            topic = es.joshluq.kmsafe.domain.model.NotificationTopic.SYSTEM,
+            title = "Dispositivo Bluetooth no configurado",
+            body = "Configura el Bluetooth",
+            priority = es.joshluq.kmsafe.domain.model.NotificationPriority.WARNING,
+            status = es.joshluq.kmsafe.domain.model.NotificationStatus.UNREAD,
+            data = mapOf("contract_id" to "contract-1")
+        )
+
+        var emittedEffect: Effect? = null
+        val job = launch {
+            viewModel.effects.collect { emittedEffect = it }
+        }
+
+        viewModel.sendEvent(Event.OnNotificationPillClicked(sampleNotif))
+        advanceUntilIdle()
+
+        coVerify(exactly = 1) {
+            markNotificationAsReadUseCase(es.joshluq.kmsafe.domain.usecase.MarkNotificationAsReadUseCase.Input("bt-pill-1"))
+        }
+        assertTrue(emittedEffect is Effect.NavigateToOnboarding)
+        assertEquals("contract-1", (emittedEffect as Effect.NavigateToOnboarding).vehicleId)
+        assertTrue((emittedEffect as Effect.NavigateToOnboarding).isEdit)
+        assertEquals(null, viewModel.state.value.activeNotification)
+        job.cancel()
+    }
+
+    @Test
+    fun `given notifications list containing only read notifications then activeNotification is null`() = runTest(testDispatcher) {
+        val readNotif = es.joshluq.kmsafe.domain.model.Notification(
+            id = "read-1",
+            topic = es.joshluq.kmsafe.domain.model.NotificationTopic.PROJECTION,
+            title = "Alerta ya leida",
+            body = "Detalle",
+            priority = es.joshluq.kmsafe.domain.model.NotificationPriority.INFO,
+            status = es.joshluq.kmsafe.domain.model.NotificationStatus.READ,
+            isRead = true
+        )
+        every { observeActiveNotificationsUseCase(any()) } returns flowOf(
+            es.joshluq.kmsafe.domain.usecase.ObserveActiveNotificationsUseCase.Output.Success(listOf(readNotif))
+        )
+
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        assertEquals(null, viewModel.state.value.activeNotification)
+    }
+
+    @Test
+    fun `when view all notifications clicked then emits NavigateToNotificationsList effect`() = runTest(testDispatcher) {
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        var emittedEffect: Effect? = null
+        val job = launch {
+            viewModel.effects.collect { emittedEffect = it }
+        }
+
+        viewModel.sendEvent(Event.OnViewAllNotificationsClicked)
+        advanceUntilIdle()
+
+        assertTrue(emittedEffect is Effect.NavigateToNotificationsList)
+        job.cancel()
+    }
+
+    @Test
+    fun `given projection transitions from safe to overlimit then publishes critical notification`() = runTest(testDispatcher) {
+        val projectionFlow = MutableSharedFlow<GetTripProjectionUseCase.Output>()
+        every { getTripProjectionUseCase(any()) } returns projectionFlow
+        every { getPreferencesUseCase(any()) } returns flowOf(
+            GetPreferencesUseCase.Output.Success(UserPreferences(lastKnownOverLimit = false))
+        )
+
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        val overlimitProj = TripProjection(
+            contractId = sampleContract.id,
+            projectedTotalKms = 25500.0,
+            expectedFinalBalance = -500.0,
+            isOverLimit = true,
+            dailyAverage = 50.0,
+            hasEnoughData = true
+        )
+        projectionFlow.emit(GetTripProjectionUseCase.Output.Success(overlimitProj))
+        advanceUntilIdle()
+
+        coVerify(atLeast = 1) {
+            publishNotificationIfUnreadUseCase(match { input ->
+                input.notification.topic == NotificationTopic.PROJECTION &&
+                input.notification.priority == NotificationPriority.CRITICAL &&
+                input.notification.title == "Alerta de exceso proyectado"
+            })
+        }
+    }
+
+    @Test
+    fun `given projection transitions from overlimit to safe then publishes info notification`() = runTest(testDispatcher) {
+        val projectionFlow = MutableSharedFlow<GetTripProjectionUseCase.Output>()
+        every { getTripProjectionUseCase(any()) } returns projectionFlow
+        every { getPreferencesUseCase(any()) } returns flowOf(
+            GetPreferencesUseCase.Output.Success(UserPreferences(lastKnownOverLimit = true))
+        )
+
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        val safeProj = TripProjection(
+            contractId = sampleContract.id,
+            projectedTotalKms = 24800.0,
+            expectedFinalBalance = 200.0,
+            isOverLimit = false,
+            dailyAverage = 40.0,
+            hasEnoughData = true
+        )
+        projectionFlow.emit(GetTripProjectionUseCase.Output.Success(safeProj))
+        advanceUntilIdle()
+
+        coVerify(atLeast = 1) {
+            publishNotificationIfUnreadUseCase(match { input ->
+                input.notification.topic == NotificationTopic.PROJECTION &&
+                input.notification.priority == NotificationPriority.INFO &&
+                input.notification.title == "Ritmo de kilometraje recuperado"
+            })
+        }
+    }
+
+    @Test
+    fun `given projection remains in same state then does not publish duplicate notification`() = runTest(testDispatcher) {
+        val projectionFlow = MutableSharedFlow<GetTripProjectionUseCase.Output>()
+        every { getTripProjectionUseCase(any()) } returns projectionFlow
+        every { getPreferencesUseCase(any()) } returns flowOf(
+            GetPreferencesUseCase.Output.Success(UserPreferences(lastKnownOverLimit = true))
+        )
+
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        val overlimitProj = TripProjection(
+            contractId = sampleContract.id,
+            projectedTotalKms = 25500.0,
+            expectedFinalBalance = -500.0,
+            isOverLimit = true,
+            dailyAverage = 50.0,
+            hasEnoughData = true
+        )
+        projectionFlow.emit(GetTripProjectionUseCase.Output.Success(overlimitProj))
+        advanceUntilIdle()
+
+        coVerify(exactly = 0) {
+            publishNotificationIfUnreadUseCase(any())
+        }
+    }
+
+    @Test
+    fun `given premium user with autotracking and vehicle without bluetooth then publishes warning notification`() = runTest(testDispatcher) {
+        val contractNoBt = sampleContract.copy(bluetoothDeviceAddress = null)
+        val overviewFlow = flowOf(
+            GetOverviewDataUseCase.Output.Success(
+                contract = contractNoBt,
+                metrics = sampleMetrics.copy(contract = contractNoBt),
+                actualKmsDrivenSinceStart = 2500.0
+            )
+        )
+        every { getOverviewDataUseCase(any()) } returns overviewFlow
+        every { getPreferencesUseCase(any()) } returns flowOf(
+            GetPreferencesUseCase.Output.Success(UserPreferences(autoTrackingEnabled = true))
+        )
+
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        coVerify(atLeast = 1) {
+            publishNotificationIfUnreadUseCase(match { input ->
+                input.notification.topic == NotificationTopic.SYSTEM &&
+                input.notification.priority == NotificationPriority.WARNING &&
+                input.notification.title == "Dispositivo Bluetooth no configurado"
+            })
+        }
+    }
+
+    @Test
+    fun `given vehicle without bluetooth subsequently gets bluetooth configured then resolves notification`() = runTest(testDispatcher) {
+        val contractNoBt = sampleContract.copy(bluetoothDeviceAddress = null)
+        val overviewFlow = MutableSharedFlow<GetOverviewDataUseCase.Output>()
+        every { getOverviewDataUseCase(any()) } returns overviewFlow
+        every { getPreferencesUseCase(any()) } returns flowOf(
+            GetPreferencesUseCase.Output.Success(UserPreferences(autoTrackingEnabled = true))
+        )
+
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        // 1. Emit contract without bluetooth -> publishes warning
+        overviewFlow.emit(
+            GetOverviewDataUseCase.Output.Success(
+                contract = contractNoBt,
+                metrics = sampleMetrics.copy(contract = contractNoBt),
+                actualKmsDrivenSinceStart = 2500.0
+            )
+        )
+        advanceUntilIdle()
+
+        coVerify(atLeast = 1) {
+            publishNotificationIfUnreadUseCase(any())
+        }
+
+        // 2. Emit contract with bluetooth -> resolves notification
+        val contractWithBt = sampleContract.copy(bluetoothDeviceAddress = "AA:BB:CC:DD:EE:FF")
+        overviewFlow.emit(
+            GetOverviewDataUseCase.Output.Success(
+                contract = contractWithBt,
+                metrics = sampleMetrics.copy(contract = contractWithBt),
+                actualKmsDrivenSinceStart = 2500.0
+            )
+        )
+        advanceUntilIdle()
+
+        coVerify(atLeast = 1) {
+            markNotificationAsReadUseCase(match { it.notificationId == "bt_missing_${sampleContract.id}" })
+        }
     }
 }

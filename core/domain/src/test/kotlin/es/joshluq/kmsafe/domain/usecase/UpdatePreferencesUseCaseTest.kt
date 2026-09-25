@@ -43,7 +43,6 @@ class UpdatePreferencesUseCaseTest {
         val input = UpdatePreferencesUseCase.Input(
             rememberEmail = true,
             lastEmail = "test@example.com",
-            showProjectionBanner = false,
             autoTrackingEnabled = true
         )
 
@@ -54,7 +53,6 @@ class UpdatePreferencesUseCaseTest {
 
         coVerify(exactly = 1) { repository.setRememberEmail(true) }
         coVerify(exactly = 1) { repository.saveLastEmail("test@example.com") }
-        coVerify(exactly = 1) { repository.setShowProjectionBanner("u1", false) }
         coVerify(exactly = 1) { repository.setAutoTrackingEnabled("u1", true) }
     }
 

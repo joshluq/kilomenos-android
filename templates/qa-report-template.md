@@ -1,6 +1,6 @@
 # QA Quality Gate Report: [FEATURE_NAME]
 
-**Feature ID**: [FEAT-XXX]  
+**Feature ID**: [KILOMENOS-XXX]  
 **Evaluation Date**: YYYY-MM-DDTHH:MM:SSZ  
 **QA Lead**: QA / Testing Engineer  
 **Upstream Dev Handoff Ref**: HANDOFF-DEV-QA-[ID]  

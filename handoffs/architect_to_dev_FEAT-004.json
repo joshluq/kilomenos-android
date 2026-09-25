@@ -1,0 +1,73 @@
+{
+  "handoff_id": "HANDOFF-ARCH-DEV-FEAT-004",
+  "schema_version": "1.0.0",
+  "timestamp": "2026-09-23T19:40:00Z",
+  "sender": {
+    "role": "Software Architect",
+    "agent_id": "software_architect"
+  },
+  "recipient": {
+    "role": "Senior Android Developer",
+    "agent_id": "senior_android_developer"
+  },
+  "feature_id": "FEAT-004",
+  "po_handoff_ref": "HANDOFF-PO-ARCH-FEAT-004",
+  "adr_path": "docs/adr/ADR-FEAT-004.md",
+  "component_spec_path": "docs/specs/COMP-SPEC-FEAT-004.md",
+  "remediation_cycle": 0,
+  "architecture_pattern": "CLEAN_ARCHITECTURE",
+  "module_targets": [
+    ":feature:overview",
+    ":core:infrastructure",
+    ":core:domain"
+  ],
+  "component_contracts": [
+    {
+      "component_name": "OverviewViewModel",
+      "package_name": "es.joshluq.kmsafe.feature.overview",
+      "layer": "VIEWMODEL",
+      "state_models": ["OverviewUiState"],
+      "action_events": ["OverviewUiAction"],
+      "exposed_flows": ["StateFlow<OverviewUiState>"]
+    },
+    {
+      "component_name": "NotificationRepositoryImpl",
+      "package_name": "es.joshluq.kmsafe.infrastructure.repository",
+      "layer": "DATA",
+      "state_models": ["Notification", "NotificationEntity"],
+      "action_events": [],
+      "exposed_flows": ["Flow<List<Notification>>", "Flow<Int>"]
+    },
+    {
+      "component_name": "NotificationDao",
+      "package_name": "es.joshluq.kmsafe.infrastructure.local.dao",
+      "layer": "DATA",
+      "state_models": ["NotificationEntity"],
+      "action_events": [],
+      "exposed_flows": ["Flow<List<NotificationEntity>>", "Flow<Int>"]
+    }
+  ],
+  "file_manifest_plan": [
+    {
+      "target_path": "feature/overview/src/main/java/es/joshluq/kmsafe/feature/overview/OverviewViewModel.kt",
+      "action": "MODIFY",
+      "purpose": "Generate canonical UUID v4 for notification id and encapsulate semantic keys in data"
+    },
+    {
+      "target_path": "core/infrastructure/src/main/java/es/joshluq/kmsafe/infrastructure/local/entity/NotificationEntity.kt",
+      "action": "MODIFY",
+      "purpose": "Support bidirectional mapping between dataJson and Notification.data"
+    },
+    {
+      "target_path": "core/infrastructure/src/main/java/es/joshluq/kmsafe/infrastructure/local/dao/NotificationDao.kt",
+      "action": "MODIFY",
+      "purpose": "Add findBySemanticKey query to detect existing unread notifications by composite key"
+    },
+    {
+      "target_path": "core/infrastructure/src/main/java/es/joshluq/kmsafe/infrastructure/repository/NotificationRepositoryImpl.kt",
+      "action": "MODIFY",
+      "purpose": "Add semantic deduplication in insertOrUpdate, propagate data in sync, and add UUID safety guard against legacy IDs"
+    }
+  ],
+  "dependencies": []
+}

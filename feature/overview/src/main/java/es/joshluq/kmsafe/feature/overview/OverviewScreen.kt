@@ -43,6 +43,7 @@ import androidx.compose.material.icons.automirrored.filled.HelpOutline
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.CarRental
+import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.SyncProblem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
@@ -66,6 +67,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
@@ -103,13 +106,16 @@ import es.joshluq.kmsafe.core.monetization.components.AdMobBanner
 import es.joshluq.kmsafe.core.ui.components.BrandingLogo
 import es.joshluq.kmsafe.core.ui.util.DateUtils
 import es.joshluq.kmsafe.core.ui.util.safeClick
+import es.joshluq.kmsafe.domain.model.Notification
+import es.joshluq.kmsafe.domain.model.NotificationPriority
+import es.joshluq.kmsafe.domain.model.NotificationTopic
 import es.joshluq.kmsafe.domain.model.RentingContract
 import es.joshluq.kmsafe.domain.model.SubscriptionLevel
 import es.joshluq.kmsafe.domain.model.TripProjection
+import es.joshluq.kmsafe.feature.notifications.components.NotificationPill
 import es.joshluq.kmsafe.feature.overview.components.AeroRunwayPacingBar
 import es.joshluq.kmsafe.feature.overview.components.CopilotRadarSection
 import es.joshluq.kmsafe.feature.overview.components.FloatingTelemetryPill
-import es.joshluq.kmsafe.feature.overview.components.StatusCapsule
 import es.joshluq.kmsafe.feature.overview.model.MonthlyUsageUiModel
 import es.joshluq.kmsafe.core.ui.R as CoreR
 
@@ -125,7 +131,10 @@ fun OverviewRoute(
     onNavigateToPremiumPaywall: () -> Unit,
     onNavigateToPreferences: () -> Unit,
     onNavigateToWelcomeDiscovery: () -> Unit,
-    onNavigateToVehicleDetail: (String) -> Unit
+    onNavigateToVehicleDetail: (String) -> Unit,
+    onNavigateToNotificationDetail: (String) -> Unit = {},
+    onNavigateToNotificationsList: () -> Unit = {},
+    onNavigateToDeepLink: (String) -> Unit = {}
 ) {
     val viewModel: OverviewViewModel = hiltViewModel()
     val state = viewModel.state.collectAsStateWithLifecycle()
@@ -188,6 +197,9 @@ fun OverviewRoute(
 
                 Effect.NavigateToWelcomeDiscovery -> onNavigateToWelcomeDiscovery()
                 is Effect.NavigateToVehicleDetail -> onNavigateToVehicleDetail(effect.id)
+                is Effect.NavigateToNotificationDetail -> onNavigateToNotificationDetail(effect.notificationId)
+                is Effect.NavigateToDeepLink -> onNavigateToDeepLink(effect.deepLinkUri)
+                Effect.NavigateToNotificationsList -> onNavigateToNotificationsList()
                 Effect.DismissTrackingNotifications -> {
                     val nm = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
                     nm.cancel(1002) // NOTIFICATION_ID_TRIP_FINISHED
@@ -396,10 +408,10 @@ private fun RentingState(
     ) {
         Spacer(modifier = Modifier.height(2.dp))
 
-        if (state.statusCapsule != null) {
-            StatusCapsule(
-                item = state.statusCapsule,
-                onClick = { onEvent(Event.OnStatusCapsuleClicked(it)) }
+        if (state.activeNotification != null) {
+            NotificationPill(
+                notification = state.activeNotification,
+                onPillClick = { onEvent(Event.OnNotificationPillClicked(it)) }
             )
         }
 
@@ -779,6 +791,20 @@ private fun OverviewTopBar(
     onEvent: (Event) -> Unit
 ) {
     CanvasKitTopBar(
+        navigationIcon = {
+            IconButton(
+                onClick = safeClick { onEvent(Event.OnViewAllNotificationsClicked) },
+                modifier = Modifier.semantics {
+                    contentDescription = "Ver todas las notificaciones"
+                }
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Notifications,
+                    contentDescription = null,
+                    tint = CanvasKitTheme.colors.textPrimary
+                )
+            }
+        },
         title = {
             BrandingLogo(logoSize = 32.dp, isMinimized = false)
         },
@@ -961,7 +987,6 @@ internal class OverviewStateProvider : PreviewParameterProvider<State> {
             monthlyUsage = listOf(
                 MonthlyUsageUiModel("Ene", "1200", "1500", 1200f, 1500f, MonthlyUsageUiModel.LimitState.SAFE)
             ),
-            showProjectionBanner = false,
             projection = TripProjection(
                 projectedTotalKms = 10000.0,
                 expectedFinalBalance = 1000000.0,

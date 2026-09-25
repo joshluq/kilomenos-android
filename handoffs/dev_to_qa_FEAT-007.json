@@ -1,0 +1,66 @@
+{
+  "handoff_id": "HANDOFF-DEV-QA-FEAT-007",
+  "schema_version": "1.0.0",
+  "timestamp": "2026-09-24T11:45:00Z",
+  "sender": {
+    "role": "Senior Android Developer",
+    "agent_id": "senior_android_developer"
+  },
+  "recipient": {
+    "role": "QA/Testing Engineer",
+    "agent_id": "qa_testing_engineer"
+  },
+  "feature_id": "FEAT-007",
+  "architect_handoff_ref": "HANDOFF-ARCH-DEV-FEAT-007",
+  "remediation_cycle": 0,
+  "implementation_manifest": {
+    "module": ":feature:notifications",
+    "entry_point_composable": "NotificationsListScreen",
+    "viewmodel_class": "NotificationsListViewModel"
+  },
+  "code_changes": [
+    {
+      "file_path": "feature/notifications/src/main/java/es/joshluq/kmsafe/feature/notifications/ui/list/Contract.kt",
+      "action": "MODIFIED",
+      "language": "kotlin",
+      "line_count": 51
+    },
+    {
+      "file_path": "feature/notifications/src/main/java/es/joshluq/kmsafe/feature/notifications/ui/list/NotificationsListViewModel.kt",
+      "action": "MODIFIED",
+      "language": "kotlin",
+      "line_count": 184
+    },
+    {
+      "file_path": "feature/notifications/src/main/java/es/joshluq/kmsafe/feature/notifications/ui/list/NotificationsListRoute.kt",
+      "action": "MODIFIED",
+      "language": "kotlin",
+      "line_count": 46
+    },
+    {
+      "file_path": "app/src/main/java/es/joshluq/kmsafe/ui/navigation/AppNavigation.kt",
+      "action": "MODIFIED",
+      "language": "kotlin",
+      "line_count": 469
+    }
+  ],
+  "developer_test_summary": {
+    "unit_tests_run": 14,
+    "unit_tests_passed": 14,
+    "unit_tests_failed": 0,
+    "test_frameworks_used": [
+      "JUnit4",
+      "MockK",
+      "Turbine",
+      "kotlinx-coroutines-test"
+    ],
+    "test_files": [
+      "feature/notifications/src/test/kotlin/es/joshluq/kmsafe/feature/notifications/NotificationsListViewModelTest.kt"
+    ]
+  },
+  "lint_and_sanity": {
+    "compilation_clean": true,
+    "ktlint_clean": true,
+    "detekt_clean": true
+  }
+}

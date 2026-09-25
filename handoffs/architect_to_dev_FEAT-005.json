@@ -1,0 +1,99 @@
+{
+  "handoff_id": "HANDOFF-ARCH-DEV-FEAT-005",
+  "schema_version": "1.0.0",
+  "timestamp": "2026-09-24T09:05:00Z",
+  "sender": {
+    "role": "Software Architect",
+    "agent_id": "software_architect"
+  },
+  "recipient": {
+    "role": "Senior Android Developer",
+    "agent_id": "senior_android_developer"
+  },
+  "feature_id": "FEAT-005",
+  "po_handoff_ref": "HANDOFF-PO-ARCH-FEAT-005",
+  "adr_path": "docs/adr/ADR-FEAT-005.md",
+  "component_spec_path": "docs/specs/COMP-SPEC-FEAT-005.md",
+  "remediation_cycle": 0,
+  "architecture_pattern": "CLEAN_ARCHITECTURE",
+  "module_targets": [
+    ":feature:notifications",
+    ":feature:overview",
+    ":core:domain",
+    ":core:infrastructure"
+  ],
+  "component_contracts": [
+    {
+      "component_name": "NotificationPill",
+      "package_name": "es.joshluq.kmsafe.feature.notifications.components",
+      "layer": "UI",
+      "state_models": ["Notification"],
+      "action_events": ["onPillClick"],
+      "exposed_flows": []
+    },
+    {
+      "component_name": "OverviewViewModel",
+      "package_name": "es.joshluq.kmsafe.feature.overview",
+      "layer": "VIEWMODEL",
+      "state_models": ["State"],
+      "action_events": ["OnNotificationPillClicked", "OnViewAllNotificationsClicked"],
+      "exposed_flows": ["StateFlow<State>", "SharedFlow<Effect>"]
+    },
+    {
+      "component_name": "PublishNotificationIfUnreadUseCase",
+      "package_name": "es.joshluq.kmsafe.domain.usecase",
+      "layer": "DOMAIN",
+      "state_models": ["Notification"],
+      "action_events": [],
+      "exposed_flows": []
+    }
+  ],
+  "file_manifest_plan": [
+    {
+      "target_path": "feature/notifications/src/main/java/es/joshluq/kmsafe/feature/notifications/components/NotificationPill.kt",
+      "action": "MODIFY",
+      "purpose": "Remove 'Ver mas' button and unify touch target on onPillClick"
+    },
+    {
+      "target_path": "feature/overview/src/main/java/es/joshluq/kmsafe/feature/overview/OverviewScreen.kt",
+      "action": "MODIFY",
+      "purpose": "Add bell icon as navigationIcon in CanvasKitTopBar"
+    },
+    {
+      "target_path": "feature/overview/src/main/java/es/joshluq/kmsafe/feature/overview/OverviewViewModel.kt",
+      "action": "MODIFY",
+      "purpose": "Handle contextual navigation in OnNotificationPillClicked and delegate to PublishNotificationIfUnreadUseCase"
+    },
+    {
+      "target_path": "core/domain/src/main/java/es/joshluq/kmsafe/domain/usecase/PublishNotificationIfUnreadUseCase.kt",
+      "action": "CREATE",
+      "purpose": "Define domain interface to check if notification was already read before publishing"
+    },
+    {
+      "target_path": "core/infrastructure/src/main/java/es/joshluq/kmsafe/infrastructure/usecase/PublishNotificationIfUnreadUseCaseImpl.kt",
+      "action": "CREATE",
+      "purpose": "Implement semantic check on Room before delegating to PublishNotificationUseCase"
+    },
+    {
+      "target_path": "core/infrastructure/src/main/java/es/joshluq/kmsafe/infrastructure/di/UseCaseModule.kt",
+      "action": "MODIFY",
+      "purpose": "Bind PublishNotificationIfUnreadUseCaseImpl"
+    },
+    {
+      "target_path": "core/infrastructure/src/main/java/es/joshluq/kmsafe/infrastructure/local/datasource/PreferencesDataSource.kt",
+      "action": "MODIFY",
+      "purpose": "Eliminate obsolete setShowProjectionBanner function"
+    },
+    {
+      "target_path": "core/domain/src/main/java/es/joshluq/kmsafe/domain/repository/PreferencesRepository.kt",
+      "action": "MODIFY",
+      "purpose": "Remove setShowProjectionBanner contract"
+    },
+    {
+      "target_path": "core/infrastructure/src/main/java/es/joshluq/kmsafe/infrastructure/repository/PreferencesRepositoryImpl.kt",
+      "action": "MODIFY",
+      "purpose": "Remove setShowProjectionBanner implementation"
+    }
+  ],
+  "dependencies": []
+}

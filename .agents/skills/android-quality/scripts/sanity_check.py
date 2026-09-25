@@ -67,9 +67,9 @@ def execute_live_sanity_check(project_dir: Path) -> Dict[str, Any]:
     """Runs compilation, style, lint, and unit tests via Gradle."""
     print(f"Executing Pre-Handoff Sanity Checks in: {project_dir}")
 
-    # 1. Compilation
-    print("  [1/4] Checking Kotlin Compilation (compileDebugKotlin)...")
-    comp_pass, comp_time, comp_out = run_gradle_task(project_dir, "compileDebugKotlin")
+    # 1. Full Application Compilation (assembleDevDebug)
+    print("  [1/4] Checking Full App Compilation (:app:assembleDevDebug)...")
+    comp_pass, comp_time, comp_out = run_gradle_task(project_dir, ":app:assembleDevDebug")
 
     # 2. ktlint / code formatting
     print("  [2/4] Checking Code Style (ktlintCheck)...")

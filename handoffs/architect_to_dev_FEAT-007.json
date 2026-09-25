@@ -1,0 +1,61 @@
+{
+  "handoff_id": "HANDOFF-ARCH-DEV-FEAT-007",
+  "schema_version": "1.0.0",
+  "timestamp": "2026-09-24T11:20:00Z",
+  "sender": {
+    "role": "Software Architect",
+    "agent_id": "software_architect"
+  },
+  "recipient": {
+    "role": "Senior Android Developer",
+    "agent_id": "senior_android_developer"
+  },
+  "feature_id": "FEAT-007",
+  "po_handoff_ref": "HANDOFF-PO-ARCH-FEAT-007",
+  "adr_path": "docs/adr/ADR-FEAT-007.md",
+  "component_spec_path": "docs/specs/COMP-SPEC-FEAT-007.md",
+  "remediation_cycle": 0,
+  "architecture_pattern": "CLEAN_ARCHITECTURE",
+  "module_targets": [
+    ":feature:notifications",
+    ":app"
+  ],
+  "component_contracts": [
+    {
+      "component_name": "NotificationsListViewModel",
+      "package_name": "es.joshluq.kmsafe.feature.notifications.ui.list",
+      "layer": "VIEWMODEL",
+      "state_models": ["NotificationsListState"],
+      "action_events": ["NotificationClicked"],
+      "exposed_flows": ["StateFlow<NotificationsListState>", "SharedFlow<NotificationsListEffect>"]
+    }
+  ],
+  "file_manifest_plan": [
+    {
+      "target_path": "feature/notifications/src/main/java/es/joshluq/kmsafe/feature/notifications/ui/list/Contract.kt",
+      "action": "MODIFY",
+      "purpose": "Add NavigateToProjection and NavigateToEditContract effects"
+    },
+    {
+      "target_path": "feature/notifications/src/main/java/es/joshluq/kmsafe/feature/notifications/ui/list/NotificationsListViewModel.kt",
+      "action": "MODIFY",
+      "purpose": "Implement contextual navigation dispatching and async background markAsRead"
+    },
+    {
+      "target_path": "feature/notifications/src/main/java/es/joshluq/kmsafe/feature/notifications/ui/list/NotificationsListRoute.kt",
+      "action": "MODIFY",
+      "purpose": "Expose and wire onNavigateToProjection and onNavigateToEditContract callbacks"
+    },
+    {
+      "target_path": "app/src/main/java/es/joshluq/kmsafe/ui/navigation/AppNavigation.kt",
+      "action": "MODIFY",
+      "purpose": "Bind route callbacks to Destination.ProjectionAnalysis and Destination.Onboarding"
+    },
+    {
+      "target_path": "feature/notifications/src/test/kotlin/es/joshluq/kmsafe/feature/notifications/ui/list/NotificationsListViewModelTest.kt",
+      "action": "MODIFY",
+      "purpose": "Verify all navigation effects and async execution according to AC-01 through AC-05"
+    }
+  ],
+  "dependencies": []
+}

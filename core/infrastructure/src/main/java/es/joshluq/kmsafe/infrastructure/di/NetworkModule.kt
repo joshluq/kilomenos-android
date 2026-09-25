@@ -15,6 +15,7 @@ import es.joshluq.kmsafe.infrastructure.remote.api.FuelApiService
 import es.joshluq.kmsafe.infrastructure.remote.api.RentingApiService
 import es.joshluq.kmsafe.infrastructure.remote.api.StorageApiService
 import es.joshluq.kmsafe.infrastructure.remote.api.BillingApiService
+import es.joshluq.kmsafe.infrastructure.remote.api.NotificationsApiService
 import es.joshluq.kmsafe.infrastructure.remote.api.ReceiptsApiService
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
@@ -23,6 +24,7 @@ import retrofit2.Retrofit
 import retrofit2.converter.jackson.JacksonConverterFactory
 import java.util.concurrent.TimeUnit
 import javax.inject.Singleton
+import kotlin.jvm.java
 
 /**
  * Hilt module for providing network-related dependencies.
@@ -147,5 +149,11 @@ object NetworkModule {
     @Singleton
     fun provideBillingApiService(@Authenticated retrofit: Retrofit): BillingApiService {
         return retrofit.create(BillingApiService::class.java)
+    }
+
+    @Provides
+    @Singleton
+    fun provideNotificationsApiService(@Authenticated retrofit: Retrofit): NotificationsApiService {
+        return retrofit.create(NotificationsApiService::class.java)
     }
 }

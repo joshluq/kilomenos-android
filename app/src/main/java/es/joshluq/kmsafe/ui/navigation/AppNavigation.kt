@@ -33,6 +33,8 @@ import es.joshluq.kmsafe.feature.fleet.setup.SetupWizardRoute
 import es.joshluq.kmsafe.feature.fleet.setup.WelcomeDiscoveryScreen
 import es.joshluq.kmsafe.feature.fleet.vehicles.VehicleListRoute
 import es.joshluq.kmsafe.feature.history.detail.RecordDetailRoute
+import es.joshluq.kmsafe.feature.notifications.ui.list.NotificationsListRoute
+import es.joshluq.kmsafe.feature.notifications.ui.detail.NotificationDetailRoute
 import es.joshluq.kmsafe.feature.premium.paywall.PremiumPaywallRoute
 import es.joshluq.kmsafe.feature.profile.preferences.PreferencesRoute
 import es.joshluq.kmsafe.ui.common.cropper.CropImageScreen
@@ -75,7 +77,7 @@ fun AppNavigation(
     LaunchedEffect(deepLinkDestination) {
         deepLinkDestination?.let { target ->
             when (target) {
-                is Destination.Dashboard, is Destination.Expenses -> {
+                is Destination.Dashboard, is Destination.Expenses, Destination.ProjectionAnalysis -> {
                     if (backStack.contains(Destination.Dashboard)) {
                         while (backStack.size > 1 && backStack.last() != Destination.Dashboard) {
                             backStack.removeAt(backStack.lastIndex)
@@ -267,6 +269,12 @@ fun AppNavigation(
                                     },
                                     onNavigateToEditContract = { vehicleId ->
                                         onNavigate(Destination.EditContract(vehicleId))
+                                    },
+                                    onNavigateToNotificationsList = {
+                                        onNavigate(Destination.NotificationsList)
+                                    },
+                                    onNavigateToNotificationDetail = { notificationId ->
+                                        onNavigate(Destination.NotificationDetail(notificationId))
                                     }
                                 )
                             }
@@ -404,10 +412,62 @@ fun AppNavigation(
                         )
                     }
 
+                    Destination.NotificationsList -> NavEntry(key) {
+                        NotificationsListRoute(
+                            onNavigateBack = onBack,
+                            onNavigateToDetail = { notificationId ->
+                                onNavigate(Destination.NotificationDetail(notificationId))
+                            },
+                            onNavigateToDeepLink = { uri ->
+                                when {
+                                    uri.contains("projection") -> {
+                                        resultStore.setResult("deep_link_destination", Destination.ProjectionAnalysis)
+                                    }
+                                    uri.contains("premium") -> onNavigate(Destination.PremiumPaywall(source = "notification"))
+                                    else -> { /* no-op or external intent */ }
+                                }
+                            },
+                            onNavigateToPaywall = {
+                                onNavigate(Destination.PremiumPaywall(source = "notification_list"))
+                            },
+                            onNavigateToProjection = {
+                                resultStore.setResult("deep_link_destination", Destination.ProjectionAnalysis)
+                            },
+                            onNavigateToEditContract = { vehicleId ->
+                                if (vehicleId.isNotBlank()) {
+                                    onNavigate(Destination.EditContract(vehicleId))
+                                } else {
+                                    onNavigate(Destination.SetupWizard)
+                                }
+                            }
+                        )
+                    }
+
+                    is Destination.NotificationDetail -> NavEntry(key) {
+                        NotificationDetailRoute(
+                            notificationId = key.notificationId,
+                            onNavigateBack = onBack,
+                            onNavigateToDeepLink = { uri ->
+                                when {
+                                    uri.contains("projection") -> {
+                                        resultStore.setResult("deep_link_destination", Destination.ProjectionAnalysis)
+                                    }
+                                    uri.contains("premium") -> onNavigate(Destination.PremiumPaywall(source = "notification"))
+                                    else -> { /* no-op or external intent */ }
+                                }
+                            }
+                        )
+                    }
+
+                    Destination.ProjectionAnalysis -> NavEntry(key) {
+                        LaunchedEffect(Unit) {
+                            resultStore.setResult("deep_link_destination", Destination.ProjectionAnalysis)
+                        }
+                    }
+
                     Destination.Overview,
                     Destination.History,
                     Destination.Profile,
-                    Destination.ProjectionAnalysis,
                     is Destination.Expenses -> NavEntry(key) {
                         // Handled internally by DashboardNavigation
                     }

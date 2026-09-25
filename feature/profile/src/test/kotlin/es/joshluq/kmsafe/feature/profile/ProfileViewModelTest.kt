@@ -116,6 +116,7 @@ class ProfileViewModelTest {
         viewModel.sendEvent(Event.OnPreferencesClicked)
         viewModel.sendEvent(Event.OnUpgradeClicked)
         viewModel.sendEvent(Event.OnWelcomeGuideClicked)
+        viewModel.sendEvent(Event.OnNotificationsClicked)
 
         testScheduler.advanceUntilIdle()
 
@@ -124,7 +125,8 @@ class ProfileViewModelTest {
                 Effect.NavigateToVehicles,
                 Effect.NavigateToPreferences,
                 Effect.NavigateToPremiumPaywall,
-                Effect.NavigateToWelcomeDiscovery
+                Effect.NavigateToWelcomeDiscovery,
+                Effect.NavigateToNotificationsList
             ),
             effects
         )

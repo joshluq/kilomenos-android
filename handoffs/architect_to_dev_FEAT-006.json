@@ -1,0 +1,64 @@
+{
+  "handoff_id": "HANDOFF-ARCH-DEV-FEAT-006",
+  "schema_version": "1.0.0",
+  "timestamp": "2026-09-24T10:05:00Z",
+  "sender": {
+    "role": "Software Architect",
+    "agent_id": "software_architect"
+  },
+  "recipient": {
+    "role": "Senior Android Developer",
+    "agent_id": "senior_android_developer"
+  },
+  "feature_id": "FEAT-006",
+  "po_handoff_ref": "HANDOFF-PO-ARCH-FEAT-006",
+  "adr_path": "docs/adr/ADR-FEAT-006.md",
+  "component_spec_path": "docs/specs/COMP-SPEC-FEAT-006.md",
+  "remediation_cycle": 0,
+  "architecture_pattern": "CLEAN_ARCHITECTURE",
+  "module_targets": [
+    ":feature:overview",
+    ":core:infrastructure"
+  ],
+  "component_contracts": [
+    {
+      "component_name": "OverviewViewModel",
+      "package_name": "es.joshluq.kmsafe.feature.overview",
+      "layer": "VIEWMODEL",
+      "state_models": ["State"],
+      "action_events": ["OnNotificationPillClicked"],
+      "exposed_flows": ["StateFlow<State>", "SharedFlow<Effect>"]
+    },
+    {
+      "component_name": "NotificationRepositoryImpl",
+      "package_name": "es.joshluq.kmsafe.infrastructure.repository",
+      "layer": "DATA",
+      "state_models": ["Notification"],
+      "action_events": ["markAsRead"],
+      "exposed_flows": []
+    }
+  ],
+  "file_manifest_plan": [
+    {
+      "target_path": "feature/overview/src/main/java/es/joshluq/kmsafe/feature/overview/OverviewViewModel.kt",
+      "action": "MODIFY",
+      "purpose": "Eliminate fallback to read notifications, implement immediate optimistic UI navigation and async background markAsRead"
+    },
+    {
+      "target_path": "core/infrastructure/src/main/java/es/joshluq/kmsafe/infrastructure/repository/NotificationRepositoryImpl.kt",
+      "action": "MODIFY",
+      "purpose": "Update Room syncStatus to SYNCED upon successful HTTP 200 response"
+    },
+    {
+      "target_path": "feature/overview/src/test/java/es/joshluq/kmsafe/feature/overview/OverviewViewModelTest.kt",
+      "action": "MODIFY",
+      "purpose": "Verify activeNotification is null when no unread notifications exist, and verify immediate navigation effect emission on pill click"
+    },
+    {
+      "target_path": "core/infrastructure/src/test/java/es/joshluq/kmsafe/infrastructure/repository/NotificationRepositoryImplTest.kt",
+      "action": "MODIFY",
+      "purpose": "Verify markAsRead updates syncStatus to SYNCED when remote API succeeds"
+    }
+  ],
+  "dependencies": []
+}

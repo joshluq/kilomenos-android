@@ -1,0 +1,75 @@
+{
+  "handoff_id": "HANDOFF-DEV-QA-FEAT-004",
+  "schema_version": "1.0.0",
+  "timestamp": "2026-09-23T19:50:00Z",
+  "sender": {
+    "role": "Senior Android Developer",
+    "agent_id": "senior_android_developer"
+  },
+  "recipient": {
+    "role": "QA/Testing Engineer",
+    "agent_id": "qa_testing_engineer"
+  },
+  "feature_id": "FEAT-004",
+  "architect_handoff_ref": "HANDOFF-ARCH-DEV-FEAT-004",
+  "remediation_cycle": 0,
+  "implementation_manifest": {
+    "module": ":feature:overview",
+    "entry_point_composable": "OverviewScreen",
+    "viewmodel_class": "OverviewViewModel",
+    "repository_class": "NotificationRepositoryImpl"
+  },
+  "code_changes": [
+    {
+      "file_path": "feature/overview/src/main/java/es/joshluq/kmsafe/feature/overview/OverviewViewModel.kt",
+      "action": "MODIFIED",
+      "language": "kotlin",
+      "line_count": 692
+    },
+    {
+      "file_path": "core/infrastructure/src/main/java/es/joshluq/kmsafe/infrastructure/local/entity/NotificationEntity.kt",
+      "action": "MODIFIED",
+      "language": "kotlin",
+      "line_count": 105
+    },
+    {
+      "file_path": "core/infrastructure/src/main/java/es/joshluq/kmsafe/infrastructure/local/dao/NotificationDao.kt",
+      "action": "MODIFIED",
+      "language": "kotlin",
+      "line_count": 55
+    },
+    {
+      "file_path": "core/infrastructure/src/main/java/es/joshluq/kmsafe/infrastructure/repository/NotificationRepositoryImpl.kt",
+      "action": "MODIFIED",
+      "language": "kotlin",
+      "line_count": 182
+    },
+    {
+      "file_path": "core/infrastructure/src/main/java/es/joshluq/kmsafe/infrastructure/notifications/KmFirebaseMessagingService.kt",
+      "action": "MODIFIED",
+      "language": "kotlin",
+      "line_count": 86
+    }
+  ],
+  "developer_test_summary": {
+    "unit_tests_run": 42,
+    "unit_tests_passed": 42,
+    "unit_tests_failed": 0,
+    "test_frameworks_used": [
+      "JUnit4",
+      "MockK",
+      "Turbine",
+      "kotlinx.coroutines.test"
+    ],
+    "test_files": [
+      "core/infrastructure/src/test/kotlin/es/joshluq/kmsafe/infrastructure/repository/NotificationRepositoryImplTest.kt",
+      "feature/overview/src/test/kotlin/es/joshluq/kmsafe/feature/overview/OverviewViewModelTest.kt",
+      "feature/notifications/src/test/kotlin/es/joshluq/kmsafe/feature/notifications/NotificationsListViewModelTest.kt"
+    ]
+  },
+  "lint_and_sanity": {
+    "compilation_clean": true,
+    "ktlint_clean": true,
+    "detekt_clean": true
+  }
+}

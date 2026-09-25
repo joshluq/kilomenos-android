@@ -60,7 +60,7 @@
     },
     "feature_id": {
       "type": "string",
-      "pattern": "^FEAT-[0-9]{3,}$"
+      "pattern": "^(KILOMENOS-[0-9]+|FEAT-[0-9]{3,})$"
     },
     "dev_handoff_ref": {
       "type": "string",

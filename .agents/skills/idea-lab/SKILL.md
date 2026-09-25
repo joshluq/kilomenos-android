@@ -1,9 +1,7 @@
 ---
 name: idea-lab
-description: >-
-  Product incubator, competitive benchmarking, and value hypothesis generator for KmSafe. Analyzes fleet and driver psychology, references industry-leading apps (Tesla, Fuelio, Drivvo, N26, Revolut), and scores feature opportunities via the ICE/RICE framework before code is written.
+description: Product incubator, competitive benchmarking, and value hypothesis generator for KmSafe. Analyzes fleet and driver psychology, references industry-leading apps (Tesla, Fuelio, Drivvo, N26, Revolut), and scores feature opportunities via the ICE/RICE framework before code is written.
 ---
-
 # Idea Lab -- Product Incubator & Competitive Benchmarking (KmSafe)
 
 This command operates as a **product incubator and strategic innovation lab**. Its mission is to explore ideas, analyze market benchmarks, and design high-impact psychological and business solutions for drivers and fleet operators, **before writing a single line of code**.

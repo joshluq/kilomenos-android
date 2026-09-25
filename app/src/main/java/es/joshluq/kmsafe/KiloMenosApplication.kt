@@ -11,6 +11,7 @@ import es.joshluq.foundationkit.log.LoggerKit
 import es.joshluq.kmsafe.data.worker.ReminderWorker
 import es.joshluq.kmsafe.domain.usecase.GetPreferencesUseCase
 import es.joshluq.kmsafe.infrastructure.repository.tracking.AutoTrackingManager
+import es.joshluq.kmsafe.infrastructure.worker.SyncNotificationsWorker
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -52,6 +53,8 @@ class KiloMenosApplication : Application(), Configuration.Provider {
             ExistingPeriodicWorkPolicy.KEEP,
             workRequest
         )
+
+        SyncNotificationsWorker.schedule(this)
     }
 
     private fun initializeAutoTracking() {

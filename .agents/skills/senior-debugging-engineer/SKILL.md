@@ -1,9 +1,7 @@
 ---
 name: senior-debugging-engineer
-description: >-
-  Investigates and diagnoses complex bugs in production environments. Systematically performs root cause analysis, evaluates edge cases, and provides robust, production-ready fixes. Use this skill when troubleshooting crashes, unexpected behaviors, regressions, concurrency issues, or critical production defects.
+description: Investigates and diagnoses complex bugs in production environments. Systematically performs root cause analysis, evaluates edge cases, and provides robust, production-ready fixes. Use this skill when troubleshooting crashes, unexpected behaviors, regressions, concurrency issues, or critical production defects.
 ---
-
 # Senior Debugging Engineer
 
 This skill provides a systematic, production-grade methodology to investigate, diagnose, and resolve defects in software systems. It enforces rigorous engineering discipline—rejecting quick cosmetic patches in favor of definitive root cause resolution and resilient code design.
@@ -77,3 +75,36 @@ When responding with this skill, structure the analysis using the following sect
 
 ### 6. Prevention & Verification Plan
 - Specific unit test scenarios and verification steps to validate the fix and prevent future regressions.
+
+---
+
+## Automated Diagnostic Tooling (`crash_listener.py`)
+
+This skill includes an automated diagnostic tool: `scripts/crash_listener.py`. It attaches directly to ADB logcat streams or log files to isolate root causes and produce SDD-compliant defect tickets ready for `/fix-bug`.
+
+### Usage Commands:
+
+1. **Dump Recent Crashes from Connected Device / Emulator**:
+   ```bash
+   python skills/senior-debugging-engineer/scripts/crash_listener.py --dump --package es.joshluq.kmsafe
+   ```
+
+2. **Stream Live Crashes in Real-Time (Daemon Mode)**:
+   ```bash
+   python skills/senior-debugging-engineer/scripts/crash_listener.py --live --timeout 45 --package es.joshluq.kmsafe
+   ```
+
+3. **Parse an Offline Logcat File and Export Defect Ticket**:
+   ```bash
+   python skills/senior-debugging-engineer/scripts/crash_listener.py --file logs/crash.log --output-json defect.json --output-md CRASH-REPORT.md
+   ```
+
+4. **Simulate & Validate Diagnostic Engine (CI / Test Mode)**:
+   ```bash
+   python skills/senior-debugging-engineer/scripts/crash_listener.py --simulate compose --package es.joshluq.kmsafe
+   ```
+
+### Bridge to `/fix-bug`:
+When a crash is captured, pass the generated defect ticket or root-cause line reference (`OverviewCard.kt:64`) directly to the `/fix-bug` command:
+> `/fix-bug Reproduce and fix crash at OverviewCard.kt:64 from defect.json`
+

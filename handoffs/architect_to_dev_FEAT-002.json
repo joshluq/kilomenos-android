@@ -1,0 +1,201 @@
+{
+  "handoff_id": "HANDOFF-ARCH-DEV-FEAT-002",
+  "schema_version": "1.0.0",
+  "timestamp": "2026-09-22T16:38:00Z",
+  "sender": {
+    "role": "Software Architect",
+    "agent_id": "software_architect"
+  },
+  "recipient": {
+    "role": "Senior Android Developer",
+    "agent_id": "senior_android_developer"
+  },
+  "feature_id": "FEAT-002",
+  "po_handoff_ref": "HANDOFF-PO-ARCH-FEAT-002",
+  "adr_path": "docs/adr/ADR-FEAT-002.md",
+  "component_spec_path": "docs/specs/COMP-SPEC-FEAT-002.md",
+  "remediation_cycle": 0,
+  "architecture_pattern": "MVI",
+  "module_targets": [
+    ":feature:notifications",
+    ":core:domain",
+    ":core:infrastructure",
+    ":core:navigation",
+    ":feature:overview"
+  ],
+  "component_contracts": [
+    {
+      "component_name": "NotificationPill",
+      "package_name": "es.joshluq.kmsafe.feature.notifications.components",
+      "layer": "UI",
+      "state_models": [
+        "Notification"
+      ],
+      "action_events": [
+        "onPillClick",
+        "onViewAllClick"
+      ],
+      "exposed_flows": []
+    },
+    {
+      "component_name": "NotificationsListViewModel",
+      "package_name": "es.joshluq.kmsafe.feature.notifications.ui.list",
+      "layer": "VIEWMODEL",
+      "state_models": [
+        "NotificationsListUiState"
+      ],
+      "action_events": [
+        "NotificationsListUiAction.Refresh",
+        "NotificationsListUiAction.TopicSelected",
+        "NotificationsListUiAction.NotificationClicked",
+        "NotificationsListUiAction.MarkAllAsReadClicked",
+        "NotificationsListUiAction.DismissError"
+      ],
+      "exposed_flows": [
+        "StateFlow<NotificationsListUiState>",
+        "Flow<NotificationsListEffect>"
+      ]
+    },
+    {
+      "component_name": "NotificationDetailViewModel",
+      "package_name": "es.joshluq.kmsafe.feature.notifications.ui.detail",
+      "layer": "VIEWMODEL",
+      "state_models": [
+        "NotificationDetailUiState"
+      ],
+      "action_events": [
+        "NotificationDetailUiAction.DismissNotification",
+        "NotificationDetailUiAction.PrimaryActionClicked",
+        "NotificationDetailUiAction.NavigateBackClicked"
+      ],
+      "exposed_flows": [
+        "StateFlow<NotificationDetailUiState>",
+        "Flow<NotificationDetailEffect>"
+      ]
+    },
+    {
+      "component_name": "ObserveActiveNotificationsUseCase",
+      "package_name": "es.joshluq.kmsafe.domain.notifications.usecase",
+      "layer": "DOMAIN",
+      "state_models": [
+        "Notification",
+        "NotificationTopic"
+      ],
+      "action_events": [],
+      "exposed_flows": [
+        "Flow<List<Notification>>"
+      ]
+    },
+    {
+      "component_name": "SyncEntitlementsFromPushUseCase",
+      "package_name": "es.joshluq.kmsafe.domain.notifications.usecase",
+      "layer": "DOMAIN",
+      "state_models": [
+        "Notification"
+      ],
+      "action_events": [],
+      "exposed_flows": []
+    },
+    {
+      "component_name": "NotificationRepository",
+      "package_name": "es.joshluq.kmsafe.domain.notifications.repository",
+      "layer": "DATA",
+      "state_models": [
+        "Notification"
+      ],
+      "action_events": [],
+      "exposed_flows": [
+        "Flow<List<Notification>>",
+        "Flow<Int>"
+      ]
+    }
+  ],
+  "file_manifest_plan": [
+    {
+      "target_path": "feature/notifications/build.gradle.kts",
+      "action": "CREATE",
+      "purpose": "Configuración del módulo Gradle para :feature:notifications"
+    },
+    {
+      "target_path": "core/domain/src/main/java/es/joshluq/kmsafe/domain/notifications/model/Notification.kt",
+      "action": "CREATE",
+      "purpose": "Modelo de dominio inmutable para notificaciones, topics y prioridades"
+    },
+    {
+      "target_path": "core/domain/src/main/java/es/joshluq/kmsafe/domain/notifications/repository/NotificationRepository.kt",
+      "action": "CREATE",
+      "purpose": "Interfaz agnóstica de repositorio en el dominio"
+    },
+    {
+      "target_path": "core/domain/src/main/java/es/joshluq/kmsafe/domain/notifications/usecase/ObserveActiveNotificationsUseCase.kt",
+      "action": "CREATE",
+      "purpose": "Caso de uso para observar el flujo de notificaciones activas"
+    },
+    {
+      "target_path": "core/domain/src/main/java/es/joshluq/kmsafe/domain/notifications/usecase/MarkNotificationAsReadUseCase.kt",
+      "action": "CREATE",
+      "purpose": "Caso de uso para marcar notificaciones como leídas"
+    },
+    {
+      "target_path": "core/domain/src/main/java/es/joshluq/kmsafe/domain/notifications/usecase/PublishNotificationUseCase.kt",
+      "action": "CREATE",
+      "purpose": "Caso de uso para que módulos funcionales publiquen avisos de forma agnóstica"
+    },
+    {
+      "target_path": "core/domain/src/main/java/es/joshluq/kmsafe/domain/notifications/usecase/SyncEntitlementsFromPushUseCase.kt",
+      "action": "CREATE",
+      "purpose": "Caso de uso para refresco reactivo de entitlements y publicación de alerta de downgrade"
+    },
+    {
+      "target_path": "feature/notifications/src/main/java/es/joshluq/kmsafe/feature/notifications/components/NotificationPill.kt",
+      "action": "CREATE",
+      "purpose": "Composable píldora monocanal para la sección superior de OverviewScreen"
+    },
+    {
+      "target_path": "feature/notifications/src/main/java/es/joshluq/kmsafe/feature/notifications/ui/list/NotificationsListRoute.kt",
+      "action": "CREATE",
+      "purpose": "Coordinador de navegación para la bandeja de notificaciones"
+    },
+    {
+      "target_path": "feature/notifications/src/main/java/es/joshluq/kmsafe/feature/notifications/ui/list/NotificationsListScreen.kt",
+      "action": "CREATE",
+      "purpose": "UI pura de 4 capas visuales para la bandeja de notificaciones"
+    },
+    {
+      "target_path": "feature/notifications/src/main/java/es/joshluq/kmsafe/feature/notifications/ui/list/NotificationsListViewModel.kt",
+      "action": "CREATE",
+      "purpose": "ViewModel MVI para la bandeja de notificaciones"
+    },
+    {
+      "target_path": "feature/notifications/src/main/java/es/joshluq/kmsafe/feature/notifications/ui/detail/NotificationDetailRoute.kt",
+      "action": "CREATE",
+      "purpose": "Coordinador de navegación para el detalle de la notificación"
+    },
+    {
+      "target_path": "feature/notifications/src/main/java/es/joshluq/kmsafe/feature/notifications/ui/detail/NotificationDetailScreen.kt",
+      "action": "CREATE",
+      "purpose": "UI pura para el detalle de la notificación con auto-mark read"
+    },
+    {
+      "target_path": "feature/notifications/src/main/java/es/joshluq/kmsafe/feature/notifications/ui/detail/NotificationDetailViewModel.kt",
+      "action": "CREATE",
+      "purpose": "ViewModel MVI entity-scoped para el detalle de notificación"
+    },
+    {
+      "target_path": "core/infrastructure/src/main/java/es/joshluq/kmsafe/infrastructure/notifications/KmFirebaseMessagingService.kt",
+      "action": "CREATE",
+      "purpose": "Servicio FCM para recepción de push y disparo de sincronización de entitlements"
+    },
+    {
+      "target_path": "feature/overview/src/main/java/es/joshluq/kmsafe/feature/overview/OverviewScreen.kt",
+      "action": "MODIFY",
+      "purpose": "Integración de NotificationPill en la primera sección manteniendo intacto FloatingTelemetryPill"
+    }
+  ],
+  "dependencies": [
+    {
+      "coordinate": "com.google.firebase:firebase-messaging",
+      "scope": "implementation"
+    }
+  ]
+}

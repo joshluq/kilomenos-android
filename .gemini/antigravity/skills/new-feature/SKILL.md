@@ -1,59 +1,81 @@
 ---
 name: new-feature
-description: Modular design and implementation pipeline for new features in KmSafe. Guides feature creation step-by-step strictly following AGENTS.md: 4-Layer visual architecture, Route/Screen separation, UseCase First mandate in :core:domain, CanvasKit tokens, and unit tests with Turbine.
+description: Platform-agnostic, spec-driven feature construction pipeline. Coordinates ingestion, OpenSpec proposals, HITL approval gates, and delegates implementation to the installed platform skills.
 ---
-# New Feature -- Modular Construction Pipeline (KmSafe)
+# New Feature -- Spec-Driven Multi-Stage Construction Pipeline
 
-This command executes the **rigorous specification, design, and implementation pipeline for new features** in KmSafe, ensuring strict adherence to AGENTS.md and preventing architectural drift.
-
-It coordinates ndroid-staff-engineer-compose, android-testing, and .agents/templates/component-spec-template.md.
+This skill executes the **rigorous specification, design, and implementation pipeline for new features** across KiloMenos platforms (Android, Supabase Backend, Web Portals). It enforces strict adherence to `AGENTS.md` and prevents architectural drift by separating concerns across specialized lifecycle roles.
 
 ---
 
-## When to Use This Command
-- To create a new screen, tab, modal, or user flow inside a :feature:* module.
-- To implement a new business process with its corresponding domain UseCase, MVI presentation layer, and unit tests.
+## Architecture & Platform Delegation Matrix
+
+`new-feature` acts as the **universal workflow orchestrator**. It standardizes requirements, proposals, and quality gates, while **delegating platform-specific architectural patterns and rules to the installed platform skills**:
+
+| Platform Target | Active Profile | Platform Architecture Skills | Platform Quality & Testing Skills |
+|---|---|---|---|
+| **Android (Mobile)** | `android` | `android-staff-engineer-compose` (FoundationKit, MVI, Route/Screen, Navigation 3, CanvasKit) | `android-testing` (Turbine, MockK, Compose rules), `android-quality` (`:app:assembleDevDebug`, lint, logcat) |
+| **Backend (Cloud / DB)** | `backend` | `supabase-db-triage` (PostgreSQL schemas, RLS, transactional migrations), `supabase-edge-functions` (Deno, JWT, FCM push) | `senior-debugging-engineer` (Service logs, Postgres error triage) |
+| **Web (SSG / Portals)** | `web` | `web-lighthouse-seo` (Astro SSG, Tailwind, WCAG 2.1 AA accessibility), `legal-compliance-audit` (GDPR, Play Store deletion) | `web-lighthouse-seo` (Lighthouse performance/SEO >= 90) |
 
 ---
 
 ## Step-by-Step Execution Protocol
 
-When the user invokes /new-feature [feature name or brief description]:
+When a new feature request is initiated via chat command (e.g., `/new-feature [name]` or `"Refina <ticket>"`):
 
-### Phase 1: Component Specification (Component Spec)
-Generate the technical specification following .agents/templates/component-spec-template.md:
-1. **4-Layer Visual Mapping**:
-   - *Layer 1 (The Pulse)*: Glanceable hero metric (< 2s scan).
-   - *Layer 2 (Decision Radar)*: Actionable insight cards and comparison deltas.
-   - *Layer 3 (Zero-Friction Action)*: 1-Tap preset chips, auditable FAB, quick forms.
-   - *Layer 4 (Diagnostic Feed)*: Contextual operational cycle history.
-2. **MVI Contracts**:
-   - UiState: Immutable Kotlin data class marked with @Immutable.
-   - UiAction: Sealed interface capturing all unidirectional user intents.
-   - UiEffect: (Optional) Single-shot side effect channel (navigation, snackbars).
+### Phase 1: Requirements Ingestion & OpenSpec Proposal Formulation
+1. **Ticket Ingestion**: If linked to a Jira issue, retrieve requirements via `atlassian-bridge`:
+   ```bash
+   python scripts/atlassian_bridge.py fetch <TICKET_KEY> --scaffold-openspec
+   ```
+2. **OpenSpec Proposal Creation**:
+   - Initialize proposal directory: `openspec/changes/<CHANGE_ID>/` via `python scripts/openspec_cli.py propose <CHANGE_ID> "<Title>"`.
+   - **Acceptance Criteria (AC-xx)**: Formulate testable criteria strictly using **Given / When / Then** syntax.
+   - **Technical Design & Contracts**: Define public interfaces and cross-platform data payloads (e.g., JSON schemas for FCM push, REST DTOs, or database schema deltas in `specs/delta_spec.md`).
 
-### Phase 2: "UseCase First" Mandate (Domain Layer)
-1. Define or identify the dedicated UseCase in :core:domain (pluginkit.jvm.library).
-2. **Golden Rule**: ViewModels **MUST NEVER** inject *Repository interfaces directly. All data access and business processes flow through domain UseCases (FlowUseCase or UseCase from FoundationKit).
-3. Ensure domain purity: strictly zero Android framework imports (ndroid.*) in :core:domain.
+### Phase 2: Human-in-the-Loop (HITL) Review Gate (MANDATORY HALT)
+1. **Publish Refinement**: Post the technical proposal and acceptance criteria to Jira:
+   ```bash
+   python scripts/atlassian_bridge.py refine <TICKET_KEY> openspec/changes/<CHANGE_ID>/proposal.md --status "In Review"
+   ```
+2. **Strict Negative Constraint (Zero Code Before Approval)**:
+   - **HALT EXECUTION IMMEDIATELY**.
+   - Present a concise proposal summary to the user in chat.
+   - **DO NOT create, modify, or delete any production code files** during this phase.
+   - Await the user's explicit confirmation (`"Aprobado"` or `"Implementa <TICKET_KEY>"`).
 
-### Phase 3: Presentation Implementation (Coordinator / Route)
-1. **[Feature]Route.kt**:
-   - Injects hiltViewModel(key = scopingKey) with deterministic entity or session keys for Navigation 3 scoping.
-   - Collects UI state using collectAsStateWithLifecycle().
-   - Coordinates navigation callbacks and savedStateHandle result handling.
-2. **[Feature]Screen.kt**:
-   - Pure, stateless Composable function accepting UiState and onAction lambda.
-   - Built exclusively with CanvasKitTheme tokens (typography, colors, spacing).
-   - Minimum 48dp touch targets on interactive elements and mandatory contentDescription.
-   - Mandatory @Preview composables for Loading, Content, and Error states.
-3. **[Feature]ViewModel.kt**:
-   - MVI state reducer exposing StateFlow<UiState>.
-   - Enforces main-safety using injected DispatcherProvider.
-   - **Zero business calculations**: all metrics are pre-computed by domain entities or UseCases.
+### Phase 3: Domain & Business Logic Implementation
+Upon receiving user approval, transition the ticket to in-progress (`python scripts/atlassian_bridge.py transition <TICKET_KEY> "En curso"`):
+1. **Apply Platform-Specific Domain Rules**:
+   - **Android**: Consult `android-staff-engineer-compose`. Implement domain UseCases in `:core:domain` (`UseCase<Input, Output>` or `FlowUseCase<Input, Output>`). Ensure domain purity (zero Android framework dependencies). Bind implementations in `:core:infrastructure` `UseCaseModule.kt`.
+   - **Backend**: Consult `supabase-db-triage`. Write transactional SQL migrations (`BEGIN ... COMMIT`) with mandatory Row Level Security (RLS) policies. Implement Edge Function business logic under Deno/TypeScript.
+   - **Web**: Consult `web-lighthouse-seo` and `legal-compliance-audit`. Define typed content collections (Markdown/MDX) and legal data policies.
 
-### Phase 4: Automated Testing
-1. Generate [Feature]ViewModelTest.kt:
-   - State flow emissions asserted with **Turbine** (iewModel.uiState.test { ... }).
-   - Mock only the injected UseCases with **MockK**.
-   - Use StandardTestDispatcher for deterministic coroutine execution.
+### Phase 4: Presentation / Component / API Implementation
+1. **Apply Platform-Specific Presentation Rules**:
+   - **Android**: Consult `android-staff-engineer-compose`.
+     * Create MVI contracts (`FeatureState : UiState`, `FeatureEvent : UiEvent`, `FeatureEffect : UiEffect`).
+     * ViewModel extends `ScreenViewModel<State, Event, Effect>`.
+     * Implement stateless `Screen` composable with `CanvasKitTheme` tokens and 4-Layer Visual Architecture.
+     * Enforce the **Navigation 3 Triad**: update `:core:navigation`, feature route, and `:app:AppNavigation.kt`.
+   - **Backend**: Consult `supabase-edge-functions`. Expose secure serverless HTTP handlers, enforce CORS headers, verify Supabase JWT auth, and integrate Firebase Admin SDK for push notifications.
+   - **Web**: Consult `web-lighthouse-seo`. Build semantic Astro components with Tailwind CSS, ensuring responsive layouts and zero unnecessary client JavaScript.
+
+### Phase 5: Automated Testing
+1. **Apply Platform-Specific Test Suites**:
+   - **Android**: Consult `android-testing`. Author unit tests with **Turbine** and **MockK** (`[Feature]ViewModelTest.kt`, `[UseCase]Test.kt`). Test UI composables with `ComposeContentTestRule`.
+   - **Backend**: Run Deno unit tests for Edge Functions and execute pgTAP / PostgREST integration queries verifying RLS permissions.
+   - **Web**: Run static linting, broken link checks, and accessibility assertions.
+
+### Phase 6: Quality Gate Audit & Archival
+1. **Execute Full Build / Compilation Verification**:
+   - **Android**: Consult `android-quality`. Run `./gradlew :app:assembleDevDebug` to guarantee that all modules, Hilt bindings, and routes compile cleanly into the APK with zero errors. Run `sanity_check.py`.
+   - **Backend**: Execute `deno check` and dry-run database migrations.
+   - **Web**: Execute `npm run build` and run Lighthouse CI audits (guaranteeing >= 90 across Performance, Accessibility, Best Practices, and SEO).
+2. **Archive OpenSpec & Finalize Ticket**:
+   ```bash
+   python scripts/openspec_cli.py archive <CHANGE_ID>
+   python scripts/atlassian_bridge.py comment <TICKET_KEY> "Feature implementation completed and 100% verified."
+   python scripts/atlassian_bridge.py transition <TICKET_KEY> "Listo"
+   ```

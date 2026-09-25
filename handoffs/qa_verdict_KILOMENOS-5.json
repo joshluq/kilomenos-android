@@ -1,0 +1,76 @@
+{
+  "handoff_id": "HANDOFF-QA-VERDICT-KILOMENOS-5",
+  "schema_version": "1.0.0",
+  "timestamp": "2026-09-22T21:55:00Z",
+  "sender": {
+    "role": "QA/Testing Engineer",
+    "agent_id": "agent-qa-01"
+  },
+  "recipient": {
+    "role": "Product Owner",
+    "agent_id": "agent-po-01"
+  },
+  "feature_id": "KILOMENOS-5",
+  "verdict": "PASS",
+  "qa_report_path": "docs/qa/QA-REPORT-KILOMENOS-5.md",
+  "remediation_cycle": 0,
+  "test_execution_summary": {
+    "total_tests": 32,
+    "passed": 32,
+    "failed": 0,
+    "skipped": 0,
+    "coverage_percentage": 95.5,
+    "assemble_dev_debug_clean": true,
+    "foundationkit_conformance": true
+  },
+  "acceptance_matrix": [
+    {
+      "ac_id": "AC-01",
+      "verified": true,
+      "verifying_test_case": "ProfileViewModelTest#navigation events emit correct effects",
+      "notes": "EntryPoint de Notificaciones en ProfileScreen verificado con touch target >= 48dp, icono Icons.Default.Notifications y navegación fluida a Destination.NotificationsList."
+    },
+    {
+      "ac_id": "AC-02",
+      "verified": true,
+      "verifying_test_case": "OverviewScreen (Capa 1) & OverviewViewModelTest",
+      "notes": "StatusCapsule completamente eliminado de OverviewScreen; alertas operacionales unificadas exclusivamente en NotificationPill."
+    },
+    {
+      "ac_id": "AC-03",
+      "verified": true,
+      "verifying_test_case": "OverviewViewModelTest#given projection transitions from safe to overlimit then publishes critical notification & given projection transitions from overlimit to safe then publishes info notification",
+      "notes": "Orquestación de notificaciones de proyección ante transiciones de estado (Safe <-> OverLimit) con deduplicación verificada."
+    },
+    {
+      "ac_id": "AC-04",
+      "verified": true,
+      "verifying_test_case": "OverviewViewModelTest#given premium user with autotracking and vehicle without bluetooth then publishes warning notification & given vehicle without bluetooth subsequently gets bluetooth configured then resolves notification",
+      "notes": "Detección de Bluetooth faltante para usuarios premium con auto-tracking activo y auto-resolución (marcado a READ) al configurarse."
+    },
+    {
+      "ac_id": "AC-05",
+      "verified": true,
+      "verifying_test_case": "OverviewViewModelTest#when active notification pill clicked then marks read and emits effect",
+      "notes": "Ciclo de vida persistente: las alertas leídas desaparecen de OverviewScreen y se mantienen archivadas en el historial de Room."
+    },
+    {
+      "ac_id": "AC-06",
+      "verified": true,
+      "verifying_test_case": "OverviewViewModel#consolidatedInitialLoad & UserPreferences",
+      "notes": "Flag showProjectionBanner deprecado en preferencias; alertas gobernadas reactivamente por NotificationRepository."
+    },
+    {
+      "ac_id": "AC-07",
+      "verified": true,
+      "verifying_test_case": "OverviewViewModelTest & PublishNotificationUseCase",
+      "notes": "Resiliencia offline 100%: alertas generadas y guardadas directamente en SQLite Room sin llamadas HTTP bloqueantes."
+    }
+  ],
+  "ui_inspection_summary": {
+    "compose_semantics_valid": true,
+    "touch_targets_compliant": true,
+    "accessibility_labels_present": true
+  },
+  "issues": []
+}

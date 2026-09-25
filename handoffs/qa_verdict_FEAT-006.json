@@ -1,0 +1,46 @@
+{
+  "handoff_id": "HANDOFF-QA-VERDICT-FEAT-006",
+  "schema_version": "1.0.0",
+  "timestamp": "2026-09-24T10:20:00Z",
+  "sender": {
+    "role": "QA/Testing Engineer",
+    "agent_id": "qa_testing_engineer"
+  },
+  "recipient": {
+    "role": "Product Owner",
+    "agent_id": "product_owner"
+  },
+  "feature_id": "FEAT-006",
+  "dev_handoff_ref": "HANDOFF-DEV-QA-FEAT-006",
+  "verdict": "PASS",
+  "qa_report_path": "docs/qa/QA-REPORT-FEAT-006.md",
+  "remediation_cycle": 0,
+  "test_execution_summary": {
+    "total_tests": 35,
+    "passed": 35,
+    "failed": 0,
+    "skipped": 0,
+    "coverage_percentage": 96.5
+  },
+  "acceptance_matrix": [
+    {
+      "ac_id": "AC-01",
+      "verified": true,
+      "verifying_test_case": "OverviewViewModelTest.given notifications list containing only read notifications then activeNotification is null",
+      "notes": "Verified activeNotification is null when no unread notifications exist and immediately cleared on pill click"
+    },
+    {
+      "ac_id": "AC-02",
+      "verified": true,
+      "verifying_test_case": "OverviewViewModelTest.given projection notification when pill clicked then marks read and emits NavigateToProjection effect",
+      "notes": "Verified navigation effects are dispatched immediately and markAsRead executes in background"
+    },
+    {
+      "ac_id": "AC-03",
+      "verified": true,
+      "verifying_test_case": "NotificationRepositoryImplTest.given canonical UUID when markAsRead then updates DAO optimistically, calls remote API and sets syncStatus to SYNCED",
+      "notes": "Verified Room syncStatus updates to SYNCED upon HTTP 200 from Supabase API"
+    }
+  ],
+  "issues": []
+}

@@ -2,7 +2,6 @@
 name: android-device
 description: Manages Android virtual devices (emulators), APK deployment, UI hierarchy inspection via layout dumps, screen coordinate resolution, ADB gesture simulation, and journey XML test execution.
 ---
-
 # Android Device & Emulator Skill
 
 ## 1. Overview & Purpose

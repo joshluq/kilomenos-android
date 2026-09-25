@@ -10,6 +10,7 @@ import dagger.hilt.components.SingletonComponent
 import es.joshluq.kmsafe.infrastructure.InfrastructureConfig
 import es.joshluq.kmsafe.infrastructure.local.AppDatabase
 import es.joshluq.kmsafe.infrastructure.local.dao.FuelExpenseDao
+import es.joshluq.kmsafe.infrastructure.local.dao.NotificationDao
 import es.joshluq.kmsafe.infrastructure.local.dao.OdometerRecordDao
 import es.joshluq.kmsafe.infrastructure.local.dao.RentingContractDao
 import es.joshluq.kmsafe.infrastructure.local.dao.ServiceStationDao
@@ -54,7 +55,9 @@ object DataModule {
                 AppDatabase.MIGRATION_15_16,
                 AppDatabase.MIGRATION_16_17,
                 AppDatabase.MIGRATION_17_18,
-                AppDatabase.MIGRATION_18_19
+                AppDatabase.MIGRATION_18_19,
+                AppDatabase.MIGRATION_19_20,
+                AppDatabase.MIGRATION_20_21
             ).build()
         }
 
@@ -101,5 +104,14 @@ object DataModule {
     @Singleton
     fun provideServiceStationDao(database: AppDatabase): ServiceStationDao {
         return database.serviceStationDao()
+    }
+
+    /**
+     * Provides the [NotificationDao] from the [AppDatabase].
+     */
+    @Provides
+    @Singleton
+    fun provideNotificationDao(database: AppDatabase): NotificationDao {
+        return database.notificationDao()
     }
 }

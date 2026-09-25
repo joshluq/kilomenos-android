@@ -18,6 +18,24 @@ import es.joshluq.kmsafe.domain.usecase.CheckFeatureAccessUseCase
 import es.joshluq.kmsafe.domain.usecase.CheckFeatureAccessUseCaseImpl
 import es.joshluq.kmsafe.domain.usecase.CheckSessionUseCase
 import es.joshluq.kmsafe.domain.usecase.CheckSessionUseCaseImpl
+import es.joshluq.kmsafe.domain.usecase.ObserveActiveNotificationsUseCase
+import es.joshluq.kmsafe.domain.usecase.ObserveActiveNotificationsUseCaseImpl
+import es.joshluq.kmsafe.domain.usecase.MarkNotificationAsReadUseCase
+import es.joshluq.kmsafe.domain.usecase.MarkNotificationAsReadUseCaseImpl
+import es.joshluq.kmsafe.domain.usecase.MarkAllNotificationsAsReadUseCase
+import es.joshluq.kmsafe.domain.usecase.MarkAllNotificationsAsReadUseCaseImpl
+import es.joshluq.kmsafe.domain.usecase.PublishNotificationUseCase
+import es.joshluq.kmsafe.domain.usecase.PublishNotificationUseCaseImpl
+import es.joshluq.kmsafe.domain.usecase.PublishNotificationIfUnreadUseCase
+import es.joshluq.kmsafe.domain.usecase.PublishNotificationIfUnreadUseCaseImpl
+import es.joshluq.kmsafe.domain.usecase.GetNotificationByIdUseCase
+import es.joshluq.kmsafe.domain.usecase.GetNotificationByIdUseCaseImpl
+import es.joshluq.kmsafe.domain.usecase.DeleteNotificationUseCase
+import es.joshluq.kmsafe.domain.usecase.DeleteNotificationUseCaseImpl
+import es.joshluq.kmsafe.domain.usecase.SyncNotificationsUseCase
+import es.joshluq.kmsafe.domain.usecase.SyncNotificationsUseCaseImpl
+import es.joshluq.kmsafe.domain.usecase.SyncEntitlementsFromPushUseCase
+import es.joshluq.kmsafe.domain.usecase.SyncEntitlementsFromPushUseCaseImpl
 import es.joshluq.kmsafe.domain.usecase.VerifyPurchaseUseCase
 import es.joshluq.kmsafe.domain.usecase.VerifyPurchaseUseCaseImpl
 import es.joshluq.kmsafe.domain.usecase.RestorePurchasesUseCase
@@ -382,4 +400,31 @@ abstract class UseCaseModule {
 
     @Binds
     abstract fun bindRestorePurchasesUseCase(impl: RestorePurchasesUseCaseImpl): RestorePurchasesUseCase
+
+    @Binds
+    abstract fun bindObserveActiveNotificationsUseCase(impl: ObserveActiveNotificationsUseCaseImpl): ObserveActiveNotificationsUseCase
+
+    @Binds
+    abstract fun bindMarkNotificationAsReadUseCase(impl: MarkNotificationAsReadUseCaseImpl): MarkNotificationAsReadUseCase
+
+    @Binds
+    abstract fun bindMarkAllNotificationsAsReadUseCase(impl: MarkAllNotificationsAsReadUseCaseImpl): MarkAllNotificationsAsReadUseCase
+
+    @Binds
+    abstract fun bindPublishNotificationUseCase(impl: PublishNotificationUseCaseImpl): PublishNotificationUseCase
+
+    @Binds
+    abstract fun bindPublishNotificationIfUnreadUseCase(impl: PublishNotificationIfUnreadUseCaseImpl): PublishNotificationIfUnreadUseCase
+
+    @Binds
+    abstract fun bindGetNotificationByIdUseCase(impl: GetNotificationByIdUseCaseImpl): GetNotificationByIdUseCase
+
+    @Binds
+    abstract fun bindDeleteNotificationUseCase(impl: DeleteNotificationUseCaseImpl): DeleteNotificationUseCase
+
+    @Binds
+    abstract fun bindSyncNotificationsUseCase(impl: SyncNotificationsUseCaseImpl): SyncNotificationsUseCase
+
+    @Binds
+    abstract fun bindSyncEntitlementsFromPushUseCase(impl: SyncEntitlementsFromPushUseCaseImpl): SyncEntitlementsFromPushUseCase
 }

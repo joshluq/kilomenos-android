@@ -1,0 +1,204 @@
+{
+  "handoff_id": "HANDOFF-DEV-QA-FEAT-002",
+  "schema_version": "1.0.0",
+  "timestamp": "2026-09-22T16:56:00Z",
+  "sender": {
+    "role": "Senior Android Developer",
+    "agent_id": "senior_android_developer"
+  },
+  "recipient": {
+    "role": "QA/Testing Engineer",
+    "agent_id": "qa_testing_engineer"
+  },
+  "feature_id": "FEAT-002",
+  "architect_handoff_ref": "HANDOFF-ARCH-DEV-FEAT-002",
+  "remediation_cycle": 0,
+  "implementation_manifest": {
+    "module": ":feature:notifications",
+    "entry_point_composable": "NotificationPill",
+    "viewmodel_class": "NotificationsListViewModel",
+    "repository_class": "NotificationRepositoryImpl"
+  },
+  "code_changes": [
+    {
+      "file_path": "core/domain/src/main/java/es/joshluq/kmsafe/domain/model/Notification.kt",
+      "action": "CREATED",
+      "language": "kotlin",
+      "line_count": 40
+    },
+    {
+      "file_path": "core/domain/src/main/java/es/joshluq/kmsafe/domain/repository/NotificationRepository.kt",
+      "action": "CREATED",
+      "language": "kotlin",
+      "line_count": 20
+    },
+    {
+      "file_path": "core/domain/src/main/java/es/joshluq/kmsafe/domain/usecase/ObserveActiveNotificationsUseCase.kt",
+      "action": "CREATED",
+      "language": "kotlin",
+      "line_count": 17
+    },
+    {
+      "file_path": "core/domain/src/main/java/es/joshluq/kmsafe/domain/usecase/MarkNotificationAsReadUseCase.kt",
+      "action": "CREATED",
+      "language": "kotlin",
+      "line_count": 15
+    },
+    {
+      "file_path": "core/domain/src/main/java/es/joshluq/kmsafe/domain/usecase/MarkAllNotificationsAsReadUseCase.kt",
+      "action": "CREATED",
+      "language": "kotlin",
+      "line_count": 15
+    },
+    {
+      "file_path": "core/domain/src/main/java/es/joshluq/kmsafe/domain/usecase/PublishNotificationUseCase.kt",
+      "action": "CREATED",
+      "language": "kotlin",
+      "line_count": 16
+    },
+    {
+      "file_path": "core/domain/src/main/java/es/joshluq/kmsafe/domain/usecase/SyncEntitlementsFromPushUseCase.kt",
+      "action": "CREATED",
+      "language": "kotlin",
+      "line_count": 43
+    },
+    {
+      "file_path": "core/domain/src/main/java/es/joshluq/kmsafe/domain/usecase/GetNotificationByIdUseCase.kt",
+      "action": "CREATED",
+      "language": "kotlin",
+      "line_count": 15
+    },
+    {
+      "file_path": "core/infrastructure/src/main/java/es/joshluq/kmsafe/infrastructure/local/entity/NotificationEntity.kt",
+      "action": "CREATED",
+      "language": "kotlin",
+      "line_count": 57
+    },
+    {
+      "file_path": "core/infrastructure/src/main/java/es/joshluq/kmsafe/infrastructure/local/dao/NotificationDao.kt",
+      "action": "CREATED",
+      "language": "kotlin",
+      "line_count": 37
+    },
+    {
+      "file_path": "core/infrastructure/src/main/java/es/joshluq/kmsafe/infrastructure/repository/NotificationRepositoryImpl.kt",
+      "action": "CREATED",
+      "language": "kotlin",
+      "line_count": 51
+    },
+    {
+      "file_path": "core/infrastructure/src/main/java/es/joshluq/kmsafe/infrastructure/notifications/KmFirebaseMessagingService.kt",
+      "action": "CREATED",
+      "language": "kotlin",
+      "line_count": 67
+    },
+    {
+      "file_path": "feature/notifications/build.gradle.kts",
+      "action": "CREATED",
+      "language": "gradle",
+      "line_count": 22
+    },
+    {
+      "file_path": "feature/notifications/src/main/AndroidManifest.xml",
+      "action": "CREATED",
+      "language": "xml",
+      "line_count": 3
+    },
+    {
+      "file_path": "feature/notifications/src/main/java/es/joshluq/kmsafe/feature/notifications/components/NotificationPill.kt",
+      "action": "CREATED",
+      "language": "kotlin",
+      "line_count": 180
+    },
+    {
+      "file_path": "feature/notifications/src/main/java/es/joshluq/kmsafe/feature/notifications/ui/list/Contract.kt",
+      "action": "CREATED",
+      "language": "kotlin",
+      "line_count": 27
+    },
+    {
+      "file_path": "feature/notifications/src/main/java/es/joshluq/kmsafe/feature/notifications/ui/list/NotificationsListViewModel.kt",
+      "action": "CREATED",
+      "language": "kotlin",
+      "line_count": 87
+    },
+    {
+      "file_path": "feature/notifications/src/main/java/es/joshluq/kmsafe/feature/notifications/ui/list/NotificationsListScreen.kt",
+      "action": "CREATED",
+      "language": "kotlin",
+      "line_count": 330
+    },
+    {
+      "file_path": "feature/notifications/src/main/java/es/joshluq/kmsafe/feature/notifications/ui/list/NotificationsListRoute.kt",
+      "action": "CREATED",
+      "language": "kotlin",
+      "line_count": 38
+    },
+    {
+      "file_path": "feature/notifications/src/main/java/es/joshluq/kmsafe/feature/notifications/ui/detail/Contract.kt",
+      "action": "CREATED",
+      "language": "kotlin",
+      "line_count": 20
+    },
+    {
+      "file_path": "feature/notifications/src/main/java/es/joshluq/kmsafe/feature/notifications/ui/detail/NotificationDetailViewModel.kt",
+      "action": "CREATED",
+      "language": "kotlin",
+      "line_count": 80
+    },
+    {
+      "file_path": "feature/notifications/src/main/java/es/joshluq/kmsafe/feature/notifications/ui/detail/NotificationDetailScreen.kt",
+      "action": "CREATED",
+      "language": "kotlin",
+      "line_count": 245
+    },
+    {
+      "file_path": "feature/notifications/src/main/java/es/joshluq/kmsafe/feature/notifications/ui/detail/NotificationDetailRoute.kt",
+      "action": "CREATED",
+      "language": "kotlin",
+      "line_count": 42
+    },
+    {
+      "file_path": "feature/overview/src/main/java/es/joshluq/kmsafe/feature/overview/OverviewScreen.kt",
+      "action": "MODIFIED",
+      "language": "kotlin",
+      "line_count": 1025
+    },
+    {
+      "file_path": "feature/overview/src/main/java/es/joshluq/kmsafe/feature/overview/OverviewViewModel.kt",
+      "action": "MODIFIED",
+      "language": "kotlin",
+      "line_count": 645
+    },
+    {
+      "file_path": "feature/overview/src/main/java/es/joshluq/kmsafe/feature/overview/Contract.kt",
+      "action": "MODIFIED",
+      "language": "kotlin",
+      "line_count": 134
+    }
+  ],
+  "developer_test_summary": {
+    "unit_tests_run": 9,
+    "unit_tests_passed": 9,
+    "unit_tests_failed": 0,
+    "test_frameworks_used": [
+      "JUnit4",
+      "MockK",
+      "Turbine",
+      "KotlinxCoroutinesTest"
+    ],
+    "test_files": [
+      "core/domain/src/test/kotlin/es/joshluq/kmsafe/domain/usecase/ObserveActiveNotificationsUseCaseTest.kt",
+      "core/domain/src/test/kotlin/es/joshluq/kmsafe/domain/usecase/SyncEntitlementsFromPushUseCaseTest.kt",
+      "core/domain/src/test/kotlin/es/joshluq/kmsafe/domain/usecase/MarkNotificationAsReadUseCaseTest.kt",
+      "feature/notifications/src/test/kotlin/es/joshluq/kmsafe/feature/notifications/NotificationsListViewModelTest.kt",
+      "feature/notifications/src/test/kotlin/es/joshluq/kmsafe/feature/notifications/NotificationDetailViewModelTest.kt",
+      "feature/overview/src/test/kotlin/es/joshluq/kmsafe/feature/overview/OverviewViewModelTest.kt"
+    ]
+  },
+  "lint_and_sanity": {
+    "compilation_clean": true,
+    "ktlint_clean": true,
+    "detekt_clean": true
+  }
+}

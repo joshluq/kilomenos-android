@@ -20,10 +20,12 @@ Key capabilities:
 
 ### Senior Android Developer
 - **Pre-Commit Verification**: Runs `sanity_check.py` locally before committing code or generating handoff contracts.
+- **Full App Build Verification**: Executes `./gradlew :app:assembleDevDebug` to guarantee all module dependencies, Hilt bindings, and route navigations compile cleanly into the debug APK.
+- **Architectural Conformance**: Ensures ViewModels inherit `es.joshluq.foundationkit.viewmodel.ScreenViewModel<State, Event, Effect>` and Domain UseCases implement `UseCase<Input, Output>` / `FlowUseCase<Input, Output>` bound in `UseCaseModule.kt`.
 - **Lint Remediation**: Consumes `lint_triage.py` JSON reports to pinpoint exact line numbers and rules causing build violations.
 
 ### QA / Testing Engineer
-- **Quality Gate Audit**: Runs `sanity_check.py` to validate incoming developer handoffs before initiating full test suites.
+- **Quality Gate Audit**: Runs `sanity_check.py` and verifies that `./gradlew :app:assembleDevDebug` passes cleanly (exit code 0) before initiating full test suites.
 - **Crash Triage**: Runs `logcat_triage.py` when automated tests or manual exploration trigger runtime failures.
 - **Defect Ticket Generation**: Uses the output of triage scripts to populate `qa_verdict_handoff.json` defect tickets with precise culprit locations and remediation routing.
 

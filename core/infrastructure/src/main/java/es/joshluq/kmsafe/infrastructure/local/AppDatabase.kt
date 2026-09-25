@@ -5,11 +5,13 @@ import androidx.room.RoomDatabase
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import es.joshluq.kmsafe.infrastructure.local.dao.FuelExpenseDao
+import es.joshluq.kmsafe.infrastructure.local.dao.NotificationDao
 import es.joshluq.kmsafe.infrastructure.local.dao.OdometerRecordDao
 import es.joshluq.kmsafe.infrastructure.local.dao.RentingContractDao
 import es.joshluq.kmsafe.infrastructure.local.dao.ServiceStationDao
 import es.joshluq.kmsafe.infrastructure.local.dao.TripRouteDao
 import es.joshluq.kmsafe.infrastructure.local.entity.FuelExpenseEntity
+import es.joshluq.kmsafe.infrastructure.local.entity.NotificationEntity
 import es.joshluq.kmsafe.infrastructure.local.entity.OdometerRecordEntity
 import es.joshluq.kmsafe.infrastructure.local.entity.RentingContractEntity
 import es.joshluq.kmsafe.infrastructure.local.entity.ServiceStationEntity
@@ -24,9 +26,10 @@ import es.joshluq.kmsafe.infrastructure.local.entity.TripRouteEntity
         OdometerRecordEntity::class,
         TripRouteEntity::class,
         FuelExpenseEntity::class,
-        ServiceStationEntity::class
+        ServiceStationEntity::class,
+        NotificationEntity::class
     ],
-    version = 19,
+    version = 21,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -35,6 +38,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun tripRouteDao(): TripRouteDao
     abstract fun fuelExpenseDao(): FuelExpenseDao
     abstract fun serviceStationDao(): ServiceStationDao
+    abstract fun notificationDao(): NotificationDao
 
     companion object {
         /**
@@ -542,6 +546,52 @@ abstract class AppDatabase : RoomDatabase() {
                 db.execSQL("CREATE INDEX IF NOT EXISTS index_odometer_record_timestamp ON odometer_record(timestamp)")
                 db.execSQL("CREATE INDEX IF NOT EXISTS index_odometer_record_syncStatus ON odometer_record(syncStatus)")
                 db.execSQL("CREATE INDEX IF NOT EXISTS index_odometer_record_contractId_timestamp ON odometer_record(contractId, timestamp)")
+            }
+        }
+
+        /**
+         * Migration from version 19 to 20:
+         * - Creates 'notifications' table and indices for topics, statuses, and timestamps.
+         */
+        val MIGRATION_19_20 = object : Migration(19, 20) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    """
+                    CREATE TABLE IF NOT EXISTS notifications (
+                        id TEXT PRIMARY KEY NOT NULL,
+                        topic TEXT NOT NULL,
+                        title TEXT NOT NULL,
+                        body TEXT NOT NULL,
+                        priority TEXT NOT NULL,
+                        status TEXT NOT NULL,
+                        deepLinkUri TEXT,
+                        timestampMillis INTEGER NOT NULL,
+                        actionLabel TEXT
+                    )
+                    """.trimIndent()
+                )
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_notifications_topic ON notifications(topic)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_notifications_status ON notifications(status)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_notifications_timestampMillis ON notifications(timestampMillis)")
+            }
+        }
+
+        /**
+         * Migration from version 20 to 21:
+         * - Extends 'notifications' table with userId, origin, dataJson, isRead, readAt, createdAt, syncStatus.
+         * - Adds indices for syncStatus and userId.
+         */
+        val MIGRATION_20_21 = object : Migration(20, 21) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE notifications ADD COLUMN userId TEXT NOT NULL DEFAULT ''")
+                db.execSQL("ALTER TABLE notifications ADD COLUMN origin TEXT NOT NULL DEFAULT 'LOCAL'")
+                db.execSQL("ALTER TABLE notifications ADD COLUMN dataJson TEXT")
+                db.execSQL("ALTER TABLE notifications ADD COLUMN isRead INTEGER NOT NULL DEFAULT 0")
+                db.execSQL("ALTER TABLE notifications ADD COLUMN readAt INTEGER")
+                db.execSQL("ALTER TABLE notifications ADD COLUMN createdAt INTEGER NOT NULL DEFAULT 0")
+                db.execSQL("ALTER TABLE notifications ADD COLUMN syncStatus TEXT NOT NULL DEFAULT 'PENDING'")
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_notifications_syncStatus ON notifications(syncStatus)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_notifications_userId ON notifications(userId)")
             }
         }
     }

@@ -1,5 +1,6 @@
 package es.joshluq.kmsafe.feature.overview
 
+import java.util.UUID
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import es.joshluq.kmsafe.core.analytics.AnalyticsTracker
@@ -13,6 +14,10 @@ import es.joshluq.kmsafe.core.ui.util.DateUtils.getContractEndDate
 import es.joshluq.kmsafe.core.ui.util.DateUtils.normalizeToUtc00
 import es.joshluq.kmsafe.core.ui.util.NumberFormatter
 import es.joshluq.kmsafe.domain.model.Feature
+import es.joshluq.kmsafe.domain.model.Notification
+import es.joshluq.kmsafe.domain.model.NotificationPriority
+import es.joshluq.kmsafe.domain.model.NotificationStatus
+import es.joshluq.kmsafe.domain.model.NotificationTopic
 import es.joshluq.kmsafe.domain.model.RentingContract
 import es.joshluq.kmsafe.domain.model.SubscriptionLevel
 import es.joshluq.kmsafe.domain.model.TripProjection
@@ -24,8 +29,11 @@ import es.joshluq.kmsafe.domain.usecase.GetMonthlyUsageUseCase
 import es.joshluq.kmsafe.domain.usecase.GetOverviewDataUseCase
 import es.joshluq.kmsafe.domain.usecase.GetPreferencesUseCase
 import es.joshluq.kmsafe.domain.usecase.GetTripProjectionUseCase
+import es.joshluq.kmsafe.domain.usecase.MarkNotificationAsReadUseCase
+import es.joshluq.kmsafe.domain.usecase.ObserveActiveNotificationsUseCase
 import es.joshluq.kmsafe.domain.usecase.ObserveTrackingStateUseCase
 import es.joshluq.kmsafe.domain.usecase.ObserveVehicleBluetoothConnectionUseCase
+import es.joshluq.kmsafe.domain.usecase.PublishNotificationIfUnreadUseCase
 import es.joshluq.kmsafe.domain.usecase.SelectContractUseCase
 import es.joshluq.kmsafe.domain.usecase.StartAutoTrackingUseCase
 import es.joshluq.kmsafe.domain.usecase.StartTripTrackingUseCase
@@ -33,7 +41,6 @@ import es.joshluq.kmsafe.domain.usecase.StopAutoTrackingUseCase
 import es.joshluq.kmsafe.domain.usecase.StopTrackingUseCase
 import es.joshluq.kmsafe.domain.usecase.StopTripTrackingUseCase
 import es.joshluq.kmsafe.domain.usecase.UpdatePreferencesUseCase
-import es.joshluq.kmsafe.feature.overview.model.StatusCapsuleUiModel
 import es.joshluq.kmsafe.feature.overview.model.toUiModel
 import kotlin.math.absoluteValue
 import kotlinx.coroutines.Job
@@ -68,22 +75,41 @@ class OverviewViewModel @Inject constructor(
     private val startTripTrackingUseCase: StartTripTrackingUseCase,
     private val stopTripTrackingUseCase: StopTripTrackingUseCase,
     private val syncStationGeofencesUseCase: SyncStationGeofencesUseCase,
+    private val observeActiveNotificationsUseCase: ObserveActiveNotificationsUseCase,
+    private val markNotificationAsReadUseCase: MarkNotificationAsReadUseCase,
+    private val publishNotificationIfUnreadUseCase: PublishNotificationIfUnreadUseCase,
     private val monetizationConfig: MonetizationConfig,
     private val analytics: AnalyticsTracker,
     private val logger: LoggerKit
 ) : ScreenViewModel<State, Event, Effect>() {
 
     private var bluetoothJob: Job? = null
+    private var previousIsOverLimit: Boolean? = null
+    private var bluetoothMissingNotifiedVehicleId: String? = null
 
     init {
         consolidatedInitialLoad()
         observeTracking()
+        observeNotifications()
         startGeofenceSync()
         updateState { copy(adUnitId = monetizationConfig.getOverviewBannerAdUnitId()) }
     }
 
     private fun startGeofenceSync() {
         syncStationGeofencesUseCase(SyncStationGeofencesUseCase.Input)
+            .launchIn(viewModelScope)
+    }
+
+    private fun observeNotifications() {
+        observeActiveNotificationsUseCase(ObserveActiveNotificationsUseCase.Input())
+            .onEach { output ->
+                when (output) {
+                    is ObserveActiveNotificationsUseCase.Output.Success -> {
+                        val mostRelevant = output.notifications.firstOrNull { it.status == NotificationStatus.UNREAD && !it.isRead }
+                        updateState { copy(activeNotification = mostRelevant) }
+                    }
+                }
+            }
             .launchIn(viewModelScope)
     }
 
@@ -119,11 +145,6 @@ class OverviewViewModel @Inject constructor(
             var newState = state.value
 
             // 1. Process Entitlements & Preferences
-            var showProjBanner = newState.showProjectionBanner
-            if (preferencesOutput is GetPreferencesUseCase.Output.Success) {
-                showProjBanner = preferencesOutput.preferences.showProjectionBanner
-            }
-
             if (entitlementsOutput is GetEntitlementsUseCase.Output.Success &&
                 preferencesOutput is GetPreferencesUseCase.Output.Success
             ) {
@@ -145,8 +166,7 @@ class OverviewViewModel @Inject constructor(
                     subscriptionLevel = entitlements.subscriptionLevel,
                     autoTrackingEnabled = isAutoTrackEnabled,
                     autoTrackingPromotionDismissed = isPromoDismissed,
-                    showAutoTrackingPromotion = false,
-                    showProjectionBanner = showProjBanner
+                    showAutoTrackingPromotion = false
                 )
             }
 
@@ -182,12 +202,16 @@ class OverviewViewModel @Inject constructor(
                     val hasBluetooth = contract.bluetoothDeviceAddress != null
                     val showBluetoothSuggestion = isPremium && isAutoTrackingEnabled && !hasBluetooth
 
-                    val capsule = resolveStatusCapsule(
-                        projection = currentProjection,
-                        showProjectionBanner = showProjBanner,
-                        renting = contract,
+                    checkBluetoothMissingNotification(
+                        contract = contract,
                         isPremium = isPremium,
                         isAutoTrackingEnabled = isAutoTrackingEnabled
+                    )
+
+                    checkProjectionTransitionNotification(
+                        contract = contract,
+                        currentProjection = currentProjection,
+                        preferencesOutput = preferencesOutput
                     )
 
                     newState = newState.copy(
@@ -202,7 +226,7 @@ class OverviewViewModel @Inject constructor(
                         differencePercentage = metrics.differencePercentage,
                         showBluetoothSuggestionBanner = showBluetoothSuggestion,
                         projection = currentProjection,
-                        statusCapsule = capsule,
+                        statusCapsule = null,
                         isSyncPending = metrics.isSyncPending,
                         isLoading = false
                     )
@@ -218,17 +242,6 @@ class OverviewViewModel @Inject constructor(
             // 5. Process Available Vehicles
             if (allContractsOutput is GetAllContractsUseCase.Output.Success) {
                 newState = newState.copy(availableVehicles = allContractsOutput.contracts.reversed())
-            }
-
-            // 6. Check Projection Alert Preference Sync
-            if (currentProjection != null && showProjBanner && preferencesOutput is GetPreferencesUseCase.Output.Success) {
-                val currentOverLimit = currentProjection.isOverLimit
-                val lastKnown = preferencesOutput.preferences.lastKnownOverLimit
-                if (lastKnown == null || lastKnown != currentOverLimit) {
-                    updatePreferencesUseCase(
-                        UpdatePreferencesUseCase.Input(lastKnownOverLimit = currentOverLimit)
-                    ).launchIn(viewModelScope)
-                }
             }
 
             // 7. Atomic State Update
@@ -292,35 +305,8 @@ class OverviewViewModel @Inject constructor(
                 }
             }
             Event.OnBottomSheetDismissed -> updateState { copy(showBottomSheet = false) }
-            Event.OnDismissProjectionBanner -> {
-                val capsule = resolveStatusCapsule(
-                    projection = state.value.projection,
-                    showProjectionBanner = false,
-                    renting = state.value.renting,
-                    isPremium = state.value.isPremium ?: false,
-                    isAutoTrackingEnabled = state.value.autoTrackingEnabled
-                )
-                updateState { copy(showProjectionBanner = false, statusCapsule = capsule) }
-            }
-            Event.OnProjectionBannerClicked -> {
-                analytics.track(KmAnalyticsEvent.Overview.ProjectionBannerClicked)
-                launchEffect(Effect.NavigateToProjection)
-            }
             is Event.OnStatusCapsuleClicked -> {
-                when (event.item) {
-                    is StatusCapsuleUiModel.CriticalRisk -> {
-                        analytics.track(KmAnalyticsEvent.Overview.StatusCapsuleClicked("critical_risk"))
-                        launchEffect(Effect.NavigateToProjection)
-                    }
-                    is StatusCapsuleUiModel.BluetoothMissing -> {
-                        analytics.track(KmAnalyticsEvent.Overview.StatusCapsuleClicked("bluetooth_missing"))
-                        state.value.renting?.let { launchEffect(Effect.NavigateToOnboarding(it.id, isEdit = true)) }
-                    }
-                    is StatusCapsuleUiModel.FleetNotice,
-                    is StatusCapsuleUiModel.DrivingInsight -> {
-                        analytics.track(KmAnalyticsEvent.Overview.StatusCapsuleClicked("insight"))
-                    }
-                }
+                // Deprecated: StatusCapsule removed from UI, alerts unified in NotificationPill
             }
             Event.OnDismissStatusCapsule -> updateState { copy(statusCapsule = null) }
             is Event.OnNewOdometerChanged -> updateState { copy(newOdometerValue = event.value) }
@@ -354,41 +340,145 @@ class OverviewViewModel @Inject constructor(
             }
             is Event.OnAutoTrackingToggled -> handleAutoTrackingToggled(event.enabled)
             Event.OnDismissBluetoothSuggestionBanner -> {
-                val capsule = if (state.value.statusCapsule is StatusCapsuleUiModel.BluetoothMissing) null else state.value.statusCapsule
-                updateState { copy(showBluetoothSuggestionBanner = false, statusCapsule = capsule) }
+                updateState { copy(showBluetoothSuggestionBanner = false) }
             }
             Event.OnWelcomeGuideClicked -> launchEffect(Effect.NavigateToWelcomeDiscovery)
+            is Event.OnNotificationPillClicked -> {
+                val targetNotification = state.value.activeNotification ?: event.notification
+                updateState { copy(activeNotification = null) }
+                when (targetNotification.topic) {
+                    NotificationTopic.PROJECTION -> {
+                        launchEffect(Effect.NavigateToProjection)
+                    }
+                    NotificationTopic.SYSTEM -> {
+                        val contractId = targetNotification.data?.get("contract_id") as? String
+                            ?: state.value.renting?.id
+                        launchEffect(Effect.NavigateToOnboarding(vehicleId = contractId, isEdit = true))
+                    }
+                    else -> {
+                        val deepLink = targetNotification.deepLinkUri
+                        if (!deepLink.isNullOrBlank()) {
+                            launchEffect(Effect.NavigateToDeepLink(deepLink))
+                        } else {
+                            launchEffect(Effect.NavigateToNotificationDetail(targetNotification.id))
+                        }
+                    }
+                }
+                viewModelScope.launch {
+                    runCatching {
+                        markNotificationAsReadUseCase(MarkNotificationAsReadUseCase.Input(targetNotification.id))
+                    }
+                }
+            }
+            Event.OnViewAllNotificationsClicked -> {
+                launchEffect(Effect.NavigateToNotificationsList)
+            }
         }
     }
 
-    private fun resolveStatusCapsule(
-        projection: TripProjection?,
-        showProjectionBanner: Boolean,
-        renting: RentingContract?,
+    private fun checkProjectionTransitionNotification(
+        contract: RentingContract,
+        currentProjection: TripProjection?,
+        preferencesOutput: GetPreferencesUseCase.Output
+    ) {
+        if (currentProjection == null) return
+
+        val currentOverLimit = currentProjection.isOverLimit
+        val lastKnown = if (preferencesOutput is GetPreferencesUseCase.Output.Success) {
+            preferencesOutput.preferences.lastKnownOverLimit
+        } else null
+
+        if (previousIsOverLimit == null) {
+            previousIsOverLimit = lastKnown ?: currentOverLimit
+        }
+
+        if (previousIsOverLimit != currentOverLimit) {
+            val distanceStr = NumberFormatter.formatDistance(currentProjection.expectedFinalBalance.absoluteValue)
+            val todayEpochDay = System.currentTimeMillis() / (24 * 60 * 60 * 1000)
+            if (currentOverLimit) {
+                val notif = Notification(
+                    id = UUID.randomUUID().toString(),
+                    topic = NotificationTopic.PROJECTION,
+                    title = "Alerta de exceso proyectado",
+                    body = "Tu ritmo actual proyecta superar el límite contratado en $distanceStr km.",
+                    priority = NotificationPriority.CRITICAL,
+                    status = NotificationStatus.UNREAD,
+                    deepLinkUri = "kmsafe://feature/projection",
+                    actionLabel = "Ver Proyección",
+                    data = mapOf(
+                        "projection_key" to "proj_${contract.id}_$todayEpochDay",
+                        "contract_id" to contract.id,
+                        "current_km" to currentProjection.expectedFinalBalance.absoluteValue,
+                        "excess_km" to distanceStr,
+                        "is_over_limit" to true
+                    )
+                )
+                viewModelScope.launch {
+                    publishNotificationIfUnreadUseCase(PublishNotificationIfUnreadUseCase.Input(notif))
+                }
+            } else {
+                val notif = Notification(
+                    id = UUID.randomUUID().toString(),
+                    topic = NotificationTopic.PROJECTION,
+                    title = "Ritmo de kilometraje recuperado",
+                    body = "Tu proyección actual está dentro de los límites del contrato.",
+                    priority = NotificationPriority.INFO,
+                    status = NotificationStatus.UNREAD,
+                    deepLinkUri = "kmsafe://feature/projection",
+                    data = mapOf(
+                        "projection_key" to "proj_safe_${contract.id}_$todayEpochDay",
+                        "contract_id" to contract.id,
+                        "is_over_limit" to false
+                    )
+                )
+                viewModelScope.launch {
+                    publishNotificationIfUnreadUseCase(PublishNotificationIfUnreadUseCase.Input(notif))
+                }
+            }
+            previousIsOverLimit = currentOverLimit
+            updatePreferencesUseCase(
+                UpdatePreferencesUseCase.Input(lastKnownOverLimit = currentOverLimit)
+            ).launchIn(viewModelScope)
+        }
+    }
+
+    private fun checkBluetoothMissingNotification(
+        contract: RentingContract,
         isPremium: Boolean,
         isAutoTrackingEnabled: Boolean
-    ): StatusCapsuleUiModel? {
-        // P1: Critical Risk from projection
-        if (showProjectionBanner && projection != null) {
-            val isOverLimit = projection.isOverLimit
-            val distanceStr = NumberFormatter.formatDistance(projection.expectedFinalBalance.absoluteValue)
-            val text = if (isOverLimit) {
-                TextProvider.Resource(R.string.projection_card_status_over, distanceStr)
-            } else {
-                TextProvider.Resource(R.string.projection_card_status_safe, distanceStr)
-            }
-            return StatusCapsuleUiModel.CriticalRisk(message = text, isOverLimit = isOverLimit)
-        }
+    ) {
+        val hasBluetooth = contract.bluetoothDeviceAddress != null
+        val semanticKey = "bt_missing_${contract.id}"
 
-        // P2: Bluetooth not configured for premium auto-tracking
-        val hasBluetooth = renting?.bluetoothDeviceAddress != null
         if (isPremium && isAutoTrackingEnabled && !hasBluetooth) {
-            return StatusCapsuleUiModel.BluetoothMissing(
-                message = TextProvider.Resource(R.string.overview_status_capsule_bluetooth)
-            )
+            if (bluetoothMissingNotifiedVehicleId != contract.id) {
+                bluetoothMissingNotifiedVehicleId = contract.id
+                val notif = Notification(
+                    id = UUID.randomUUID().toString(),
+                    topic = NotificationTopic.SYSTEM,
+                    title = "Dispositivo Bluetooth no configurado",
+                    body = "Configura el Bluetooth de tu vehículo para habilitar el auto-tracking inteligente.",
+                    priority = NotificationPriority.WARNING,
+                    status = NotificationStatus.UNREAD,
+                    deepLinkUri = "kmsafe://feature/fleet/edit?vehicleId=${contract.id}",
+                    actionLabel = "Configurar",
+                    data = mapOf(
+                        "deduplication_key" to semanticKey,
+                        "contract_id" to contract.id
+                    )
+                )
+                viewModelScope.launch {
+                    publishNotificationIfUnreadUseCase(PublishNotificationIfUnreadUseCase.Input(notif))
+                }
+            }
+        } else if (hasBluetooth) {
+            if (bluetoothMissingNotifiedVehicleId == contract.id) {
+                bluetoothMissingNotifiedVehicleId = null
+                viewModelScope.launch {
+                    markNotificationAsReadUseCase(MarkNotificationAsReadUseCase.Input(semanticKey))
+                }
+            }
         }
-
-        return null
     }
 
     private fun handlePermissionsResult(granted: Boolean) {
@@ -595,21 +685,17 @@ class OverviewViewModel @Inject constructor(
                         stopAutoTrackingUseCase(StopAutoTrackingUseCase.Input).launchIn(viewModelScope)
                     }
 
-                    // Re-trigger evaluation of the banner and capsule after toggle
+                    // Re-trigger evaluation of the banner and notifications after toggle
                     val isPremium = state.value.isPremium ?: false
                     val hasBluetooth = state.value.renting?.bluetoothDeviceAddress != null
                     val showBluetooth = isPremium && enabled && !hasBluetooth
-                    val capsule = resolveStatusCapsule(
-                        projection = state.value.projection,
-                        showProjectionBanner = state.value.showProjectionBanner,
-                        renting = state.value.renting,
-                        isPremium = isPremium,
-                        isAutoTrackingEnabled = enabled
-                    )
+                    state.value.renting?.let { contract ->
+                        checkBluetoothMissingNotification(contract, isPremium, enabled)
+                    }
                     updateState {
                         copy(
                             showBluetoothSuggestionBanner = showBluetooth,
-                            statusCapsule = capsule
+                            statusCapsule = null
                         )
                     }
                 }

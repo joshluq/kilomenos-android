@@ -20,7 +20,6 @@ interface UpdatePreferencesUseCase : FlowUseCase<UpdatePreferencesUseCase.Input,
     data class Input(
         val rememberEmail: Boolean? = null,
         val lastEmail: String? = null,
-        val showProjectionBanner: Boolean? = null,
         val lastKnownOverLimit: Boolean? = null,
         val autoTrackingEnabled: Boolean? = null,
         val autoTrackingPromotionDismissed: Boolean? = null
@@ -46,7 +45,6 @@ class UpdatePreferencesUseCaseImpl @Inject constructor(
                 input.lastEmail?.let { repository.saveLastEmail(it) }
 
                 if (user != null) {
-                    input.showProjectionBanner?.let { repository.setShowProjectionBanner(user.id, it) }
                     input.lastKnownOverLimit?.let { repository.setLastKnownOverLimit(user.id, it) }
                     input.autoTrackingEnabled?.let {
                         logger.i("UpdatePreferencesUseCase", "Persisting autoTrackingEnabled=$it for ${user.id}")

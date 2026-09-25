@@ -54,7 +54,6 @@ class PreferencesViewModelTest {
 
     private val initialPreferences = UserPreferences(
         rememberEmail = true,
-        showProjectionBanner = true,
         autoTrackingEnabled = false
     )
 
@@ -116,7 +115,6 @@ class PreferencesViewModelTest {
 
         val state = viewModel.state.value
         assertTrue(state.rememberEmail)
-        assertTrue(state.showProjectionBanner)
         assertFalse(state.autoTrackingEnabled)
         assertTrue(state.isUserPremium)
         assertFalse(state.canStartTrial)
@@ -157,18 +155,6 @@ class PreferencesViewModelTest {
 
         assertFalse(viewModel.state.value.rememberEmail)
         verify { updatePreferencesUseCase(UpdatePreferencesUseCase.Input(rememberEmail = false)) }
-    }
-
-    @Test
-    fun `projection banner toggle updates preferences`() = runTest(testDispatcher) {
-        val viewModel = createViewModel()
-        testScheduler.advanceUntilIdle()
-
-        viewModel.sendEvent(Event.OnProjectionBannerToggled(false))
-        testScheduler.advanceUntilIdle()
-
-        assertFalse(viewModel.state.value.showProjectionBanner)
-        verify { updatePreferencesUseCase(UpdatePreferencesUseCase.Input(showProjectionBanner = false)) }
     }
 
     @Test

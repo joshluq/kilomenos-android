@@ -41,7 +41,9 @@ fun DashboardNavigation(
     onNavigateToAssistedPermissions: () -> Unit,
     onNavigateToWelcomeDiscovery: (Boolean) -> Unit,
     onNavigateToVehicleDetail: (String) -> Unit,
-    onNavigateToEditContract: (String) -> Unit = {}
+    onNavigateToEditContract: (String) -> Unit = {},
+    onNavigateToNotificationsList: () -> Unit = {},
+    onNavigateToNotificationDetail: (String) -> Unit = {}
 ) {
     val resultStore = LocalNavigationResultStore.current
     val deepLinkDestination by resultStore
@@ -74,6 +76,9 @@ fun DashboardNavigation(
             val dest = deepLinkDestination as Destination.Expenses
             resultStore.clearResult("deep_link_destination")
             dest
+        } else if (selectedTab == DashboardTab.PROJECTION && deepLinkDestination is Destination.ProjectionAnalysis) {
+            resultStore.clearResult("deep_link_destination")
+            Destination.ProjectionAnalysis
         } else {
             destinationForTab(selectedTab)
         }
@@ -108,7 +113,9 @@ fun DashboardNavigation(
                         onNavigateToPremiumPaywall = { onNavigateToPremiumPaywall("overview") },
                         onNavigateToPreferences = onNavigateToPreferences,
                         onNavigateToWelcomeDiscovery = { onNavigateToWelcomeDiscovery(false) },
-                        onNavigateToVehicleDetail = onNavigateToVehicleDetail
+                        onNavigateToVehicleDetail = onNavigateToVehicleDetail,
+                        onNavigateToNotificationsList = onNavigateToNotificationsList,
+                        onNavigateToNotificationDetail = onNavigateToNotificationDetail
                     )
                 }
                 Destination.History -> NavEntry(key) {
@@ -138,7 +145,8 @@ fun DashboardNavigation(
                         onNavigateToPreferences = onNavigateToPreferences,
                         onNavigateToLogin = onNavigateToLogin,
                         onNavigateToPremiumPaywall = { onNavigateToPremiumPaywall("profile") },
-                        onNavigateToWelcomeDiscovery = { onNavigateToWelcomeDiscovery(true) }
+                        onNavigateToWelcomeDiscovery = { onNavigateToWelcomeDiscovery(true) },
+                        onNavigateToNotificationsList = onNavigateToNotificationsList
                     )
                 }
                 else -> NavEntry(key) { }

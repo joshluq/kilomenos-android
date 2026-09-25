@@ -145,4 +145,10 @@ abstract class RepositoryModule {
     abstract fun bindBillingRepository(
         repository: BillingRepositoryImpl
     ): BillingRepository
+
+    @Singleton
+    @Binds
+    abstract fun bindNotificationRepository(
+        repository: es.joshluq.kmsafe.infrastructure.repository.NotificationRepositoryImpl
+    ): es.joshluq.kmsafe.domain.repository.NotificationRepository
 }

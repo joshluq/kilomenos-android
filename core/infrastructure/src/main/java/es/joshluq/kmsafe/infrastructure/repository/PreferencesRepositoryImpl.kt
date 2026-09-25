@@ -31,10 +31,6 @@ class PreferencesRepositoryImpl @Inject constructor(
         dataSource.saveLastEmail(email)
     }
 
-    override suspend fun setShowProjectionBanner(userId: String, enabled: Boolean) {
-        dataSource.setShowProjectionBanner(userId, enabled)
-    }
-
     override suspend fun setAutoTrackingEnabled(userId: String, enabled: Boolean) {
         dataSource.setAutoTrackingEnabled(userId, enabled)
     }

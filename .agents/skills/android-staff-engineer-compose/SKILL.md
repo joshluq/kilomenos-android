@@ -1,9 +1,7 @@
 ---
 name: android-staff-engineer-compose
-description: >-
-  Architects, reviews, and implements production-grade Jetpack Compose UI following Staff Android Engineer standards and the KiloMenos clean architecture guidelines in AGENTS.md. Enforces MVI, CanvasKit design tokens, the 4-Layer UI pattern, Navigation 3 ViewModel scoping, recomposition optimization, and zero business logic in presentation.
+description: Architects, reviews, and implements production-grade Jetpack Compose UI following Staff Android Engineer standards and the KiloMenos clean architecture guidelines in AGENTS.md. Enforces MVI, CanvasKit design tokens, the 4-Layer UI pattern, Navigation 3 ViewModel scoping, recomposition optimization, and zero business logic in presentation.
 ---
-
 # Android Staff Engineer - Jetpack Compose & Clean Architecture
 
 This skill embodies the technical leadership, architectural rigor, and system-level standards of a **Staff Android Engineer** specializing in **Jetpack Compose**, aligned with the **KiloMenos (KmSafe) Architecture & Guidelines (`AGENTS.md`)**.
@@ -52,6 +50,20 @@ Every screen follows the **Coordinator / Route Pattern** decoupling navigation i
 - **Full Preview Support**: Provide `@Preview` composables with mock states representing Loading, Content, and Error states.
 - **Glanceable Touch Targets**: All interactive elements must adhere to >= 48dp touch targets for automotive/glanceable safety.
 - **EAA / Accessibility**: Mandatory meaningful `contentDescription` on every icon, button, and image.
+
+### 2.3 FoundationKit ScreenViewModel & Canonical MVI Contracts
+All feature ViewModels in KiloMenos **MUST** inherit from `es.joshluq.foundationkit.viewmodel.ScreenViewModel<State, Event, Effect>`:
+- **Contract Declaration Standards**:
+  - Always declare canonical, explicitly named top-level interfaces:
+    ```kotlin
+    @Immutable
+    data class FeatureState(...) : UiState
+    sealed interface FeatureEvent : UiEvent
+    sealed interface FeatureEffect : UiEffect
+    ```
+- **The Kotlin Typealias Member Access Trap**:
+  - **WARNING**: In Kotlin, a typealias (e.g., `typealias Event = FeatureEvent`) **DOES NOT** inherit or expose nested companion objects or sealed subclasses (e.g., `Event.OnItemClicked` will fail with `Unresolved reference`).
+  - Always reference the concrete sealed interface type directly in Composable screens and ViewModels (`FeatureEvent.OnItemClicked`), or define the sealed subtypes directly within the top-level declaration without typealias indirection.
 
 ---
 
@@ -115,6 +127,12 @@ backStack.add(Destination.Login)
 ### 4.4 Persistent Dashboard Tabs
 Top-level dashboard tabs (`Overview`, `History`, `Expenses`, `Projection`) rely on reactive Room flows. They **MUST NOT** use randomized session keys so their state is retained during tab switches and reacts to active contract changes.
 
+### 4.5 The Navigation 3 Triad Protocol
+Whenever a new screen or destination is created, all 3 legs of the navigation triad must be updated atomically:
+1. **`:core:navigation`**: Define the typed `Destination` in `Destination.kt`.
+2. **`:feature:<name>`**: Implement `[Feature]Route.kt` and `[Feature]Screen.kt`.
+3. **`:app`**: Add `implementation(project(":feature:<name>"))` in `app/build.gradle.kts` AND add the exhaustive branch to `AppNavigation.kt` (`when (key)`).
+
 ---
 
 ## 5. CanvasKit Design System Enforcement
@@ -150,10 +168,13 @@ A Staff Engineer guarantees 60/120 FPS by proactively designing against recompos
 Before submitting or approving any Jetpack Compose code:
 
 - [ ] **Architecture**: Is there a clear `Route` (coordinator) vs `Screen` (stateless UI) separation?
+- [ ] **FoundationKit Conformance**: Does ViewModel inherit `ScreenViewModel<State, Event, Effect>`?
 - [ ] **Domain Purity**: Is the ViewModel calling UseCases instead of Repositories? Zero business math in VM/UI?
+- [ ] **Navigation Triad**: Are `Destination`, feature route, and `AppNavigation.kt` branches all updated?
 - [ ] **Scoping**: Is `hiltViewModel()` properly keyed (entity-scoped, session-scoped, or persistent tab)?
 - [ ] **Visual Layering**: Does the screen honor the 4-Layer Hierarchy (Pulse, Radar, Action, Feed)?
 - [ ] **CanvasKit**: Are all colors, paddings, and typography resolved via `CanvasKitTheme` tokens?
 - [ ] **Performance**: Are parameters stable? Are lazy lists keyed? Are heavy computations memoized?
 - [ ] **Accessibility & GDPR**: Do all interactive elements meet 48dp minimum targets and provide clear `contentDescription`?
 - [ ] **Previews**: Are there preview composables covering primary UI states?
+- [ ] **Full App Assemble**: Has `./gradlew :app:assembleDevDebug` compiled with 0 errors (exit code 0)?

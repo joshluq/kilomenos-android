@@ -1,0 +1,88 @@
+{
+  "handoff_id": "HANDOFF-PO-ARCH-FEAT-006",
+  "schema_version": "1.0.0",
+  "timestamp": "2026-09-24T10:00:00Z",
+  "sender": {
+    "role": "Product Owner",
+    "agent_id": "product_owner"
+  },
+  "recipient": {
+    "role": "Software Architect",
+    "agent_id": "software_architect"
+  },
+  "feature_id": "FEAT-006",
+  "feature_title": "Lectura Asíncrona de Notificaciones, Actualización de syncStatus y Navegación Inmediata",
+  "prd_path": "docs/prd/PRD-FEAT-006.md",
+  "user_stories": [
+    {
+      "story_id": "US-01",
+      "role": "conductor que pulsa una alerta en NotificationPill",
+      "want": "que la píldora desaparezca de inmediato sin mostrarme notificaciones ya leídas",
+      "so_that": "tenga la certeza visual de que el aviso fue atendido"
+    },
+    {
+      "story_id": "US-02",
+      "role": "conductor que interactúa con un aviso de proyección o configuración",
+      "want": "que la app navegue inmediatamente a la pantalla de destino",
+      "so_that": "no sufra demoras de red en la transición"
+    },
+    {
+      "story_id": "US-03",
+      "role": "gestor de flota y sistema offline-first",
+      "want": "que el estado de sincronización de la notificación pase a SYNCED en la base de datos local una vez que el servidor confirme la lectura con HTTP 200",
+      "so_that": "se mantenga la coherencia del estado offline y la cola de sincronización"
+    }
+  ],
+  "functional_requirements": [
+    {
+      "fr_id": "FR-01",
+      "title": "Eliminación de Fallback a Notificaciones Leídas",
+      "statement": "En OverviewViewModel, observeNotifications debe asignar a activeNotification estrictamente la primera notificación no leída. Si no existen alertas no leídas, activeNotification debe ser null eliminando el operador Elvis de fallback."
+    },
+    {
+      "fr_id": "FR-02",
+      "title": "Navegación Inmediata y Limpieza Optimista de UI",
+      "statement": "Al recibir OnNotificationPillClicked, OverviewViewModel debe limpiar de forma inmediata activeNotification = null y emitir el efecto de navegación sin suspender ni esperar la respuesta remota."
+    },
+    {
+      "fr_id": "FR-03",
+      "title": "Lectura Asíncrona en Background",
+      "statement": "OverviewViewModel debe delegar la ejecución de markNotificationAsReadUseCase a una corrutina en segundo plano en Dispatchers.IO desacoplada del flujo síncrono de navegación."
+    },
+    {
+      "fr_id": "FR-04",
+      "title": "Actualización de syncStatus a SYNCED en Room",
+      "statement": "En NotificationRepositoryImpl.markAsRead, tras recibir una respuesta HTTP exitosa de notificationsApiService.markAsRead(targetId), el repositorio debe ejecutar notificationDao.updateSyncStatus(listOf(targetId), SYNCED)."
+    }
+  ],
+  "acceptance_criteria": [
+    {
+      "ac_id": "AC-01",
+      "scenario": "Ocultamiento Inmediato y Selección Exclusiva de Notificaciones No Leídas",
+      "given": "una notificación mostrada en NotificationPill",
+      "when": "el usuario pulsa sobre la píldora o la notificación pasa a estado leído",
+      "then": "activeNotification se establece en null (o en la siguiente notificación no leída) y la píldora desaparece inmediatamente sin mostrar alertas leídas"
+    },
+    {
+      "ac_id": "AC-02",
+      "scenario": "Navegación Inmediata Asíncrona sin Bloqueo de Red",
+      "given": "una notificación de proyección o Bluetooth visible en NotificationPill",
+      "when": "el usuario pulsa la píldora despachando OnNotificationPillClicked",
+      "then": "el efecto de navegación (NavigateToProjection o NavigateToOnboarding) se emite de forma instantánea sin esperar la respuesta HTTP del servidor, ejecutándose el marcado como leído en segundo plano"
+    },
+    {
+      "ac_id": "AC-03",
+      "scenario": "Actualización de syncStatus a SYNCED tras HTTP 200",
+      "given": "una notificación existente en Room con syncStatus = PENDING",
+      "when": "el servicio remoto notificationsApiService.markAsRead(targetId) responde con éxito (response.isSuccessful)",
+      "then": "NotificationRepositoryImpl actualiza en Room el syncStatus a SYNCED para ese targetId"
+    }
+  ],
+  "non_functional_requirements": {
+    "min_sdk": 24,
+    "target_sdk": 35,
+    "offline_supported": true,
+    "accessibility_required": true,
+    "performance_budget_ms": 16
+  }
+}

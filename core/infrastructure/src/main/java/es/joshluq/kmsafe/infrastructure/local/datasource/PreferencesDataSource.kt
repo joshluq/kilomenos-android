@@ -28,7 +28,6 @@ class PreferencesDataSource @Inject constructor(
         private const val KEY_REMEMBER_EMAIL = "global_remember_email"
         private const val KEY_LAST_EMAIL = "global_last_email"
 
-        private fun bannerKey(userId: String) = "ui_${userId}_show_projection_banner"
         private fun limitKey(userId: String) = "ui_${userId}_last_known_over_limit"
         private fun autoTrackingKey(userId: String) = "settings_${userId}_auto_tracking_enabled"
         private fun promotionDismissedKey(userId: String) = "ui_${userId}_auto_tracking_promotion_dismissed"
@@ -42,12 +41,6 @@ class PreferencesDataSource @Inject constructor(
         flow {
             val rememberEmail = storage.read(KEY_REMEMBER_EMAIL) ?: true
             val lastEmail = storage.read(KEY_LAST_EMAIL) ?: ""
-
-            val showBanner = if (userId.isNotEmpty()) {
-                storage.read(bannerKey(userId)) ?: true
-            } else {
-                true
-            }
 
             val lastLimit = if (userId.isNotEmpty()) {
                 storage.read<Boolean>(limitKey(userId))
@@ -71,7 +64,6 @@ class PreferencesDataSource @Inject constructor(
                 UserPreferences(
                     rememberEmail = rememberEmail,
                     lastEmail = lastEmail,
-                    showProjectionBanner = showBanner,
                     lastKnownOverLimit = lastLimit,
                     autoTrackingEnabled = autoTracking,
                     autoTrackingPromotionDismissed = promotionDismissed
@@ -98,12 +90,6 @@ class PreferencesDataSource @Inject constructor(
 
     suspend fun saveLastEmail(email: String) {
         storage.save(KEY_LAST_EMAIL, email)
-        _preferenceUpdates.tryEmit(Unit)
-    }
-
-    suspend fun setShowProjectionBanner(userId: String, enabled: Boolean) {
-        if (userId.isEmpty()) return
-        storage.save(bannerKey(userId), enabled)
         _preferenceUpdates.tryEmit(Unit)
     }
 

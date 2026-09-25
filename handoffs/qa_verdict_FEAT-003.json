@@ -1,0 +1,81 @@
+{
+  "handoff_id": "HANDOFF-QA-VERDICT-FEAT-003",
+  "schema_version": "1.0.0",
+  "timestamp": "2026-09-23T16:50:00Z",
+  "sender": {
+    "role": "QA/Testing Engineer",
+    "agent_id": "qa_testing_engineer"
+  },
+  "recipient": {
+    "role": "Product Owner",
+    "agent_id": "product_owner"
+  },
+  "feature_id": "FEAT-003",
+  "dev_handoff_ref": "HANDOFF-DEV-QA-FEAT-003",
+  "verdict": "PASS",
+  "qa_report_path": "docs/qa/QA-REPORT-FEAT-003.md",
+  "remediation_cycle": 0,
+  "test_execution_summary": {
+    "total_tests": 35,
+    "passed": 35,
+    "failed": 0,
+    "skipped": 0,
+    "coverage_percentage": 92.4
+  },
+  "acceptance_matrix": [
+    {
+      "ac_id": "AC-01",
+      "verified": true,
+      "verifying_test_case": "NotificationRepositoryImplTest#whenGetNotifications_emitsLocalFlowWithoutNetworkBlock",
+      "notes": "Verified that Room database emits reactive flow with zero initial network block"
+    },
+    {
+      "ac_id": "AC-02",
+      "verified": true,
+      "verifying_test_case": "NotificationRepositoryImplTest#whenSyncPending_callsBatchSyncAndUpdatesSyncedStatus",
+      "notes": "Verified that pending entities sync to remote backend and transition to SYNCED"
+    },
+    {
+      "ac_id": "AC-03",
+      "verified": true,
+      "verifying_test_case": "NotificationRepositoryImplTest#whenMarkAsRead_updatesRoomOptimisticallyAndDispatchesRemotePatch",
+      "notes": "Verified optimistic UI mark as read and background remote PATCH dispatch"
+    },
+    {
+      "ac_id": "AC-04",
+      "verified": true,
+      "verifying_test_case": "NotificationRepositoryImplTest#whenMarkAllAsRead_updatesRoomAndCallsRemoteReadAll",
+      "notes": "Verified batch mark all as read across database and remote backend"
+    },
+    {
+      "ac_id": "AC-05",
+      "verified": true,
+      "verifying_test_case": "NotificationsListViewModelTest#whenFetchRemoteFailsWithPremiumRequired_showsProBannerWithoutErrorState",
+      "notes": "Verified HTTP 403 maps to PremiumRequiredException, maintains Room data, and renders Pro banner"
+    },
+    {
+      "ac_id": "AC-06",
+      "verified": true,
+      "verifying_test_case": "KmFirebaseMessagingServiceTest#whenRemotePushReceived_storesInRoomAndPostsSystemNotification",
+      "notes": "Verified FCM push ingestion with origin=REMOTE and status=SYNCED"
+    },
+    {
+      "ac_id": "AC-07",
+      "verified": true,
+      "verifying_test_case": "KmFirebaseMessagingServiceTest#whenRefreshEntitlementsPush_triggersSessionSync",
+      "notes": "Verified FCM action_code REFRESH_ENTITLEMENTS invalidates cache and triggers sync"
+    },
+    {
+      "ac_id": "AC-08",
+      "verified": true,
+      "verifying_test_case": "NotificationRepositoryImplTest#whenDeleteNotification_deletesFromRoomAndDispatchesRemoteDelete",
+      "notes": "Verified optimistic deletion from Room and remote DELETE invocation"
+    }
+  ],
+  "ui_inspection_summary": {
+    "compose_semantics_valid": true,
+    "touch_targets_compliant": true,
+    "accessibility_labels_present": true
+  },
+  "issues": []
+}

@@ -4,6 +4,7 @@
     <string name="profile_renting_option">My Renting</string>
     <string name="profile_vehicles_option">My Vehicles</string>
     <string name="profile_preferences_option">Preferences</string>
+    <string name="profile_notifications_option">Notifications</string>
     <string name="profile_logout_button">Log Out</string>
     <string name="profile_logout_confirmation_title">Log Out</string>
     <string name="profile_logout_confirmation_message_free">Your data will remain on this device after logging out. However, if another driver logs in on this phone, they will be asked to delete your local information to avoid conflicts.</string>
@@ -50,8 +51,6 @@
     <string name="preferences_account_settings_title">ACCOUNT SETTINGS</string>
     <string name="preferences_remember_email_label">Remember email</string>
     <string name="preferences_remember_email_desc">Automatically shows your email on the login screen.</string>
-    <string name="preferences_projection_banner_label">Projection alerts</string>
-    <string name="preferences_projection_banner_desc">Shows a notice on the start about the estimated final status of your contract.</string>
     <string name="preferences_oss_licenses_label">Software credits</string>
     <string name="preferences_oss_licenses_desc">Licenses of the open source libraries used.</string>
     <string name="preferences_about_header">ABOUT</string>

@@ -21,6 +21,7 @@ import androidx.compose.material.icons.automirrored.filled.HelpOutline
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.CarRental
 import androidx.compose.material.icons.filled.DeleteForever
+import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.PrivacyTip
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.WorkspacePremium
@@ -60,6 +61,7 @@ import es.joshluq.kmsafe.core.ui.util.safeClick
 fun ProfileRoute(
     onNavigateToVehicles: () -> Unit,
     onNavigateToPreferences: () -> Unit,
+    onNavigateToNotificationsList: () -> Unit = {},
     onNavigateToLogin: () -> Unit,
     onNavigateToPremiumPaywall: () -> Unit,
     onNavigateToWelcomeDiscovery: () -> Unit,
@@ -76,6 +78,7 @@ fun ProfileRoute(
             when (effect) {
                 Effect.NavigateToVehicles -> onNavigateToVehicles()
                 Effect.NavigateToPreferences -> onNavigateToPreferences()
+                Effect.NavigateToNotificationsList -> onNavigateToNotificationsList()
                 Effect.NavigateToLogin -> onNavigateToLogin()
                 Effect.NavigateToPremiumPaywall -> onNavigateToPremiumPaywall()
                 Effect.NavigateToWelcomeDiscovery -> onNavigateToWelcomeDiscovery()
@@ -144,6 +147,13 @@ fun ProfileScreen(
                     icon = Icons.Default.Settings,
                     onClick = safeClick { onEvent(Event.OnPreferencesClicked) },
                     modifier = Modifier.testTag("profile_preferences_button")
+                )
+
+                SettingsItem(
+                    label = stringResource(R.string.profile_notifications_option),
+                    icon = Icons.Default.Notifications,
+                    onClick = safeClick { onEvent(Event.OnNotificationsClicked) },
+                    modifier = Modifier.testTag("profile_notifications_button")
                 )
 
                 Spacer(modifier = Modifier.height(CanvasKitTheme.spacing.xs))

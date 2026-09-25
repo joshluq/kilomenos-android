@@ -5,10 +5,12 @@ import es.joshluq.foundationkit.text.TextProvider
 import es.joshluq.foundationkit.viewmodel.UiEffect
 import es.joshluq.foundationkit.viewmodel.UiEvent
 import es.joshluq.foundationkit.viewmodel.UiState
+import es.joshluq.kmsafe.domain.model.Notification
 import es.joshluq.kmsafe.domain.model.RentingContract
 import es.joshluq.kmsafe.domain.model.SubscriptionLevel
 import es.joshluq.kmsafe.domain.model.TripProjection
 import es.joshluq.kmsafe.feature.overview.model.MonthlyUsageUiModel
+import es.joshluq.kmsafe.feature.overview.model.StatusCapsuleUiModel
 
 /**
  * Represents the UI state for the Overview screen.
@@ -31,7 +33,6 @@ data class State(
     val isSaving: Boolean = false,
     val isLoading: Boolean = true,
     val projection: TripProjection? = null,
-    val showProjectionBanner: Boolean = false,
     val availableVehicles: List<RentingContract> = emptyList(),
     val showVehicleSwitcher: Boolean = false,
     val isSwitchingVehicle: Boolean = false,
@@ -53,7 +54,8 @@ data class State(
     val tripStartTime: Long? = null,
     val showBluetoothSuggestionBanner: Boolean = false,
     val isVehicleBluetoothConnected: Boolean = false,
-    val statusCapsule: es.joshluq.kmsafe.feature.overview.model.StatusCapsuleUiModel? = null,
+    val statusCapsule: StatusCapsuleUiModel? = null,
+    val activeNotification: Notification? = null,
     val error: TextProvider? = null,
     val newRecordDateError: TextProvider? = null
 ) : UiState {
@@ -75,8 +77,6 @@ sealed interface Event : UiEvent {
     data class OnVehicleDetailClicked(val id: String) : Event
     data object OnUpdateOdometerClicked : Event
     data object OnBottomSheetDismissed : Event
-    data object OnDismissProjectionBanner : Event
-    data object OnProjectionBannerClicked : Event
     data class OnStatusCapsuleClicked(val item: es.joshluq.kmsafe.feature.overview.model.StatusCapsuleUiModel) : Event
     data object OnDismissStatusCapsule : Event
     data object OnToggleVehicleSwitcher : Event
@@ -101,6 +101,8 @@ sealed interface Event : UiEvent {
     data class OnAutoTrackingToggled(val enabled: Boolean) : Event
     data class OnPermissionsResult(val granted: Boolean) : Event
     data object OnWelcomeGuideClicked : Event
+    data class OnNotificationPillClicked(val notification: es.joshluq.kmsafe.domain.model.Notification) : Event
+    data object OnViewAllNotificationsClicked : Event
 }
 
 /**
@@ -119,6 +121,9 @@ sealed interface Effect : UiEffect {
     data object NavigateToPremiumPaywall : Effect
     data object NavigateToPreferences : Effect
     data object NavigateToWelcomeDiscovery : Effect
+    data class NavigateToNotificationDetail(val notificationId: String) : Effect
+    data class NavigateToDeepLink(val deepLinkUri: String) : Effect
+    data object NavigateToNotificationsList : Effect
     /**
      * Signals the Route to cancel any residual tracking notifications
      * (e.g., "Trip Finished") after the user saves or discards a trip.
