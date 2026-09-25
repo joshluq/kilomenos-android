@@ -55,6 +55,16 @@ configure<ApplicationExtension> {
         }
     }
 
+    packaging {
+        resources {
+            excludes += setOf(
+                "META-INF/*.kotlin_module",
+                "META-INF/AL2.0",
+                "META-INF/LGPL2.1"
+            )
+        }
+    }
+
     buildFeatures {
         buildConfig = true
     }
