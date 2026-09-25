@@ -6,11 +6,11 @@ import es.joshluq.kmsafe.core.domain.usecase.SyncStationGeofencesUseCase
 import es.joshluq.kmsafe.core.monetization.domain.MonetizationConfig
 import es.joshluq.kmsafe.domain.model.ContractMetrics
 import es.joshluq.kmsafe.domain.model.Entitlements
+import es.joshluq.kmsafe.domain.model.Notification
 import es.joshluq.kmsafe.domain.model.RentingContract
 import es.joshluq.kmsafe.domain.model.SubscriptionLevel
 import es.joshluq.kmsafe.domain.model.TripProjection
 import es.joshluq.kmsafe.domain.model.UserPreferences
-import es.joshluq.kmsafe.feature.overview.model.StatusCapsuleUiModel
 import es.joshluq.kmsafe.domain.usecase.AddOdometerRecordUseCase
 import es.joshluq.kmsafe.domain.usecase.ClearTrackingUseCase
 import es.joshluq.kmsafe.domain.usecase.DismissTripNotificationUseCase
@@ -30,12 +30,12 @@ import es.joshluq.kmsafe.domain.usecase.StopTrackingUseCase
 import es.joshluq.kmsafe.domain.usecase.StopTripTrackingUseCase
 import es.joshluq.kmsafe.domain.usecase.UpdatePreferencesUseCase
 import io.mockk.clearAllMocks
-import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.unmockkAll
 import es.joshluq.kmsafe.domain.model.NotificationPriority
+import es.joshluq.kmsafe.domain.model.NotificationStatus
 import es.joshluq.kmsafe.domain.model.NotificationTopic
 import es.joshluq.kmsafe.domain.usecase.PublishNotificationIfUnreadUseCase
 import kotlinx.coroutines.Dispatchers
@@ -517,13 +517,13 @@ class OverviewViewModelTest {
         val viewModel = createViewModel()
         advanceUntilIdle()
 
-        val sampleNotif = es.joshluq.kmsafe.domain.model.Notification(
+        val sampleNotif = Notification(
             id = "bt-pill-1",
-            topic = es.joshluq.kmsafe.domain.model.NotificationTopic.SYSTEM,
+            topic = NotificationTopic.SYSTEM,
             title = "Dispositivo Bluetooth no configurado",
             body = "Configura el Bluetooth",
-            priority = es.joshluq.kmsafe.domain.model.NotificationPriority.WARNING,
-            status = es.joshluq.kmsafe.domain.model.NotificationStatus.UNREAD,
+            priority = NotificationPriority.WARNING,
+            status = NotificationStatus.UNREAD,
             data = mapOf("contract_id" to "contract-1")
         )
 

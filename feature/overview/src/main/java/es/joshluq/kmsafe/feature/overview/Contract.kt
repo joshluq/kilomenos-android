@@ -77,7 +77,7 @@ sealed interface Event : UiEvent {
     data class OnVehicleDetailClicked(val id: String) : Event
     data object OnUpdateOdometerClicked : Event
     data object OnBottomSheetDismissed : Event
-    data class OnStatusCapsuleClicked(val item: es.joshluq.kmsafe.feature.overview.model.StatusCapsuleUiModel) : Event
+    data class OnStatusCapsuleClicked(val item: StatusCapsuleUiModel) : Event
     data object OnDismissStatusCapsule : Event
     data object OnToggleVehicleSwitcher : Event
     data class OnNewOdometerChanged(val value: String) : Event
@@ -101,7 +101,7 @@ sealed interface Event : UiEvent {
     data class OnAutoTrackingToggled(val enabled: Boolean) : Event
     data class OnPermissionsResult(val granted: Boolean) : Event
     data object OnWelcomeGuideClicked : Event
-    data class OnNotificationPillClicked(val notification: es.joshluq.kmsafe.domain.model.Notification) : Event
+    data class OnNotificationPillClicked(val notification: Notification) : Event
     data object OnViewAllNotificationsClicked : Event
 }
 

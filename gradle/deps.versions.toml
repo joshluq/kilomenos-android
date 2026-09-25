@@ -13,16 +13,16 @@ credentials = "1.6.0"
 glance = "1.1.1"
 
 # Google Services
-play-services-ads = "25.4.0"
+play-services-ads = "25.5.0"
 play-services-location = "21.4.0"
 play-services-maps = "20.0.0"
 user-messaging-platform = "4.0.0"
-googleid = "1.2.0"
+googleid = "1.2.1"
 billing = "9.1.0"
 
 # Maps Utils
 maps-utils = "5.2.0"
-maps-compose = "8.5.0"
+maps-compose = "8.6.0"
 
 # Third Party
 coil = "2.7.0"
@@ -31,7 +31,7 @@ accompanist = "0.37.3"
 javax-inject = "1"
 
 # Firebase
-firebase-bom = "34.18.0"
+firebase-bom = "34.19.0"
 google-services = "4.5.0"
 crashlytics = "3.0.8"
 

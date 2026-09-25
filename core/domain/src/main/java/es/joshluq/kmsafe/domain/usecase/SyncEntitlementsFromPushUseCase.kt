@@ -3,7 +3,6 @@ package es.joshluq.kmsafe.domain.usecase
 import es.joshluq.foundationkit.usecase.UseCase
 import es.joshluq.foundationkit.usecase.UseCaseInput
 import es.joshluq.foundationkit.usecase.UseCaseOutput
-import es.joshluq.kmsafe.domain.model.Entitlements
 import es.joshluq.kmsafe.domain.model.Notification
 import es.joshluq.kmsafe.domain.model.NotificationPriority
 import es.joshluq.kmsafe.domain.model.NotificationStatus

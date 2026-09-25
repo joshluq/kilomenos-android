@@ -47,8 +47,5 @@ sealed interface NotificationsListEffect : UiEffect {
 }
 
 // Aliases for FoundationKit ScreenViewModel convention and backward compatibility
-typealias State = NotificationsListState
-typealias Event = NotificationsListEvent
-typealias Effect = NotificationsListEffect
 typealias NotificationsListUiState = NotificationsListState
 typealias NotificationsListUiAction = NotificationsListEvent

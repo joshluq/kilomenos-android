@@ -3,7 +3,6 @@ package es.joshluq.kmsafe.infrastructure.repository
 import es.joshluq.foundationkit.log.LoggerKit
 import es.joshluq.kmsafe.domain.model.Notification
 import es.joshluq.kmsafe.domain.model.NotificationPriority
-import es.joshluq.kmsafe.domain.model.NotificationStatus
 import es.joshluq.kmsafe.domain.model.NotificationTopic
 import es.joshluq.kmsafe.domain.model.PremiumRequiredException
 import es.joshluq.kmsafe.infrastructure.local.dao.NotificationDao
