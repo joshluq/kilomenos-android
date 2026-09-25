@@ -49,4 +49,15 @@ sealed interface AppOverlayState {
     data class AiReceiptScanning(
         val stepMessage: TextProvider? = null
     ) : AppOverlayState
+
+    /**
+     * Displayed when a subscription downgrade from PREMIUM to FREE is detected in background or via Push FCM.
+     *
+     * @param title Contextual title informing about the subscription transition.
+     * @param message Detailed message explaining the updated feature access.
+     */
+    data class SubscriptionDowngraded(
+        val title: TextProvider? = null,
+        val message: TextProvider? = null
+    ) : AppOverlayState
 }

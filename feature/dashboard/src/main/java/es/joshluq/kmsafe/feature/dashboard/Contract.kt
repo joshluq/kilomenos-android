@@ -23,7 +23,7 @@ data class State(
     val error: TextProvider? = null
 ) : UiState {
     val isNavigationBlocked: Boolean
-        get() = hudOverlayState !is AppOverlayState.None || isSwitchingVehicle
+        get() = (hudOverlayState !is AppOverlayState.None && hudOverlayState !is AppOverlayState.SubscriptionDowngraded) || isSwitchingVehicle
     companion object {
         val Empty = State()
     }
@@ -47,6 +47,8 @@ sealed interface Event : UiEvent {
     data object OnDismissOdometerDialog : Event
     data class OnOdometerChanged(val mileage: String) : Event
     data object ResetToOverview : Event
+    data object OnDismissSubscriptionOverlay : Event
+    data object OnUpgradeFromSubscriptionOverlay : Event
 }
 
 /**
@@ -54,4 +56,5 @@ sealed interface Event : UiEvent {
  */
 sealed interface Effect : UiEffect {
     data class NavigateToTab(val tab: DashboardTab) : Effect
+    data object NavigateToPaywall : Effect
 }

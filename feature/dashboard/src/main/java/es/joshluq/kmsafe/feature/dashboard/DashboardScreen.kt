@@ -40,6 +40,7 @@ import es.joshluq.kmsafe.core.navigation.LocalNavigationResultStore
  */
 @Composable
 fun DashboardRoute(
+    onNavigateToPremiumPaywall: ((String) -> Unit)? = null,
     navigationContent: @Composable (selectedTab: DashboardTab, onSelectTab: (DashboardTab) -> Unit) -> Unit
 ) {
     val viewModel: DashboardViewModel = hiltViewModel()
@@ -49,6 +50,15 @@ fun DashboardRoute(
     val deepLinkDestination by resultStore
         .getResult<Destination>("deep_link_destination")
         .collectAsStateWithLifecycle()
+
+    LaunchedEffect(viewModel) {
+        viewModel.effects.collect { effect ->
+            when (effect) {
+                Effect.NavigateToPaywall -> onNavigateToPremiumPaywall?.invoke("subscription_downgrade")
+                is Effect.NavigateToTab -> Unit
+            }
+        }
+    }
 
     LaunchedEffect(deepLinkDestination) {
         when (deepLinkDestination) {
@@ -111,7 +121,11 @@ fun DashboardScreen(
         }
 
         // Executive HUD Overlay (Elevated at Dashboard root level to block Scaffold & NavigationBar)
-        AppExecutiveHudOverlay(state = activeOverlay)
+        AppExecutiveHudOverlay(
+            state = activeOverlay,
+            onDismissSubscriptionOverlay = { onEvent(Event.OnDismissSubscriptionOverlay) },
+            onUpgradeSubscriptionOverlay = { onEvent(Event.OnUpgradeFromSubscriptionOverlay) }
+        )
     }
 }
 

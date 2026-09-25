@@ -221,6 +221,9 @@ fun AppNavigation(
 
                     Destination.Dashboard -> NavEntry(key) {
                         DashboardRoute(
+                            onNavigateToPremiumPaywall = { source ->
+                                onNavigate(Destination.PremiumPaywall(source))
+                            },
                             navigationContent = { selectedTab, onSelectTab ->
                                 DashboardNavigation(
                                     selectedTab = selectedTab,

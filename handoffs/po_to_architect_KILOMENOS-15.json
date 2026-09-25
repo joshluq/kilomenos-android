@@ -1,0 +1,137 @@
+{
+  "handoff_id": "HANDOFF-PO-ARCH-KILOMENOS-15",
+  "schema_version": "1.0.0",
+  "timestamp": "2026-09-26T01:10:00Z",
+  "sender": {
+    "role": "Product Owner",
+    "agent_id": "product_owner"
+  },
+  "recipient": {
+    "role": "Software Architect",
+    "agent_id": "software_architect"
+  },
+  "feature_id": "KILOMENOS-15",
+  "feature_title": "Optimización y Aceleración del Arranque de la Aplicación (Zero-Network Cold Start)",
+  "prd_path": "docs/prd/PRD-KILOMENOS-15.md",
+  "user_stories": [
+    {
+      "story_id": "US-01",
+      "role": "usuario con sesión activa",
+      "want": "que la aplicación abra el Dashboard de forma casi instantánea al pulsar el icono",
+      "so_that": "pueda consultar mis datos y registrar kilometraje sin esperar a que se descargue todo mi historial por internet"
+    },
+    {
+      "story_id": "US-02",
+      "role": "usuario Premium con múltiples vehículos y cientos de registros",
+      "want": "que la sincronización con la nube ocurra en segundo plano sin interrumpir mi navegación",
+      "so_that": "mis datos se mantengan al día sin congelar la pantalla"
+    },
+    {
+      "story_id": "US-03",
+      "role": "conductor en un garaje subterráneo sin cobertura",
+      "want": "que la aplicación inicie y me permita operar con mis datos locales sin mostrar pantallas de carga infinitas ni errores bloqueantes",
+      "so_that": "tenga acceso garantizado a mis herramientas de control de kilometraje"
+    },
+    {
+      "story_id": "US-04",
+      "role": "usuario que navega a las pantallas de Historial o Gastos",
+      "want": "que los datos locales se muestren al instante y se actualicen incrementalmente mediante pull-to-refresh o refresco en segundo plano",
+      "so_that": "se optimice el consumo de batería y datos móviles"
+    }
+  ],
+  "functional_requirements": [
+    {
+      "fr_id": "FR-01",
+      "title": "Eliminación de Sincronización Bloqueante en Launch",
+      "statement": "LaunchViewModel no debe invocar syncContractsUseCase ni ninguna operación de sincronización de red profunda antes de disparar LaunchEffect.NavigateToDashboard."
+    },
+    {
+      "fr_id": "FR-02",
+      "title": "Eliminación de Refresco Forzado de Entitlements en Launch",
+      "statement": "LaunchViewModel debe confiar en la sesión y derechos de suscripción ya persistidos en el almacenamiento local cifrado (UserSessionDataSource), eliminando el parámetro forceRefresh = true en la ruta crítica de arranque."
+    },
+    {
+      "fr_id": "FR-03",
+      "title": "Navegación Inmediata con Sesión Activa",
+      "statement": "Al emitirse CheckSessionUseCase.Output.ActiveSession, el sistema debe transicionar inmediatamente a NavigateToDashboard, eliminando retardos artificiales arbitrarios (delay)."
+    },
+    {
+      "fr_id": "FR-04",
+      "title": "Delegación de Sincronización a Background Worker",
+      "statement": "Toda la sincronización remota de contratos, estaciones, historial y gastos debe ser orquestada de forma no bloqueante por SyncWorker (WorkManager) con restricciones de conectividad de red adecuadas."
+    },
+    {
+      "fr_id": "FR-05",
+      "title": "Refresco a Demanda en Pestañas Detalle",
+      "statement": "Las vistas de Historial (HistoryScreen) y Gastos (ExpensesScreen) deben implementar sincronización incremental / a demanda (e.g. pull-to-refresh) permitiendo al usuario forzar una recarga sin penalizar el inicio global."
+    },
+    {
+      "fr_id": "FR-06",
+      "title": "Preservación del Manejo de Sesión Inconsistente",
+      "statement": "Si CheckSessionUseCase detecta InconsistentSession o IdleSession, se mantendrá el flujo de cierre forzado de sesión y redirección segura a NavigateToLogin."
+    },
+    {
+      "fr_id": "FR-07",
+      "title": "Notificación Unificada ante Degradación PREMIUM -> FREE",
+      "statement": "Cuando el sistema detecte la transición de suscripción de PREMIUM a FREE, ya sea mediante sincronización en background o recibida en caliente por push notification (FCM), el sistema debe comunicarlo inmediatamente al usuario utilizando el componente AppOverlay o un diálogo informativo."
+    }
+  ],
+  "acceptance_criteria": [
+    {
+      "ac_id": "AC-01",
+      "scenario": "Cold Start Instantáneo con Sesión Activa",
+      "given": "un usuario autenticado con sesión activa y datos previamente almacenados en Room DB",
+      "when": "el usuario abre la aplicación desde un estado detenido (Cold Start)",
+      "then": "el sistema evalúa la sesión localmente y emite LaunchEffect.NavigateToDashboard en un tiempo total de ejecución inferior a 800ms, sin realizar peticiones de red bloqueantes en LaunchScreen"
+    },
+    {
+      "ac_id": "AC-02",
+      "scenario": "Disponibilidad y Arranque en Modo Offline",
+      "given": "un usuario con sesión activa en un dispositivo en Modo Avión o sin conectividad de red",
+      "when": "se inicia la aplicación",
+      "then": "la aplicación carga exitosamente el Dashboard mostrando los vehículos, métricas y contratos locales sin mostrar diálogos de error de red ni quedarse en bucle de carga"
+    },
+    {
+      "ac_id": "AC-03",
+      "scenario": "Sincronización en Segundo Plano Sin Afectar Fluidez UI",
+      "given": "el usuario ya ha navegado al Dashboard",
+      "when": "SyncWorker ejecuta la sincronización de contratos, estaciones, historial y gastos en segundo plano",
+      "then": "la UI mantiene una tasa de refresco constante (>= 60 fps, frames <= 16ms) sin congelamiento ni tirones (jank)"
+    },
+    {
+      "ac_id": "AC-04",
+      "scenario": "Carga de Datos Reactiva en Overview",
+      "given": "que SyncWorker descarga nuevos registros de odómetro o gastos mientras el usuario está en el Dashboard",
+      "when": "Room DB actualiza las tablas locales",
+      "then": "las métricas de OverviewScreen se actualizan reactivamente a través de los Flow de Room sin requerir reinicio de la app"
+    },
+    {
+      "ac_id": "AC-05",
+      "scenario": "Redirección Correcta ante Sesión Inválida o Ausente",
+      "given": "un usuario sin sesión activa (IdleSession) o con tokens corruptos (InconsistentSession)",
+      "when": "se inicia la aplicación",
+      "then": "el sistema no intenta sincronizar datos y redirige limpiamente a NavigateToLogin"
+    },
+    {
+      "ac_id": "AC-06",
+      "scenario": "Feedback al Usuario ante Degradación PREMIUM -> FREE en Background Sync",
+      "given": "un usuario que inició la aplicación con derechos de suscripción cacheados localmente como PREMIUM",
+      "when": "la sincronización asíncrona de Entitlements en segundo plano detecta que el estado de suscripción ha pasado a FREE",
+      "then": "el sistema actualiza de forma reactiva el estado de la sesión y muestra un mensaje contextual o aprovecha el componente AppOverlay (HUD no destructivo o diálogo informativo) informando al usuario sobre la actualización al nivel FREE y sus características sin forzar el cierre de la aplicación"
+    },
+    {
+      "ac_id": "AC-07",
+      "scenario": "Feedback al Usuario ante Notificación Push en Caliente (PREMIUM -> FREE)",
+      "given": "un usuario activo interactuando con la aplicación con suscripción PREMIUM en primer plano (foreground)",
+      "when": "se recibe en caliente una notificación push (FCM) informando la expiración o revocación de la suscripción hacia FREE",
+      "then": "el sistema procesa el evento, actualiza el estado de la sesión y despliega exactamente el mismo mecanismo (AppOverlay o diálogo informativo de suscripción) presentado en AC-06 para notificar la transición al nivel FREE sin forzar el reinicio de la app"
+    }
+  ],
+  "non_functional_requirements": {
+    "min_sdk": 24,
+    "target_sdk": 35,
+    "offline_supported": true,
+    "accessibility_required": true,
+    "performance_budget_ms": 16
+  }
+}

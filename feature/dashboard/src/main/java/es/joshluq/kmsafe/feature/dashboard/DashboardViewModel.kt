@@ -5,11 +5,15 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import es.joshluq.foundationkit.log.LoggerKit
 import es.joshluq.foundationkit.viewmodel.ScreenViewModel
 import es.joshluq.kmsafe.domain.model.AppOverlayState
+import es.joshluq.kmsafe.domain.model.SubscriptionLevel
 import es.joshluq.kmsafe.domain.usecase.GetCurrentUserUseCase
+import es.joshluq.kmsafe.domain.usecase.GetEntitlementsUseCase
 import es.joshluq.kmsafe.domain.usecase.GetRentingContractUseCase
 import es.joshluq.kmsafe.domain.usecase.ObserveAppOverlayUseCase
 import es.joshluq.kmsafe.domain.usecase.ObserveFleetSwitchingUseCase
+import es.joshluq.kmsafe.domain.usecase.SetAppOverlayUseCase
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import es.joshluq.kmsafe.core.analytics.AnalyticsTracker
@@ -22,13 +26,16 @@ import javax.inject.Inject
 class DashboardViewModel @Inject constructor(
     private val getRentingContractUseCase: GetRentingContractUseCase,
     private val getCurrentUserUseCase: GetCurrentUserUseCase,
+    private val getEntitlementsUseCase: GetEntitlementsUseCase,
     private val observeFleetSwitchingUseCase: ObserveFleetSwitchingUseCase,
     private val observeAppOverlayUseCase: ObserveAppOverlayUseCase,
+    private val setAppOverlayUseCase: SetAppOverlayUseCase,
     private val analytics: AnalyticsTracker,
     private val logger: LoggerKit
 ) : ScreenViewModel<State, Event, Effect>() {
 
     private var lastUserId: String? = null
+    private var lastSubscriptionLevel: SubscriptionLevel? = null
 
     override fun createInitialState(): State = State.Empty
 
@@ -37,6 +44,7 @@ class DashboardViewModel @Inject constructor(
         observeCurrentUser()
         observeFleetSwitching()
         observeAppOverlay()
+        observeSubscriptionDowngrades()
     }
 
     override fun handleEvent(event: Event) {
@@ -55,6 +63,11 @@ class DashboardViewModel @Inject constructor(
             }
             is Event.OnOdometerChanged -> {
                 updateState { copy(currentMileageInput = event.mileage) }
+            }
+            Event.OnDismissSubscriptionOverlay -> dismissSubscriptionOverlay()
+            Event.OnUpgradeFromSubscriptionOverlay -> {
+                dismissSubscriptionOverlay()
+                launchEffect(Effect.NavigateToPaywall)
             }
         }
     }
@@ -151,5 +164,30 @@ class DashboardViewModel @Inject constructor(
         if (state.value.selectedTab != tab) {
             updateState { copy(selectedTab = tab) }
         }
+    }
+
+    private fun observeSubscriptionDowngrades() {
+        getEntitlementsUseCase(GetEntitlementsUseCase.Input("", forceRefresh = false))
+            .distinctUntilChanged()
+            .onEach { output ->
+                if (output is GetEntitlementsUseCase.Output.Success) {
+                    val currentLevel = output.entitlements.subscriptionLevel
+                    val previousLevel = lastSubscriptionLevel
+                    lastSubscriptionLevel = currentLevel
+
+                    if (previousLevel == SubscriptionLevel.PREMIUM && currentLevel == SubscriptionLevel.FREE) {
+                        logger.w("DashboardViewModel", "Subscription downgrade detected: PREMIUM -> FREE. Triggering HUD Overlay.")
+                        setAppOverlayUseCase(SetAppOverlayUseCase.Input(AppOverlayState.SubscriptionDowngraded()))
+                            .launchIn(viewModelScope)
+                    }
+                }
+            }
+            .catch { logger.e("DashboardViewModel", "Error observing entitlements for downgrade", it) }
+            .launchIn(viewModelScope)
+    }
+
+    private fun dismissSubscriptionOverlay() {
+        setAppOverlayUseCase(SetAppOverlayUseCase.Input(AppOverlayState.None))
+            .launchIn(viewModelScope)
     }
 }

@@ -1,0 +1,99 @@
+{
+  "handoff_id": "HANDOFF-ARCH-DEV-KILOMENOS-15",
+  "schema_version": "1.0.0",
+  "timestamp": "2026-09-26T01:26:00Z",
+  "sender": {
+    "role": "Mobile Software Architect",
+    "agent_id": "software_architect"
+  },
+  "recipient": {
+    "role": "Senior Android Developer",
+    "agent_id": "senior_android_developer"
+  },
+  "feature_id": "KILOMENOS-15",
+  "po_handoff_ref": "HANDOFF-PO-ARCH-KILOMENOS-15",
+  "adr_path": "docs/adr/ADR-KILOMENOS-15.md",
+  "component_spec_path": "docs/specs/COMP-SPEC-KILOMENOS-15.md",
+  "remediation_cycle": 0,
+  "architecture_pattern": "CLEAN_ARCHITECTURE",
+  "module_targets": [
+    ":feature:auth",
+    ":core:domain",
+    ":feature:dashboard",
+    ":core:ui"
+  ],
+  "component_contracts": [
+    {
+      "component_name": "LaunchViewModel",
+      "package_name": "es.joshluq.kmsafe.feature.auth.launch",
+      "layer": "VIEWMODEL",
+      "state_models": ["LaunchState"],
+      "action_events": ["LaunchEvent"],
+      "exposed_flows": ["state", "effects"]
+    },
+    {
+      "component_name": "AppOverlayState",
+      "package_name": "es.joshluq.kmsafe.domain.model",
+      "layer": "DOMAIN",
+      "state_models": ["AppOverlayState.SubscriptionDowngraded", "AppOverlayState.None"],
+      "action_events": [],
+      "exposed_flows": []
+    },
+    {
+      "component_name": "DashboardViewModel",
+      "package_name": "es.joshluq.kmsafe.feature.dashboard",
+      "layer": "VIEWMODEL",
+      "state_models": ["State"],
+      "action_events": [
+        "Event.OnDismissSubscriptionOverlay",
+        "Event.OnUpgradeFromSubscriptionOverlay"
+      ],
+      "exposed_flows": ["state", "effects"]
+    },
+    {
+      "component_name": "AppExecutiveHudOverlay",
+      "package_name": "es.joshluq.kmsafe.core.ui.components",
+      "layer": "UI",
+      "state_models": ["AppOverlayState"],
+      "action_events": ["onDismiss", "onUpgrade"],
+      "exposed_flows": []
+    }
+  ],
+  "file_manifest_plan": [
+    {
+      "target_path": "feature/auth/src/main/java/es/joshluq/kmsafe/feature/auth/launch/LaunchViewModel.kt",
+      "action": "MODIFY",
+      "purpose": "Eliminar llamadas síncronas de red y delays artificiales en fetchInitialData para garantizar navegación inmediata con ActiveSession"
+    },
+    {
+      "target_path": "core/domain/src/main/java/es/joshluq/kmsafe/domain/model/AppOverlayState.kt",
+      "action": "MODIFY",
+      "purpose": "Añadir variante SubscriptionDowngraded para soportar feedback de transición PREMIUM -> FREE"
+    },
+    {
+      "target_path": "feature/dashboard/src/main/java/es/joshluq/kmsafe/feature/dashboard/Contract.kt",
+      "action": "MODIFY",
+      "purpose": "Añadir eventos OnDismissSubscriptionOverlay y OnUpgradeFromSubscriptionOverlay al contrato de Dashboard"
+    },
+    {
+      "target_path": "feature/dashboard/src/main/java/es/joshluq/kmsafe/feature/dashboard/DashboardViewModel.kt",
+      "action": "MODIFY",
+      "purpose": "Observar cambios en entitlements y despachar AppOverlayState.SubscriptionDowngraded ante transición PREMIUM -> FREE"
+    },
+    {
+      "target_path": "core/ui/src/main/java/es/joshluq/kmsafe/core/ui/components/AppExecutiveHudOverlay.kt",
+      "action": "MODIFY",
+      "purpose": "Renderizar contenido informativo para AppOverlayState.SubscriptionDowngraded con botones de acción"
+    },
+    {
+      "target_path": "feature/auth/src/test/kotlin/es/joshluq/kmsafe/feature/auth/launch/LaunchViewModelTest.kt",
+      "action": "MODIFY",
+      "purpose": "Actualizar pruebas unitarias de LaunchViewModel para validar arranque instantáneo y ausencia de llamadas de red"
+    },
+    {
+      "target_path": "feature/dashboard/src/test/kotlin/es/joshluq/kmsafe/feature/dashboard/DashboardViewModelTest.kt",
+      "action": "MODIFY",
+      "purpose": "Añadir pruebas unitarias para la detección de degradación de suscripción y manejo de overlay"
+    }
+  ]
+}

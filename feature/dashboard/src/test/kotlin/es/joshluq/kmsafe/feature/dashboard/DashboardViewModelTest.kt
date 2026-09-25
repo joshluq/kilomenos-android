@@ -2,17 +2,22 @@ package es.joshluq.kmsafe.feature.dashboard
 
 import es.joshluq.foundationkit.log.LoggerKit
 import es.joshluq.kmsafe.domain.model.AppOverlayState
+import es.joshluq.kmsafe.domain.model.Entitlements
 import es.joshluq.kmsafe.domain.model.FleetSwitchingState
 import es.joshluq.kmsafe.domain.model.RentingContract
+import es.joshluq.kmsafe.domain.model.SubscriptionLevel
 import es.joshluq.kmsafe.domain.model.User
 import es.joshluq.kmsafe.domain.usecase.GetCurrentUserUseCase
+import es.joshluq.kmsafe.domain.usecase.GetEntitlementsUseCase
 import es.joshluq.kmsafe.domain.usecase.GetRentingContractUseCase
 import es.joshluq.kmsafe.domain.usecase.ObserveAppOverlayUseCase
 import es.joshluq.kmsafe.domain.usecase.ObserveFleetSwitchingUseCase
+import es.joshluq.kmsafe.domain.usecase.SetAppOverlayUseCase
 import io.mockk.clearAllMocks
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.unmockkAll
+import io.mockk.verify
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -39,6 +44,8 @@ class DashboardViewModelTest {
     private val getCurrentUserUseCase: GetCurrentUserUseCase = mockk(relaxed = true)
     private val observeFleetSwitchingUseCase: ObserveFleetSwitchingUseCase = mockk(relaxed = true)
     private val observeAppOverlayUseCase: ObserveAppOverlayUseCase = mockk(relaxed = true)
+    private val getEntitlementsUseCase: GetEntitlementsUseCase = mockk(relaxed = true)
+    private val setAppOverlayUseCase: SetAppOverlayUseCase = mockk(relaxed = true)
     private val analytics = es.joshluq.kmsafe.core.analytics.fake.FakeAnalyticsTracker()
     private val logger: LoggerKit = mockk(relaxed = true)
 
@@ -52,6 +59,10 @@ class DashboardViewModelTest {
         every { observeAppOverlayUseCase(any()) } returns flowOf(
             ObserveAppOverlayUseCase.Output.Success(AppOverlayState.None)
         )
+        every { getEntitlementsUseCase(any()) } returns flowOf(
+            GetEntitlementsUseCase.Output.Success(Entitlements.Default)
+        )
+        every { setAppOverlayUseCase(any()) } returns flowOf(SetAppOverlayUseCase.Output.Success)
     }
 
     @After
@@ -67,6 +78,8 @@ class DashboardViewModelTest {
             getCurrentUserUseCase = getCurrentUserUseCase,
             observeFleetSwitchingUseCase = observeFleetSwitchingUseCase,
             observeAppOverlayUseCase = observeAppOverlayUseCase,
+            getEntitlementsUseCase = getEntitlementsUseCase,
+            setAppOverlayUseCase = setAppOverlayUseCase,
             analytics = analytics,
             logger = logger
         )
@@ -292,5 +305,93 @@ class DashboardViewModelTest {
 
         assertEquals(AppOverlayState.None, viewModel.state.value.hudOverlayState)
         assertFalse(viewModel.state.value.isNavigationBlocked)
+    }
+
+    @Test
+    fun `given subscription downgrade from PREMIUM to FREE then sets SubscriptionDowngraded overlay`() = runTest(testDispatcher) {
+        val entitlementsFlow = MutableSharedFlow<GetEntitlementsUseCase.Output>()
+        every { getEntitlementsUseCase(any()) } returns entitlementsFlow
+
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        // Initial emission as PREMIUM
+        entitlementsFlow.emit(
+            GetEntitlementsUseCase.Output.Success(
+                Entitlements.Default.copy(subscriptionLevel = SubscriptionLevel.PREMIUM)
+            )
+        )
+        advanceUntilIdle()
+
+        // Next emission as FREE (downgrade)
+        entitlementsFlow.emit(
+            GetEntitlementsUseCase.Output.Success(
+                Entitlements.Default.copy(subscriptionLevel = SubscriptionLevel.FREE)
+            )
+        )
+        advanceUntilIdle()
+
+        verify(exactly = 1) {
+            setAppOverlayUseCase(match { it.state is AppOverlayState.SubscriptionDowngraded })
+        }
+    }
+
+    @Test
+    fun `given subscription upgrade from FREE to PREMIUM then does not trigger SubscriptionDowngraded overlay`() = runTest(testDispatcher) {
+        val entitlementsFlow = MutableSharedFlow<GetEntitlementsUseCase.Output>()
+        every { getEntitlementsUseCase(any()) } returns entitlementsFlow
+
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        entitlementsFlow.emit(
+            GetEntitlementsUseCase.Output.Success(
+                Entitlements.Default.copy(subscriptionLevel = SubscriptionLevel.FREE)
+            )
+        )
+        advanceUntilIdle()
+
+        entitlementsFlow.emit(
+            GetEntitlementsUseCase.Output.Success(
+                Entitlements.Default.copy(subscriptionLevel = SubscriptionLevel.PREMIUM)
+            )
+        )
+        advanceUntilIdle()
+
+        verify(exactly = 0) {
+            setAppOverlayUseCase(match { it.state is AppOverlayState.SubscriptionDowngraded })
+        }
+    }
+
+    @Test
+    fun `given OnDismissSubscriptionOverlay event then clears overlay with AppOverlayState None`() = runTest(testDispatcher) {
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        viewModel.sendEvent(Event.OnDismissSubscriptionOverlay)
+        advanceUntilIdle()
+
+        verify(exactly = 1) {
+            setAppOverlayUseCase(SetAppOverlayUseCase.Input(AppOverlayState.None))
+        }
+    }
+
+    @Test
+    fun `given OnUpgradeFromSubscriptionOverlay event then clears overlay and emits NavigateToPaywall effect`() = runTest(testDispatcher) {
+        val effects = mutableListOf<Effect>()
+        val viewModel = createViewModel()
+        backgroundScope.launch(kotlinx.coroutines.test.UnconfinedTestDispatcher(testScheduler)) {
+            viewModel.effects.collect { effects.add(it) }
+        }
+        advanceUntilIdle()
+
+        viewModel.sendEvent(Event.OnUpgradeFromSubscriptionOverlay)
+        advanceUntilIdle()
+
+        verify(exactly = 1) {
+            setAppOverlayUseCase(SetAppOverlayUseCase.Input(AppOverlayState.None))
+        }
+        assertEquals(1, effects.size)
+        assertEquals(Effect.NavigateToPaywall, effects.first())
     }
 }

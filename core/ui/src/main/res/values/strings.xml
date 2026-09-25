@@ -103,4 +103,10 @@
     <string name="hud_account_deletion_title">Eliminación de cuenta (RGPD)</string>
     <string name="hud_ocr_scanning_title">Analizando ticket con IA ✨</string>
     <string name="hud_ocr_scanning_subtitle">Extrayendo estación, litros, importe y fecha…</string>
+
+    <!-- Subscription Downgrade Overlay -->
+    <string name="overlay_subscription_downgraded_title">Tu suscripción ha cambiado a FREE</string>
+    <string name="overlay_subscription_downgraded_message">Tu periodo Premium ha finalizado. Las funciones multi-vehículo, telemetría automática y proyecciones avanzadas se han desactivado. Puedes reactivarlas cuando quieras.</string>
+    <string name="overlay_subscription_downgraded_upgrade">Ver Planes</string>
+    <string name="overlay_subscription_downgraded_dismiss">Entendido</string>
 </resources>

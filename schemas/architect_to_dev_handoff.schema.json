@@ -69,7 +69,7 @@
     },
     "feature_id": {
       "type": "string",
-      "pattern": "^FEAT-[0-9]{3,}$"
+      "pattern": "^(FEAT-[0-9]{3,}|KILOMENOS-[0-9]+)$"
     },
     "po_handoff_ref": {
       "type": "string",

@@ -59,6 +59,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
+import es.joshluq.canvaskit.components.buttons.CanvasKitButton
+import es.joshluq.canvaskit.components.buttons.CanvasKitButtonVariant
 import es.joshluq.canvaskit.components.cards.CanvasKitCard
 import es.joshluq.canvaskit.components.cards.CanvasKitCardVariant
 import es.joshluq.canvaskit.foundations.theme.CanvasKitTheme
@@ -81,7 +83,9 @@ import kotlin.math.sin
 @Composable
 fun AppExecutiveHudOverlay(
     state: AppOverlayState,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onDismissSubscriptionOverlay: () -> Unit = {},
+    onUpgradeSubscriptionOverlay: () -> Unit = {}
 ) {
     AnimatedVisibility(
         visible = state !is AppOverlayState.None,
@@ -89,6 +93,9 @@ fun AppExecutiveHudOverlay(
         exit = fadeOut(animationSpec = tween(250))
     ) {
         BackHandler(enabled = true) {
+            if (state is AppOverlayState.SubscriptionDowngraded) {
+                onDismissSubscriptionOverlay()
+            }
             // Prevent back gestures during critical operations
         }
 
@@ -215,54 +222,110 @@ fun AppExecutiveHudOverlay(
                             )
                         }
 
+                        is AppOverlayState.SubscriptionDowngraded -> {
+                            SubscriptionDowngradedContent(
+                                state = state,
+                                onDismiss = onDismissSubscriptionOverlay,
+                                onUpgrade = onUpgradeSubscriptionOverlay
+                            )
+                        }
+
                         AppOverlayState.None -> Unit
                     }
 
-                    Spacer(modifier = Modifier.height(6.dp))
+                    if (state !is AppOverlayState.SubscriptionDowngraded) {
+                        Spacer(modifier = Modifier.height(6.dp))
 
-                    // Progress bar or shimmer
-                    val deletionProgress = (state as? AppOverlayState.AccountDeletion)?.progress
-                    if (deletionProgress != null) {
-                        val animatedProgress by animateFloatAsState(
-                            targetValue = deletionProgress,
-                            animationSpec = tween(500, easing = FastOutSlowInEasing),
-                            label = "gdpr_progress"
-                        )
-                        LinearProgressIndicator(
-                            progress = { animatedProgress },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(4.dp)
-                                .clip(RoundedCornerShape(2.dp)),
-                            color = CanvasKitTheme.colors.error,
-                            trackColor = CanvasKitTheme.colors.error.copy(alpha = 0.2f)
-                        )
-                    } else {
-                        val accentColor = if (state is AppOverlayState.AccountDeletion) {
-                            CanvasKitTheme.colors.error
+                        // Progress bar or shimmer
+                        val deletionProgress = (state as? AppOverlayState.AccountDeletion)?.progress
+                        if (deletionProgress != null) {
+                            val animatedProgress by animateFloatAsState(
+                                targetValue = deletionProgress,
+                                animationSpec = tween(500, easing = FastOutSlowInEasing),
+                                label = "gdpr_progress"
+                            )
+                            LinearProgressIndicator(
+                                progress = { animatedProgress },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(4.dp)
+                                    .clip(RoundedCornerShape(2.dp)),
+                                color = CanvasKitTheme.colors.error,
+                                trackColor = CanvasKitTheme.colors.error.copy(alpha = 0.2f)
+                            )
                         } else {
-                            CanvasKitTheme.colors.brandAccent
+                            val accentColor = if (state is AppOverlayState.AccountDeletion) {
+                                CanvasKitTheme.colors.error
+                            } else {
+                                CanvasKitTheme.colors.brandAccent
+                            }
+                            val shimmerBrush = Brush.horizontalGradient(
+                                colors = listOf(
+                                    accentColor.copy(alpha = 0.3f),
+                                    accentColor,
+                                    accentColor.copy(alpha = 0.3f)
+                                ),
+                                startX = shimmerTranslate * 300f,
+                                endX = (shimmerTranslate * 300f) + 300f
+                            )
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(4.dp)
+                                    .clip(RoundedCornerShape(2.dp))
+                                    .background(shimmerBrush)
+                            )
                         }
-                        val shimmerBrush = Brush.horizontalGradient(
-                            colors = listOf(
-                                accentColor.copy(alpha = 0.3f),
-                                accentColor,
-                                accentColor.copy(alpha = 0.3f)
-                            ),
-                            startX = shimmerTranslate * 300f,
-                            endX = (shimmerTranslate * 300f) + 300f
-                        )
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(4.dp)
-                                .clip(RoundedCornerShape(2.dp))
-                                .background(shimmerBrush)
-                        )
                     }
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun SubscriptionDowngradedContent(
+    state: AppOverlayState.SubscriptionDowngraded,
+    onDismiss: () -> Unit,
+    onUpgrade: () -> Unit
+) {
+    Icon(
+        imageVector = Icons.Default.Lock,
+        contentDescription = null,
+        tint = CanvasKitTheme.colors.brandAccent,
+        modifier = Modifier.size(56.dp)
+    )
+    Spacer(modifier = Modifier.height(4.dp))
+    Text(
+        text = state.title?.asString() ?: stringResource(R.string.overlay_subscription_downgraded_title),
+        style = CanvasKitTheme.typography.headingMedium,
+        color = CanvasKitTheme.colors.textPrimary,
+        fontWeight = FontWeight.Bold,
+        textAlign = TextAlign.Center
+    )
+    Text(
+        text = state.message?.asString() ?: stringResource(R.string.overlay_subscription_downgraded_message),
+        style = CanvasKitTheme.typography.bodyMedium,
+        color = CanvasKitTheme.colors.textSecondary,
+        textAlign = TextAlign.Center
+    )
+    Spacer(modifier = Modifier.height(8.dp))
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        CanvasKitButton(
+            text = stringResource(R.string.overlay_subscription_downgraded_upgrade),
+            onClick = onUpgrade,
+            modifier = Modifier.fillMaxWidth(),
+            variant = CanvasKitButtonVariant.Primary
+        )
+        CanvasKitButton(
+            text = stringResource(R.string.overlay_subscription_downgraded_dismiss),
+            onClick = onDismiss,
+            modifier = Modifier.fillMaxWidth(),
+            variant = CanvasKitButtonVariant.Ghost
+        )
     }
 }
 

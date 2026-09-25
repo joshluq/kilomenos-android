@@ -1,15 +1,9 @@
 package es.joshluq.kmsafe.feature.auth.launch
 
 import es.joshluq.foundationkit.log.LoggerKit
-import es.joshluq.kmsafe.domain.model.Entitlements
-import es.joshluq.kmsafe.domain.model.SubscriptionLevel
-import es.joshluq.kmsafe.domain.service.FingerprintProvider
 import es.joshluq.kmsafe.domain.usecase.CheckSessionUseCase
-import es.joshluq.kmsafe.domain.usecase.GetEntitlementsUseCase
 import es.joshluq.kmsafe.domain.usecase.SignOutUseCase
-import es.joshluq.kmsafe.domain.usecase.SyncContractsUseCase
 import io.mockk.clearAllMocks
-import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
@@ -34,16 +28,12 @@ class LaunchViewModelTest {
     private val testDispatcher = StandardTestDispatcher()
 
     private val checkSessionUseCase: CheckSessionUseCase = mockk(relaxed = true)
-    private val syncContractsUseCase: SyncContractsUseCase = mockk(relaxed = true)
-    private val getEntitlementsUseCase: GetEntitlementsUseCase = mockk(relaxed = true)
     private val signOutUseCase: SignOutUseCase = mockk(relaxed = true)
-    private val fingerprintProvider: FingerprintProvider = mockk(relaxed = true)
     private val logger: LoggerKit = mockk(relaxed = true)
 
     @Before
     fun setUp() {
         Dispatchers.setMain(testDispatcher)
-        coEvery { fingerprintProvider.getFingerprint() } returns "test_fingerprint"
     }
 
     @After
@@ -56,10 +46,7 @@ class LaunchViewModelTest {
     private fun createViewModel(): LaunchViewModel {
         return LaunchViewModel(
             checkSessionUseCase = checkSessionUseCase,
-            syncContractsUseCase = syncContractsUseCase,
-            getEntitlementsUseCase = getEntitlementsUseCase,
             signOutUseCase = signOutUseCase,
-            fingerprintProvider = fingerprintProvider,
             logger = logger
         )
     }
@@ -84,16 +71,9 @@ class LaunchViewModelTest {
     }
 
     @Test
-    fun `given active session when initialized then syncs entitlements and contracts and navigates to dashboard`() = runTest(testDispatcher) {
+    fun `given active session when initialized then immediately navigates to dashboard without network calls`() = runTest(testDispatcher) {
         every { checkSessionUseCase(CheckSessionUseCase.Input) } returns flowOf(
             CheckSessionUseCase.Output.ActiveSession
-        )
-        val entitlements = Entitlements.Default.copy(subscriptionLevel = SubscriptionLevel.PREMIUM)
-        every { getEntitlementsUseCase(any()) } returns flowOf(
-            GetEntitlementsUseCase.Output.Success(entitlements)
-        )
-        every { syncContractsUseCase(any()) } returns flowOf(
-            SyncContractsUseCase.Output.Success
         )
 
         val effects = mutableListOf<LaunchEffect>()
@@ -104,8 +84,6 @@ class LaunchViewModelTest {
         }
         advanceUntilIdle()
 
-        coVerify { getEntitlementsUseCase(GetEntitlementsUseCase.Input("test_fingerprint", forceRefresh = true)) }
-        coVerify { syncContractsUseCase(SyncContractsUseCase.Input) }
         assertEquals(1, effects.size)
         assertEquals(LaunchEffect.NavigateToDashboard, effects.first())
     }
@@ -130,29 +108,5 @@ class LaunchViewModelTest {
         coVerify { signOutUseCase(SignOutUseCase.Input(clearLocalData = true, minHoldDurationMs = 0L)) }
         assertEquals(1, effects.size)
         assertEquals(LaunchEffect.NavigateToLogin, effects.first())
-    }
-
-    @Test
-    fun `given active session with failing syncs when initialized then navigates to dashboard regardless`() = runTest(testDispatcher) {
-        every { checkSessionUseCase(CheckSessionUseCase.Input) } returns flowOf(
-            CheckSessionUseCase.Output.ActiveSession
-        )
-        every { getEntitlementsUseCase(any()) } returns flowOf(
-            GetEntitlementsUseCase.Output.Failure("Network error")
-        )
-        every { syncContractsUseCase(any()) } returns flowOf(
-            SyncContractsUseCase.Output.Failure("Network error")
-        )
-
-        val effects = mutableListOf<LaunchEffect>()
-        val viewModel = createViewModel()
-
-        backgroundScope.launch(kotlinx.coroutines.test.UnconfinedTestDispatcher(testScheduler)) {
-            viewModel.effects.collect { effects.add(it) }
-        }
-        advanceUntilIdle()
-
-        assertEquals(1, effects.size)
-        assertEquals(LaunchEffect.NavigateToDashboard, effects.first())
     }
 }

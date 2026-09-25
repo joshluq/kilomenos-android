@@ -103,4 +103,10 @@
     <string name="hud_account_deletion_title">Account Deletion (GDPR)</string>
     <string name="hud_ocr_scanning_title">Analyzing receipt with AI ✨</string>
     <string name="hud_ocr_scanning_subtitle">Extracting station, liters, amount, and date…</string>
+
+    <!-- Subscription Downgrade Overlay -->
+    <string name="overlay_subscription_downgraded_title">Your plan has changed to FREE</string>
+    <string name="overlay_subscription_downgraded_message">Your Premium period has ended. Multi-vehicle sync, automated telemetry, and advanced projections are now disabled. You can reactivate them anytime.</string>
+    <string name="overlay_subscription_downgraded_upgrade">View Plans</string>
+    <string name="overlay_subscription_downgraded_dismiss">Got it</string>
 </resources>
