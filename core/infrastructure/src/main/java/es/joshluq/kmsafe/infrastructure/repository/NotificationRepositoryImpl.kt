@@ -13,6 +13,7 @@ import es.joshluq.kmsafe.infrastructure.mapper.toIsoString
 import es.joshluq.kmsafe.infrastructure.remote.api.NotificationsApiService
 import es.joshluq.kmsafe.infrastructure.remote.dto.NotificationSyncItemDto
 import es.joshluq.kmsafe.infrastructure.remote.dto.NotificationSyncRequest
+import es.joshluq.kmsafe.infrastructure.remote.dto.RegisterFcmTokenRequest
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -254,6 +255,28 @@ class NotificationRepositoryImpl(
             }
             Result.success(remoteItems.size)
         } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun registerDeviceToken(token: String, deviceId: String?): Result<Unit> {
+        return try {
+            val request = RegisterFcmTokenRequest(
+                fcmToken = token,
+                deviceId = deviceId,
+                platform = "ANDROID"
+            )
+            val response = notificationsApiService.registerFcmToken(request)
+            if (response.isSuccessful && response.body()?.success != false) {
+                logger.i("NotificationRepository", "FCM device token registered successfully in backend")
+                Result.success(Unit)
+            } else {
+                val errorMsg = response.body()?.error ?: "HTTP ${response.code()}"
+                logger.w("NotificationRepository", "Failed to register FCM device token: $errorMsg")
+                Result.failure(Exception("Failed to register FCM token: $errorMsg"))
+            }
+        } catch (e: Exception) {
+            logger.e("NotificationRepository", "Error registering FCM device token: ${e.message}", e)
             Result.failure(e)
         }
     }

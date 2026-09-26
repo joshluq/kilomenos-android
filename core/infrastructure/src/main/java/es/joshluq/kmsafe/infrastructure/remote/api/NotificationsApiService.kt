@@ -5,6 +5,8 @@ import es.joshluq.kmsafe.infrastructure.remote.dto.NotificationReadResponse
 import es.joshluq.kmsafe.infrastructure.remote.dto.NotificationSyncRequest
 import es.joshluq.kmsafe.infrastructure.remote.dto.NotificationSyncResponse
 import es.joshluq.kmsafe.infrastructure.remote.dto.NotificationsListResponse
+import es.joshluq.kmsafe.infrastructure.remote.dto.RegisterFcmTokenRequest
+import es.joshluq.kmsafe.infrastructure.remote.dto.RegisterFcmTokenResponse
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.DELETE
@@ -15,7 +17,7 @@ import retrofit2.http.Path
 import retrofit2.http.Query
 
 /**
- * Retrofit service definition for Supabase v1 notifications endpoints (KILOMENOS-9).
+ * Retrofit service definition notifications endpoints (KILOMENOS-9).
  */
 interface NotificationsApiService {
 
@@ -46,4 +48,9 @@ interface NotificationsApiService {
     suspend fun deleteNotification(
         @Path("id") id: String
     ): Response<Map<String, Any>>
+
+    @POST("v1/devices/fcm-token")
+    suspend fun registerFcmToken(
+        @Body body: RegisterFcmTokenRequest
+    ): Response<RegisterFcmTokenResponse>
 }

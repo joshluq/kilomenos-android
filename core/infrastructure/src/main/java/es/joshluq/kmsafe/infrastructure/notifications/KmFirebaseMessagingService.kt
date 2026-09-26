@@ -8,11 +8,14 @@ import es.joshluq.kmsafe.domain.model.NotificationPriority
 import es.joshluq.kmsafe.domain.model.NotificationStatus
 import es.joshluq.kmsafe.domain.model.NotificationTopic
 import es.joshluq.kmsafe.domain.usecase.PublishNotificationUseCase
+import es.joshluq.kmsafe.domain.usecase.RegisterDeviceTokenUseCase
 import es.joshluq.kmsafe.domain.usecase.SyncEntitlementsFromPushUseCase
+import es.joshluq.kmsafe.infrastructure.repository.NotificationRepositoryImpl.Companion.isCanonicalUuid
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
+import java.util.UUID
 import javax.inject.Inject
 
 /**
@@ -27,6 +30,9 @@ class KmFirebaseMessagingService : FirebaseMessagingService() {
 
     @Inject
     lateinit var publishNotificationUseCase: PublishNotificationUseCase
+
+    @Inject
+    lateinit var registerDeviceTokenUseCase: RegisterDeviceTokenUseCase
 
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
@@ -56,9 +62,9 @@ class KmFirebaseMessagingService : FirebaseMessagingService() {
                     .getOrDefault(NotificationPriority.INFO)
                 val deepLinkUri = data["deep_link"] ?: data["deepLinkUri"]
 
-                val notifId = data["id"]?.takeIf { es.joshluq.kmsafe.infrastructure.repository.NotificationRepositoryImpl.isCanonicalUuid(it) }
-                    ?: data["notification_id"]?.takeIf { es.joshluq.kmsafe.infrastructure.repository.NotificationRepositoryImpl.isCanonicalUuid(it) }
-                    ?: java.util.UUID.randomUUID().toString()
+                val notifId = data["id"]?.takeIf { isCanonicalUuid(it) }
+                    ?: data["notification_id"]?.takeIf { isCanonicalUuid(it) }
+                    ?: UUID.randomUUID().toString()
 
                 val notif = Notification(
                     id = notifId,
@@ -78,7 +84,11 @@ class KmFirebaseMessagingService : FirebaseMessagingService() {
         }
     }
 
+    @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun onNewToken(token: String) {
         super.onNewToken(token)
+        serviceScope.launch {
+            registerDeviceTokenUseCase(RegisterDeviceTokenUseCase.Input(token))
+        }
     }
 }

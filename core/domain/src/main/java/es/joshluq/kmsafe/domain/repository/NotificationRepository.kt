@@ -19,4 +19,5 @@ interface NotificationRepository {
     suspend fun delete(id: String)
     suspend fun syncPending(): Boolean
     suspend fun fetchRemoteNotifications(): Result<Int>
+    suspend fun registerDeviceToken(token: String, deviceId: String? = null): Result<Unit>
 }

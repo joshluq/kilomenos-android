@@ -36,6 +36,8 @@ import es.joshluq.kmsafe.domain.usecase.SyncNotificationsUseCase
 import es.joshluq.kmsafe.domain.usecase.SyncNotificationsUseCaseImpl
 import es.joshluq.kmsafe.domain.usecase.SyncEntitlementsFromPushUseCase
 import es.joshluq.kmsafe.domain.usecase.SyncEntitlementsFromPushUseCaseImpl
+import es.joshluq.kmsafe.domain.usecase.RegisterDeviceTokenUseCase
+import es.joshluq.kmsafe.domain.usecase.RegisterDeviceTokenUseCaseImpl
 import es.joshluq.kmsafe.domain.usecase.VerifyPurchaseUseCase
 import es.joshluq.kmsafe.domain.usecase.VerifyPurchaseUseCaseImpl
 import es.joshluq.kmsafe.domain.usecase.RestorePurchasesUseCase
@@ -432,4 +434,7 @@ abstract class UseCaseModule {
 
     @Binds
     abstract fun bindSyncEntitlementsFromPushUseCase(impl: SyncEntitlementsFromPushUseCaseImpl): SyncEntitlementsFromPushUseCase
+
+    @Binds
+    abstract fun bindRegisterDeviceTokenUseCase(impl: RegisterDeviceTokenUseCaseImpl): RegisterDeviceTokenUseCase
 }

@@ -16,6 +16,8 @@ import es.joshluq.kmsafe.infrastructure.remote.dto.NotificationRemoteDto
 import es.joshluq.kmsafe.infrastructure.remote.dto.NotificationSyncData
 import es.joshluq.kmsafe.infrastructure.remote.dto.NotificationSyncResponse
 import es.joshluq.kmsafe.infrastructure.remote.dto.NotificationsListResponse
+import es.joshluq.kmsafe.infrastructure.remote.dto.RegisterFcmTokenRequest
+import es.joshluq.kmsafe.infrastructure.remote.dto.RegisterFcmTokenResponse
 import io.mockk.clearAllMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -234,5 +236,37 @@ class NotificationRepositoryImplTest {
                 list.size == 1 && list[0].id == validUuid1 && list[0].origin == "REMOTE" && list[0].syncStatus == "SYNCED"
             })
         }
+    }
+
+    @Test
+    fun `given valid token and deviceId when registerDeviceToken then sends request and returns success`() = runTest {
+        val token = "fcm_test_token_123"
+        val deviceId = "test_device_id_abc"
+        val response = RegisterFcmTokenResponse(success = true, message = "Registered")
+        coEvery { notificationsApiService.registerFcmToken(any()) } returns Response.success(response)
+
+        val result = repository.registerDeviceToken(token, deviceId)
+
+        assertTrue(result.isSuccess)
+        coVerify(exactly = 1) {
+            notificationsApiService.registerFcmToken(
+                RegisterFcmTokenRequest(
+                    fcmToken = token,
+                    deviceId = deviceId,
+                    platform = "ANDROID"
+                )
+            )
+        }
+    }
+
+    @Test
+    fun `given server error response when registerDeviceToken then returns failure`() = runTest {
+        val token = "fcm_test_token_123"
+        val errorBody = "{\"error\":\"Internal Server Error\"}".toResponseBody("application/json".toMediaTypeOrNull())
+        coEvery { notificationsApiService.registerFcmToken(any()) } returns Response.error(500, errorBody)
+
+        val result = repository.registerDeviceToken(token, null)
+
+        assertTrue(result.isFailure)
     }
 }

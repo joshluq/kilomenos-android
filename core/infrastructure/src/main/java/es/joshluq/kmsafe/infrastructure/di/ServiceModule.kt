@@ -13,6 +13,8 @@ import es.joshluq.kmsafe.infrastructure.util.DeviceFingerprintProvider
 import javax.inject.Singleton
 
 import es.joshluq.kmsafe.domain.service.BillingService
+import es.joshluq.kmsafe.domain.service.DeviceTokenProvider
+import es.joshluq.kmsafe.infrastructure.notifications.FirebaseDeviceTokenProvider
 import es.joshluq.kmsafe.infrastructure.remote.billing.BillingManager
 
 /**
@@ -33,6 +35,12 @@ abstract class ServiceModule {
     abstract fun bindFingerprintProvider(
         provider: DeviceFingerprintProvider
     ): FingerprintProvider
+
+    @Binds
+    @Singleton
+    abstract fun bindDeviceTokenProvider(
+        provider: FirebaseDeviceTokenProvider
+    ): DeviceTokenProvider
 
     @Binds
     @Singleton

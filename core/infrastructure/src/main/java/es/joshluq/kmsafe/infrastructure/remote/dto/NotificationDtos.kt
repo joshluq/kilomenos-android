@@ -88,3 +88,17 @@ data class NotificationReadAllResponse(
 data class NotificationReadAllData(
     @JsonProperty("updated_count") val updatedCount: Int = 0
 )
+
+@JsonIgnoreProperties(ignoreUnknown = true)
+data class RegisterFcmTokenRequest(
+    @JsonProperty("fcm_token") val fcmToken: String,
+    @JsonProperty("device_id") val deviceId: String? = null,
+    @JsonProperty("platform") val platform: String = "ANDROID"
+)
+
+@JsonIgnoreProperties(ignoreUnknown = true)
+data class RegisterFcmTokenResponse(
+    @JsonProperty("success") val success: Boolean = true,
+    @JsonProperty("message") val message: String? = null,
+    @JsonProperty("error") val error: String? = null
+)
