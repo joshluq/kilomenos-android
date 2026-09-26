@@ -25,19 +25,22 @@ import es.joshluq.kmsafe.domain.model.OdometerRecord
 import es.joshluq.kmsafe.domain.model.SyncStatus
 import es.joshluq.kmsafe.domain.model.TripRoute
 import es.joshluq.kmsafe.domain.repository.HistoryRepository
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 /**
  * Implementation of [HistoryRepository] using Room and Remote API.
  */
-class HistoryRepositoryImpl @Inject constructor(
+class HistoryRepositoryImpl(
     private val dao: OdometerRecordDao,
     private val routeDao: TripRouteDao,
     private val appDatabase: AppDatabase,
@@ -47,8 +50,35 @@ class HistoryRepositoryImpl @Inject constructor(
     private val syncManager: SyncManager,
     private val errorMapper: ErrorMapper,
     private val logger: LoggerKit,
-    private val dispatchers: DispatcherProvider
+    private val dispatchers: DispatcherProvider,
+    private val coroutineScope: CoroutineScope
 ) : HistoryRepository {
+
+    @Inject
+    constructor(
+        dao: OdometerRecordDao,
+        routeDao: TripRouteDao,
+        appDatabase: AppDatabase,
+        apiService: RentingApiService,
+        sessionDataSource: UserSessionDataSource,
+        syncIdHandler: SyncIdHandler,
+        syncManager: SyncManager,
+        errorMapper: ErrorMapper,
+        logger: LoggerKit,
+        dispatchers: DispatcherProvider
+    ) : this(
+        dao = dao,
+        routeDao = routeDao,
+        appDatabase = appDatabase,
+        apiService = apiService,
+        sessionDataSource = sessionDataSource,
+        syncIdHandler = syncIdHandler,
+        syncManager = syncManager,
+        errorMapper = errorMapper,
+        logger = logger,
+        dispatchers = dispatchers,
+        coroutineScope = CoroutineScope(SupervisorJob() + dispatchers.io)
+    )
 
     override fun getHistory(contractId: String): Flow<List<OdometerRecord>> {
         return dao.getAllRecords(contractId).map { entities ->
@@ -63,9 +93,9 @@ class HistoryRepositoryImpl @Inject constructor(
     }
 
     override suspend fun saveRecord(record: OdometerRecord, route: TripRoute?) = withContext(dispatchers.io) {
-        logger.d("HistoryRepository", "Saving record: ${record.odometerValue} km")
+        logger.d("HistoryRepository", "Saving record locally: ${record.odometerValue} km (ID: ${record.id})")
 
-        // Local-First: Always save as PENDING to allow future migration
+        // 1. Local-First: Always save as PENDING immediately
         val recordToSave = record.copy(syncStatus = SyncStatus.PENDING)
         dao.insertRecord(recordToSave.toEntity())
 
@@ -75,116 +105,128 @@ class HistoryRepositoryImpl @Inject constructor(
             routeDao.insertRoute(it.copy(recordId = record.id).toEntity())
         }
 
-        // Remote Sync (Only if session is active and user has Cloud Sync feature)
-        if (sessionDataSource.getSessionState().first() is AuthSessionState.Active) {
-            // Initial records are created automatically by the server during contract creation.
-            // We skip explicit POST here to avoid duplication.
-            if (record.isInitialRecord) {
-                logger.d("HistoryRepository", "Skipping remote sync for initial record ${record.id}")
-                return@withContext
-            }
-
-            runCatching {
-                if (sessionDataSource.hasFeature(Feature.CLOUD_SYNC.id)) {
-                    val response = apiService.addOdometerRecord(
-                        contractId = record.contractId,
-                        request = AddOdometerRecordRequest(
-                            id = record.id,
-                            timestamp = record.timestamp.toIsoString(),
-                            odometerValue = record.odometerValue,
-                            label = record.label,
-                            fuelConsumed = record.fuelAmount
-                        )
-                    )
-                    if (response.isSuccessful) {
-                        val remoteRecordDto = response.body()?.record
-                        if (remoteRecordDto != null) {
-                            val remoteRecord = remoteRecordDto.toDomainFromApi()
-                            syncIdHandler.resolveOdometerId(record, remoteRecord)
-
-                            if (remoteRecord.id == record.id && (route != null || record.hasRoute)) {
-                                val routeToSync = route ?: routeDao.getRouteByRecordIdSync(record.id)?.toDomainFromEntity()
-                                routeToSync?.let { saveRoute(it) }
-                            }
-                        }
-                    } else {
-                        val errorBody = response.errorBody()?.string() ?: ""
-                        logger.e("HistoryRepository", "Remote record creation failed with code ${response.code()}: $errorBody")
-                        if (response.code() == 409 || errorBody.contains("duplicate key", ignoreCase = true) || errorBody.contains("already exists", ignoreCase = true)) {
-                            logger.w("HistoryRepository", "Remote sync conflict: Duplicate key or already exists. Marking as SYNCED.")
-                            dao.insertRecord(record.copy(syncStatus = SyncStatus.SYNCED).toEntity())
-                        } else {
-                            syncManager.scheduleSync()
-                        }
-                    }
-                }
-            }.onFailure { e ->
-                if (e is kotlinx.coroutines.CancellationException) throw e
-                logger.e("HistoryRepository", "Remote record creation failed", e)
-                syncManager.scheduleSync()
+        // 2. Remote Sync is decoupled and runs in background so caller returns immediately (< 30ms)
+        if (!record.isInitialRecord) {
+            coroutineScope.launch {
+                dispatchRemoteAdd(recordToSave, route)
             }
         }
     }
 
-    override suspend fun updateRecord(record: OdometerRecord) = withContext(dispatchers.io) {
-        logger.d("HistoryRepository", "Updating record ID: ${record.id}")
-        // Local-First: Update in DB with PENDING status
-        val recordToUpdate = record.copy(syncStatus = SyncStatus.PENDING)
-        dao.insertRecord(recordToUpdate.toEntity())
+    private suspend fun dispatchRemoteAdd(record: OdometerRecord, route: TripRoute?) {
+        if (sessionDataSource.getSessionState().first() !is AuthSessionState.Active) {
+            logger.d("HistoryRepository", "Remote sync postponed: Session is not active")
+            return
+        }
 
-        // Remote Sync (Cloud Sync feature)
-        if (sessionDataSource.getSessionState().first() is AuthSessionState.Active &&
-            sessionDataSource.hasFeature(Feature.CLOUD_SYNC.id)
-        ) {
-            logger.d("HistoryRepository", "Session active and Cloud Sync enabled, attempting remote update sync")
-            runCatching {
-                val response = apiService.updateOdometerRecord(
-                    recordId = record.id,
-                    request = UpdateOdometerRecordRequest(
-                        odometerValue = record.odometerValue,
+        runCatching {
+            if (sessionDataSource.hasFeature(Feature.CLOUD_SYNC.id)) {
+                val response = apiService.addOdometerRecord(
+                    contractId = record.contractId,
+                    request = AddOdometerRecordRequest(
+                        id = record.id,
                         timestamp = record.timestamp.toIsoString(),
+                        odometerValue = record.odometerValue,
                         label = record.label,
                         fuelConsumed = record.fuelAmount
                     )
                 )
                 if (response.isSuccessful) {
-                    logger.i("HistoryRepository", "Remote update successful")
-                    // Success: Mark as SYNCED locally
-                    dao.insertRecord(record.copy(syncStatus = SyncStatus.SYNCED).toEntity())
+                    val remoteRecordDto = response.body()?.record
+                    if (remoteRecordDto != null) {
+                        val remoteRecord = remoteRecordDto.toDomainFromApi()
+                        syncIdHandler.resolveOdometerId(record, remoteRecord)
+
+                        if (remoteRecord.id == record.id && (route != null || record.hasRoute)) {
+                            val routeToSync = route ?: routeDao.getRouteByRecordIdSync(record.id)?.toDomainFromEntity()
+                            routeToSync?.let { saveRoute(it) }
+                        }
+                    }
                 } else {
                     val errorBody = response.errorBody()?.string() ?: ""
-                    logger.e("HistoryRepository", "Remote update failed with code ${response.code()}: $errorBody")
+                    logger.e("HistoryRepository", "Remote record creation failed with code ${response.code()}: $errorBody")
+                    if (response.code() == 409 || errorBody.contains("duplicate key", ignoreCase = true) || errorBody.contains("already exists", ignoreCase = true)) {
+                        logger.w("HistoryRepository", "Remote sync conflict: Duplicate key or already exists. Marking as SYNCED.")
+                        dao.insertRecord(record.copy(syncStatus = SyncStatus.SYNCED).toEntity())
+                    } else {
+                        syncManager.scheduleSync()
+                    }
+                }
+            }
+        }.onFailure { e ->
+            if (e is kotlinx.coroutines.CancellationException) throw e
+            logger.e("HistoryRepository", "Remote record creation failed", e)
+            syncManager.scheduleSync()
+        }
+    }
+
+    override suspend fun updateRecord(record: OdometerRecord) = withContext(dispatchers.io) {
+        logger.d("HistoryRepository", "Updating record ID: ${record.id}")
+        // Local-First: Update in DB with PENDING status immediately
+        val recordToUpdate = record.copy(syncStatus = SyncStatus.PENDING)
+        dao.insertRecord(recordToUpdate.toEntity())
+
+        // Remote Sync (Cloud Sync feature) executed asynchronously in background
+        if (sessionDataSource.getSessionState().first() is AuthSessionState.Active &&
+            sessionDataSource.hasFeature(Feature.CLOUD_SYNC.id)
+        ) {
+            coroutineScope.launch {
+                runCatching {
+                    val response = apiService.updateOdometerRecord(
+                        recordId = record.id,
+                        request = UpdateOdometerRecordRequest(
+                            odometerValue = record.odometerValue,
+                            timestamp = record.timestamp.toIsoString(),
+                            label = record.label,
+                            fuelConsumed = record.fuelAmount
+                        )
+                    )
+                    if (response.isSuccessful) {
+                        logger.i("HistoryRepository", "Remote update successful")
+                        // Success: Mark as SYNCED locally
+                        dao.insertRecord(record.copy(syncStatus = SyncStatus.SYNCED).toEntity())
+                    } else {
+                        val errorBody = response.errorBody()?.string() ?: ""
+                        logger.e("HistoryRepository", "Remote update failed with code ${response.code()}: $errorBody")
+                        syncManager.scheduleSync()
+                    }
+                }.onFailure { e ->
+                    if (e is kotlinx.coroutines.CancellationException) throw e
+                    logger.e("HistoryRepository", "Error during remote update sync", e)
                     syncManager.scheduleSync()
                 }
-            }.onFailure { e ->
-                if (e is kotlinx.coroutines.CancellationException) throw e
-                logger.e("HistoryRepository", "Error during remote update sync", e)
-                syncManager.scheduleSync()
             }
         }
     }
 
     override suspend fun deleteRecord(record: OdometerRecord) = withContext(dispatchers.io) {
-        logger.d("HistoryRepository", "Deleting record ID: ${record.id}")
-        // Local-First: Delete from DB
+        logger.d("HistoryRepository", "Deleting record ID: ${record.id} (Status: ${record.syncStatus})")
+        // Local-First: Delete from DB immediately
         dao.deleteRecord(record.toEntity())
 
-        // Remote Sync (Cloud Sync feature)
+        // Outbox optimization: If record was PENDING and never uploaded, skip remote DELETE (avoids 404)
+        if (record.syncStatus == SyncStatus.PENDING) {
+            logger.d("HistoryRepository", "Record ${record.id} was PENDING; skipping remote DELETE")
+            return@withContext
+        }
+
+        // Remote Sync (Cloud Sync feature) executed asynchronously in background
         if (sessionDataSource.getSessionState().first() is AuthSessionState.Active &&
             sessionDataSource.hasFeature(Feature.CLOUD_SYNC.id)
         ) {
-            logger.d("HistoryRepository", "Session active and Cloud Sync enabled, attempting remote deletion sync")
-            runCatching {
-                val response = apiService.deleteOdometerRecord(record.id)
-                if (response.isSuccessful) {
-                    logger.i("HistoryRepository", "Remote deletion successful")
-                } else {
-                    val errorBody = response.errorBody()?.string() ?: ""
-                    logger.e("HistoryRepository", "Remote deletion failed with code ${response.code()}: $errorBody")
+            coroutineScope.launch {
+                runCatching {
+                    val response = apiService.deleteOdometerRecord(record.id)
+                    if (response.isSuccessful) {
+                        logger.i("HistoryRepository", "Remote deletion successful")
+                    } else {
+                        val errorBody = response.errorBody()?.string() ?: ""
+                        logger.e("HistoryRepository", "Remote deletion failed with code ${response.code()}: $errorBody")
+                    }
+                }.onFailure { e ->
+                    if (e is kotlinx.coroutines.CancellationException) throw e
+                    logger.e("HistoryRepository", "Error during remote deletion sync", e)
                 }
-            }.onFailure { e ->
-                if (e is kotlinx.coroutines.CancellationException) throw e
-                logger.e("HistoryRepository", "Error during remote deletion sync", e)
             }
         }
     }

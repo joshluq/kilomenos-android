@@ -136,4 +136,16 @@ class AddOdometerRecordUseCaseTest {
         val failure = emissions[1] as AddOdometerRecordUseCase.Output.Failure
         assertEquals("Database timeout", failure.message)
     }
+
+    @Test
+    fun `given zero or negative odometer value when invoke then emits Failure and skips repository save`() = runTest {
+        val emissions = useCase(AddOdometerRecordUseCase.Input(odometerValue = 0.0, timestamp = 1000L)).toList()
+
+        assertEquals(2, emissions.size)
+        assertTrue(emissions[0] is AddOdometerRecordUseCase.Output.Progress)
+        val failure = emissions[1] as AddOdometerRecordUseCase.Output.Failure
+        assertEquals("El kilometraje debe ser mayor a 0", failure.message)
+
+        coVerify(exactly = 0) { historyRepository.saveRecord(any(), any()) }
+    }
 }

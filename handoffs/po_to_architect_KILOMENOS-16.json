@@ -1,0 +1,123 @@
+{
+  "$schema": "../schemas/po_to_architect_handoff.schema.json",
+  "handoff_id": "HANDOFF-PO-ARCH-KILOMENOS-16-01",
+  "schema_version": "1.0.0",
+  "timestamp": "2026-09-26T15:23:00Z",
+  "sender": {
+    "role": "Product Owner",
+    "agent_id": "product_owner"
+  },
+  "recipient": {
+    "role": "Software Architect",
+    "agent_id": "software_architect"
+  },
+  "feature_id": "KILOMENOS-16",
+  "feature_title": "Optimización Local-First en el Registro de Odómetro",
+  "prd_path": "docs/prd/PRD-KILOMENOS-16.md",
+  "user_stories": [
+    {
+      "story_id": "US-01",
+      "role": "conductor",
+      "want": "registrar mis kilómetros recorridos de forma inmediata y sin esperas tras pulsar Guardar",
+      "so_that": "el modal se cierre al instante independientemente de la calidad de mi cobertura móvil"
+    },
+    {
+      "story_id": "US-02",
+      "role": "conductor",
+      "want": "que mis métricas de balance, kilometraje real y proyección se actualicen al milisegundo en la pantalla principal tras guardar",
+      "so_that": "pueda verificar inmediatamente mi estado respecto al contrato"
+    },
+    {
+      "story_id": "US-03",
+      "role": "conductor en zonas sin cobertura o modo avión",
+      "want": "que mis registros se almacenen con seguridad en mi dispositivo y se sincronicen automáticamente en segundo plano cuando recupere la conexión",
+      "so_that": "no sufra pérdida de datos ni bloqueos al registrar mis trayectos"
+    },
+    {
+      "story_id": "US-04",
+      "role": "conductor",
+      "want": "que si me equivoco y elimino un registro que aún no se ha subido a la nube, se cancele limpiamente",
+      "so_that": "no se generen errores de sincronización ni registros duplicados en el servidor"
+    }
+  ],
+  "functional_requirements": [
+    {
+      "fr_id": "FR-01",
+      "title": "Persistencia Local Inmediata en Room DB",
+      "statement": "El sistema persistirá el nuevo registro de odómetro en la base de datos local Room DB con estado SyncStatus.PENDING en un tiempo de ejecución inferior a 10ms."
+    },
+    {
+      "fr_id": "FR-02",
+      "title": "Cierre Instantáneo de UI",
+      "statement": "El BottomSheet de registro de odómetro se cerrará y emitirá confirmación de éxito a la UI en un tiempo total inferior a 30ms tras la pulsación del usuario, sin esperar a la finalización de llamadas de red."
+    },
+    {
+      "fr_id": "FR-03",
+      "title": "Recálculo Reactivo de Métricas en Dashboard",
+      "statement": "OverviewViewModel recalculará y mostrará reactivamente el nuevo kilometraje total, balance contractual y gráfica de proyecciones a través del Flow de Room sin requerir recarga manual ni reinicio de la app."
+    },
+    {
+      "fr_id": "FR-04",
+      "title": "Sincronización Asíncrona Desacoplada",
+      "statement": "El sistema delegará la sincronización remota a un Job asíncrono o a WorkManager (SyncManager), ejecutándose en segundo plano en Dispatchers.IO sin interferir con la navegación del usuario."
+    },
+    {
+      "fr_id": "FR-05",
+      "title": "Idempotencia por UUID de Cliente",
+      "statement": "Todo registro se creará con un identificador UUID generado por el cliente móvil (client-generated UUID), el cual será respetado por el backend para evitar colisiones o swaps de ID que puedan romper la relación con rutas GPS (TripRoute)."
+    },
+    {
+      "fr_id": "FR-06",
+      "title": "Gestión Segura de Borrado y Edición Local",
+      "statement": "Si un registro marcado como SyncStatus.PENDING es eliminado localmente antes de sincronizarse con el backend, se purgará de Room y se cancelará su sincronización remota sin emitir llamadas DELETE HTTP huérfanas al servidor."
+    }
+  ],
+  "acceptance_criteria": [
+    {
+      "ac_id": "AC-01",
+      "scenario": "Registro Instantáneo y Cierre de UI (< 30ms)",
+      "given": "un usuario autenticado con contrato activo en la pantalla OverviewScreen",
+      "when": "introduce un kilometraje válido (ej. '45') y pulsa el botón 'Guardar Registro'",
+      "then": "el sistema inserta el registro en Room DB como SyncStatus.PENDING, cierra inmediatamente el BottomSheet en menos de 30ms y recalcula reactivamente el balance y odómetro en el Dashboard, mientras la sincronización remota se ejecuta en segundo plano"
+    },
+    {
+      "ac_id": "AC-02",
+      "scenario": "Disponibilidad y Persistencia en Modo Offline",
+      "given": "un usuario en Modo Avión o en un garaje subterráneo sin cobertura de red",
+      "when": "registra un kilometraje válido desde el BottomSheet",
+      "then": "el registro se almacena exitosamente en Room DB, la UI se cierra sin mostrar alertas de error de red ni spinners bloqueantes, y el nuevo kilometraje se refleja de inmediato en el Dashboard local"
+    },
+    {
+      "ac_id": "AC-03",
+      "scenario": "Sincronización Automática al Recuperar Conectividad",
+      "given": "uno o más registros de odómetro almacenados localmente con SyncStatus.PENDING",
+      "when": "el dispositivo recupera la conexión a Internet o se dispara el worker en segundo plano",
+      "then": "SyncWorker / SyncManager envía las solicitudes POST con los UUIDs locales, el servidor responde HTTP 200/201 y los registros se actualizan localmente a SyncStatus.SYNCED"
+    },
+    {
+      "ac_id": "AC-04",
+      "scenario": "Eliminación Limpia de Registro PENDING sin Tráfico de Red",
+      "given": "un registro de odómetro en Room DB con SyncStatus.PENDING que aún no ha sido sincronizado con el servidor",
+      "when": "el usuario pulsa 'Eliminar' desde la pantalla de Historial",
+      "then": "el registro se elimina inmediatamente de la base de datos local y el sistema no envía ninguna petición DELETE HTTP al backend"
+    },
+    {
+      "ac_id": "AC-05",
+      "scenario": "Rechazo de Inputs Inválidos sin Escritura en Base de Datos",
+      "given": "el BottomSheet de registro abierto",
+      "when": "el usuario introduce un valor no numérico, menor o igual a cero, o una fecha fuera de contrato",
+      "then": "el sistema no ejecuta ninguna inserción en Room DB, mantiene el BottomSheet abierto y muestra el mensaje de error de validación correspondiente"
+    }
+  ],
+  "non_functional_requirements": {
+    "min_sdk": 24,
+    "target_sdk": 35,
+    "offline_capability": true,
+    "rendering_budget_ms": 16,
+    "security_constraints": [
+      "Zero sensitive PII or authentication tokens logged to Logcat during background sync",
+      "Preservación de claves foráneas entre OdometerRecord y TripRoute mediante Client-Generated UUID"
+    ]
+  },
+  "remediation_cycle": 0
+}

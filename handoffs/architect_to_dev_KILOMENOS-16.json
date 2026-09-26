@@ -1,0 +1,74 @@
+{
+  "$schema": "../schemas/architect_to_dev_handoff.schema.json",
+  "handoff_id": "HANDOFF-ARCH-DEV-KILOMENOS-16-01",
+  "schema_version": "1.0.0",
+  "timestamp": "2026-09-26T15:24:30Z",
+  "sender": {
+    "role": "Mobile Software Architect",
+    "agent_id": "software_architect"
+  },
+  "recipient": {
+    "role": "Senior Android Developer",
+    "agent_id": "senior_android_developer"
+  },
+  "feature_id": "KILOMENOS-16",
+  "po_handoff_ref": "HANDOFF-PO-ARCH-KILOMENOS-16-01",
+  "adr_path": "docs/adr/ADR-KILOMENOS-16.md",
+  "component_spec_path": "docs/specs/COMP-SPEC-KILOMENOS-16.md",
+  "remediation_cycle": 0,
+  "architecture_pattern": "CLEAN_ARCHITECTURE",
+  "module_targets": [
+    ":core:domain",
+    ":core:infrastructure",
+    ":feature:overview"
+  ],
+  "component_contracts": [
+    {
+      "component_name": "AddOdometerRecordUseCase",
+      "package_name": "es.joshluq.kmsafe.domain.usecase",
+      "layer": "DOMAIN",
+      "state_models": ["AddOdometerRecordUseCase.Output"],
+      "action_events": ["AddOdometerRecordUseCase.Input"],
+      "exposed_flows": ["invoke"]
+    },
+    {
+      "component_name": "HistoryRepositoryImpl",
+      "package_name": "es.joshluq.kmsafe.infrastructure.repository",
+      "layer": "DATA",
+      "state_models": ["OdometerRecord", "TripRoute", "SyncStatus"],
+      "action_events": ["saveRecord", "deleteRecord", "updateRecord"],
+      "exposed_flows": ["getHistory"]
+    },
+    {
+      "component_name": "OverviewViewModel",
+      "package_name": "es.joshluq.kmsafe.feature.overview",
+      "layer": "VIEWMODEL",
+      "state_models": ["State"],
+      "action_events": ["Event.OnSaveRecordClicked"],
+      "exposed_flows": ["state", "effects"]
+    }
+  ],
+  "dependencies": [],
+  "file_manifest_plan": [
+    {
+      "target_path": "core/domain/src/main/java/es/joshluq/kmsafe/domain/usecase/AddOdometerRecordUseCase.kt",
+      "action": "MODIFY",
+      "purpose": "Añadir validación estricta de input (> 0) y emitir Success inmediatamente tras confirmar inserción local en Room"
+    },
+    {
+      "target_path": "core/infrastructure/src/main/java/es/joshluq/kmsafe/infrastructure/repository/HistoryRepositoryImpl.kt",
+      "action": "MODIFY",
+      "purpose": "Persistir en Room con SyncStatus.PENDING de inmediato, desacoplar la sincronización remota a background y evitar llamadas DELETE si el registro es PENDING"
+    },
+    {
+      "target_path": "feature/overview/src/main/java/es/joshluq/kmsafe/feature/overview/OverviewViewModel.kt",
+      "action": "MODIFY",
+      "purpose": "Cerrar instantáneamente el BottomSheet al recibir Success (< 30ms) y delegar el recálculo reactivo a los Flows de Room"
+    },
+    {
+      "target_path": "core/domain/src/test/kotlin/es/joshluq/kmsafe/domain/usecase/AddOdometerRecordUseCaseTest.kt",
+      "action": "MODIFY",
+      "purpose": "Añadir tests unitarios validando persistencia inmediata y rechazo de valores <= 0"
+    }
+  ]
+}

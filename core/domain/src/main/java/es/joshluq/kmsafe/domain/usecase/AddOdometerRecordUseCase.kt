@@ -42,10 +42,15 @@ class AddOdometerRecordUseCaseImpl @Inject constructor(
 ) : AddOdometerRecordUseCase {
 
     override fun invoke(input: AddOdometerRecordUseCase.Input): Flow<AddOdometerRecordUseCase.Output> = flow {
+        if (input.odometerValue <= 0.0) {
+            emit(AddOdometerRecordUseCase.Output.Failure("El kilometraje debe ser mayor a 0"))
+            return@flow
+        }
+
         val contract = rentingRepository.getContract().firstOrNull()
 
         if (contract == null) {
-            emit(AddOdometerRecordUseCase.Output.Failure("No renting contract found") as AddOdometerRecordUseCase.Output)
+            emit(AddOdometerRecordUseCase.Output.Failure("No renting contract found"))
             return@flow
         }
 
