@@ -61,7 +61,7 @@ private const val KEY_CONTRACT_ID = "contract_id"
  * Returns the associated contract/vehicle ID if present in payload data.
  */
 val Notification.contractId: String?
-    get() = data?.get(KEY_CONTRACT_ID) as? String
+    get() = (data?.get(KEY_CONTRACT_ID) as? String)?.takeIf { it.isNotBlank() }
 
 /**
  * Checks if the notification is targetable for the currently active vehicle.

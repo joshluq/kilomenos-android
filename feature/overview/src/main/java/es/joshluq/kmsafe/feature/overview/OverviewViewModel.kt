@@ -21,6 +21,7 @@ import es.joshluq.kmsafe.domain.model.NotificationTopic
 import es.joshluq.kmsafe.domain.model.RentingContract
 import es.joshluq.kmsafe.domain.model.SubscriptionLevel
 import es.joshluq.kmsafe.domain.model.TripProjection
+import es.joshluq.kmsafe.domain.model.isForVehicle
 import es.joshluq.kmsafe.domain.usecase.AddOdometerRecordUseCase
 import es.joshluq.kmsafe.domain.usecase.ClearTrackingUseCase
 import es.joshluq.kmsafe.domain.usecase.DismissTripNotificationUseCase
@@ -86,32 +87,19 @@ class OverviewViewModel @Inject constructor(
 ) : ScreenViewModel<State, Event, Effect>() {
 
     private var bluetoothJob: Job? = null
+    private var previousProjectionVehicleId: String? = null
     private var previousIsOverLimit: Boolean? = null
     private var bluetoothMissingNotifiedVehicleId: String? = null
 
     init {
         consolidatedInitialLoad()
         observeTracking()
-        observeNotifications()
         startGeofenceSync()
         updateState { copy(adUnitId = monetizationConfig.getOverviewBannerAdUnitId()) }
     }
 
     private fun startGeofenceSync() {
         syncStationGeofencesUseCase(SyncStationGeofencesUseCase.Input)
-            .launchIn(viewModelScope)
-    }
-
-    private fun observeNotifications() {
-        observeActiveNotificationsUseCase(ObserveActiveNotificationsUseCase.Input())
-            .onEach { output ->
-                when (output) {
-                    is ObserveActiveNotificationsUseCase.Output.Success -> {
-                        val mostRelevant = output.notifications.firstOrNull { it.status == NotificationStatus.UNREAD && !it.isRead }
-                        updateState { copy(activeNotification = mostRelevant) }
-                    }
-                }
-            }
             .launchIn(viewModelScope)
     }
 
@@ -128,6 +116,8 @@ class OverviewViewModel @Inject constructor(
             .distinctUntilChanged()
         val projectionFlow = getTripProjectionUseCase(GetTripProjectionUseCase.Input)
             .distinctUntilChanged()
+        val notificationsFlow = observeActiveNotificationsUseCase(ObserveActiveNotificationsUseCase.Input())
+            .distinctUntilChanged()
 
         combine(
             entitlementsFlow,
@@ -135,7 +125,8 @@ class OverviewViewModel @Inject constructor(
             overviewDataFlow,
             allContractsFlow,
             monthlyUsageFlow,
-            projectionFlow
+            projectionFlow,
+            notificationsFlow
         ) { flows: Array<Any> ->
             val entitlementsOutput = flows[0] as GetEntitlementsUseCase.Output
             val preferencesOutput = flows[1] as GetPreferencesUseCase.Output
@@ -143,6 +134,7 @@ class OverviewViewModel @Inject constructor(
             val allContractsOutput = flows[3] as GetAllContractsUseCase.Output
             val monthlyUsageOutput = flows[4] as GetMonthlyUsageUseCase.Output
             val projectionOutput = flows[5] as GetTripProjectionUseCase.Output
+            val notificationsOutput = flows[6] as ObserveActiveNotificationsUseCase.Output
 
             var newState = state.value
 
@@ -244,6 +236,15 @@ class OverviewViewModel @Inject constructor(
             // 5. Process Available Vehicles
             if (allContractsOutput is GetAllContractsUseCase.Output.Success) {
                 newState = newState.copy(availableVehicles = allContractsOutput.contracts.reversed())
+            }
+
+            // 6. Process Active Notification
+            if (notificationsOutput is ObserveActiveNotificationsUseCase.Output.Success) {
+                val activeVehicleId = activeContract?.id
+                val mostRelevant = notificationsOutput.notifications.firstOrNull { notif ->
+                    (notif.status == NotificationStatus.UNREAD && !notif.isRead) && notif.isForVehicle(activeVehicleId)
+                }
+                newState = newState.copy(activeNotification = mostRelevant)
             }
 
             // 7. Atomic State Update
@@ -389,6 +390,12 @@ class OverviewViewModel @Inject constructor(
         val lastKnown = if (preferencesOutput is GetPreferencesUseCase.Output.Success) {
             preferencesOutput.preferences.lastKnownOverLimit
         } else null
+
+        if (previousProjectionVehicleId != contract.id) {
+            val isInitial = previousProjectionVehicleId == null
+            previousProjectionVehicleId = contract.id
+            previousIsOverLimit = if (isInitial) (lastKnown ?: currentOverLimit) else currentOverLimit
+        }
 
         if (previousIsOverLimit == null) {
             previousIsOverLimit = lastKnown ?: currentOverLimit

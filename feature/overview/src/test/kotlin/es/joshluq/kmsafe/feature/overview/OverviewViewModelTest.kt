@@ -20,6 +20,7 @@ import es.joshluq.kmsafe.domain.usecase.GetMonthlyUsageUseCase
 import es.joshluq.kmsafe.domain.usecase.GetOverviewDataUseCase
 import es.joshluq.kmsafe.domain.usecase.GetPreferencesUseCase
 import es.joshluq.kmsafe.domain.usecase.GetTripProjectionUseCase
+import es.joshluq.kmsafe.domain.usecase.ObserveActiveNotificationsUseCase
 import es.joshluq.kmsafe.domain.usecase.ObserveTrackingStateUseCase
 import es.joshluq.kmsafe.domain.usecase.ObserveVehicleBluetoothConnectionUseCase
 import es.joshluq.kmsafe.domain.usecase.SelectContractUseCase
@@ -564,6 +565,115 @@ class OverviewViewModelTest {
         advanceUntilIdle()
 
         assertEquals(null, viewModel.state.value.activeNotification)
+    }
+
+    @Test
+    fun `given unread notification belonging to another vehicle then activeNotification is null`() = runTest(testDispatcher) {
+        val otherVehicleNotif = Notification(
+            id = "notif-car-b",
+            topic = NotificationTopic.PROJECTION,
+            title = "Alerta de exceso proyectado",
+            body = "Saldo negativo",
+            priority = NotificationPriority.CRITICAL,
+            status = NotificationStatus.UNREAD,
+            isRead = false,
+            data = mapOf("contract_id" to "contract-other-vehicle")
+        )
+        every { observeActiveNotificationsUseCase(any()) } returns flowOf(
+            ObserveActiveNotificationsUseCase.Output.Success(listOf(otherVehicleNotif))
+        )
+
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        assertEquals(null, viewModel.state.value.activeNotification)
+    }
+
+    @Test
+    fun `given active vehicle has unread notification then activeNotification displays it`() = runTest(testDispatcher) {
+        val activeVehicleNotif = Notification(
+            id = "notif-car-a",
+            topic = NotificationTopic.PROJECTION,
+            title = "Ritmo de kilometraje recuperado",
+            body = "Saldo positivo",
+            priority = NotificationPriority.INFO,
+            status = NotificationStatus.UNREAD,
+            isRead = false,
+            data = mapOf("contract_id" to sampleContract.id)
+        )
+        every { observeActiveNotificationsUseCase(any()) } returns flowOf(
+            ObserveActiveNotificationsUseCase.Output.Success(listOf(activeVehicleNotif))
+        )
+
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        assertEquals(activeVehicleNotif, viewModel.state.value.activeNotification)
+    }
+
+    @Test
+    fun `given active vehicle notification is read and other vehicle has unread notification then activeNotification becomes null`() = runTest(testDispatcher) {
+        val notificationsFlow = MutableSharedFlow<ObserveActiveNotificationsUseCase.Output>()
+        every { observeActiveNotificationsUseCase(any()) } returns notificationsFlow
+
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        val notifCarA = Notification(
+            id = "notif-car-a",
+            topic = NotificationTopic.PROJECTION,
+            title = "Ritmo de kilometraje recuperado",
+            body = "Saldo positivo",
+            priority = NotificationPriority.INFO,
+            status = NotificationStatus.UNREAD,
+            isRead = false,
+            data = mapOf("contract_id" to sampleContract.id)
+        )
+        val notifCarB = Notification(
+            id = "notif-car-b",
+            topic = NotificationTopic.PROJECTION,
+            title = "Alerta de exceso proyectado",
+            body = "Saldo negativo",
+            priority = NotificationPriority.CRITICAL,
+            status = NotificationStatus.UNREAD,
+            isRead = false,
+            data = mapOf("contract_id" to "contract-other")
+        )
+
+        // Initial emission: car A (unread) and car B (unread)
+        notificationsFlow.emit(ObserveActiveNotificationsUseCase.Output.Success(listOf(notifCarA, notifCarB)))
+        advanceUntilIdle()
+        assertEquals("notif-car-a", viewModel.state.value.activeNotification?.id)
+
+        // Second emission: car A is now READ, car B remains UNREAD
+        val notifCarARead = notifCarA.copy(status = NotificationStatus.READ, isRead = true)
+        notificationsFlow.emit(ObserveActiveNotificationsUseCase.Output.Success(listOf(notifCarARead, notifCarB)))
+        advanceUntilIdle()
+
+        // Car B should NOT be shown on Car A's overview!
+        assertEquals(null, viewModel.state.value.activeNotification)
+    }
+
+    @Test
+    fun `given global unread notification without contract_id then activeNotification displays it`() = runTest(testDispatcher) {
+        val globalNotif = Notification(
+            id = "notif-system",
+            topic = NotificationTopic.SUBSCRIPTION,
+            title = "Plan actualizado",
+            body = "Tu suscripción ha cambiado",
+            priority = NotificationPriority.INFO,
+            status = NotificationStatus.UNREAD,
+            isRead = false,
+            data = null
+        )
+        every { observeActiveNotificationsUseCase(any()) } returns flowOf(
+            ObserveActiveNotificationsUseCase.Output.Success(listOf(globalNotif))
+        )
+
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        assertEquals(globalNotif, viewModel.state.value.activeNotification)
     }
 
     @Test
