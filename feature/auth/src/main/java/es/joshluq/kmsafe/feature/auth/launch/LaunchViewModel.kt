@@ -6,11 +6,13 @@ import es.joshluq.foundationkit.log.LoggerKit
 import es.joshluq.foundationkit.viewmodel.ScreenViewModel
 import es.joshluq.kmsafe.domain.usecase.CheckSessionUseCase
 import es.joshluq.kmsafe.domain.usecase.SignOutUseCase
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import kotlin.time.Duration.Companion.milliseconds
 
 @HiltViewModel
 class LaunchViewModel @Inject constructor(
@@ -37,16 +39,19 @@ class LaunchViewModel @Inject constructor(
 
                 when (output) {
                     CheckSessionUseCase.Output.ActiveSession -> {
+                        delay(800.milliseconds)
                         isNavigating = true
                         logger.i("LaunchViewModel", "Active session confirmed. Instant navigation to Dashboard.")
                         launchEffect(LaunchEffect.NavigateToDashboard)
                     }
                     CheckSessionUseCase.Output.InconsistentSession -> {
+                        delay(800.milliseconds)
                         isNavigating = true
                         logger.w("LaunchViewModel", "Inconsistent session detected. Forcing logout.")
                         handleInconsistentSession()
                     }
                     CheckSessionUseCase.Output.IdleSession -> {
+                        delay(800.milliseconds)
                         isNavigating = true
                         logger.d("LaunchViewModel", "No active session, navigating to Login")
                         launchEffect(LaunchEffect.NavigateToLogin)
