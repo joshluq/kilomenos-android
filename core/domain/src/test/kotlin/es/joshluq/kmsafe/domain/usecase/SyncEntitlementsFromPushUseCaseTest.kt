@@ -74,4 +74,32 @@ class SyncEntitlementsFromPushUseCaseTest {
         verify(exactly = 1) { entitlementsRepository.clearCache() }
         coVerify(exactly = 0) { notificationRepository.insertOrUpdate(any()) }
     }
+
+    @Test
+    fun `given RTDN FCM HTTP v1 downgrade payload when invoke then clears cache and posts notification`() = runTest {
+        val payload = mapOf(
+            "event_type" to "SUBSCRIPTION_DOWNGRADED",
+            "subscription_level" to "FREE",
+            "previous_level" to "PREMIUM",
+            "action_code" to "REFRESH_ENTITLEMENTS",
+            "title" to "Suscripción Finalizada",
+            "message" to "Tu período Premium ha finalizado.",
+            "deep_link" to "kmsafe://notifications?id=subscription_downgrade"
+        )
+
+        val notificationSlot = slot<Notification>()
+        coEvery { notificationRepository.insertOrUpdate(capture(notificationSlot)) } returns Unit
+
+        val result = useCase(SyncEntitlementsFromPushUseCase.Input(payload))
+
+        assertTrue(result.isSuccess)
+        val output = result.getOrNull() as SyncEntitlementsFromPushUseCase.Output.Success
+        assertTrue(output.isDowngraded)
+
+        verify(exactly = 1) { entitlementsRepository.clearCache() }
+        coVerify(exactly = 1) { notificationRepository.insertOrUpdate(any()) }
+        assertEquals(NotificationTopic.SUBSCRIPTION, notificationSlot.captured.topic)
+        assertEquals("Suscripción Finalizada", notificationSlot.captured.title)
+        assertEquals("kmsafe://notifications?id=subscription_downgrade", notificationSlot.captured.deepLinkUri)
+    }
 }

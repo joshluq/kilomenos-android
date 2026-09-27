@@ -17,6 +17,7 @@ import es.joshluq.kmsafe.infrastructure.remote.api.StorageApiService
 import es.joshluq.kmsafe.infrastructure.remote.api.BillingApiService
 import es.joshluq.kmsafe.infrastructure.remote.api.NotificationsApiService
 import es.joshluq.kmsafe.infrastructure.remote.api.ReceiptsApiService
+import es.joshluq.kmsafe.infrastructure.remote.interceptor.EntitlementsSecurityInterceptor
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
@@ -70,12 +71,14 @@ object NetworkModule {
     @Authenticated
     fun provideAuthenticatedOkHttpClient(
         baseClient: OkHttpClient,
-        authKit: AuthKit
+        authKit: AuthKit,
+        entitlementsSecurityInterceptor: EntitlementsSecurityInterceptor
     ): OkHttpClient {
         val networkKit = authKit.plugin<NetworkKit>() ?: error("NetworkKit plugin not installed")
         return baseClient.newBuilder()
             .addInterceptor(networkKit.interceptor())
             .authenticator(networkKit.authenticator())
+            .addInterceptor(entitlementsSecurityInterceptor)
             .build()
     }
 

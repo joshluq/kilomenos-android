@@ -109,4 +109,13 @@
     <string name="overlay_subscription_downgraded_message">Tu periodo Premium ha finalizado. Las funciones multi-vehículo, telemetría automática y proyecciones avanzadas se han desactivado. Puedes reactivarlas cuando quieras.</string>
     <string name="overlay_subscription_downgraded_upgrade">Ver Planes</string>
     <string name="overlay_subscription_downgraded_dismiss">Entendido</string>
+
+    <!-- Notification Permission Rationale Dialog -->
+    <string name="notification_permission_dialog_acc_description">Diálogo informativo para activar alertas de protección de vehículo</string>
+    <string name="notification_permission_dialog_icon_description">Icono de alertas de protección vehicular</string>
+    <string name="notification_permission_dialog_title">Protege la Cobertura de tu Vehículo</string>
+    <string name="notification_permission_dialog_message">KiloMenos necesita enviarte alertas sobre cambios en el estado de tu suscripción y avisos anticipados antes de exceder el límite de kilómetros de tu póliza de renting.</string>
+    <string name="notification_permission_dialog_feature">Evita penalizaciones por exceso de kilometraje</string>
+    <string name="notification_permission_dialog_confirm">Continuar y Activar</string>
+    <string name="notification_permission_dialog_dismiss">Más tarde</string>
 </resources>

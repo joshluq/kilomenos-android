@@ -109,4 +109,13 @@
     <string name="overlay_subscription_downgraded_message">Your Premium period has ended. Multi-vehicle sync, automated telemetry, and advanced projections are now disabled. You can reactivate them anytime.</string>
     <string name="overlay_subscription_downgraded_upgrade">View Plans</string>
     <string name="overlay_subscription_downgraded_dismiss">Got it</string>
+
+    <!-- Notification Permission Rationale Dialog -->
+    <string name="notification_permission_dialog_acc_description">Informative dialog to enable vehicle protection alerts</string>
+    <string name="notification_permission_dialog_icon_description">Vehicle protection alert icon</string>
+    <string name="notification_permission_dialog_title">Protect Your Vehicle Coverage</string>
+    <string name="notification_permission_dialog_message">KiloMenos needs to send you alerts about changes to your subscription and early warnings before exceeding the mileage limit of your lease policy.</string>
+    <string name="notification_permission_dialog_feature">Avoid mileage overage penalties</string>
+    <string name="notification_permission_dialog_confirm">Continue and Enable</string>
+    <string name="notification_permission_dialog_dismiss">Later</string>
 </resources>

@@ -1,5 +1,14 @@
 package es.joshluq.kmsafe.infrastructure.notifications
 
+import android.Manifest
+import android.annotation.SuppressLint
+import android.app.PendingIntent
+import android.content.Intent
+import android.content.pm.PackageManager
+import android.os.Build
+import androidx.core.app.ActivityCompat
+import androidx.core.app.NotificationCompat
+import androidx.core.app.NotificationManagerCompat
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
 import dagger.hilt.android.AndroidEntryPoint
@@ -17,6 +26,7 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import java.util.UUID
 import javax.inject.Inject
+import androidx.core.net.toUri
 
 /**
  * Firebase Cloud Messaging service for handling remote push notifications
@@ -34,6 +44,9 @@ class KmFirebaseMessagingService : FirebaseMessagingService() {
     @Inject
     lateinit var registerDeviceTokenUseCase: RegisterDeviceTokenUseCase
 
+    @Inject
+    lateinit var channelManager: NotificationChannelManager
+
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     override fun onMessageReceived(remoteMessage: RemoteMessage) {
@@ -42,25 +55,33 @@ class KmFirebaseMessagingService : FirebaseMessagingService() {
         val data = remoteMessage.data
         serviceScope.launch {
             // 1. Reactive Entitlements Sync trigger
+            var isDowngradeAlertHandled = false
             if (data.containsKey("subscription_level") ||
                 data["action"] == "SYNC_ENTITLEMENTS" ||
-                data["action_code"] == "REFRESH_ENTITLEMENTS"
+                data["action_code"] == "REFRESH_ENTITLEMENTS" ||
+                data["event_type"] == "SUBSCRIPTION_DOWNGRADED"
             ) {
-                syncEntitlementsFromPushUseCase(SyncEntitlementsFromPushUseCase.Input(data))
+                val syncResult = syncEntitlementsFromPushUseCase(SyncEntitlementsFromPushUseCase.Input(data))
+                if (syncResult.isSuccess) {
+                    val output = syncResult.getOrNull()
+                    if (output is SyncEntitlementsFromPushUseCase.Output.Success && output.isDowngraded) {
+                        isDowngradeAlertHandled = true
+                    }
+                }
             }
 
             // 2. Visible message payload
             val notificationPayload = remoteMessage.notification
-            if (notificationPayload != null || data.containsKey("title")) {
-                val title = notificationPayload?.title ?: data["title"] ?: "Notificación"
-                val body = notificationPayload?.body ?: data["body"] ?: ""
+            if (notificationPayload != null || data.containsKey("title") || data.containsKey("message")) {
+                val title = notificationPayload?.title ?: data["title"] ?: "KiloMenos"
+                val body = notificationPayload?.body ?: data["message"] ?: data["body"] ?: ""
                 val topicStr = data["topic"]?.uppercase()
                 val topic = runCatching { NotificationTopic.valueOf(topicStr ?: "") }
-                    .getOrDefault(NotificationTopic.SYSTEM)
+                    .getOrDefault(NotificationTopic.SUBSCRIPTION)
                 val priorityStr = data["priority"]?.uppercase()
                 val priority = runCatching { NotificationPriority.valueOf(priorityStr ?: "") }
-                    .getOrDefault(NotificationPriority.INFO)
-                val deepLinkUri = data["deep_link"] ?: data["deepLinkUri"]
+                    .getOrDefault(NotificationPriority.WARNING)
+                val deepLinkUri = data["deep_link"] ?: data["deepLinkUri"] ?: "kmsafe://notifications"
 
                 val notifId = data["id"]?.takeIf { isCanonicalUuid(it) }
                     ?: data["notification_id"]?.takeIf { isCanonicalUuid(it) }
@@ -75,12 +96,61 @@ class KmFirebaseMessagingService : FirebaseMessagingService() {
                     status = NotificationStatus.UNREAD,
                     deepLinkUri = deepLinkUri,
                     timestampMillis = remoteMessage.sentTime.takeIf { it > 0 } ?: System.currentTimeMillis(),
-                    actionLabel = data["action_label"],
+                    actionLabel = data["action_label"] ?: "Ver",
                     origin = "REMOTE",
                     syncStatus = "SYNCED"
                 )
-                publishNotificationUseCase(PublishNotificationUseCase.Input(notif))
+
+                // Prevent duplicate database insertion if entitlements sync already persisted the downgrade alert
+                if (!isDowngradeAlertHandled) {
+                    publishNotificationUseCase(PublishNotificationUseCase.Input(notif))
+                }
+
+                // Post system alert with NotificationCompat
+                postSystemNotification(notif)
             }
+        }
+    }
+
+    @SuppressLint("MissingPermission")
+    private fun postSystemNotification(notification: Notification) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+            ActivityCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
+        ) {
+            return
+        }
+        val channelId = channelManager.getSubscriptionChannelId()
+        val intent = Intent(
+            Intent.ACTION_VIEW,
+            (notification.deepLinkUri ?: "kmsafe://notifications").toUri()
+        ).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+        }
+
+        val safeNotificationId = notification.id.hashCode() and 0x7FFFFFFF
+
+        val pendingIntent = PendingIntent.getActivity(
+            this,
+            safeNotificationId,
+            intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
+        val brandIconRes = resources.getIdentifier("ic_stat_kmsafe_brand", "drawable", packageName)
+            .takeIf { it != 0 } ?: applicationInfo.icon.takeIf { it != 0 } ?: android.R.drawable.ic_dialog_alert
+
+        val builder = NotificationCompat.Builder(this, channelId)
+            .setSmallIcon(brandIconRes)
+            .setContentTitle(notification.title)
+            .setContentText(notification.body)
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setAutoCancel(true)
+            .setContentIntent(pendingIntent)
+
+        try {
+            NotificationManagerCompat.from(this).notify(safeNotificationId, builder.build())
+        } catch (_: SecurityException) {
+            // Handled when POST_NOTIFICATIONS is not granted in Android 13+
         }
     }
 

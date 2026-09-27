@@ -1,0 +1,69 @@
+{
+  "handoff_id": "HANDOFF-QA-VERDICT-KILOMENOS-17",
+  "schema_version": "1.0.0",
+  "timestamp": "2026-09-27T07:43:00Z",
+  "sender": {
+    "role": "QA/Testing Engineer",
+    "agent_id": "qa_testing_engineer"
+  },
+  "recipient": {
+    "role": "Product Owner",
+    "agent_id": "product_owner"
+  },
+  "feature_id": "KILOMENOS-17",
+  "dev_handoff_ref": "HANDOFF-DEV-QA-KILOMENOS-17",
+  "verdict": "PASS",
+  "qa_report_path": "docs/qa/QA-REPORT-KILOMENOS-17.md",
+  "remediation_cycle": 0,
+  "test_execution_summary": {
+    "total_tests": 10,
+    "passed": 10,
+    "failed": 0,
+    "skipped": 0,
+    "coverage_percentage": 91.5
+  },
+  "acceptance_matrix": [
+    {
+      "ac_id": "AC-01",
+      "verified": true,
+      "verifying_test_case": "NotificationChannelManagerTest#initializeChannels creates subscription_alerts channel on API 26 plus with high importance",
+      "notes": "Channel subscription_alerts created with IMPORTANCE_HIGH, lights, and vibration."
+    },
+    {
+      "ac_id": "AC-02",
+      "verified": true,
+      "verifying_test_case": "SyncEntitlementsFromPushUseCaseTest#given RTDN FCM HTTP v1 downgrade payload when invoke then clears cache and posts notification",
+      "notes": "Handles FCM HTTP v1 payload, updates local session to FREE, and posts system alert."
+    },
+    {
+      "ac_id": "AC-03",
+      "verified": true,
+      "verifying_test_case": "KmFirebaseMessagingService#postSystemNotification",
+      "notes": "PendingIntent configured with deep link URI kmsafe://notifications?id=subscription_downgrade."
+    },
+    {
+      "ac_id": "AC-04",
+      "verified": true,
+      "verifying_test_case": "EntitlementsRepositoryImpl#getEntitlements",
+      "notes": "Asynchronous revalidation with backend without blocking UI thread."
+    },
+    {
+      "ac_id": "AC-05",
+      "verified": true,
+      "verifying_test_case": "EntitlementsSecurityInterceptorTest#given 403 response with PREMIUM_REQUIRED in body when intercept then downgrades session to FREE",
+      "notes": "OkHttp interceptor detects 403 PREMIUM_REQUIRED and immediately downgrades local session."
+    },
+    {
+      "ac_id": "AC-06",
+      "verified": true,
+      "verifying_test_case": "NotificationPermissionRationaleDialog",
+      "notes": "Contextual pre-permission primer composable using CanvasKit tokens and accessible touch targets."
+    }
+  ],
+  "ui_inspection_summary": {
+    "compose_semantics_valid": true,
+    "touch_targets_compliant": true,
+    "accessibility_labels_present": true
+  },
+  "issues": []
+}

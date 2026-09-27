@@ -6,6 +6,7 @@ import es.joshluq.authkit.session.model.TokenHolder
 import es.joshluq.foundationkit.log.LoggerKit
 import es.joshluq.kmsafe.domain.model.AuthSessionState
 import es.joshluq.kmsafe.infrastructure.mapper.toDomain
+import es.joshluq.kmsafe.infrastructure.remote.model.EntitlementsModel
 import es.joshluq.kmsafe.infrastructure.remote.model.UserSessionModel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -15,6 +16,8 @@ import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -42,6 +45,9 @@ interface UserSessionDataSource {
 
     /** Ends the current session. */
     suspend fun endSession()
+
+    /** Degrades the current session entitlements to FREE level. */
+    suspend fun downgradeToFree()
 }
 
 /**
@@ -115,5 +121,31 @@ class UserSessionDataSourceImpl @Inject constructor(
         logger.i("UserSessionDataSource", "Ending session")
         authKit.session.endSession()
         _sessionDataUpdates.emit(null)
+    }
+
+    private val sessionMutex = Mutex()
+
+    override suspend fun downgradeToFree() {
+        sessionMutex.withLock {
+            val current = getCurrentUserSession() ?: return
+            val currentEntitlements = current.entitlements
+            if (currentEntitlements?.subscriptionLevel == "FREE") {
+                logger.d("UserSessionDataSource", "Session is already at FREE level. Skipping redundant downgrade.")
+                return
+            }
+            val updatedEntitlements = currentEntitlements?.copy(
+                subscriptionLevel = "FREE"
+            ) ?: EntitlementsModel(
+                subscriptionLevel = "FREE",
+                isTrialActive = false,
+                trialExpiresAt = null,
+                enabledFeatures = emptyList(),
+                canStartTrial = false,
+                trialFeatures = emptyList()
+            )
+            val updatedSession = current.copy(entitlements = updatedEntitlements)
+            saveSessionData(updatedSession)
+            logger.w("UserSessionDataSource", "Session downgraded to FREE by security enforcement")
+        }
     }
 }

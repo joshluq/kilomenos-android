@@ -1,0 +1,98 @@
+{
+  "handoff_id": "HANDOFF-DEV-QA-KILOMENOS-17",
+  "schema_version": "1.0.0",
+  "timestamp": "2026-09-27T07:41:00Z",
+  "sender": {
+    "role": "Senior Android Developer",
+    "agent_id": "senior_android_developer"
+  },
+  "recipient": {
+    "role": "QA/Testing Engineer",
+    "agent_id": "qa_testing_engineer"
+  },
+  "feature_id": "KILOMENOS-17",
+  "architect_handoff_ref": "HANDOFF-ARCH-DEV-KILOMENOS-17",
+  "remediation_cycle": 0,
+  "implementation_manifest": {
+    "module": ":core:infrastructure",
+    "entry_point_service": "KmFirebaseMessagingService",
+    "entry_point_composable": "NotificationPermissionRationaleDialog",
+    "repository_class": "UserSessionDataSourceImpl"
+  },
+  "code_changes": [
+    {
+      "file_path": "core/infrastructure/src/main/java/es/joshluq/kmsafe/infrastructure/notifications/NotificationChannelManager.kt",
+      "action": "CREATED",
+      "language": "kotlin",
+      "line_count": 56
+    },
+    {
+      "file_path": "core/infrastructure/src/main/java/es/joshluq/kmsafe/infrastructure/notifications/KmFirebaseMessagingService.kt",
+      "action": "MODIFIED",
+      "language": "kotlin",
+      "line_count": 116
+    },
+    {
+      "file_path": "core/infrastructure/src/main/java/es/joshluq/kmsafe/infrastructure/remote/interceptor/EntitlementsSecurityInterceptor.kt",
+      "action": "CREATED",
+      "language": "kotlin",
+      "line_count": 47
+    },
+    {
+      "file_path": "core/infrastructure/src/main/java/es/joshluq/kmsafe/infrastructure/remote/auth/UserSessionDataSource.kt",
+      "action": "MODIFIED",
+      "language": "kotlin",
+      "line_count": 122
+    },
+    {
+      "file_path": "core/domain/src/main/java/es/joshluq/kmsafe/domain/usecase/SyncEntitlementsFromPushUseCase.kt",
+      "action": "MODIFIED",
+      "language": "kotlin",
+      "line_count": 73
+    },
+    {
+      "file_path": "core/infrastructure/src/main/java/es/joshluq/kmsafe/infrastructure/di/NetworkModule.kt",
+      "action": "MODIFIED",
+      "language": "kotlin",
+      "line_count": 144
+    },
+    {
+      "file_path": "core/infrastructure/src/main/java/es/joshluq/kmsafe/infrastructure/di/ServiceModule.kt",
+      "action": "MODIFIED",
+      "language": "kotlin",
+      "line_count": 55
+    },
+    {
+      "file_path": "app/src/main/java/es/joshluq/kmsafe/KiloMenosApplication.kt",
+      "action": "MODIFIED",
+      "language": "kotlin",
+      "line_count": 69
+    },
+    {
+      "file_path": "core/ui/src/main/java/es/joshluq/kmsafe/core/ui/components/NotificationPermissionRationaleDialog.kt",
+      "action": "CREATED",
+      "language": "kotlin",
+      "line_count": 190
+    }
+  ],
+  "developer_test_summary": {
+    "unit_tests_run": 10,
+    "unit_tests_passed": 10,
+    "unit_tests_failed": 0,
+    "test_frameworks_used": [
+      "JUnit 4",
+      "MockK",
+      "Coroutines Test"
+    ],
+    "test_files": [
+      "core/infrastructure/src/test/kotlin/es/joshluq/kmsafe/infrastructure/notifications/NotificationChannelManagerTest.kt",
+      "core/infrastructure/src/test/kotlin/es/joshluq/kmsafe/infrastructure/remote/interceptor/EntitlementsSecurityInterceptorTest.kt",
+      "core/domain/src/test/kotlin/es/joshluq/kmsafe/domain/usecase/SyncEntitlementsFromPushUseCaseTest.kt"
+    ]
+  },
+  "lint_and_sanity": {
+    "compilation_clean": true,
+    "ktlint_clean": true,
+    "detekt_clean": true
+  }
+}

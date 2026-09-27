@@ -1,0 +1,86 @@
+{
+  "handoff_id": "HANDOFF-ARCH-DEV-KILOMENOS-17",
+  "schema_version": "1.0.0",
+  "timestamp": "2026-09-27T06:48:00Z",
+  "sender": {
+    "role": "Software Architect",
+    "agent_id": "software_architect"
+  },
+  "recipient": {
+    "role": "Senior Android Developer",
+    "agent_id": "senior_android_developer"
+  },
+  "feature_id": "KILOMENOS-17",
+  "po_handoff_ref": "HANDOFF-PO-ARCH-KILOMENOS-17",
+  "adr_path": "docs/adr/ADR-KILOMENOS-17.md",
+  "component_spec_path": "docs/specs/COMP-SPEC-KILOMENOS-17.md",
+  "remediation_cycle": 0,
+  "architecture_pattern": "CLEAN_ARCHITECTURE",
+  "module_targets": [
+    ":core:infrastructure",
+    ":core:domain",
+    ":core:ui",
+    ":feature:notifications"
+  ],
+  "component_contracts": [
+    {
+      "component_name": "NotificationChannelManager",
+      "package_name": "es.joshluq.kmsafe.infrastructure.notifications",
+      "layer": "DATA",
+      "state_models": ["NotificationChannel"],
+      "action_events": ["initializeChannels", "getSubscriptionChannelId"],
+      "exposed_flows": []
+    },
+    {
+      "component_name": "KmFirebaseMessagingService",
+      "package_name": "es.joshluq.kmsafe.infrastructure.notifications",
+      "layer": "DATA",
+      "state_models": ["RemoteMessage", "Notification"],
+      "action_events": ["onMessageReceived", "postSystemNotification", "onNewToken"],
+      "exposed_flows": []
+    },
+    {
+      "component_name": "EntitlementsSecurityInterceptor",
+      "package_name": "es.joshluq.kmsafe.infrastructure.remote.interceptor",
+      "layer": "DATA",
+      "state_models": ["Response"],
+      "action_events": ["intercept"],
+      "exposed_flows": []
+    },
+    {
+      "component_name": "InAppPermissionPrimerDialog",
+      "package_name": "es.joshluq.kmsafe.core.ui.components",
+      "layer": "UI",
+      "state_models": [],
+      "action_events": ["onConfirm", "onDismiss"],
+      "exposed_flows": []
+    }
+  ],
+  "file_manifest_plan": [
+    {
+      "target_path": "core/infrastructure/src/main/java/es/joshluq/kmsafe/infrastructure/notifications/NotificationChannelManager.kt",
+      "action": "CREATE",
+      "purpose": "Define and implement NotificationChannelManager for registering subscription_alerts with IMPORTANCE_HIGH"
+    },
+    {
+      "target_path": "core/infrastructure/src/main/java/es/joshluq/kmsafe/infrastructure/notifications/KmFirebaseMessagingService.kt",
+      "action": "MODIFY",
+      "purpose": "Enhance FCM service to post visible system notifications in foreground and trigger reactive entitlements invalidation"
+    },
+    {
+      "target_path": "core/infrastructure/src/main/java/es/joshluq/kmsafe/infrastructure/remote/interceptor/EntitlementsSecurityInterceptor.kt",
+      "action": "CREATE",
+      "purpose": "Implement OkHttp interceptor capturing HTTP 403 PREMIUM_REQUIRED to downgrade local session to FREE"
+    },
+    {
+      "target_path": "core/infrastructure/src/main/java/es/joshluq/kmsafe/infrastructure/di/NotificationModule.kt",
+      "action": "MODIFY",
+      "purpose": "Provide and bind NotificationChannelManager and EntitlementsSecurityInterceptor"
+    },
+    {
+      "target_path": "core/ui/src/main/java/es/joshluq/kmsafe/core/ui/components/InAppPermissionPrimerDialog.kt",
+      "action": "CREATE",
+      "purpose": "Provide contextual pre-permission dialog before requesting POST_NOTIFICATIONS on Android 13+"
+    }
+  ]
+}

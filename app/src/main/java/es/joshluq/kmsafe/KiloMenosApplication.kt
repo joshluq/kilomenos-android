@@ -10,6 +10,7 @@ import dagger.hilt.android.HiltAndroidApp
 import es.joshluq.foundationkit.log.LoggerKit
 import es.joshluq.kmsafe.data.worker.ReminderWorker
 import es.joshluq.kmsafe.domain.usecase.GetPreferencesUseCase
+import es.joshluq.kmsafe.infrastructure.notifications.NotificationChannelManager
 import es.joshluq.kmsafe.infrastructure.repository.tracking.AutoTrackingManager
 import es.joshluq.kmsafe.infrastructure.worker.SyncNotificationsWorker
 import kotlinx.coroutines.CoroutineScope
@@ -35,11 +36,15 @@ class KiloMenosApplication : Application(), Configuration.Provider {
     @Inject
     lateinit var getPreferencesUseCase: GetPreferencesUseCase
 
+    @Inject
+    lateinit var channelManager: NotificationChannelManager
+
     private val applicationScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
 
     override fun onCreate() {
         super.onCreate()
         logger.i("Application", "KiloMenos started. Version: ${BuildConfig.VERSION_NAME}")
+        channelManager.initializeChannels()
         setupBackgroundWorkers()
         initializeAutoTracking()
     }

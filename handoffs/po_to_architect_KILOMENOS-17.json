@@ -1,0 +1,130 @@
+{
+  "handoff_id": "HANDOFF-PO-ARCH-KILOMENOS-17",
+  "schema_version": "1.0.0",
+  "timestamp": "2026-09-27T06:47:00Z",
+  "sender": {
+    "role": "Product Owner",
+    "agent_id": "product_owner"
+  },
+  "recipient": {
+    "role": "Software Architect",
+    "agent_id": "software_architect"
+  },
+  "feature_id": "KILOMENOS-17",
+  "feature_title": "Integración FCM HTTP v1, Canal de Suscripción y Seguridad en Entitlements",
+  "prd_path": "docs/prd/PRD-KILOMENOS-17.md",
+  "user_stories": [
+    {
+      "story_id": "US-01",
+      "role": "conductor en Android 8.0+",
+      "want": "que las alertas de cambio de plan y facturación se entreguen en un canal de notificación dedicado y de alta prioridad",
+      "so_that": "no me pierda avisos críticos sobre la cobertura de mis viajes"
+    },
+    {
+      "story_id": "US-02",
+      "role": "conductor en Android 13+",
+      "want": "comprender mediante una explicación contextual clara por qué KmSafe necesita enviarme notificaciones antes de que el sistema operativo me pida el permiso",
+      "so_that": "pueda otorgarlo con confianza y sin fricción"
+    },
+    {
+      "story_id": "US-03",
+      "role": "conductor con la app abierta en primer plano",
+      "want": "recibir una notificación visible no intrusiva y una actualización reactiva de mis derechos sin que la aplicación se congele",
+      "so_that": "pueda estar al tanto de mi estado de suscripción sin perder mis datos en curso"
+    },
+    {
+      "story_id": "US-04",
+      "role": "operador de plataforma y Product Owner",
+      "want": "que la app móvil verifique la validez de mis derechos de suscripción cada vez que se reanuda la sesión o cuando la API retorne HTTP 403 PREMIUM_REQUIRED",
+      "so_that": "las funcionalidades de pago estén estrictamente protegidas bajo un modelo Zero Trust"
+    }
+  ],
+  "functional_requirements": [
+    {
+      "fr_id": "FR-01",
+      "title": "Inicialización del Canal de Notificaciones",
+      "statement": "La aplicación inicializará obligatoriamente el canal de notificación del sistema subscription_alerts en API 26+ con alta prioridad antes de procesar cualquier mensaje FCM."
+    },
+    {
+      "fr_id": "FR-02",
+      "title": "Procesamiento de Payload FCM HTTP v1",
+      "statement": "KmFirebaseMessagingService procesará el payload FCM HTTP v1 identificando action_code REFRESH_ENTITLEMENTS para forzar la invalidación reactiva de la sesión local."
+    },
+    {
+      "fr_id": "FR-03",
+      "title": "Despacho Dual en Foreground y Background",
+      "statement": "El servicio persistirá la notificación en Room y construirá una notificación visible con NotificationCompat.Builder en el canal subscription_alerts cuando la app esté en primer plano."
+    },
+    {
+      "fr_id": "FR-04",
+      "title": "Pre-Permission Primer para POST_NOTIFICATIONS",
+      "statement": "En dispositivos Android 13+, la aplicación presentará un diálogo contextual de sensibilización antes de disparar la solicitud de permisos del sistema operativo."
+    },
+    {
+      "fr_id": "FR-05",
+      "title": "Revalidación Activa en onResume",
+      "statement": "Al pasar a primer plano, el repositorio de sesión consultará de forma asíncrona los derechos autoritativos al backend (GET /v1/user/entitlements)."
+    },
+    {
+      "fr_id": "FR-06",
+      "title": "Interceptor de Red para HTTP 403 PREMIUM_REQUIRED",
+      "statement": "Un interceptor de red en OkHttp capturará errores HTTP 403 PREMIUM_REQUIRED para degradar de inmediato la sesión local a FREE y notificar a la UI."
+    },
+    {
+      "fr_id": "FR-07",
+      "title": "TTL de Caché Offline (24 Horas)",
+      "statement": "La vigencia del estado Premium en caché local tendrá una duración máxima de 24 horas sin conexión validada con el servidor."
+    }
+  ],
+  "acceptance_criteria": [
+    {
+      "ac_id": "AC-01",
+      "scenario": "Creación del Canal subscription_alerts al Iniciar la App",
+      "given": "un dispositivo con Android 8.0 o superior (API >= 26)",
+      "when": "se inicializa la aplicación KmSafe",
+      "then": "el sistema verifica la existencia del canal subscription_alerts y lo crea con IMPORTANCE_HIGH y vibración activada"
+    },
+    {
+      "ac_id": "AC-02",
+      "scenario": "Procesamiento de Push FCM HTTP v1 en Foreground con Alerta Visible",
+      "given": "la aplicación abierta en primer plano por el usuario",
+      "when": "KmFirebaseMessagingService recibe un mensaje FCM con action_code REFRESH_ENTITLEMENTS, title y body",
+      "then": "el servicio actualiza los entitlements locales a FREE, persiste la alerta en Room DB y emite una notificación en la barra de estado mediante NotificationCompat.Builder"
+    },
+    {
+      "ac_id": "AC-03",
+      "scenario": "Navegación por Deep Link al Pulsar Notificación de Suscripción",
+      "given": "una notificación de degradación de suscripción en la bandeja del sistema con deep link kmsafe://notifications?id=subscription_downgrade",
+      "when": "el usuario pulsa sobre la notificación",
+      "then": "el sistema abre la aplicación y navega directamente a la pantalla de detalle de notificación o Paywall correspondiente"
+    },
+    {
+      "ac_id": "AC-04",
+      "scenario": "Revalidación Activa de Entitlements en onResume",
+      "given": "un usuario que reanuda la aplicación pasando de segundo plano a primer plano",
+      "when": "se ejecuta el evento de ciclo de vida onResume",
+      "then": "el repositorio de sesión consulta de forma asíncrona GET /v1/user/entitlements y sincroniza el estado local inmediatamente"
+    },
+    {
+      "ac_id": "AC-05",
+      "scenario": "Degradación Automática por Interceptor ante HTTP 403 PREMIUM_REQUIRED",
+      "given": "un usuario con estado en caché local que intenta acceder a una función remota de pago",
+      "when": "el servidor Supabase responde con HTTP 403 Forbidden y código de error PREMIUM_REQUIRED",
+      "then": "el interceptor de red de OkHttp captura la respuesta, actualiza el nivel de suscripción local a FREE en Room/DataStore y emite la acción para desplegar el diálogo de Soft Landing"
+    },
+    {
+      "ac_id": "AC-06",
+      "scenario": "Pre-Permission Primer para POST_NOTIFICATIONS en Android 13+",
+      "given": "un dispositivo con Android 13 o superior (API >= 33) que aún no tiene concedido el permiso POST_NOTIFICATIONS",
+      "when": "el usuario interactúa con la configuración de alertas o finaliza la configuración de su vehículo",
+      "then": "se muestra un diálogo contextual informativo explicando los beneficios de seguridad vehicular antes de lanzar la solicitud nativa del sistema"
+    }
+  ],
+  "non_functional_requirements": {
+    "min_sdk": 24,
+    "target_sdk": 35,
+    "offline_supported": true,
+    "accessibility_required": true,
+    "performance_budget_ms": 16
+  }
+}

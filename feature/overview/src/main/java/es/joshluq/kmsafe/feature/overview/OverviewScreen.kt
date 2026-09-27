@@ -55,6 +55,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -102,6 +103,7 @@ import es.joshluq.canvaskit.foundations.theme.CanvasKitTheme
 import es.joshluq.foundationkit.text.asString
 import es.joshluq.kmsafe.core.monetization.components.AdMobBanner
 import es.joshluq.kmsafe.core.ui.components.BrandingLogo
+import es.joshluq.kmsafe.core.ui.components.NotificationPermissionRationaleDialog
 import es.joshluq.kmsafe.core.ui.util.DateUtils
 import es.joshluq.kmsafe.core.ui.util.safeClick
 import es.joshluq.kmsafe.domain.model.RentingContract
@@ -214,6 +216,8 @@ fun OverviewScreen(
     val focusManager = LocalFocusManager.current
     val keyboardController = LocalSoftwareKeyboardController.current
 
+    var showNotificationRationale by rememberSaveable { mutableStateOf(false) }
+
     val fineLocationState = rememberPermissionState(Manifest.permission.ACCESS_FINE_LOCATION)
 
     val activityRecognitionState = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
@@ -318,11 +322,23 @@ fun OverviewScreen(
                         onEvent = onEvent,
                         hasAutoTrackingPermissions = hasAutoTrackingPermissions,
                         onRequestPermissions = {
-                            onEvent(Event.OnRequestPermissionsRationale)
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+                                !isNotificationsGranted &&
+                                isFineLocationGranted
+                            ) {
+                                showNotificationRationale = true
+                            } else {
+                                onEvent(Event.OnRequestPermissionsRationale)
+                            }
                         },
                         onStartTracking = {
                             if (isFineLocationGranted && isNotificationsGranted) {
                                 onEvent(Event.OnStartTrackingClicked)
+                            } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+                                !isNotificationsGranted &&
+                                isFineLocationGranted
+                            ) {
+                                showNotificationRationale = true
                             } else {
                                 onEvent(Event.OnRequestAssistedPermissions)
                             }
@@ -371,6 +387,18 @@ fun OverviewScreen(
             ) {
                 UpdateOdometerContent(state, onEvent)
             }
+        }
+
+        if (showNotificationRationale) {
+            NotificationPermissionRationaleDialog(
+                onConfirm = {
+                    showNotificationRationale = false
+                    notificationsPermissionState?.launchPermissionRequest()
+                },
+                onDismiss = {
+                    showNotificationRationale = false
+                }
+            )
         }
     }
 }

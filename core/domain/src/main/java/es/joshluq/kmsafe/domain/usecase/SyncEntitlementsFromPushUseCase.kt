@@ -36,12 +36,23 @@ class SyncEntitlementsFromPushUseCaseImpl @Inject constructor(
     override suspend fun invoke(input: SyncEntitlementsFromPushUseCase.Input): Result<SyncEntitlementsFromPushUseCase.Output> {
         return runCatching {
             val type = input.payloadData["type"]
-            if (type != "ENTITLEMENTS_SYNC" && type != "SUBSCRIPTION_STATUS") {
-                return@runCatching SyncEntitlementsFromPushUseCase.Output.Ignored("Unsupported payload type: $type")
+            val actionCode = input.payloadData["action_code"] ?: input.payloadData["action"]
+            val eventType = input.payloadData["event_type"]
+
+            val isEntitlementsEvent = type == "ENTITLEMENTS_SYNC" ||
+                type == "SUBSCRIPTION_STATUS" ||
+                actionCode == "REFRESH_ENTITLEMENTS" ||
+                actionCode == "SYNC_ENTITLEMENTS" ||
+                eventType == "SUBSCRIPTION_DOWNGRADED" ||
+                input.payloadData.containsKey("subscription_level")
+
+            if (!isEntitlementsEvent) {
+                return@runCatching SyncEntitlementsFromPushUseCase.Output.Ignored("Unsupported payload: type=$type, action_code=$actionCode, event_type=$eventType")
             }
 
             val levelString = input.payloadData["subscription_level"]
-            val isDowngrade = input.payloadData["is_downgrade"]?.toBooleanStrictOrNull() ?: false
+            val isDowngrade = input.payloadData["is_downgrade"]?.toBooleanStrictOrNull()
+                ?: (eventType == "SUBSCRIPTION_DOWNGRADED" || levelString?.uppercase() == "FREE")
 
             val newLevel = when (levelString?.uppercase()) {
                 "PREMIUM" -> SubscriptionLevel.PREMIUM
@@ -51,15 +62,21 @@ class SyncEntitlementsFromPushUseCaseImpl @Inject constructor(
             entitlementsRepository.clearCache()
 
             if (isDowngrade || newLevel == SubscriptionLevel.FREE) {
+                val notifId = input.payloadData["id"] ?: UUID.randomUUID().toString()
+                val title = input.payloadData["title"] ?: "Tu suscripción ha cambiado a Plan Gratuito"
+                val body = input.payloadData["message"] ?: input.payloadData["body"]
+                    ?: "Renueva tu plan Premium para seguir disfrutando de telemetría ilimitada y proyecciones avanzadas."
+                val deepLink = input.payloadData["deep_link"] ?: input.payloadData["deepLinkUri"] ?: "kmsafe://feature/premium"
+
                 val alert = Notification(
-                    id = UUID.randomUUID().toString(),
+                    id = notifId,
                     topic = NotificationTopic.SUBSCRIPTION,
-                    title = "Tu suscripción ha cambiado a Plan Gratuito",
-                    body = "Renueva tu plan Premium para seguir disfrutando de telemetría ilimitada y proyecciones avanzadas.",
+                    title = title,
+                    body = body,
                     priority = NotificationPriority.WARNING,
                     status = NotificationStatus.UNREAD,
-                    actionLabel = "Renovar Plan",
-                    deepLinkUri = "kmsafe://feature/premium"
+                    actionLabel = input.payloadData["action_label"] ?: "Renovar Plan",
+                    deepLinkUri = deepLink
                 )
                 notificationRepository.insertOrUpdate(alert)
             }

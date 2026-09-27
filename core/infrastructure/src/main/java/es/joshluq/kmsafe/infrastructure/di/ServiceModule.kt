@@ -1,4 +1,4 @@
-package es.joshluq.kmsafe.core.infrastructure.di
+package es.joshluq.kmsafe.infrastructure.di
 
 import dagger.Binds
 import dagger.Module
@@ -15,6 +15,8 @@ import javax.inject.Singleton
 import es.joshluq.kmsafe.domain.service.BillingService
 import es.joshluq.kmsafe.domain.service.DeviceTokenProvider
 import es.joshluq.kmsafe.infrastructure.notifications.FirebaseDeviceTokenProvider
+import es.joshluq.kmsafe.infrastructure.notifications.NotificationChannelManager
+import es.joshluq.kmsafe.infrastructure.notifications.NotificationChannelManagerImpl
 import es.joshluq.kmsafe.infrastructure.remote.billing.BillingManager
 
 /**
@@ -23,6 +25,12 @@ import es.joshluq.kmsafe.infrastructure.remote.billing.BillingManager
 @Module
 @InstallIn(SingletonComponent::class)
 abstract class ServiceModule {
+
+    @Binds
+    @Singleton
+    abstract fun bindNotificationChannelManager(
+        manager: NotificationChannelManagerImpl
+    ): NotificationChannelManager
 
     @Binds
     @Singleton
