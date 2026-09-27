@@ -1,13 +1,16 @@
 package es.joshluq.kmsafe.feature.notifications
 
 import es.joshluq.foundationkit.log.LoggerKit
+import es.joshluq.kmsafe.domain.model.Entitlements
 import es.joshluq.kmsafe.domain.model.Notification
 import es.joshluq.kmsafe.domain.model.NotificationPriority
 import es.joshluq.kmsafe.domain.model.NotificationStatus
 import es.joshluq.kmsafe.domain.model.NotificationTopic
 import es.joshluq.kmsafe.domain.model.RentingContract
+import es.joshluq.kmsafe.domain.model.SubscriptionLevel
 import es.joshluq.kmsafe.domain.usecase.DeleteNotificationUseCase
 import es.joshluq.kmsafe.domain.usecase.GetAllContractsUseCase
+import es.joshluq.kmsafe.domain.usecase.GetEntitlementsUseCase
 import es.joshluq.kmsafe.domain.usecase.GetRentingContractUseCase
 import es.joshluq.kmsafe.domain.usecase.MarkAllNotificationsAsReadUseCase
 import es.joshluq.kmsafe.domain.usecase.MarkNotificationAsReadUseCase
@@ -49,6 +52,7 @@ class NotificationsListViewModelTest {
     private val syncNotificationsUseCase: SyncNotificationsUseCase = mockk(relaxed = true)
     private val getRentingContractUseCase: GetRentingContractUseCase = mockk()
     private val getAllContractsUseCase: GetAllContractsUseCase = mockk()
+    private val getEntitlementsUseCase: GetEntitlementsUseCase = mockk()
     private val logger: LoggerKit = mockk(relaxed = true)
 
     private val notificationsFlow = MutableStateFlow<ObserveActiveNotificationsUseCase.Output>(
@@ -60,6 +64,9 @@ class NotificationsListViewModelTest {
     private val allContractsFlow = MutableStateFlow<GetAllContractsUseCase.Output>(
         GetAllContractsUseCase.Output.Progress
     )
+    private val entitlementsFlow = MutableStateFlow<GetEntitlementsUseCase.Output>(
+        GetEntitlementsUseCase.Output.Success(Entitlements.Default.copy(subscriptionLevel = SubscriptionLevel.PREMIUM))
+    )
     private lateinit var viewModel: NotificationsListViewModel
 
     @Before
@@ -68,6 +75,7 @@ class NotificationsListViewModelTest {
         every { observeActiveNotificationsUseCase(any()) } returns notificationsFlow
         every { getRentingContractUseCase(any()) } returns rentingContractFlow
         every { getAllContractsUseCase(any()) } returns allContractsFlow
+        every { getEntitlementsUseCase(any()) } returns entitlementsFlow
         coEvery { syncNotificationsUseCase(any()) } returns Result.success(SyncNotificationsUseCase.Output.Success(0))
         viewModel = NotificationsListViewModel(
             observeActiveNotificationsUseCase,
@@ -77,6 +85,7 @@ class NotificationsListViewModelTest {
             syncNotificationsUseCase,
             getRentingContractUseCase,
             getAllContractsUseCase,
+            getEntitlementsUseCase,
             logger
         )
     }
@@ -419,4 +428,129 @@ class NotificationsListViewModelTest {
         coVerify(exactly = 1) { markNotificationAsReadUseCase(MarkNotificationAsReadUseCase.Input("notif-proj-a")) }
         job.cancel()
     }
+
+    @Test
+    fun `given user is FREE when initialized then syncNotificationsUseCase is never called and premium banner is visible`() = runTest(testDispatcher) {
+        val freeSyncUseCase: SyncNotificationsUseCase = mockk(relaxed = true)
+        val freeEntitlementsFlow = MutableStateFlow<GetEntitlementsUseCase.Output>(
+            GetEntitlementsUseCase.Output.Success(Entitlements.Default.copy(subscriptionLevel = SubscriptionLevel.FREE))
+        )
+        every { getEntitlementsUseCase(any()) } returns freeEntitlementsFlow
+
+        val freeViewModel = NotificationsListViewModel(
+            observeActiveNotificationsUseCase,
+            markNotificationAsReadUseCase,
+            markAllNotificationsAsReadUseCase,
+            deleteNotificationUseCase,
+            freeSyncUseCase,
+            getRentingContractUseCase,
+            getAllContractsUseCase,
+            getEntitlementsUseCase,
+            logger
+        )
+        advanceUntilIdle()
+
+        coVerify(exactly = 0) { freeSyncUseCase(any()) }
+        assertTrue(freeViewModel.uiState.value.isPremiumRequiredBannerVisible)
+        assertFalse(freeViewModel.uiState.value.isSyncing)
+    }
+
+    @Test
+    fun `given user is FREE when refresh clicked then syncNotificationsUseCase is never called and premium banner is visible`() = runTest(testDispatcher) {
+        val freeSyncUseCase: SyncNotificationsUseCase = mockk(relaxed = true)
+        val freeEntitlementsFlow = MutableStateFlow<GetEntitlementsUseCase.Output>(
+            GetEntitlementsUseCase.Output.Success(Entitlements.Default.copy(subscriptionLevel = SubscriptionLevel.FREE))
+        )
+        every { getEntitlementsUseCase(any()) } returns freeEntitlementsFlow
+
+        val freeViewModel = NotificationsListViewModel(
+            observeActiveNotificationsUseCase,
+            markNotificationAsReadUseCase,
+            markAllNotificationsAsReadUseCase,
+            deleteNotificationUseCase,
+            freeSyncUseCase,
+            getRentingContractUseCase,
+            getAllContractsUseCase,
+            getEntitlementsUseCase,
+            logger
+        )
+        advanceUntilIdle()
+
+        freeViewModel.sendEvent(NotificationsListEvent.Refresh)
+        advanceUntilIdle()
+
+        coVerify(exactly = 0) { freeSyncUseCase(any()) }
+        assertTrue(freeViewModel.uiState.value.isPremiumRequiredBannerVisible)
+    }
+
+    @Test
+    fun `given user is PREMIUM when initialized then syncNotificationsUseCase is called`() = runTest(testDispatcher) {
+        advanceUntilIdle()
+
+        coVerify(atLeast = 1) { syncNotificationsUseCase(any()) }
+        assertFalse(viewModel.uiState.value.isPremiumRequiredBannerVisible)
+    }
+
+    @Test
+    fun `given user transitions from FREE to PREMIUM then triggers sync and hides premium banner`() = runTest(testDispatcher) {
+        val dynamicSyncUseCase: SyncNotificationsUseCase = mockk(relaxed = true)
+        coEvery { dynamicSyncUseCase(any()) } returns Result.success(SyncNotificationsUseCase.Output.Success(0))
+        val dynamicEntitlementsFlow = MutableStateFlow<GetEntitlementsUseCase.Output>(
+            GetEntitlementsUseCase.Output.Success(Entitlements.Default.copy(subscriptionLevel = SubscriptionLevel.FREE))
+        )
+        every { getEntitlementsUseCase(any()) } returns dynamicEntitlementsFlow
+
+        val dynamicViewModel = NotificationsListViewModel(
+            observeActiveNotificationsUseCase,
+            markNotificationAsReadUseCase,
+            markAllNotificationsAsReadUseCase,
+            deleteNotificationUseCase,
+            dynamicSyncUseCase,
+            getRentingContractUseCase,
+            getAllContractsUseCase,
+            getEntitlementsUseCase,
+            logger
+        )
+        advanceUntilIdle()
+
+        coVerify(exactly = 0) { dynamicSyncUseCase(any()) }
+        assertTrue(dynamicViewModel.uiState.value.isPremiumRequiredBannerVisible)
+
+        // Upgrade to PREMIUM
+        dynamicEntitlementsFlow.value = GetEntitlementsUseCase.Output.Success(
+            Entitlements.Default.copy(subscriptionLevel = SubscriptionLevel.PREMIUM)
+        )
+        advanceUntilIdle()
+
+        coVerify(atLeast = 1) { dynamicSyncUseCase(any()) }
+        assertFalse(dynamicViewModel.uiState.value.isPremiumRequiredBannerVisible)
+    }
+
+    @Test
+    fun `given sync already in progress when refresh triggered multiple times then skips redundant sync`() = runTest(testDispatcher) {
+        val isolatedSyncUseCase: SyncNotificationsUseCase = mockk(relaxed = true)
+        coEvery { isolatedSyncUseCase(any()) } coAnswers {
+            kotlinx.coroutines.delay(500)
+            Result.success(SyncNotificationsUseCase.Output.Success(0))
+        }
+
+        val testVm = NotificationsListViewModel(
+            observeActiveNotificationsUseCase,
+            markNotificationAsReadUseCase,
+            markAllNotificationsAsReadUseCase,
+            deleteNotificationUseCase,
+            isolatedSyncUseCase,
+            getRentingContractUseCase,
+            getAllContractsUseCase,
+            getEntitlementsUseCase,
+            logger
+        )
+
+        testVm.sendEvent(NotificationsListEvent.Refresh)
+        testVm.sendEvent(NotificationsListEvent.Refresh)
+        advanceUntilIdle()
+
+        coVerify(exactly = 1) { isolatedSyncUseCase(any()) }
+    }
 }
+

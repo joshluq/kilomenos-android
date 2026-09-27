@@ -18,7 +18,11 @@ import es.joshluq.kmsafe.domain.usecase.ObserveActiveNotificationsUseCase
 import es.joshluq.kmsafe.domain.usecase.SyncNotificationsUseCase
 import es.joshluq.kmsafe.feature.notifications.ui.mapper.NotificationTextResolver
 import es.joshluq.kmsafe.feature.notifications.ui.model.NotificationUiItem
+import es.joshluq.kmsafe.domain.model.SubscriptionLevel
+import es.joshluq.kmsafe.domain.usecase.GetEntitlementsUseCase
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -35,16 +39,20 @@ class NotificationsListViewModel @Inject constructor(
     private val syncNotificationsUseCase: SyncNotificationsUseCase,
     private val getRentingContractUseCase: GetRentingContractUseCase,
     private val getAllContractsUseCase: GetAllContractsUseCase,
+    private val getEntitlementsUseCase: GetEntitlementsUseCase,
     private val logger: LoggerKit
 ) : ScreenViewModel<NotificationsListState, NotificationsListEvent, NotificationsListEffect>() {
 
     override fun createInitialState(): NotificationsListState = NotificationsListState.Empty
 
     private var allNotifications: List<Notification> = emptyList()
+    private var currentSubscriptionLevel: SubscriptionLevel? = null
+    private var syncJob: Job? = null
 
     init {
         observeNotifications()
         observeContracts()
+        observeEntitlements()
         triggerSync()
     }
 
@@ -90,8 +98,58 @@ class NotificationsListViewModel @Inject constructor(
         }
     }
 
-    private fun triggerSync() {
+    private fun observeEntitlements() {
         viewModelScope.launch {
+            getEntitlementsUseCase(GetEntitlementsUseCase.Input("", forceRefresh = false))
+                .catch { e -> logger.e("NotificationsListViewModel", "Error observing entitlements", e) }
+                .collect { output ->
+                    if (output is GetEntitlementsUseCase.Output.Success) {
+                        val newLevel = output.entitlements.subscriptionLevel
+                        val previousLevel = currentSubscriptionLevel
+                        currentSubscriptionLevel = newLevel
+                        if (newLevel == SubscriptionLevel.FREE) {
+                            syncJob?.cancel()
+                            updateState {
+                                copy(
+                                    isSyncing = false,
+                                    isPremiumRequiredBannerVisible = true
+                                )
+                            }
+                        } else if (newLevel == SubscriptionLevel.PREMIUM) {
+                            updateState { copy(isPremiumRequiredBannerVisible = false) }
+                            if (previousLevel == SubscriptionLevel.FREE) {
+                                triggerSync()
+                            }
+                        }
+                    }
+                }
+        }
+    }
+
+    private fun triggerSync() {
+        if (syncJob?.isActive == true) {
+            logger.d("NotificationsListViewModel", "Sync operation already in progress. Skipping redundant trigger.")
+            return
+        }
+        syncJob = viewModelScope.launch {
+            val level = currentSubscriptionLevel ?: run {
+                val output = getEntitlementsUseCase(GetEntitlementsUseCase.Input("", forceRefresh = false))
+                    .catch { e -> logger.e("NotificationsListViewModel", "Error checking entitlements for sync", e) }
+                    .firstOrNull()
+                (output as? GetEntitlementsUseCase.Output.Success)?.entitlements?.subscriptionLevel
+            }
+
+            if (level == SubscriptionLevel.FREE) {
+                logger.d("NotificationsListViewModel", "User has FREE subscription tier. Skipping remote sync to avoid HTTP 403.")
+                updateState {
+                    copy(
+                        isSyncing = false,
+                        isPremiumRequiredBannerVisible = true
+                    )
+                }
+                return@launch
+            }
+
             updateState { copy(isSyncing = true) }
             val result = syncNotificationsUseCase(SyncNotificationsUseCase.Input)
             result.fold(

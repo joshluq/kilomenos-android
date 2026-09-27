@@ -19,6 +19,12 @@ class AppOverlayDataSource @Inject constructor() {
     fun observeOverlay(): Flow<AppOverlayState> = _overlayState.asStateFlow()
 
     fun updateOverlay(state: AppOverlayState) {
+        val current = _overlayState.value
+        if (state is AppOverlayState.SubscriptionDowngraded &&
+            (current is AppOverlayState.LoggingOut || current is AppOverlayState.AccountDeletion)
+        ) {
+            return
+        }
         _overlayState.value = state
     }
 }

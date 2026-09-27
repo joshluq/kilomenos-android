@@ -337,6 +337,46 @@ class DashboardViewModelTest {
     }
 
     @Test
+    fun `given user is PREMIUM when logging out then does not trigger SubscriptionDowngraded overlay`() = runTest(testDispatcher) {
+        val userFlow = MutableSharedFlow<GetCurrentUserUseCase.Output>()
+        val entitlementsFlow = MutableSharedFlow<GetEntitlementsUseCase.Output>()
+        val overlayFlow = MutableSharedFlow<ObserveAppOverlayUseCase.Output>(replay = 1)
+
+        every { getCurrentUserUseCase(any()) } returns userFlow
+        every { getEntitlementsUseCase(any()) } returns entitlementsFlow
+        every { observeAppOverlayUseCase(any()) } returns overlayFlow
+
+        overlayFlow.emit(ObserveAppOverlayUseCase.Output.Success(AppOverlayState.None))
+
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        // 1. User is authenticated and PREMIUM
+        userFlow.emit(GetCurrentUserUseCase.Output.Success(User(id = "user_premium", email = "p@test.com", name = "Premium User")))
+        entitlementsFlow.emit(
+            GetEntitlementsUseCase.Output.Success(
+                Entitlements.Default.copy(subscriptionLevel = SubscriptionLevel.PREMIUM)
+            )
+        )
+        advanceUntilIdle()
+
+        // 2. User logs out: LoggingOut overlay appears, session ends (user becomes null, entitlements fall back to FREE)
+        overlayFlow.emit(ObserveAppOverlayUseCase.Output.Success(AppOverlayState.LoggingOut))
+        userFlow.emit(GetCurrentUserUseCase.Output.Success(null))
+        entitlementsFlow.emit(
+            GetEntitlementsUseCase.Output.Success(
+                Entitlements.Default.copy(subscriptionLevel = SubscriptionLevel.FREE)
+            )
+        )
+        advanceUntilIdle()
+
+        // Should NEVER have called SubscriptionDowngraded
+        verify(exactly = 0) {
+            setAppOverlayUseCase(match { it.state is AppOverlayState.SubscriptionDowngraded })
+        }
+    }
+
+    @Test
     fun `given subscription upgrade from FREE to PREMIUM then does not trigger SubscriptionDowngraded overlay`() = runTest(testDispatcher) {
         val entitlementsFlow = MutableSharedFlow<GetEntitlementsUseCase.Output>()
         every { getEntitlementsUseCase(any()) } returns entitlementsFlow

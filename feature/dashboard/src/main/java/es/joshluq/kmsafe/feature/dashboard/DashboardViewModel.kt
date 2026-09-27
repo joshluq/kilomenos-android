@@ -81,11 +81,13 @@ class DashboardViewModel @Inject constructor(
                         if (currentUserId != null && currentUserId != lastUserId) {
                             logger.d("DashboardViewModel", "User session changed ($lastUserId -> $currentUserId), resetting tab to OVERVIEW")
                             lastUserId = currentUserId
+                            lastSubscriptionLevel = null
                             if (!state.value.isNavigationBlocked) {
                                 updateState { copy(selectedTab = DashboardTab.OVERVIEW) }
                             }
                         } else if (currentUserId == null) {
                             lastUserId = null
+                            lastSubscriptionLevel = null
                         }
                     }
                 }
@@ -173,6 +175,16 @@ class DashboardViewModel @Inject constructor(
                 if (output is GetEntitlementsUseCase.Output.Success) {
                     val currentLevel = output.entitlements.subscriptionLevel
                     val previousLevel = lastSubscriptionLevel
+
+                    val isSessionTerminating = state.value.hudOverlayState is AppOverlayState.LoggingOut ||
+                        state.value.hudOverlayState is AppOverlayState.AccountDeletion
+
+                    if (isSessionTerminating) {
+                        logger.d("DashboardViewModel", "Ignoring subscription change while session is terminating (overlay=${state.value.hudOverlayState})")
+                        lastSubscriptionLevel = currentLevel
+                        return@onEach
+                    }
+
                     lastSubscriptionLevel = currentLevel
 
                     if (previousLevel == SubscriptionLevel.PREMIUM && currentLevel == SubscriptionLevel.FREE) {
