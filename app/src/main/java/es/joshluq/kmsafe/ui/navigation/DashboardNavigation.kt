@@ -42,8 +42,7 @@ fun DashboardNavigation(
     onNavigateToWelcomeDiscovery: (Boolean) -> Unit,
     onNavigateToVehicleDetail: (String) -> Unit,
     onNavigateToEditContract: (String) -> Unit = {},
-    onNavigateToNotificationsList: () -> Unit = {},
-    onNavigateToNotificationDetail: (String) -> Unit = {}
+    onNavigateToNotificationsList: () -> Unit = {}
 ) {
     val resultStore = LocalNavigationResultStore.current
     val deepLinkDestination by resultStore
@@ -114,8 +113,7 @@ fun DashboardNavigation(
                         onNavigateToPreferences = onNavigateToPreferences,
                         onNavigateToWelcomeDiscovery = { onNavigateToWelcomeDiscovery(false) },
                         onNavigateToVehicleDetail = onNavigateToVehicleDetail,
-                        onNavigateToNotificationsList = onNavigateToNotificationsList,
-                        onNavigateToNotificationDetail = onNavigateToNotificationDetail
+                        onNavigateToNotificationsList = onNavigateToNotificationsList
                     )
                 }
                 Destination.History -> NavEntry(key) {

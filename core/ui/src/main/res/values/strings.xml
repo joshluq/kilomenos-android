@@ -49,6 +49,18 @@
     <string name="error_invalid_receipt_image">La imagen del ticket no es válida o no se pudo procesar.</string>
     <string name="error_receipt_scan_quota_exceeded">Has alcanzado el límite mensual de escaneos de tickets con IA.</string>
     <string name="error_multi_vehicle_limit">La cuenta gratuita solo permite gestionar un vehículo activo. Pasa a Premium para gestionar una flota sin límites.</string>
+    <string name="error_device_trial_limit">Este dispositivo ya ha alcanzado el límite de pruebas gratuitas.</string>
+    <string name="error_already_premium">Tu cuenta ya dispone de una suscripción Premium activa.</string>
+    <string name="error_purchase_verification_failed">No se pudo verificar la compra con Google Play. Intenta restaurar tus compras.</string>
+    <string name="error_invalid_json_body">La solicitud enviada contiene un formato incorrecto.</string>
+    <string name="error_validation_required_field">El campo %1$s es obligatorio.</string>
+    <string name="error_invalid_format">El formato del campo %1$s no es válido.</string>
+    <string name="error_notification_not_found">La notificación solicitada no existe o no está disponible.</string>
+    <string name="error_resource_not_found">El elemento solicitado no se ha encontrado.</string>
+    <string name="error_conflict">Se produjo un conflicto de versión. Se están sincronizando los datos.</string>
+    <string name="error_database">Error interno en la base de datos. Por favor, inténtalo de nuevo.</string>
+    <string name="error_fcm_dispatch_failed">No se pudo enviar la notificación. Se reintentará en segundo plano.</string>
+    <string name="error_service_unavailable">El servicio se encuentra en mantenimiento. Por favor, inténtalo más tarde.</string>
 
     <!-- Accessibility -->
     <string name="acc_back">Volver</string>

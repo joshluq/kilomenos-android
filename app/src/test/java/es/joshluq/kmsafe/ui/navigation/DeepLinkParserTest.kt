@@ -151,13 +151,74 @@ class DeepLinkParserTest {
     }
 
     @Test
+    fun `given canonical kmsafe app notifications uri then resolves to Destination NotificationsList`() {
+        val uri: Uri = mockk {
+            every { scheme } returns "kmsafe"
+            every { host } returns "app"
+            every { pathSegments } returns listOf("notifications")
+        }
+        val intent: Intent = mockk {
+            every { action } returns null
+            every { data } returns uri
+        }
+
+        val dest = DeepLinkParser.parse(intent)
+        assertEquals(Destination.NotificationsList, dest)
+    }
+
+    @Test
+    fun `given https notifications uri then resolves to Destination NotificationsList`() {
+        val uri: Uri = mockk {
+            every { scheme } returns "https"
+            every { host } returns "kmsafe.app"
+            every { pathSegments } returns listOf("notifications")
+        }
+        val intent: Intent = mockk {
+            every { action } returns null
+            every { data } returns uri
+        }
+
+        val dest = DeepLinkParser.parse(intent)
+        assertEquals(Destination.NotificationsList, dest)
+    }
+
+    @Test
+    fun `given legacy notification host uri then resolves to Destination NotificationsList`() {
+        val uri: Uri = mockk {
+            every { scheme } returns "kmsafe"
+            every { host } returns "notifications"
+            every { pathSegments } returns emptyList()
+        }
+        val intent: Intent = mockk {
+            every { action } returns null
+            every { data } returns uri
+        }
+
+        val dest = DeepLinkParser.parse(intent)
+        assertEquals(Destination.NotificationsList, dest)
+    }
+
+    @Test
+    fun `given intent with VIEW_NOTIFICATION action then resolves to Destination NotificationsList`() {
+        val intent: Intent = mockk {
+            every { action } returns "kmsafe.intent.action.VIEW_NOTIFICATION"
+        }
+
+        val dest = DeepLinkParser.parse(intent)
+        assertEquals(Destination.NotificationsList, dest)
+    }
+
+    @Test
     fun `given unknown path then returns null`() {
         val uri: Uri = mockk {
             every { scheme } returns "https"
             every { host } returns "kmsafe.app"
             every { pathSegments } returns listOf("unknown_path")
         }
-        val intent: Intent = mockk { every { data } returns uri }
+        val intent: Intent = mockk {
+            every { action } returns null
+            every { data } returns uri
+        }
 
         assertNull(DeepLinkParser.parse(intent))
     }

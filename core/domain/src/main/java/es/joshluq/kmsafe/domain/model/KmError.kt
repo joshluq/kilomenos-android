@@ -71,6 +71,61 @@ sealed interface KmError {
     /** Multi-vehicle fleet management is only available for Premium users. */
     data object MultiVehicleLimitReached : KmError
 
+    // --- Official Backend Error Catalog (KILOMENOS-18) ---
+
+    // A. Entitlements & Suscripción (Paywall)
+    /** Resource or sync is exclusive to active subscribers (PREMIUM_REQUIRED / 403). */
+    data object PremiumRequired : KmError
+
+    /** Physical device has already reached the maximum trial activations (DEVICE_TRIAL_LIMIT / 400). */
+    data object DeviceTrialLimit : KmError
+
+    /** User attempted to start a trial while already having an active subscription (ALREADY_PREMIUM / 400). */
+    data object AlreadyPremium : KmError
+
+    /** Google Play purchase token is invalid or expired (PURCHASE_VERIFICATION_FAILED / 400 or 402). */
+    data object PurchaseVerificationFailed : KmError
+
+    // B. Autenticación y Tokens
+    /** Session invalid or unauthorized (AUTH_UNAUTHORIZED / 401). */
+    data object AuthUnauthorized : KmError
+
+    /** JWT expired, requiring transparent refresh (AUTH_TOKEN_EXPIRED / 401). */
+    data object AuthTokenExpired : KmError
+
+    /** Supabase or backend API key missing or invalid (API_KEY_INVALID / 401). */
+    data object ApiKeyInvalid : KmError
+
+    // C. Validación de Peticiones
+    /** Malformed JSON payload in request body (INVALID_JSON_BODY / 400). */
+    data object InvalidJsonBody : KmError
+
+    /** A mandatory parameter or field is missing (VALIDATION_REQUIRED_FIELD / 400). */
+    data class ValidationRequiredField(val field: String) : KmError
+
+    /** A field value has an invalid format (INVALID_FORMAT / 400). */
+    data class InvalidFormat(val field: String, val reason: String? = null) : KmError
+
+    // D. Recursos y Persistencia
+    /** Notification not found or belongs to another user (NOTIFICATION_NOT_FOUND / 404). */
+    data object NotificationNotFound : KmError
+
+    /** Generic resource not found (NOT_FOUND / 404). */
+    data object ResourceNotFound : KmError
+
+    /** Duplicate record or version conflict (CONFLICT / 409). */
+    data object Conflict : KmError
+
+    // E. Sistema y Servicios Externos
+    /** Internal database error in PostgreSQL or RLS (DATABASE_ERROR / 500). */
+    data class DatabaseError(val code: Int = 500) : KmError
+
+    /** Failed to dispatch push notification through FCM (FCM_DISPATCH_FAILED / 502). */
+    data object FcmDispatchFailed : KmError
+
+    /** Service is under maintenance or temporarily unavailable (SERVICE_UNAVAILABLE / 503). */
+    data class ServiceUnavailable(val retryAfterSeconds: Int? = null) : KmError
+
     /** An unexpected or unhandled error occurred. */
     data object UnknownError : KmError
 }

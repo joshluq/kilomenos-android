@@ -51,10 +51,13 @@ class SyncEntitlementsFromPushUseCaseTest {
         assertTrue(output.isDowngraded)
 
         verify(exactly = 1) { entitlementsRepository.clearCache() }
+        coVerify(exactly = 1) { entitlementsRepository.downgradeToFree() }
         coVerify(exactly = 1) { notificationRepository.insertOrUpdate(any()) }
         assertEquals(NotificationTopic.SUBSCRIPTION, notificationSlot.captured.topic)
-        assertEquals("Tu suscripción ha cambiado a Plan Gratuito", notificationSlot.captured.title)
-        assertEquals("kmsafe://feature/premium", notificationSlot.captured.deepLinkUri)
+        assertEquals("Tu plan ha cambiado a Free", notificationSlot.captured.title)
+        assertEquals("kmsafe://app/notifications", notificationSlot.captured.deepLinkUri)
+        assertEquals("SYNCED", notificationSlot.captured.syncStatus)
+        assertEquals("REMOTE", notificationSlot.captured.origin)
     }
 
     @Test
@@ -72,6 +75,7 @@ class SyncEntitlementsFromPushUseCaseTest {
         assertEquals(false, output.isDowngraded)
 
         verify(exactly = 1) { entitlementsRepository.clearCache() }
+        coVerify(exactly = 0) { entitlementsRepository.downgradeToFree() }
         coVerify(exactly = 0) { notificationRepository.insertOrUpdate(any()) }
     }
 
@@ -84,7 +88,7 @@ class SyncEntitlementsFromPushUseCaseTest {
             "action_code" to "REFRESH_ENTITLEMENTS",
             "title" to "Suscripción Finalizada",
             "message" to "Tu período Premium ha finalizado.",
-            "deep_link" to "kmsafe://notifications?id=subscription_downgrade"
+            "deep_link" to "kmsafe://app/notifications"
         )
 
         val notificationSlot = slot<Notification>()
@@ -97,9 +101,39 @@ class SyncEntitlementsFromPushUseCaseTest {
         assertTrue(output.isDowngraded)
 
         verify(exactly = 1) { entitlementsRepository.clearCache() }
+        coVerify(exactly = 1) { entitlementsRepository.downgradeToFree() }
         coVerify(exactly = 1) { notificationRepository.insertOrUpdate(any()) }
         assertEquals(NotificationTopic.SUBSCRIPTION, notificationSlot.captured.topic)
         assertEquals("Suscripción Finalizada", notificationSlot.captured.title)
-        assertEquals("kmsafe://notifications?id=subscription_downgrade", notificationSlot.captured.deepLinkUri)
+        assertEquals("kmsafe://app/notifications", notificationSlot.captured.deepLinkUri)
+    }
+
+    @Test
+    fun `given FCM HTTP v1 payload with canonical notification_id then persists notification with exact id and SYNCED status`() = runTest {
+        val expectedUuid = "197b6717-7a2c-482c-8cbc-b1332bbbb457"
+        val payload = mapOf(
+            "notification_id" to expectedUuid,
+            "event_type" to "SUBSCRIPTION_DOWNGRADED",
+            "subscription_level" to "FREE",
+            "action_code" to "REFRESH_ENTITLEMENTS",
+            "title" to "Tu plan ha cambiado a Free",
+            "body" to "Tu período Premium ha finalizado.",
+            "deep_link" to "kmsafe://app/notifications"
+        )
+
+        val notificationSlot = slot<Notification>()
+        coEvery { notificationRepository.insertOrUpdate(capture(notificationSlot)) } returns Unit
+
+        val result = useCase(SyncEntitlementsFromPushUseCase.Input(payload))
+
+        assertTrue(result.isSuccess)
+        val output = result.getOrNull() as SyncEntitlementsFromPushUseCase.Output.Success
+        assertTrue(output.isDowngraded)
+        assertEquals(expectedUuid, output.notification?.id)
+
+        coVerify(exactly = 1) { notificationRepository.insertOrUpdate(any()) }
+        assertEquals(expectedUuid, notificationSlot.captured.id)
+        assertEquals("SYNCED", notificationSlot.captured.syncStatus)
+        assertEquals("REMOTE", notificationSlot.captured.origin)
     }
 }

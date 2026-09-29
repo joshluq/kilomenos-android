@@ -22,7 +22,6 @@ import es.joshluq.kmsafe.domain.model.SubscriptionLevel
 import es.joshluq.kmsafe.domain.usecase.GetEntitlementsUseCase
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -53,7 +52,6 @@ class NotificationsListViewModel @Inject constructor(
         observeNotifications()
         observeContracts()
         observeEntitlements()
-        triggerSync()
     }
 
     private fun observeNotifications() {
@@ -107,18 +105,22 @@ class NotificationsListViewModel @Inject constructor(
                         val newLevel = output.entitlements.subscriptionLevel
                         val previousLevel = currentSubscriptionLevel
                         currentSubscriptionLevel = newLevel
-                        if (newLevel == SubscriptionLevel.FREE) {
-                            syncJob?.cancel()
-                            updateState {
-                                copy(
-                                    isSyncing = false,
-                                    isPremiumRequiredBannerVisible = true
-                                )
+
+                        when (newLevel) {
+                            SubscriptionLevel.FREE -> {
+                                syncJob?.cancel()
+                                updateState {
+                                    copy(
+                                        isSyncing = false,
+                                        isPremiumRequiredBannerVisible = true
+                                    )
+                                }
                             }
-                        } else if (newLevel == SubscriptionLevel.PREMIUM) {
-                            updateState { copy(isPremiumRequiredBannerVisible = false) }
-                            if (previousLevel == SubscriptionLevel.FREE) {
-                                triggerSync()
+                            SubscriptionLevel.PREMIUM, SubscriptionLevel.TRIAL -> {
+                                updateState { copy(isPremiumRequiredBannerVisible = false) }
+                                if (previousLevel == null || previousLevel == SubscriptionLevel.FREE) {
+                                    triggerSync()
+                                }
                             }
                         }
                     }
@@ -131,25 +133,19 @@ class NotificationsListViewModel @Inject constructor(
             logger.d("NotificationsListViewModel", "Sync operation already in progress. Skipping redundant trigger.")
             return
         }
+
+        if (currentSubscriptionLevel == SubscriptionLevel.FREE) {
+            logger.d("NotificationsListViewModel", "User has FREE subscription tier. Skipping remote sync to avoid HTTP 403.")
+            updateState {
+                copy(
+                    isSyncing = false,
+                    isPremiumRequiredBannerVisible = true
+                )
+            }
+            return
+        }
+
         syncJob = viewModelScope.launch {
-            val level = currentSubscriptionLevel ?: run {
-                val output = getEntitlementsUseCase(GetEntitlementsUseCase.Input("", forceRefresh = false))
-                    .catch { e -> logger.e("NotificationsListViewModel", "Error checking entitlements for sync", e) }
-                    .firstOrNull()
-                (output as? GetEntitlementsUseCase.Output.Success)?.entitlements?.subscriptionLevel
-            }
-
-            if (level == SubscriptionLevel.FREE) {
-                logger.d("NotificationsListViewModel", "User has FREE subscription tier. Skipping remote sync to avoid HTTP 403.")
-                updateState {
-                    copy(
-                        isSyncing = false,
-                        isPremiumRequiredBannerVisible = true
-                    )
-                }
-                return@launch
-            }
-
             updateState { copy(isSyncing = true) }
             val result = syncNotificationsUseCase(SyncNotificationsUseCase.Input)
             result.fold(

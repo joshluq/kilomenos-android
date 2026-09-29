@@ -129,7 +129,6 @@ fun OverviewRoute(
     onNavigateToPreferences: () -> Unit,
     onNavigateToWelcomeDiscovery: () -> Unit,
     onNavigateToVehicleDetail: (String) -> Unit,
-    onNavigateToNotificationDetail: (String) -> Unit = {},
     onNavigateToNotificationsList: () -> Unit = {},
     onNavigateToDeepLink: (String) -> Unit = {}
 ) {
@@ -194,7 +193,6 @@ fun OverviewRoute(
 
                 Effect.NavigateToWelcomeDiscovery -> onNavigateToWelcomeDiscovery()
                 is Effect.NavigateToVehicleDetail -> onNavigateToVehicleDetail(effect.id)
-                is Effect.NavigateToNotificationDetail -> onNavigateToNotificationDetail(effect.notificationId)
                 is Effect.NavigateToDeepLink -> onNavigateToDeepLink(effect.deepLinkUri)
                 Effect.NavigateToNotificationsList -> onNavigateToNotificationsList()
             }

@@ -363,7 +363,7 @@ class OverviewViewModel @Inject constructor(
                         if (!deepLink.isNullOrBlank()) {
                             launchEffect(Effect.NavigateToDeepLink(deepLink))
                         } else {
-                            launchEffect(Effect.NavigateToNotificationDetail(targetNotification.id))
+                            launchEffect(Effect.NavigateToNotificationsList)
                         }
                     }
                 }

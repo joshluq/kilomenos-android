@@ -6,6 +6,7 @@ import es.joshluq.foundationkit.log.LoggerKit
 import es.joshluq.kmsafe.core.navigation.Destination
 import es.joshluq.kmsafe.core.navigation.NavigationResultStore
 import es.joshluq.kmsafe.domain.usecase.CheckSessionUseCase
+import es.joshluq.kmsafe.domain.usecase.GetEntitlementsUseCase
 import es.joshluq.kmsafe.domain.usecase.RegisterDeviceTokenUseCase
 import es.joshluq.kmsafe.infrastructure.worker.SyncManager
 import es.joshluq.kmsafe.ui.util.NetworkConnectivityObserver
@@ -34,6 +35,7 @@ class MainViewModelTest {
     private val testDispatcher = StandardTestDispatcher()
     private val checkSessionUseCase: CheckSessionUseCase = mockk(relaxed = true)
     private val registerDeviceTokenUseCase: RegisterDeviceTokenUseCase = mockk(relaxed = true)
+    private val getEntitlementsUseCase: GetEntitlementsUseCase = mockk(relaxed = true)
     private val connectivityObserver: NetworkConnectivityObserver = mockk(relaxed = true)
     private val syncManager: SyncManager = mockk(relaxed = true)
     private val resultStore: NavigationResultStore = mockk(relaxed = true)
@@ -138,9 +140,28 @@ class MainViewModelTest {
         verify(exactly = 1) { resultStore.setResult("quick_add_odometer", true) }
     }
 
+    @Test
+    fun `given active session when onAppResumed called then triggers getEntitlements with forceRefresh`() = runTest(testDispatcher) {
+        every { checkSessionUseCase(CheckSessionUseCase.Input) } returns flowOf(
+            CheckSessionUseCase.Output.ActiveSession
+        )
+        every { getEntitlementsUseCase(any()) } returns flowOf(
+            GetEntitlementsUseCase.Output.Success(mockk())
+        )
+
+        val viewModel = createViewModel()
+        viewModel.onAppResumed()
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        verify(atLeast = 1) {
+            getEntitlementsUseCase(GetEntitlementsUseCase.Input(deviceFingerprint = "", forceRefresh = true))
+        }
+    }
+
     private fun createViewModel() = MainViewModel(
         checkSessionUseCase = checkSessionUseCase,
         registerDeviceTokenUseCase = registerDeviceTokenUseCase,
+        getEntitlementsUseCase = getEntitlementsUseCase,
         connectivityObserver = connectivityObserver,
         syncManager = syncManager,
         resultStore = resultStore,

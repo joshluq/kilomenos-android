@@ -121,7 +121,6 @@ sealed interface Effect : UiEffect {
     data object NavigateToPremiumPaywall : Effect
     data object NavigateToPreferences : Effect
     data object NavigateToWelcomeDiscovery : Effect
-    data class NavigateToNotificationDetail(val notificationId: String) : Effect
     data class NavigateToDeepLink(val deepLinkUri: String) : Effect
     data object NavigateToNotificationsList : Effect
 }

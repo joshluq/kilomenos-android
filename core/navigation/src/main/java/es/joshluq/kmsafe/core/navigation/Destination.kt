@@ -165,12 +165,6 @@ sealed interface Destination {
      */
     @Serializable
     object NotificationsList : Destination
-
-    /**
-     * Notification Detail destination.
-     */
-    @Serializable
-    data class NotificationDetail(val notificationId: String) : Destination
 }
 
 private val navJson = Json {

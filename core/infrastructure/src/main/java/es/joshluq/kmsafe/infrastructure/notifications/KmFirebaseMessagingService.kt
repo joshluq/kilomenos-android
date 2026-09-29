@@ -55,7 +55,7 @@ class KmFirebaseMessagingService : FirebaseMessagingService() {
         val data = remoteMessage.data
         serviceScope.launch {
             // 1. Reactive Entitlements Sync trigger
-            var isDowngradeAlertHandled = false
+            var downgradeNotification: Notification? = null
             if (data.containsKey("subscription_level") ||
                 data["action"] == "SYNC_ENTITLEMENTS" ||
                 data["action_code"] == "REFRESH_ENTITLEMENTS" ||
@@ -65,49 +65,51 @@ class KmFirebaseMessagingService : FirebaseMessagingService() {
                 if (syncResult.isSuccess) {
                     val output = syncResult.getOrNull()
                     if (output is SyncEntitlementsFromPushUseCase.Output.Success && output.isDowngraded) {
-                        isDowngradeAlertHandled = true
+                        downgradeNotification = output.notification
                     }
                 }
             }
 
             // 2. Visible message payload
             val notificationPayload = remoteMessage.notification
-            if (notificationPayload != null || data.containsKey("title") || data.containsKey("message")) {
-                val title = notificationPayload?.title ?: data["title"] ?: "KiloMenos"
-                val body = notificationPayload?.body ?: data["message"] ?: data["body"] ?: ""
-                val topicStr = data["topic"]?.uppercase()
-                val topic = runCatching { NotificationTopic.valueOf(topicStr ?: "") }
-                    .getOrDefault(NotificationTopic.SUBSCRIPTION)
-                val priorityStr = data["priority"]?.uppercase()
-                val priority = runCatching { NotificationPriority.valueOf(priorityStr ?: "") }
-                    .getOrDefault(NotificationPriority.WARNING)
-                val deepLinkUri = data["deep_link"] ?: data["deepLinkUri"] ?: "kmsafe://notifications"
+            if (notificationPayload != null || data.containsKey("title") || data.containsKey("message") || downgradeNotification != null) {
+                val notifToPost = if (downgradeNotification != null) {
+                    downgradeNotification
+                } else {
+                    val title = notificationPayload?.title ?: data["title"] ?: "KiloMenos"
+                    val body = notificationPayload?.body ?: data["message"] ?: data["body"] ?: ""
+                    val topicStr = data["topic"]?.uppercase()
+                    val topic = runCatching { NotificationTopic.valueOf(topicStr ?: "") }
+                        .getOrDefault(NotificationTopic.SUBSCRIPTION)
+                    val priorityStr = data["priority"]?.uppercase()
+                    val priority = runCatching { NotificationPriority.valueOf(priorityStr ?: "") }
+                        .getOrDefault(NotificationPriority.WARNING)
+                    val deepLinkUri = data["deep_link"] ?: data["deepLinkUri"] ?: "kmsafe://app/notifications"
 
-                val notifId = data["id"]?.takeIf { isCanonicalUuid(it) }
-                    ?: data["notification_id"]?.takeIf { isCanonicalUuid(it) }
-                    ?: UUID.randomUUID().toString()
+                    val notifId = data["notification_id"]?.takeIf { isCanonicalUuid(it) }
+                        ?: data["id"]?.takeIf { isCanonicalUuid(it) }
+                        ?: UUID.randomUUID().toString()
 
-                val notif = Notification(
-                    id = notifId,
-                    topic = topic,
-                    title = title,
-                    body = body,
-                    priority = priority,
-                    status = NotificationStatus.UNREAD,
-                    deepLinkUri = deepLinkUri,
-                    timestampMillis = remoteMessage.sentTime.takeIf { it > 0 } ?: System.currentTimeMillis(),
-                    actionLabel = data["action_label"] ?: "Ver",
-                    origin = "REMOTE",
-                    syncStatus = "SYNCED"
-                )
+                    val notif = Notification(
+                        id = notifId,
+                        topic = topic,
+                        title = title,
+                        body = body,
+                        priority = priority,
+                        status = NotificationStatus.UNREAD,
+                        deepLinkUri = deepLinkUri,
+                        timestampMillis = remoteMessage.sentTime.takeIf { it > 0 } ?: System.currentTimeMillis(),
+                        actionLabel = data["action_label"] ?: "Ver",
+                        origin = "REMOTE",
+                        syncStatus = "SYNCED"
+                    )
 
-                // Prevent duplicate database insertion if entitlements sync already persisted the downgrade alert
-                if (!isDowngradeAlertHandled) {
                     publishNotificationUseCase(PublishNotificationUseCase.Input(notif))
+                    notif
                 }
 
                 // Post system alert with NotificationCompat
-                postSystemNotification(notif)
+                postSystemNotification(notifToPost)
             }
         }
     }
@@ -122,7 +124,7 @@ class KmFirebaseMessagingService : FirebaseMessagingService() {
         val channelId = channelManager.getSubscriptionChannelId()
         val intent = Intent(
             Intent.ACTION_VIEW,
-            (notification.deepLinkUri ?: "kmsafe://notifications").toUri()
+            (notification.deepLinkUri ?: "kmsafe://app/notifications").toUri()
         ).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
         }

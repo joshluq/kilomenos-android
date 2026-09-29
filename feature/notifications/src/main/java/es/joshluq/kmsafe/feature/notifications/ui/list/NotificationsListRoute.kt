@@ -26,7 +26,6 @@ import java.util.UUID
 @Composable
 fun NotificationsListRoute(
     onNavigateBack: () -> Unit,
-    onNavigateToDetail: (String) -> Unit = {},
     onNavigateToDeepLink: (String) -> Unit = {},
     onNavigateToPaywall: () -> Unit = {},
     onNavigateToProjection: () -> Unit = {},
@@ -65,7 +64,6 @@ fun NotificationsListRoute(
         viewModel.effects.collect { effect ->
             when (effect) {
                 NotificationsListEffect.NavigateBack -> onNavigateBack()
-                is NotificationsListEffect.NavigateToDetail -> onNavigateToDetail(effect.notificationId)
                 is NotificationsListEffect.NavigateToDeepLink -> onNavigateToDeepLink(effect.deepLinkUri)
                 NotificationsListEffect.NavigateToPaywall -> onNavigateToPaywall()
                 NotificationsListEffect.NavigateToProjection -> onNavigateToProjection()

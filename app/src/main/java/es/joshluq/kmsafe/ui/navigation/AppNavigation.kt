@@ -34,7 +34,6 @@ import es.joshluq.kmsafe.feature.fleet.setup.WelcomeDiscoveryScreen
 import es.joshluq.kmsafe.feature.fleet.vehicles.VehicleListRoute
 import es.joshluq.kmsafe.feature.history.detail.RecordDetailRoute
 import es.joshluq.kmsafe.feature.notifications.ui.list.NotificationsListRoute
-import es.joshluq.kmsafe.feature.notifications.ui.detail.NotificationDetailRoute
 import es.joshluq.kmsafe.feature.premium.paywall.PremiumPaywallRoute
 import es.joshluq.kmsafe.feature.profile.preferences.PreferencesRoute
 import es.joshluq.kmsafe.ui.common.cropper.CropImageScreen
@@ -275,9 +274,6 @@ fun AppNavigation(
                                     },
                                     onNavigateToNotificationsList = {
                                         onNavigate(Destination.NotificationsList)
-                                    },
-                                    onNavigateToNotificationDetail = { notificationId ->
-                                        onNavigate(Destination.NotificationDetail(notificationId))
                                     }
                                 )
                             }
@@ -418,9 +414,6 @@ fun AppNavigation(
                     Destination.NotificationsList -> NavEntry(key) {
                         NotificationsListRoute(
                             onNavigateBack = onBack,
-                            onNavigateToDetail = { notificationId ->
-                                onNavigate(Destination.NotificationDetail(notificationId))
-                            },
                             onNavigateToDeepLink = { uri ->
                                 when {
                                     uri.contains("projection") -> {
@@ -441,22 +434,6 @@ fun AppNavigation(
                                     onNavigate(Destination.EditContract(vehicleId))
                                 } else {
                                     onNavigate(Destination.SetupWizard)
-                                }
-                            }
-                        )
-                    }
-
-                    is Destination.NotificationDetail -> NavEntry(key) {
-                        NotificationDetailRoute(
-                            notificationId = key.notificationId,
-                            onNavigateBack = onBack,
-                            onNavigateToDeepLink = { uri ->
-                                when {
-                                    uri.contains("projection") -> {
-                                        resultStore.setResult("deep_link_destination", Destination.ProjectionAnalysis)
-                                    }
-                                    uri.contains("premium") -> onNavigate(Destination.PremiumPaywall(source = "notification"))
-                                    else -> { /* no-op or external intent */ }
                                 }
                             }
                         )

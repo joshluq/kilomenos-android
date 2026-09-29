@@ -27,4 +27,9 @@ interface EntitlementsRepository {
      * Clears the local entitlements cache.
      */
     fun clearCache()
+
+    /**
+     * Immediately degrades the local entitlements and session to the FREE tier.
+     */
+    suspend fun downgradeToFree()
 }

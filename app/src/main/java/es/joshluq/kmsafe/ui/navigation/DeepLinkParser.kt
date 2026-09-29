@@ -10,6 +10,8 @@ import es.joshluq.kmsafe.core.navigation.Destination
  */
 object DeepLinkParser {
 
+    private const val ACTION_VIEW_NOTIFICATION = "kmsafe.intent.action.VIEW_NOTIFICATION"
+
     /**
      * Parses incoming [Intent] and resolves the corresponding typed [Destination].
      *
@@ -17,10 +19,23 @@ object DeepLinkParser {
      * @return Resolved [Destination] or null if the intent does not match known URI patterns.
      */
     fun parse(intent: Intent?): Destination? {
-        val data: Uri = intent?.data ?: return null
+        if (intent == null) return null
+
+        val action = runCatching { intent.action }.getOrNull()
+        if (action == ACTION_VIEW_NOTIFICATION) {
+            return Destination.NotificationsList
+        }
+
+        val data: Uri = intent.data ?: return null
 
         val isHttps = data.scheme == DeepLinkConfig.SCHEME && data.host == DeepLinkConfig.HOST
         val isCustomScheme = data.scheme == "kmsafe" && data.host == "app"
+        val isLegacyNotificationHost = data.scheme == "kmsafe" && data.host == "notifications"
+
+        if (isLegacyNotificationHost) {
+            return Destination.NotificationsList
+        }
+
         if (!isHttps && !isCustomScheme) {
             return null
         }
@@ -29,6 +44,7 @@ object DeepLinkParser {
 
         return when {
             pathSegments.isEmpty() || pathSegments[0] == "dashboard" || pathSegments[0] == "overview" -> Destination.Dashboard
+            pathSegments[0] == "notifications" -> Destination.NotificationsList
             pathSegments[0] == "expenses" -> {
                 val stationId = data.getQueryParameter("stationId")
                 val autoOpen = data.getBooleanQueryParameter("autoOpen", false) ||

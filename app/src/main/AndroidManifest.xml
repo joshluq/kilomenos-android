@@ -49,6 +49,20 @@
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data android:scheme="kmsafe" android:host="app" />
             </intent-filter>
+
+            <!-- Defensive Custom Scheme for Notifications: kmsafe://notifications -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="kmsafe" android:host="notifications" />
+            </intent-filter>
+
+            <!-- Custom Notification Click Action -->
+            <intent-filter>
+                <action android:name="kmsafe.intent.action.VIEW_NOTIFICATION" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
         </activity>
 
         <provider

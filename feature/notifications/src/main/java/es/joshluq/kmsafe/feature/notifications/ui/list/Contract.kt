@@ -39,7 +39,6 @@ sealed interface NotificationsListEvent : UiEvent {
 
 sealed interface NotificationsListEffect : UiEffect {
     data object NavigateBack : NotificationsListEffect
-    data class NavigateToDetail(val notificationId: String) : NotificationsListEffect
     data class NavigateToDeepLink(val deepLinkUri: String) : NotificationsListEffect
     data object NavigateToPaywall : NotificationsListEffect
     data object NavigateToProjection : NotificationsListEffect

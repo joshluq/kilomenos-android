@@ -49,6 +49,18 @@
     <string name="error_invalid_receipt_image">The receipt image is invalid or could not be processed.</string>
     <string name="error_receipt_scan_quota_exceeded">You have reached the monthly limit for AI receipt scans.</string>
     <string name="error_multi_vehicle_limit">Free accounts are limited to one active vehicle. Upgrade to Premium to manage unlimited fleet vehicles.</string>
+    <string name="error_device_trial_limit">This device has already reached the free trial limit.</string>
+    <string name="error_already_premium">Your account already has an active Premium subscription.</string>
+    <string name="error_purchase_verification_failed">Could not verify purchase with Google Play. Please try restoring purchases.</string>
+    <string name="error_invalid_json_body">The request contains malformed data.</string>
+    <string name="error_validation_required_field">The field %1$s is required.</string>
+    <string name="error_invalid_format">The format for %1$s is invalid.</string>
+    <string name="error_notification_not_found">The requested notification does not exist or is unavailable.</string>
+    <string name="error_resource_not_found">The requested item was not found.</string>
+    <string name="error_conflict">A version conflict occurred. Refreshing data from the server.</string>
+    <string name="error_database">Internal database error. Please try again.</string>
+    <string name="error_fcm_dispatch_failed">Could not dispatch notification. It will be retried in the background.</string>
+    <string name="error_service_unavailable">The service is temporarily under maintenance. Please try again later.</string>
 
     <!-- Accessibility -->
     <string name="acc_back">Back</string>

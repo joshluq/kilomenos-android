@@ -8,6 +8,7 @@ import es.joshluq.kmsafe.infrastructure.mapper.toDomain
 import es.joshluq.kmsafe.infrastructure.remote.api.EntitlementsApiService
 import es.joshluq.kmsafe.infrastructure.remote.api.StartTrialRequest
 import es.joshluq.kmsafe.domain.model.Entitlements
+import es.joshluq.kmsafe.domain.model.SubscriptionLevel
 import es.joshluq.kmsafe.domain.repository.AuthRepository
 import es.joshluq.kmsafe.domain.repository.EntitlementsRepository
 import kotlinx.coroutines.CoroutineScope
@@ -123,5 +124,15 @@ class EntitlementsRepositoryImpl @Inject constructor(
      */
     override fun clearCache() {
         lastFetchTime = 0L
+    }
+
+    /**
+     * Immediately degrades the local entitlements and session to the FREE tier.
+     */
+    override suspend fun downgradeToFree() {
+        clearCache()
+        val freeEntitlements = Entitlements.Default.copy(subscriptionLevel = SubscriptionLevel.FREE)
+        authRepository.updateEntitlements(freeEntitlements)
+        logger.w("EntitlementsRepository", "Local entitlements downgraded to FREE")
     }
 }
