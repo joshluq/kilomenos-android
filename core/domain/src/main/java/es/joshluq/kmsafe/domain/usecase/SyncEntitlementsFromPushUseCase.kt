@@ -92,7 +92,8 @@ class SyncEntitlementsFromPushUseCaseImpl @Inject constructor(
                     deepLinkUri = deepLink,
                     origin = input.payloadData["origin"] ?: "REMOTE",
                     syncStatus = "SYNCED",
-                    timestampMillis = System.currentTimeMillis()
+                    timestampMillis = System.currentTimeMillis(),
+                    data = input.payloadData + mapOf("event_type" to (eventType ?: "SUBSCRIPTION_DOWNGRADED"), "sub_type" to "downgrade")
                 )
                 notificationRepository.insertOrUpdate(alert)
                 alertNotification = alert

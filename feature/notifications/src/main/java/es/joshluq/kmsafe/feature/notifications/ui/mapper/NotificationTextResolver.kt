@@ -61,12 +61,30 @@ object NotificationTextResolver {
     }
 
     private fun resolveSubscription(notification: Notification): NotificationLocalizedTexts {
-        return NotificationLocalizedTexts(
-            title = TextProvider.Resource(R.string.notification_subscription_title),
-            body = TextProvider.Resource(R.string.notification_subscription_body),
-            actionLabel = TextProvider.Resource(R.string.notification_subscription_action),
-            topicLabel = TextProvider.Resource(R.string.notification_topic_subscription)
-        )
+        val eventType = notification.data?.get("event_type") as? String
+        val subType = notification.data?.get("sub_type") as? String
+        val isDowngrade = eventType == "SUBSCRIPTION_DOWNGRADED" ||
+            subType == "downgrade" ||
+            notification.title.contains("Free", ignoreCase = true) ||
+            notification.title.contains("Cancel", ignoreCase = true)
+
+        return if (isDowngrade) {
+            NotificationLocalizedTexts(
+                title = TextProvider.Resource(R.string.notification_subscription_downgraded_title),
+                body = TextProvider.Resource(R.string.notification_subscription_downgraded_body),
+                actionLabel = TextProvider.Resource(R.string.notification_subscription_downgraded_action),
+                topicLabel = TextProvider.Resource(R.string.notification_topic_subscription)
+            )
+        } else if (notification.title.isNotBlank()) {
+            fallback(notification, R.string.notification_topic_subscription)
+        } else {
+            NotificationLocalizedTexts(
+                title = TextProvider.Resource(R.string.notification_subscription_title),
+                body = TextProvider.Resource(R.string.notification_subscription_body),
+                actionLabel = TextProvider.Resource(R.string.notification_subscription_action),
+                topicLabel = TextProvider.Resource(R.string.notification_topic_subscription)
+            )
+        }
     }
 
     private fun resolveFleet(notification: Notification): NotificationLocalizedTexts {

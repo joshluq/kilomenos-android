@@ -27,6 +27,7 @@ import kotlinx.coroutines.launch
 import java.util.UUID
 import javax.inject.Inject
 import androidx.core.net.toUri
+import es.joshluq.kmsafe.core.infrastructure.R
 
 /**
  * Firebase Cloud Messaging service for handling remote push notifications
@@ -141,10 +142,25 @@ class KmFirebaseMessagingService : FirebaseMessagingService() {
         val brandIconRes = resources.getIdentifier("ic_stat_kmsafe_brand", "drawable", packageName)
             .takeIf { it != 0 } ?: applicationInfo.icon.takeIf { it != 0 } ?: android.R.drawable.ic_dialog_alert
 
+        val isDowngrade = notification.data?.get("event_type") == "SUBSCRIPTION_DOWNGRADED" ||
+            (notification.topic == NotificationTopic.SUBSCRIPTION && notification.title.contains("Free", ignoreCase = true))
+
+        val resolvedTitle = if (isDowngrade) {
+            getString(R.string.notification_subscription_downgraded_title)
+        } else {
+            notification.title
+        }
+
+        val resolvedBody = if (isDowngrade) {
+            getString(R.string.notification_subscription_downgraded_body)
+        } else {
+            notification.body
+        }
+
         val builder = NotificationCompat.Builder(this, channelId)
             .setSmallIcon(brandIconRes)
-            .setContentTitle(notification.title)
-            .setContentText(notification.body)
+            .setContentTitle(resolvedTitle)
+            .setContentText(resolvedBody)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setAutoCancel(true)
             .setContentIntent(pendingIntent)

@@ -1,0 +1,4 @@
+<resources>
+    <string name="notification_subscription_downgraded_title">Tu plan ha cambiado a Free</string>
+    <string name="notification_subscription_downgraded_body">Tu período Premium ha finalizado. Actualiza tu suscripción para seguir disfrutando de todas las ventajas.</string>
+</resources>

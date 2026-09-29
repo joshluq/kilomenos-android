@@ -41,6 +41,9 @@
     <string name="notification_subscription_title">Upgrade to KiloMenos Pro</string>
     <string name="notification_subscription_body">Unlock multi-vehicle sync, telemetry, and smart copilot.</string>
     <string name="notification_subscription_action">View Plans</string>
+    <string name="notification_subscription_downgraded_title">Your plan has changed to FREE</string>
+    <string name="notification_subscription_downgraded_body">Your Premium period has ended. Upgrade your subscription to keep enjoying all features.</string>
+    <string name="notification_subscription_downgraded_action">View Plans</string>
 
     <!-- Topic: FLEET -->
     <string name="notification_fleet_title">Fleet Update</string>

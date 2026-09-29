@@ -133,6 +133,7 @@ class EntitlementsRepositoryImpl @Inject constructor(
         clearCache()
         val freeEntitlements = Entitlements.Default.copy(subscriptionLevel = SubscriptionLevel.FREE)
         authRepository.updateEntitlements(freeEntitlements)
+        lastFetchTime = System.currentTimeMillis()
         logger.w("EntitlementsRepository", "Local entitlements downgraded to FREE")
     }
 }

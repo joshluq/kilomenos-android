@@ -41,6 +41,9 @@
     <string name="notification_subscription_title">Actualiza a KiloMenos Pro</string>
     <string name="notification_subscription_body">Desbloquea sincronización multi-vehículo, telemetría y copiloto inteligente.</string>
     <string name="notification_subscription_action">Ver Planes</string>
+    <string name="notification_subscription_downgraded_title">Tu plan ha cambiado a Free</string>
+    <string name="notification_subscription_downgraded_body">Tu período Premium ha finalizado. Actualiza tu suscripción para seguir disfrutando de todas las ventajas.</string>
+    <string name="notification_subscription_downgraded_action">Ver Planes</string>
 
     <!-- Topic: FLEET -->
     <string name="notification_fleet_title">Actualización de Flota</string>

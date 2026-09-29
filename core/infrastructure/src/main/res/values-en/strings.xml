@@ -1,0 +1,4 @@
+<resources>
+    <string name="notification_subscription_downgraded_title">Your plan has changed to FREE</string>
+    <string name="notification_subscription_downgraded_body">Your Premium period has ended. Upgrade your subscription to keep enjoying all features.</string>
+</resources>
