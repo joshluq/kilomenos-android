@@ -1,0 +1,79 @@
+{
+  "handoff_id": "HANDOFF-ARCH-DEV-KILOMENOS-18-01",
+  "schema_version": "1.0.0",
+  "timestamp": "2026-09-29T10:13:00Z",
+  "sender": {
+    "role": "Mobile Software Architect",
+    "agent_id": "software_architect"
+  },
+  "recipient": {
+    "role": "Senior Android Developer",
+    "agent_id": "senior_android_developer"
+  },
+  "feature_id": "KILOMENOS-18",
+  "po_handoff_ref": "HANDOFF-PO-ARCH-KILOMENOS-18-01",
+  "adr_path": "docs/adr/ADR-KILOMENOS-18.md",
+  "component_spec_path": "docs/specs/COMP-SPEC-KILOMENOS-18.md",
+  "remediation_cycle": 0,
+  "architecture_pattern": "MVI",
+  "module_targets": [
+    ":feature:notifications"
+  ],
+  "component_contracts": [
+    {
+      "component_name": "NotificationsListViewModel",
+      "package_name": "es.joshluq.kmsafe.feature.notifications.ui.list",
+      "layer": "VIEWMODEL",
+      "state_models": ["NotificationsListState"],
+      "action_events": [
+        "DeleteNotificationClicked",
+        "ConfirmDeleteNotificationClicked",
+        "DismissDeleteNotificationClicked"
+      ],
+      "exposed_flows": ["state", "effects"]
+    },
+    {
+      "component_name": "NotificationsListScreen",
+      "package_name": "es.joshluq.kmsafe.feature.notifications.ui.list",
+      "layer": "UI",
+      "state_models": ["NotificationsListState"],
+      "action_events": [
+        "ConfirmDeleteNotificationClicked",
+        "DismissDeleteNotificationClicked"
+      ],
+      "exposed_flows": ["NotificationsListScreen"]
+    }
+  ],
+  "file_manifest_plan": [
+    {
+      "target_path": "feature/notifications/src/main/java/es/joshluq/kmsafe/feature/notifications/ui/list/Contract.kt",
+      "action": "MODIFY",
+      "purpose": "Añadir notificationPendingDeletion a NotificationsListState y nuevos eventos ConfirmDeleteNotificationClicked y DismissDeleteNotificationClicked"
+    },
+    {
+      "target_path": "feature/notifications/src/main/java/es/joshluq/kmsafe/feature/notifications/ui/list/NotificationsListViewModel.kt",
+      "action": "MODIFY",
+      "purpose": "Interceptar DeleteNotificationClicked para asignar notificación pendiente, procesar ConfirmDeleteNotificationClicked y DismissDeleteNotificationClicked"
+    },
+    {
+      "target_path": "feature/notifications/src/main/java/es/joshluq/kmsafe/feature/notifications/ui/list/NotificationsListScreen.kt",
+      "action": "MODIFY",
+      "purpose": "Proyectar CanvasKitConfirmDialog cuando notificationPendingDeletion no sea null"
+    },
+    {
+      "target_path": "feature/notifications/src/main/res/values/strings.xml",
+      "action": "MODIFY",
+      "purpose": "Añadir recursos de strings para título, mensaje, confirmación y cancelación del diálogo"
+    },
+    {
+      "target_path": "feature/notifications/src/main/res/values-en/strings.xml",
+      "action": "MODIFY",
+      "purpose": "Añadir strings en inglés para el diálogo de confirmación de eliminación"
+    },
+    {
+      "target_path": "feature/notifications/src/test/kotlin/es/joshluq/kmsafe/feature/notifications/NotificationsListViewModelTest.kt",
+      "action": "MODIFY",
+      "purpose": "Añadir tests unitarios para apertura, cancelación y confirmación del borrado de notificación"
+    }
+  ]
+}

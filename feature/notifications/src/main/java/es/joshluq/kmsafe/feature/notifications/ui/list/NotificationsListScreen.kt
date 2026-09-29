@@ -53,6 +53,7 @@ import es.joshluq.canvaskit.components.buttons.CanvasKitButtonVariant
 import es.joshluq.canvaskit.components.cards.CanvasKitCard
 import es.joshluq.canvaskit.components.chips.CanvasKitChip
 import es.joshluq.canvaskit.components.chips.CanvasKitChipVariant
+import es.joshluq.canvaskit.components.feedback.CanvasKitConfirmDialog
 import es.joshluq.canvaskit.components.navigation.CanvasKitTopBar
 import es.joshluq.canvaskit.foundations.theme.CanvasKitTheme
 import es.joshluq.foundationkit.text.asString
@@ -240,7 +241,12 @@ fun NotificationsListScreen(
                         variant = CanvasKitChipVariant.Outlined,
                         selected = uiState.selectedTopic == null,
                         onClick = { onAction(NotificationsListEvent.TopicSelected(null)) },
-                        label = { Text(stringResource(R.string.notifications_filter_all)) },
+                        label = {
+                            Text(
+                                text = stringResource(R.string.notifications_filter_all),
+                                color = CanvasKitTheme.colors.textPrimary
+                            )
+                        },
                         modifier = Modifier.defaultMinSize(minHeight = 48.dp),
                     )
                 }
@@ -255,7 +261,12 @@ fun NotificationsListScreen(
                         variant = CanvasKitChipVariant.Outlined,
                         selected = uiState.selectedTopic == topic,
                         onClick = { onAction(NotificationsListEvent.TopicSelected(topic)) },
-                        label = { Text(stringResource(labelRes)) },
+                        label = {
+                            Text(
+                                text = stringResource(labelRes),
+                                color = CanvasKitTheme.colors.textPrimary
+                            )
+                        },
                         modifier = Modifier.defaultMinSize(minHeight = 48.dp)
                     )
                 }
@@ -306,6 +317,19 @@ fun NotificationsListScreen(
                     }
                 }
             }
+        }
+
+        uiState.notificationPendingDeletion?.let {
+            CanvasKitConfirmDialog(
+                title = stringResource(R.string.notifications_delete_confirmation_title),
+                message = stringResource(R.string.notifications_delete_confirmation_message),
+                confirmText = stringResource(R.string.notifications_delete_confirm),
+                cancelText = stringResource(R.string.notifications_delete_cancel),
+                onConfirm = { onAction(NotificationsListEvent.ConfirmDeleteNotificationClicked) },
+                onDismissRequest = { onAction(NotificationsListEvent.DismissDeleteNotificationClicked) },
+                isDestructive = true,
+                icon = Icons.Default.DeleteOutline
+            )
         }
     }
 }

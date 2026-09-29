@@ -70,5 +70,11 @@
     <string name="notifications_unread_prefix">No leída: </string>
     <string name="notifications_empty_filter">No tienes notificaciones en este filtro</string>
     <string name="notifications_delete_content_description">Eliminar notificación</string>
+
+    <!-- Deletion Confirmation Dialog -->
+    <string name="notifications_delete_confirmation_title">¿Eliminar notificación?</string>
+    <string name="notifications_delete_confirmation_message">¿Estás seguro de que deseas eliminar esta notificación? Esta acción no se puede deshacer.</string>
+    <string name="notifications_delete_confirm">Eliminar</string>
+    <string name="notifications_delete_cancel">Cancelar</string>
 </resources>
 

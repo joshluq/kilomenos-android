@@ -239,9 +239,20 @@ class NotificationsListViewModel @Inject constructor(
                 }
             }
             is NotificationsListEvent.DeleteNotificationClicked -> {
-                viewModelScope.launch {
-                    deleteNotificationUseCase(DeleteNotificationUseCase.Input(event.notificationId))
+                val itemToDelete = state.value.notifications.find { it.id == event.notificationId }
+                updateState { copy(notificationPendingDeletion = itemToDelete) }
+            }
+            NotificationsListEvent.ConfirmDeleteNotificationClicked -> {
+                val pending = state.value.notificationPendingDeletion
+                updateState { copy(notificationPendingDeletion = null) }
+                if (pending != null) {
+                    viewModelScope.launch {
+                        deleteNotificationUseCase(DeleteNotificationUseCase.Input(pending.id))
+                    }
                 }
+            }
+            NotificationsListEvent.DismissDeleteNotificationClicked -> {
+                updateState { copy(notificationPendingDeletion = null) }
             }
             NotificationsListEvent.DismissPremiumBanner -> {
                 updateState { copy(isPremiumRequiredBannerVisible = false) }

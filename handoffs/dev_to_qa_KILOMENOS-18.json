@@ -1,0 +1,78 @@
+{
+  "handoff_id": "HANDOFF-DEV-QA-KILOMENOS-18-01",
+  "schema_version": "1.0.0",
+  "timestamp": "2026-09-29T10:17:00Z",
+  "sender": {
+    "role": "Senior Android Developer",
+    "agent_id": "senior_android_developer"
+  },
+  "recipient": {
+    "role": "QA/Testing Engineer",
+    "agent_id": "qa_testing_engineer"
+  },
+  "feature_id": "KILOMENOS-18",
+  "architect_handoff_ref": "HANDOFF-ARCH-DEV-KILOMENOS-18-01",
+  "remediation_cycle": 0,
+  "implementation_manifest": {
+    "module": ":feature:notifications",
+    "entry_point_composable": "NotificationsListScreen",
+    "viewmodel_class": "NotificationsListViewModel"
+  },
+  "code_changes": [
+    {
+      "file_path": "feature/notifications/src/main/res/values/strings.xml",
+      "action": "MODIFIED",
+      "language": "xml",
+      "line_count": 80
+    },
+    {
+      "file_path": "feature/notifications/src/main/res/values-en/strings.xml",
+      "action": "MODIFIED",
+      "language": "xml",
+      "line_count": 80
+    },
+    {
+      "file_path": "feature/notifications/src/main/java/es/joshluq/kmsafe/feature/notifications/ui/list/Contract.kt",
+      "action": "MODIFIED",
+      "language": "kotlin",
+      "line_count": 53
+    },
+    {
+      "file_path": "feature/notifications/src/main/java/es/joshluq/kmsafe/feature/notifications/ui/list/NotificationsListViewModel.kt",
+      "action": "MODIFIED",
+      "language": "kotlin",
+      "line_count": 327
+    },
+    {
+      "file_path": "feature/notifications/src/main/java/es/joshluq/kmsafe/feature/notifications/ui/list/NotificationsListScreen.kt",
+      "action": "MODIFIED",
+      "language": "kotlin",
+      "line_count": 555
+    },
+    {
+      "file_path": "feature/notifications/src/test/kotlin/es/joshluq/kmsafe/feature/notifications/NotificationsListViewModelTest.kt",
+      "action": "MODIFIED",
+      "language": "kotlin",
+      "line_count": 616
+    }
+  ],
+  "developer_test_summary": {
+    "unit_tests_run": 21,
+    "unit_tests_passed": 21,
+    "unit_tests_failed": 0,
+    "test_frameworks_used": [
+      "JUnit4",
+      "MockK",
+      "Turbine",
+      "kotlinx.coroutines.test"
+    ],
+    "test_files": [
+      "feature/notifications/src/test/kotlin/es/joshluq/kmsafe/feature/notifications/NotificationsListViewModelTest.kt"
+    ]
+  },
+  "lint_and_sanity": {
+    "compilation_clean": true,
+    "ktlint_clean": true,
+    "detekt_clean": true
+  }
+}

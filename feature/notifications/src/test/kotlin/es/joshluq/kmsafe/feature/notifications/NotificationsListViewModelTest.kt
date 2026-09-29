@@ -40,6 +40,7 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
+import kotlin.time.Duration.Companion.milliseconds
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class NotificationsListViewModelTest {
@@ -279,10 +280,70 @@ class NotificationsListViewModelTest {
     }
 
     @Test
-    fun `given delete notification clicked then invokes deleteNotificationUseCase`() = runTest(testDispatcher) {
+    fun `given delete notification clicked then sets notificationPendingDeletion without deleting`() = runTest(testDispatcher) {
+        val notif = Notification(
+            id = "del-1",
+            topic = NotificationTopic.PROJECTION,
+            title = "Aviso a eliminar",
+            body = "Detalles",
+            priority = NotificationPriority.INFO,
+            status = NotificationStatus.UNREAD
+        )
+        notificationsFlow.value = ObserveActiveNotificationsUseCase.Output.Success(listOf(notif))
+        advanceUntilIdle()
+
         viewModel.sendEvent(NotificationsListEvent.DeleteNotificationClicked("del-1"))
         advanceUntilIdle()
 
+        assertEquals("del-1", viewModel.uiState.value.notificationPendingDeletion?.id)
+        coVerify(exactly = 0) { deleteNotificationUseCase(any()) }
+    }
+
+    @Test
+    fun `given notification pending deletion when dismissed then clears state without deleting`() = runTest(testDispatcher) {
+        val notif = Notification(
+            id = "del-1",
+            topic = NotificationTopic.PROJECTION,
+            title = "Aviso a eliminar",
+            body = "Detalles",
+            priority = NotificationPriority.INFO,
+            status = NotificationStatus.UNREAD
+        )
+        notificationsFlow.value = ObserveActiveNotificationsUseCase.Output.Success(listOf(notif))
+        advanceUntilIdle()
+
+        viewModel.sendEvent(NotificationsListEvent.DeleteNotificationClicked("del-1"))
+        advanceUntilIdle()
+        assertEquals("del-1", viewModel.uiState.value.notificationPendingDeletion?.id)
+
+        viewModel.sendEvent(NotificationsListEvent.DismissDeleteNotificationClicked)
+        advanceUntilIdle()
+
+        assertNull(viewModel.uiState.value.notificationPendingDeletion)
+        coVerify(exactly = 0) { deleteNotificationUseCase(any()) }
+    }
+
+    @Test
+    fun `given notification pending deletion when confirmed then invokes deleteNotificationUseCase and clears state`() = runTest(testDispatcher) {
+        val notif = Notification(
+            id = "del-1",
+            topic = NotificationTopic.PROJECTION,
+            title = "Aviso a eliminar",
+            body = "Detalles",
+            priority = NotificationPriority.INFO,
+            status = NotificationStatus.UNREAD
+        )
+        notificationsFlow.value = ObserveActiveNotificationsUseCase.Output.Success(listOf(notif))
+        advanceUntilIdle()
+
+        viewModel.sendEvent(NotificationsListEvent.DeleteNotificationClicked("del-1"))
+        advanceUntilIdle()
+        assertEquals("del-1", viewModel.uiState.value.notificationPendingDeletion?.id)
+
+        viewModel.sendEvent(NotificationsListEvent.ConfirmDeleteNotificationClicked)
+        advanceUntilIdle()
+
+        assertNull(viewModel.uiState.value.notificationPendingDeletion)
         coVerify(exactly = 1) { deleteNotificationUseCase(DeleteNotificationUseCase.Input("del-1")) }
     }
 
@@ -530,7 +591,7 @@ class NotificationsListViewModelTest {
     fun `given sync already in progress when refresh triggered multiple times then skips redundant sync`() = runTest(testDispatcher) {
         val isolatedSyncUseCase: SyncNotificationsUseCase = mockk(relaxed = true)
         coEvery { isolatedSyncUseCase(any()) } coAnswers {
-            kotlinx.coroutines.delay(500)
+            kotlinx.coroutines.delay(500.milliseconds)
             Result.success(SyncNotificationsUseCase.Output.Success(0))
         }
 

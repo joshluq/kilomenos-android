@@ -1,0 +1,57 @@
+{
+  "handoff_id": "HANDOFF-QA-VERDICT-KILOMENOS-18-01",
+  "schema_version": "1.0.0",
+  "timestamp": "2026-09-29T10:20:00Z",
+  "sender": {
+    "role": "QA/Testing Engineer",
+    "agent_id": "qa_testing_engineer"
+  },
+  "recipient": {
+    "role": "Product Owner",
+    "agent_id": "product_owner"
+  },
+  "feature_id": "KILOMENOS-18",
+  "dev_handoff_ref": "HANDOFF-DEV-QA-KILOMENOS-18-01",
+  "verdict": "PASS",
+  "qa_report_path": "docs/qa/QA-REPORT-KILOMENOS-18.md",
+  "remediation_cycle": 0,
+  "test_execution_summary": {
+    "total_tests": 21,
+    "passed": 21,
+    "failed": 0,
+    "skipped": 0,
+    "coverage_percentage": 100.0
+  },
+  "acceptance_matrix": [
+    {
+      "ac_id": "AC-01",
+      "verified": true,
+      "verifying_test_case": "NotificationsListViewModelTest#given delete notification clicked then sets notificationPendingDeletion without deleting",
+      "notes": "Modal CanvasKitConfirmDialog activado en uiState sin disparar borrado prematuro"
+    },
+    {
+      "ac_id": "AC-02",
+      "verified": true,
+      "verifying_test_case": "NotificationsListViewModelTest#given notification pending deletion when dismissed then clears state without deleting",
+      "notes": "Descarte limpio sin invocación al caso de uso ni efectos secundarios"
+    },
+    {
+      "ac_id": "AC-03",
+      "verified": true,
+      "verifying_test_case": "NotificationsListViewModelTest#given notification pending deletion when confirmed then invokes deleteNotificationUseCase and clears state",
+      "notes": "Confirmación modal despacha DeleteNotificationUseCase y limpia estado"
+    },
+    {
+      "ac_id": "AC-04",
+      "verified": true,
+      "verifying_test_case": "NotificationsListScreen Semantics & CanvasKitConfirmDialog inspection",
+      "notes": "Cumple touch target >= 48x48dp y etiquetas de accesibilidad completas"
+    }
+  ],
+  "ui_inspection_summary": {
+    "compose_semantics_valid": true,
+    "touch_targets_compliant": true,
+    "accessibility_labels_present": true
+  },
+  "issues": []
+}

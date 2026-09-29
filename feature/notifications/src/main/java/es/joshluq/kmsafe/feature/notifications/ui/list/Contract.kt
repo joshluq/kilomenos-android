@@ -18,7 +18,8 @@ data class NotificationsListState(
     val isPremiumRequiredBannerVisible: Boolean = false,
     val errorMessage: String? = null,
     val activeVehicleId: String? = null,
-    val vehicleNames: Map<String, String> = emptyMap()
+    val vehicleNames: Map<String, String> = emptyMap(),
+    val notificationPendingDeletion: NotificationUiItem? = null
 ) : UiState {
     companion object {
         val Empty = NotificationsListState(isLoading = true)
@@ -32,6 +33,8 @@ sealed interface NotificationsListEvent : UiEvent {
     data class MarkAsReadClicked(val notificationId: String) : NotificationsListEvent
     data object MarkAllAsReadClicked : NotificationsListEvent
     data class DeleteNotificationClicked(val notificationId: String) : NotificationsListEvent
+    data object ConfirmDeleteNotificationClicked : NotificationsListEvent
+    data object DismissDeleteNotificationClicked : NotificationsListEvent
     data object DismissPremiumBanner : NotificationsListEvent
     data object UpgradeToProClicked : NotificationsListEvent
     data object DismissError : NotificationsListEvent

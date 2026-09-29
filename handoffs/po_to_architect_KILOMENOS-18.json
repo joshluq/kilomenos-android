@@ -1,0 +1,100 @@
+{
+  "handoff_id": "HANDOFF-PO-ARCH-KILOMENOS-18-01",
+  "schema_version": "1.0.0",
+  "timestamp": "2026-09-29T10:07:00Z",
+  "sender": {
+    "role": "Product Owner",
+    "agent_id": "product_owner"
+  },
+  "recipient": {
+    "role": "Software Architect",
+    "agent_id": "software_architect"
+  },
+  "feature_id": "KILOMENOS-18",
+  "feature_title": "Confirmación de Eliminación de Notificación con CanvasKitConfirmDialog",
+  "prd_path": "docs/prd/PRD-KILOMENOS-18.md",
+  "user_stories": [
+    {
+      "story_id": "US-01",
+      "role": "conductor",
+      "want": "que el sistema me solicite una confirmación explícita antes de eliminar una notificación",
+      "so_that": "no pierda información relevante de mis contratos por toques involuntarios"
+    },
+    {
+      "story_id": "US-02",
+      "role": "conductor",
+      "want": "poder cancelar el proceso de borrado pulsando en Cancelar, tocando fuera del modal o usando el gesto de atrás",
+      "so_that": "pueda mantener intacta la notificación si cambié de opinión o pulsé por error"
+    },
+    {
+      "story_id": "US-03",
+      "role": "conductor",
+      "want": "que al pulsar Eliminar en el diálogo de confirmación, la notificación se suprima de inmediato de la lista y el contador se actualice",
+      "so_that": "mi bandeja de avisos quede organizada y refleje el estado real"
+    }
+  ],
+  "functional_requirements": [
+    {
+      "fr_id": "FR-01",
+      "title": "Interceptación de Acción Destructiva",
+      "statement": "Al pulsar el icono de papelera en cualquier fila de notificación en NotificationsListScreen, el sistema no ejecutará la eliminación inmediata, sino que registrará la notificación objetivo en el estado de la UI y mostrará el diálogo modal CanvasKitConfirmDialog."
+    },
+    {
+      "fr_id": "FR-02",
+      "title": "Presentación del Diálogo CanvasKitConfirmDialog",
+      "statement": "El diálogo debe renderizarse con título descriptivo, mensaje de advertencia, icono de eliminación, botón destructivo 'Eliminar' (isDestructive = true) y botón 'Cancelar'."
+    },
+    {
+      "fr_id": "FR-03",
+      "title": "Cancelación y Descarte Limpio",
+      "statement": "Si el usuario pulsa 'Cancelar', pulsa sobre el scrim exterior o realiza el gesto/botón de retroceso de Android, el diálogo se cerrará inmediatamente, el estado de eliminación pendiente se restablecerá a null y la notificación permanecerá intacta en la base de datos y en la lista."
+    },
+    {
+      "fr_id": "FR-04",
+      "title": "Confirmación y Eliminación Local/Remota",
+      "statement": "Si el usuario pulsa 'Eliminar', el diálogo se cerrará de inmediato y se despachará la ejecución de DeleteNotificationUseCase(notificationId), eliminándose la notificación de forma reactiva de la pantalla y actualizando el contador de no leídas."
+    },
+    {
+      "fr_id": "FR-05",
+      "title": "Internacionalización y Localización Completa",
+      "statement": "Todos los literales del diálogo deben estar definidos en strings.xml para español (values/strings.xml) e inglés (values-en/strings.xml)."
+    }
+  ],
+  "acceptance_criteria": [
+    {
+      "ac_id": "AC-01",
+      "scenario": "Despliegue del Diálogo de Confirmación al Solicitar Borrado",
+      "given": "un usuario autenticado en la pantalla NotificationsListScreen con al menos una notificación visible",
+      "when": "pulsa sobre el icono de eliminar (papelera) de una notificación específica",
+      "then": "el sistema muestra el modal CanvasKitConfirmDialog con título '¿Eliminar notificación?', mensaje descriptivo, icono de eliminación y opciones 'Eliminar' y 'Cancelar', permaneciendo la notificación en la lista de fondo sin eliminarse aún"
+    },
+    {
+      "ac_id": "AC-02",
+      "scenario": "Cancelación del Diálogo sin Efectos Secundarios",
+      "given": "el diálogo de confirmación CanvasKitConfirmDialog visible en pantalla para una notificación",
+      "when": "el usuario pulsa el botón 'Cancelar', pulsa fuera del área del diálogo o ejecuta el gesto de retroceso del sistema Android",
+      "then": "el diálogo se cierra inmediatamente, no se envía ninguna orden de borrado a DeleteNotificationUseCase y la notificación permanece inalterada en la lista"
+    },
+    {
+      "ac_id": "AC-03",
+      "scenario": "Confirmación Exitosa de la Eliminación",
+      "given": "el diálogo de confirmación CanvasKitConfirmDialog visible para una notificación válida",
+      "when": "el usuario pulsa el botón destructivo 'Eliminar'",
+      "then": "el diálogo se cierra, el sistema ejecuta DeleteNotificationUseCase(notificationId), la notificación es removida reactivamente de la pantalla y el contador de notificaciones no leídas se decrementa si el aviso estaba sin leer"
+    },
+    {
+      "ac_id": "AC-04",
+      "scenario": "Accesibilidad y Touch Targets Conformes",
+      "given": "el diálogo de confirmación desplegado en pantalla",
+      "when": "un usuario navega utilizando el lector de pantalla TalkBack",
+      "then": "los botones de confirmación y cancelación disponen de etiquetas semánticas claras y touch targets interactivos de al menos 48x48dp"
+    }
+  ],
+  "non_functional_requirements": {
+    "min_sdk": 24,
+    "target_sdk": 35,
+    "offline_supported": true,
+    "accessibility_required": true,
+    "performance_budget_ms": 16
+  }
+}
