@@ -27,6 +27,7 @@ CORE_SKILLS = {
     'openspec',
     'atlassian-bridge',
     'idea-lab',
+    'ecosystem-optimizer',
 }
 
 PROFILE_SKILLS = {

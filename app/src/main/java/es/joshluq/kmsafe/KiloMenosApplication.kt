@@ -9,6 +9,8 @@ import androidx.work.WorkManager
 import dagger.hilt.android.HiltAndroidApp
 import es.joshluq.foundationkit.log.LoggerKit
 import es.joshluq.kmsafe.data.worker.ReminderWorker
+import es.joshluq.kmsafe.domain.model.Feature
+import es.joshluq.kmsafe.domain.usecase.CheckFeatureAccessUseCase
 import es.joshluq.kmsafe.domain.usecase.GetPreferencesUseCase
 import es.joshluq.kmsafe.infrastructure.notifications.NotificationChannelManager
 import es.joshluq.kmsafe.infrastructure.repository.tracking.AutoTrackingManager
@@ -35,6 +37,9 @@ class KiloMenosApplication : Application(), Configuration.Provider {
 
     @Inject
     lateinit var getPreferencesUseCase: GetPreferencesUseCase
+
+    @Inject
+    lateinit var checkFeatureAccessUseCase: CheckFeatureAccessUseCase
 
     @Inject
     lateinit var channelManager: NotificationChannelManager
@@ -65,10 +70,17 @@ class KiloMenosApplication : Application(), Configuration.Provider {
     private fun initializeAutoTracking() {
         applicationScope.launch {
             try {
+                val access = checkFeatureAccessUseCase(CheckFeatureAccessUseCase.Input(Feature.AUTO_TRACKING)).first()
+                val isPremium = (access is CheckFeatureAccessUseCase.Output.Success) && access.isGranted
                 val output = getPreferencesUseCase(GetPreferencesUseCase.Input).first()
-                if (output is GetPreferencesUseCase.Output.Success && output.preferences.autoTrackingEnabled) {
-                    logger.i("Application", "Auto-tracking is enabled in preferences. Ensuring registration.")
+                val isEnabled = (output is GetPreferencesUseCase.Output.Success) && output.preferences.autoTrackingEnabled
+
+                if (isPremium && isEnabled) {
+                    logger.i("Application", "Auto-tracking is enabled in preferences for Premium user. Ensuring registration.")
                     autoTrackingManager.startAutoTracking()
+                } else if (!isPremium) {
+                    logger.d("Application", "User is FREE. Ensuring auto-tracking is unregistered.")
+                    autoTrackingManager.stopAutoTracking()
                 }
             } catch (e: Exception) {
                 logger.e("Application", "Failed to initialize auto-tracking on start", e)

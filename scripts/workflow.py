@@ -854,6 +854,76 @@ def cmd_workflow_status(change_id: Optional[str] = None):
     print("===========================================================")
 
 
+def cmd_workflow_audit(
+    target: str = ".",
+    profile: str = "auto",
+    report: Optional[str] = None,
+    json_out: bool = False,
+    no_spokes: bool = False
+) -> bool:
+    """Phase 4: Audits ecosystem health, context budget, platform purity, and spoke sync."""
+    candidates = [
+        ROOT_DIR / "skills" / "ecosystem-optimizer" / "scripts" / "ecosystem_audit.py",
+        ROOT_DIR / ".agents" / "skills" / "ecosystem-optimizer" / "scripts" / "ecosystem_audit.py",
+        ROOT_DIR / ".gemini" / "antigravity" / "skills" / "ecosystem-optimizer" / "scripts" / "ecosystem_audit.py",
+        ROOT_DIR / "scripts" / "ecosystem_audit.py",
+    ]
+    script_path = None
+    for c in candidates:
+        if c.is_file():
+            script_path = c
+            break
+
+    if not script_path:
+        print(f"[ERROR] ecosystem_audit script not found in ecosystem-optimizer skills or scripts/")
+        return False
+
+    if str(script_path.parent) not in sys.path:
+        sys.path.insert(0, str(script_path.parent))
+
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("ecosystem_audit", str(script_path))
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+
+    target_dir = Path(target).resolve()
+    result = mod.run_full_ecosystem_audit(target_dir, profile=profile, check_spokes=not no_spokes)
+
+    if json_out:
+        print(json.dumps(result, indent=2))
+        return result["overall_status"] != "FAIL"
+
+    print("===========================================================")
+    print("   🏥 AGENTIC ECOSYSTEM COMPREHENSIVE HEALTH AUDIT")
+    print(f"   Target  : {target_dir}")
+    print(f"   Profile : {result['profile']}")
+    print(f"   Status  : {result['overall_status']}")
+    print("===========================================================")
+    print(f" 1. Context Budget  : [{result['budget']['overall_status']}] ~{result['budget']['total_estimated_tokens']:,} tokens across {result['budget']['files_analyzed']} files")
+    print(f" 2. Platform Purity : [{result['leakage']['status']}] {result['leakage']['violations_count']} domain leaks detected")
+    print(f" 3. Schema Quality  : [{result['schemas']['status']}] {result['schemas']['passed']}/{result['schemas']['schemas_checked']} schemas valid Draft-07")
+    print(f" 4. Context Pruning : [{result['pruning']['status']}] {result['pruning']['platitudes_count']} platitudes, {result['pruning']['redundancies_count']} duplicates, {result['pruning']['contradictions_count']} contradictions")
+
+    if result["spokes"]:
+        print(f" 5. Spoke Parity    : {len(result['spokes'])} satellite repositories audited")
+        for sp in result["spokes"]:
+            print(f"    - {sp['spoke']}: [{sp['overall_status']}] (In Sync: {sp['in_sync_count']}, Drift: {sp['drifted_count']}, Missing: {sp['missing_count']})")
+
+    print("-----------------------------------------------------------")
+    if result["overall_status"] == "PASS":
+        print(" 🎉 System health is pristine! All agentic constraints satisfied.")
+    elif result["overall_status"] == "WARN":
+        print(" ⚠️ System is healthy with optimization opportunities.")
+    else:
+        print(" ❌ Critical issues detected. Run 'python skills/ecosystem-optimizer/scripts/ecosystem_audit.py' for details.")
+    print("===========================================================")
+
+    if report:
+        mod.generate_markdown_report(result, Path(report).resolve())
+
+    return result["overall_status"] != "FAIL"
+
+
 # ==============================================================================
 # 4. CLI ARGUMENT PARSER
 # ==============================================================================
@@ -897,6 +967,14 @@ def build_parser() -> argparse.ArgumentParser:
     # status
     p_status = subparsers.add_parser("status", help="Inspect active changes and lifecycle progress.")
     p_status.add_argument("change_id", nargs="?", help="Optional specific change ID to query")
+
+    # audit
+    p_audit = subparsers.add_parser("audit", help="Phase 4: Ecosystem health, context budget, and platform purity audit.")
+    p_audit.add_argument("--target", default=".", help="Target directory to audit (default: current dir)")
+    p_audit.add_argument("--profile", default="auto", choices=["android", "backend", "web", "auto"], help="Platform profile")
+    p_audit.add_argument("--report", help="Path to write Markdown health report")
+    p_audit.add_argument("--json", action="store_true", help="Output results in JSON format")
+    p_audit.add_argument("--no-spokes", action="store_true", help="Skip satellite spoke parity check")
 
     return parser
 
@@ -945,7 +1023,17 @@ def main():
         sys.exit(0 if success else 1)
     elif args.command == "status":
         cmd_workflow_status(args.change_id)
+    elif args.command == "audit":
+        success = cmd_workflow_audit(
+            target=args.target,
+            profile=args.profile,
+            report=args.report,
+            json_out=args.json,
+            no_spokes=args.no_spokes
+        )
+        sys.exit(0 if success else 1)
 
 
 if __name__ == "__main__":
     main()
+

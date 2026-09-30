@@ -72,6 +72,17 @@ class TrackingDataSourceTest {
         coVerify { storage.delete("tracking_distance_meters") }
         coVerify { storage.delete("tracking_route_polyline") }
         coVerify { storage.delete("tracking_point_count") }
+        coVerify { storage.delete("tracking_mode") }
         coVerify { storage.save(eq("tracking_last_trip_end_timestamp"), any<Long>()) }
+    }
+
+    @Test
+    fun `startTracking saves tracking_mode correctly`() = runTest {
+        coEvery { storage.read<Double>("tracking_distance_meters") } returns null
+        coEvery { storage.read<Long>("tracking_start_timestamp") } returns null
+
+        dataSource.startTracking(1000L, es.joshluq.kmsafe.domain.model.TrackingMode.AUTOMATIC)
+
+        coVerify { storage.save("tracking_mode", "AUTOMATIC") }
     }
 }

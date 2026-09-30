@@ -36,6 +36,7 @@ class TestSkillsSpecification(unittest.TestCase):
                 "openspec",
                 "supabase-db-triage",
                 "supabase-edge-functions",
+                "ecosystem-optimizer",
             ]
         else:
             expected_skills = [p.name for p in self.skills_dir.iterdir() if p.is_dir()]
@@ -107,6 +108,11 @@ class TestSkillsSpecification(unittest.TestCase):
             ("android-quality", "sanity_check.py"),
             ("senior-debugging-engineer", "crash_listener.py"),
             ("supabase-db-triage", "backend_sanity_check.py"),
+            ("ecosystem-optimizer", "ecosystem_audit.py"),
+            ("ecosystem-optimizer", "audit_context_budget.py"),
+            ("ecosystem-optimizer", "lint_platform_leakage.py"),
+            ("ecosystem-optimizer", "validate_spokes_sync.py"),
+            ("ecosystem-optimizer", "audit_context_pruning.py"),
         ]
 
         for skill_name, script_name in expected_scripts:

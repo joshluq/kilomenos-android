@@ -149,9 +149,12 @@ class OverviewViewModel @Inject constructor(
                 val isAutoTrackEnabled = prefs.autoTrackingEnabled
                 val isPromoDismissed = prefs.autoTrackingPromotionDismissed
 
-                if (isAutoTrackEnabled) {
-                    logger.d("OverviewViewModel", "Auto-tracking is enabled in preferences. Ensuring registration.")
+                if (isPremiumUser && isAutoTrackEnabled) {
+                    logger.d("OverviewViewModel", "Auto-tracking is enabled for Premium user. Ensuring registration.")
                     startAutoTrackingUseCase(StartAutoTrackingUseCase.Input).launchIn(viewModelScope)
+                } else if (!isPremiumUser) {
+                    logger.d("OverviewViewModel", "User is FREE. Ensuring auto-tracking is unregistered.")
+                    stopAutoTrackingUseCase(StopAutoTrackingUseCase.Input).launchIn(viewModelScope)
                 }
 
                 newState = newState.copy(

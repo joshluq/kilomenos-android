@@ -31,6 +31,7 @@ import es.joshluq.kmsafe.core.analytics.AnalyticsTracker
 import es.joshluq.kmsafe.core.analytics.model.KmAnalyticsEvent
 import es.joshluq.foundationkit.log.LoggerKit
 import es.joshluq.kmsafe.domain.model.Feature
+import es.joshluq.kmsafe.domain.model.TrackingMode
 import es.joshluq.kmsafe.domain.repository.TrackingRepository
 import es.joshluq.kmsafe.domain.usecase.CheckFeatureAccessUseCase
 import es.joshluq.kmsafe.domain.usecase.GetPreferencesUseCase
@@ -99,6 +100,7 @@ class LocationTrackingService : Service() {
         const val ACTION_START = "ACTION_START"
         const val ACTION_START_BT_AUTO = "ACTION_START_BT_AUTO"
         const val ACTION_STOP = "ACTION_STOP"
+        const val ACTION_STOP_AUTOMATIC = "ACTION_STOP_AUTOMATIC"
         const val EXTRA_DEVICE_MAC = "EXTRA_DEVICE_MAC"
         const val EXTRA_VEHICLE_NAME = "EXTRA_VEHICLE_NAME"
 
@@ -138,7 +140,24 @@ class LocationTrackingService : Service() {
 
         // 1. Handle explicit stop commands immediately without promoting to foreground
         if (action == ACTION_STOP) {
+            logger.i("LocationService", "ACTION_STOP received: User or explicit command. Stopping unconditionally.")
             stopTracking()
+            return START_NOT_STICKY
+        }
+
+        // 1.1 Handle automated stop signals (AR EXIT, Pedestrian transitions, BT Disconnect)
+        // Guarded: Never stops an active MANUAL session
+        if (action == ACTION_STOP_AUTOMATIC) {
+            serviceScope.launch {
+                val isTracking = trackingRepository.isTracking.first()
+                val currentMode = trackingRepository.trackingMode.first()
+                if (isTracking && currentMode == TrackingMode.AUTOMATIC) {
+                    logger.i("LocationService", "ACTION_STOP_AUTOMATIC confirmed for AUTOMATIC session. Stopping tracking.")
+                    stopTracking()
+                } else {
+                    logger.i("LocationService", "ACTION_STOP_AUTOMATIC ignored: Current session is MANUAL or inactive (isTracking=$isTracking, mode=$currentMode).")
+                }
+            }
             return START_NOT_STICKY
         }
 
@@ -158,7 +177,7 @@ class LocationTrackingService : Service() {
 
         // 4. Handle explicit UI manual start
         if (action == ACTION_START) {
-            startTracking()
+            startTracking(TrackingMode.MANUAL)
             return START_STICKY
         }
 
@@ -191,8 +210,17 @@ class LocationTrackingService : Service() {
         if (type == ActivityTransition.ACTIVITY_TRANSITION_ENTER) {
             startAutoValidationAndTracking(isBluetoothFastPath = false)
         } else if (type == ActivityTransition.ACTIVITY_TRANSITION_EXIT) {
-            logger.i("LocationService", "IN_VEHICLE EXIT detected. Stopping service.")
-            stopTracking()
+            logger.i("LocationService", "IN_VEHICLE EXIT detected. Evaluating automatic stop...")
+            serviceScope.launch {
+                val isTracking = trackingRepository.isTracking.first()
+                val currentMode = trackingRepository.trackingMode.first()
+                if (isTracking && currentMode == TrackingMode.AUTOMATIC) {
+                    logger.i("LocationService", "IN_VEHICLE EXIT confirmed for AUTOMATIC session. Stopping service.")
+                    stopTracking()
+                } else {
+                    logger.i("LocationService", "IN_VEHICLE EXIT ignored: session is MANUAL or inactive (isTracking=$isTracking, mode=$currentMode).")
+                }
+            }
         }
     }
 
@@ -202,6 +230,15 @@ class LocationTrackingService : Service() {
     ) {
         serviceScope.launch {
             try {
+                // 0. Check if already tracking BEFORE any validation to protect ongoing sessions
+                if (trackingRepository.isTracking.first()) {
+                    logger.d("LocationService", "Already tracking. Automated start validation aborted without interrupting active session.")
+                    preverifiedMac?.let { mac ->
+                        TrackingDeviceCache.updateCache(this@LocationTrackingService, mac, null)
+                    }
+                    return@launch
+                }
+
                 // Run business validations
                 logger.d("LocationService", "Starting autostart validation flow (fastPath=$isBluetoothFastPath)...")
 
@@ -244,12 +281,6 @@ class LocationTrackingService : Service() {
                     logger.i("LocationService", "Bluetooth Fast-Path active: Bypassing cooldown check for hardware ignition event.")
                 }
 
-                // 4. Check if already tracking
-                if (trackingRepository.isTracking.first()) {
-                    logger.d("LocationService", "Already tracking. Validation aborted.")
-                    return@launch
-                }
-
                 // 4. Check Bluetooth if linked
                 val contractOutput = withTimeoutOrNull(5000L.milliseconds) {
                     getRentingContractUseCase(GetRentingContractUseCase.Input).first {
@@ -280,9 +311,9 @@ class LocationTrackingService : Service() {
                     return@launch
                 }
 
-                // Validations passed! Start GPS capture
-                logger.i("LocationService", "VALIDATIONS PASSED. Switching to active tracking.")
-                startTracking()
+                // Validations passed! Start GPS capture in AUTOMATIC mode
+                logger.i("LocationService", "VALIDATIONS PASSED. Switching to active AUTOMATIC tracking.")
+                startTracking(TrackingMode.AUTOMATIC)
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
@@ -467,8 +498,8 @@ class LocationTrackingService : Service() {
         }
     }
 
-    private fun startTracking() {
-        logger.i("LocationService", "startTracking initiated")
+    private fun startTracking(mode: TrackingMode = TrackingMode.MANUAL) {
+        logger.i("LocationService", "startTracking initiated with mode=$mode")
 
         // Clean up residual notifications from previous trip cycle
         val notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
@@ -494,9 +525,13 @@ class LocationTrackingService : Service() {
         serviceScope.launch {
             val isAlreadyTracking = trackingRepository.isTracking.first()
             if (!isAlreadyTracking) {
-                trackingRepository.startTracking()
+                trackingRepository.startTracking(mode)
             }
-            startBluetoothHeartbeat()
+            if (mode == TrackingMode.AUTOMATIC) {
+                startBluetoothHeartbeat()
+            } else {
+                bluetoothHeartbeatJob?.cancel()
+            }
 
             val locationRequest = LocationRequest.Builder(
                 PRIORITY_HIGH_ACCURACY,

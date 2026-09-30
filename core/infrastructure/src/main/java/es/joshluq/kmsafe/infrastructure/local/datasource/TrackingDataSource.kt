@@ -4,6 +4,7 @@ import es.joshluq.foundationkit.log.LoggerKit
 import es.joshluq.foundationkit.provider.StorageProvider
 import es.joshluq.foundationkit.provider.read
 import es.joshluq.foundationkit.provider.save
+import es.joshluq.kmsafe.domain.model.TrackingMode
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -28,6 +29,7 @@ class TrackingDataSource @Inject constructor(
 
     companion object {
         private const val KEY_IS_TRACKING = "tracking_active"
+        private const val KEY_TRACKING_MODE = "tracking_mode"
         private const val KEY_START_TIME = "tracking_start_timestamp"
         private const val KEY_DISTANCE = "tracking_distance_meters"
         private const val KEY_ROUTE_POLYLINE = "tracking_route_polyline"
@@ -37,6 +39,18 @@ class TrackingDataSource @Inject constructor(
 
     fun isTracking(): Flow<Boolean> = _updates.flatMapLatest {
         flow { emit(storage.read<Boolean>(KEY_IS_TRACKING) ?: false) }
+    }
+
+    fun getTrackingMode(): Flow<TrackingMode> = _updates.flatMapLatest {
+        flow {
+            val raw = storage.read<String>(KEY_TRACKING_MODE)
+            val mode = if (raw == TrackingMode.AUTOMATIC.name) {
+                TrackingMode.AUTOMATIC
+            } else {
+                TrackingMode.MANUAL
+            }
+            emit(mode)
+        }
     }
 
     fun getStartTime(): Flow<Long?> = _updates.flatMapLatest {
@@ -59,19 +73,23 @@ class TrackingDataSource @Inject constructor(
         flow { emit(storage.read<Long>(KEY_LAST_TRIP_END_TIME)) }
     }
 
-    suspend fun startTracking(timestamp: Long) {
+    suspend fun startTracking(
+        timestamp: Long,
+        mode: TrackingMode = TrackingMode.MANUAL
+    ) {
         val existingDistance = storage.read<Double>(KEY_DISTANCE) ?: 0.0
         val existingStartTime = storage.read<Long>(KEY_START_TIME)
 
         storage.save(KEY_IS_TRACKING, true)
+        storage.save(KEY_TRACKING_MODE, mode.name)
         if (existingDistance <= 0.0 || existingStartTime == null) {
-            logger.i("TrackingDataSource", "startTracking: initializing new tracking session at $timestamp")
+            logger.i("TrackingDataSource", "startTracking: initializing new tracking session at $timestamp with mode=$mode")
             storage.save(KEY_START_TIME, timestamp)
             storage.save(KEY_DISTANCE, 0.0)
             storage.delete(KEY_ROUTE_POLYLINE)
             storage.save(KEY_POINT_COUNT, 0)
         } else {
-            logger.i("TrackingDataSource", "startTracking: resuming existing session with accumulated distance ${existingDistance}m")
+            logger.i("TrackingDataSource", "startTracking: resuming existing session with accumulated distance ${existingDistance}m (mode=$mode)")
         }
         _updates.emit(Unit)
     }
@@ -94,6 +112,7 @@ class TrackingDataSource @Inject constructor(
     suspend fun clear() {
         logger.d("TrackingDataSource", "clear: deleting all tracking keys and recording lastTripEndTime")
         storage.delete(KEY_IS_TRACKING)
+        storage.delete(KEY_TRACKING_MODE)
         storage.delete(KEY_START_TIME)
         storage.delete(KEY_DISTANCE)
         storage.delete(KEY_ROUTE_POLYLINE)

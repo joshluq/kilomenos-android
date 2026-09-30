@@ -59,7 +59,7 @@
     },
     "feature_id": {
       "type": "string",
-      "pattern": "^(FEAT-[0-9]{3,}|KILOMENOS-[0-9]+)$"
+      "pattern": "^FEAT-[0-9]{3,}$"
     },
     "feature_title": {
       "type": "string",

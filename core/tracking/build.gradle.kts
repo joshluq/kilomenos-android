@@ -3,10 +3,14 @@ import com.android.build.api.dsl.LibraryExtension
 plugins {
     alias(libs.plugins.pluginkit.android.library)
     alias(libs.plugins.pluginkit.android.hilt)
+    alias(libs.plugins.pluginkit.android.testing)
 }
 
 configure<LibraryExtension> {
     namespace = "es.joshluq.kmsafe.core.tracking"
+    testOptions {
+        unitTests.isReturnDefaultValues = true
+    }
 }
 
 dependencies {

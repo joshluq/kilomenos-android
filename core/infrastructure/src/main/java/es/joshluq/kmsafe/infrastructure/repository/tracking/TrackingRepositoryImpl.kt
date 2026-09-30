@@ -3,6 +3,7 @@ package es.joshluq.kmsafe.infrastructure.repository.tracking
 import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.PolyUtil
 import es.joshluq.foundationkit.log.LoggerKit
+import es.joshluq.kmsafe.domain.model.TrackingMode
 import es.joshluq.kmsafe.infrastructure.local.datasource.TrackingDataSource
 import es.joshluq.kmsafe.domain.repository.TrackingRepository
 import kotlinx.coroutines.flow.Flow
@@ -43,6 +44,11 @@ class TrackingRepositoryImpl @Inject constructor(
     override val isTracking: Flow<Boolean> = dataSource.isTracking()
 
     /**
+     * Flow emitting the mode of the active tracking session (MANUAL vs AUTOMATIC).
+     */
+    override val trackingMode: Flow<TrackingMode> = dataSource.getTrackingMode()
+
+    /**
      * Flow emitting the timestamp of when the last tracking session was stopped or cleared.
      */
     override val lastTripEndTime: Flow<Long?> = dataSource.getLastTripEndTime()
@@ -60,9 +66,9 @@ class TrackingRepositoryImpl @Inject constructor(
     /**
      * Starts a new tracking session by saving the current start timestamp in the data source.
      */
-    override suspend fun startTracking() {
-        logger.i("TrackingRepository", "startTracking initiated")
-        dataSource.startTracking(System.currentTimeMillis())
+    override suspend fun startTracking(mode: TrackingMode) {
+        logger.i("TrackingRepository", "startTracking initiated with mode=$mode")
+        dataSource.startTracking(System.currentTimeMillis(), mode)
     }
 
     /**

@@ -19,6 +19,7 @@ import com.google.android.gms.location.LocationServices
 import dagger.hilt.android.AndroidEntryPoint
 import es.joshluq.foundationkit.log.LoggerKit
 import es.joshluq.kmsafe.domain.model.Feature
+import es.joshluq.kmsafe.domain.model.TrackingMode
 import es.joshluq.kmsafe.domain.repository.TrackingRepository
 import es.joshluq.kmsafe.domain.usecase.CheckFeatureAccessUseCase
 import es.joshluq.kmsafe.domain.usecase.DetectNearestStationUseCase
@@ -245,12 +246,15 @@ class BluetoothConnectionReceiver : BroadcastReceiver() {
 
             // Fast-path: Conclude trip tracking immediately instead of waiting for Activity Recognition delay
             val isTracking = trackingRepository.isTracking.first()
-            if (isTracking) {
-                logger.i("BluetoothReceiver", "Active trip detected during vehicle disconnect. Stopping tracking service immediately.")
+            val mode = trackingRepository.trackingMode.first()
+            if (isTracking && mode == TrackingMode.AUTOMATIC) {
+                logger.i("BluetoothReceiver", "Active AUTOMATIC trip detected during vehicle disconnect. Stopping tracking service immediately.")
                 val stopIntent = Intent(context, LocationTrackingService::class.java).apply {
-                    action = LocationTrackingService.ACTION_STOP
+                    action = LocationTrackingService.ACTION_STOP_AUTOMATIC
                 }
                 context.startService(stopIntent)
+            } else if (isTracking) {
+                logger.i("BluetoothReceiver", "Active trip is in MANUAL mode. Bluetooth disconnection will NOT stop the trip.")
             }
 
             // Smart Arrival: Detect if vehicle stopped at a service station

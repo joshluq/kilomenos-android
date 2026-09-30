@@ -1,5 +1,6 @@
 package es.joshluq.kmsafe.domain.repository
 
+import es.joshluq.kmsafe.domain.model.TrackingMode
 import kotlinx.coroutines.flow.Flow
 
 /**
@@ -22,6 +23,11 @@ interface TrackingRepository {
     val isTracking: Flow<Boolean>
 
     /**
+     * The mode of the current tracking session (MANUAL vs AUTOMATIC).
+     */
+    val trackingMode: Flow<TrackingMode>
+
+    /**
      * The timestamp of when the last tracking session finished or was cancelled.
      */
     val lastTripEndTime: Flow<Long?>
@@ -39,7 +45,7 @@ interface TrackingRepository {
     /**
      * Starts a new trip tracking session.
      */
-    suspend fun startTracking()
+    suspend fun startTracking(mode: TrackingMode = TrackingMode.MANUAL)
 
     /**
      * Updates the accumulated distance and optionally appends a new point to the route.

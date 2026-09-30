@@ -82,7 +82,7 @@ class OverviewViewModelTest {
     private val stopTripTrackingUseCase: StopTripTrackingUseCase = mockk(relaxed = true)
     private val dismissTripNotificationUseCase: DismissTripNotificationUseCase = mockk(relaxed = true)
     private val syncStationGeofencesUseCase: SyncStationGeofencesUseCase = mockk(relaxed = true)
-    private val observeActiveNotificationsUseCase: es.joshluq.kmsafe.domain.usecase.ObserveActiveNotificationsUseCase = mockk(relaxed = true)
+    private val observeActiveNotificationsUseCase: ObserveActiveNotificationsUseCase = mockk(relaxed = true)
     private val markNotificationAsReadUseCase: es.joshluq.kmsafe.domain.usecase.MarkNotificationAsReadUseCase = mockk(relaxed = true)
     private val publishNotificationIfUnreadUseCase: PublishNotificationIfUnreadUseCase = mockk(relaxed = true)
     private val monetizationConfig: MonetizationConfig = mockk(relaxed = true)
@@ -172,7 +172,7 @@ class OverviewViewModelTest {
             ObserveVehicleBluetoothConnectionUseCase.Output.Success(isConnected = false)
         )
         every { observeActiveNotificationsUseCase(any()) } returns flowOf(
-            es.joshluq.kmsafe.domain.usecase.ObserveActiveNotificationsUseCase.Output.Success(emptyList())
+            ObserveActiveNotificationsUseCase.Output.Success(emptyList())
         )
     }
 
@@ -487,13 +487,13 @@ class OverviewViewModelTest {
         val viewModel = createViewModel()
         advanceUntilIdle()
 
-        val sampleNotif = es.joshluq.kmsafe.domain.model.Notification(
+        val sampleNotif = Notification(
             id = "proj-pill-1",
-            topic = es.joshluq.kmsafe.domain.model.NotificationTopic.PROJECTION,
+            topic = NotificationTopic.PROJECTION,
             title = "Alerta de proyección",
             body = "Revisar cálculo",
-            priority = es.joshluq.kmsafe.domain.model.NotificationPriority.CRITICAL,
-            status = es.joshluq.kmsafe.domain.model.NotificationStatus.UNREAD,
+            priority = NotificationPriority.CRITICAL,
+            status = NotificationStatus.UNREAD,
             deepLinkUri = "kmsafe://feature/projection"
         )
 
@@ -548,17 +548,17 @@ class OverviewViewModelTest {
 
     @Test
     fun `given notifications list containing only read notifications then activeNotification is null`() = runTest(testDispatcher) {
-        val readNotif = es.joshluq.kmsafe.domain.model.Notification(
+        val readNotif = Notification(
             id = "read-1",
-            topic = es.joshluq.kmsafe.domain.model.NotificationTopic.PROJECTION,
+            topic = NotificationTopic.PROJECTION,
             title = "Alerta ya leida",
             body = "Detalle",
-            priority = es.joshluq.kmsafe.domain.model.NotificationPriority.INFO,
-            status = es.joshluq.kmsafe.domain.model.NotificationStatus.READ,
+            priority = NotificationPriority.INFO,
+            status = NotificationStatus.READ,
             isRead = true
         )
         every { observeActiveNotificationsUseCase(any()) } returns flowOf(
-            es.joshluq.kmsafe.domain.usecase.ObserveActiveNotificationsUseCase.Output.Success(listOf(readNotif))
+            ObserveActiveNotificationsUseCase.Output.Success(listOf(readNotif))
         )
 
         val viewModel = createViewModel()
@@ -849,5 +849,21 @@ class OverviewViewModelTest {
         coVerify(atLeast = 1) {
             markNotificationAsReadUseCase(match { it.notificationId == "bt_missing_${sampleContract.id}" })
         }
+    }
+
+    @Test
+    fun `given free user with autoTrackingEnabled true then does not start auto-tracking and ensures stopAutoTracking called`() = runTest(testDispatcher) {
+        every { getEntitlementsUseCase(any()) } returns flowOf(
+            GetEntitlementsUseCase.Output.Success(Entitlements.Default.copy(subscriptionLevel = SubscriptionLevel.FREE))
+        )
+        every { getPreferencesUseCase(any()) } returns flowOf(
+            GetPreferencesUseCase.Output.Success(UserPreferences(autoTrackingEnabled = true))
+        )
+
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        coVerify(exactly = 0) { startAutoTrackingUseCase(any()) }
+        coVerify(atLeast = 1) { stopAutoTrackingUseCase(any()) }
     }
 }
